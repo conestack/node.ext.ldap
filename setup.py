@@ -26,12 +26,24 @@
 setup.py bdist_egg
 """
 
-from setuptools import setup
+from setuptools import setup, find_packages
+import sys, os
+
+version = '1.0'
 
 setup(
-  name="bda.ldap",
-  version="1.0",
-  description="""BlueDynamics Alliance LDAP lib.""",
-  author="Robert Niederreiter <rnix@squarewave.at>",
-  packages=['bda.ldap'],
+    name='bda.ldap',
+    version=version,
+    description="LDAP lib BlueDynamics Alliance",
+    long_description="""""",
+    classifiers=[],
+    keywords='ldap zope',
+    author='Robert Niederreiter',
+    author_email='dev@bluedynamics.com',
+    url='http://svn.plone.org/svn/collective/bda.ldap',
+    license='GPL',
+    packages=find_packages(exclude=['ez_setup']),
+    namespace_packages=['bda'],
+    include_package_data=True,
+    zip_safe=False,
 )
