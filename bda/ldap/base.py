@@ -1,23 +1,9 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2006-2007 by BlueDynamics Alliance, Austria
+# Copyright 2006-2008, BlueDynamics Alliance, Austria
+# www.bluedynamics.com
 #
-# GNU General Public License (GPL)
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-# 02110-1301, USA.
+# GNU General Public Licence Version 2 or later - see LICENCE.GPL
 
 """Module bda.ldap.base
 
@@ -27,11 +13,11 @@ and for managing the directory itself.
 depends on python-ldap.
 """
 
-__version__ = '1.0'
 __docformat__ = 'plaintext'
 __author__ = """Robert Niederreiter <rnix@squarewave.at>"""
 
 import ldap
+from ldap import MOD_ADD, MOD_DELETE, MOD_REPLACE
 
 BASE = ldap.SCOPE_BASE
 ONELEVEL = ldap.SCOPE_ONELEVEL
@@ -180,7 +166,7 @@ class LDAPCommunicator(object):
         attributes = [ (k,v) for k,v in data.items() ]
         self._con.add_s(dn, attributes)    
         
-    def modify(self, dn, data):
+    def modify(self, dn, modlist):
         """Modify an existing entry in the directory.
         
         The first argument is a string containing the dn of the object 
@@ -189,8 +175,10 @@ class LDAPCommunicator(object):
         modification (MOD_REPLACE, MOD_DELETE, or MOD_ADD), the second gives 
         the name of the field to modify, and the third gives the new value 
         for the field (for MOD_ADD and MOD_REPLACE).
+        
+        see python-ldap ldap.ldapobject.modify()
         """
-        self._con.modify_s(dn, data)
+        self._con.modify_s(dn, modlist)
         
     def delete(self, deleteDN):
         """Delete an entry from the directory.

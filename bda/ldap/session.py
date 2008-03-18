@@ -1,34 +1,14 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2006-2007 by:
-#     Blue Dynamics Alliance
-#         * Klein & Partner KEG, Austria
-#         * Squarewave Computing Robert Niederreiter, Austria
+# Copyright 2006-2008, BlueDynamics Alliance, Austria
+# www.bluedynamics.com
 #
-# GNU General Public License (GPL)
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-# 02110-1301, USA.
+# GNU General Public Licence Version 2 or later - see LICENCE.GPL
 
-"""Module bda.ldap.session
-"""
-
-__version__ = '1.0'
 __docformat__ = 'plaintext'
 __author__ = """Robert Niederreiter <rnix@squarewave.at>,
-                Georg Bernhard <g.bernhard@akbild.ac.at>"""
+                Georg Bernhard <g.bernhard@akbild.ac.at>,
+                Florian Friesdorf <flo@chaoflow.net>"""
 
 import ldap
 from base import LDAPConnector
@@ -82,7 +62,15 @@ class LDAPSession(object):
         Look at bda.ldap.base.LDAPCommunicator.modify() for details.
         """
         func = self.communicator.modify
-        return self_perform(func, dn, data)
+        return self._perform(func, dn, data)
+    
+    def delete(self, dn):
+        """Delete an entry from the directory.
+        
+        Take the DN to delete from the directory as argument.
+        """
+        func = self.communicator.delete
+        return self._perform(func, dn)
     
     def _perform(self, function, *args, **kwargs):
         """Try to perform the given function with the given argument.
