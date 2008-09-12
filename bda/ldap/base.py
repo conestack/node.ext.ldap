@@ -16,8 +16,11 @@ depends on python-ldap.
 __docformat__ = 'plaintext'
 __author__ = """Robert Niederreiter <rnix@squarewave.at>"""
 
-import ldap
-from ldap import MOD_ADD, MOD_DELETE, MOD_REPLACE
+try:
+    # try if cached ldap connection works. depends on plone.memoize.
+    from ldapcached import ldapcached as ldap
+except:
+    import ldap
 
 BASE = ldap.SCOPE_BASE
 ONELEVEL = ldap.SCOPE_ONELEVEL
