@@ -8,6 +8,11 @@ Overview
 This Package provides objects for LDAP communication. You probably be
 interrested in the LDAPSession object.
 
+LDAP Queries are cached by default.
+- Depends on plone.memoize
+- Adjust CACHE_TIMEOUT_SECONDS for to control cache-time
+- If you don't want LDAP Caching, disable the ldapcached import in base.py
+
 
 Dependencies
 ============
@@ -39,3 +44,5 @@ Credits
 - Georg Bernhard <g.bernhard@akbild.ac.at>
   
 - Florian Friesdorf <flo@chaoflow.net>
+
+- Johannes Raggam <johannes@bluedynamics.com>
