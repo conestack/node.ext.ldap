@@ -22,8 +22,8 @@ import logging
 logger = logging.getLogger('bda.ldap')
 
 try:
-    # try if cached ldap connection works. depends on plone.memoize.
-    from ldapcached import ldapcached
+    #try if cached ldap connection works. depends on plone.memoize.
+    import ldapcached
 except ImportError:
     logger.info('ldap query caching not available')
 
