@@ -9,17 +9,26 @@ __docformat__ = 'plaintext'
 __author__ = """Robert Niederreiter <rnix@squarewave.at>
                 Johannes Raggam <johannes@bluedynamics.com>"""
 
-import ldap
+from ldap.ldapobject import SimpleLDAPObject
 import logging
 from time import time
 from plone.memoize import ram
 
-# FOLLOWING DOES NOT WORK?
+logger = logging.getLogger('bda.ldap')
+
 try:
     """Try to use memcached as caching storage
     """
     import memcache
     from plone.memoize.interfaces import ICacheChooser
+    MEMCACHE_AVAILABLE = True
+except ImportError:
+    """Use default caching storage
+    """
+    logger.info('ldap-cache using default cache storage')
+    MEMCACHE_AVAILABLE = False
+
+if MEMCACHE_AVAILABLE:
     from zope.interface import directlyProvides
     from zope.component import provideUtility
     import zope.thread
@@ -37,18 +46,13 @@ try:
     directlyProvides(choose_cache, ICacheChooser)
     provideUtility(choose_cache)
     ram.choose_cache = choose_cache
-    print("LDAP-CACHE USING MEMCACHED")
+    logger.info('ldap-cache using memcached')
     
-except:
-    """Use default caching storage
-    """
-    print("LDAP-CACHE USING DEFAULT CACHE STORAGE")
-    pass
+
 
 CACHE_TIMEOUT_SECONDS = 30*60
 
-ldapcached = ldap
-orig_search_ext = ldap.ldapobject.SimpleLDAPObject.search_ext
+orig_search_ext = SimpleLDAPObject.search_ext
     
 def _search_cachekey(method, self, *args, **kwargs):
     timeout = time() // CACHE_TIMEOUT_SECONDS
@@ -74,8 +78,7 @@ def search_ext_s(self, base, scope, filterstr='(objectClass=*)', attrlist=None,
                             serverctrls, clientctrls, timeout, sizelimit)
     return self.result(msgid, all=1, timeout=timeout)[1]
 
-logger = logging.getLogger('bda.ldap')
 logger.info('REBINDING python-ldap search_ext for caching')
 
-ldapcached.ldapobject.SimpleLDAPObject.search_ext = search_ext
-ldapcached.ldapobject.SimpleLDAPObject.search_ext_s = search_ext_s
+SimpleLDAPObject.search_ext = search_ext
+SimpleLDAPObject.search_ext_s = search_ext_s

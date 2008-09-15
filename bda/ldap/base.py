@@ -16,11 +16,16 @@ depends on python-ldap.
 __docformat__ = 'plaintext'
 __author__ = """Robert Niederreiter <rnix@squarewave.at>"""
 
+import ldap
+import logging
+
+logger = logging.getLogger('bda.ldap')
+
 try:
     # try if cached ldap connection works. depends on plone.memoize.
-    from ldapcached import ldapcached as ldap
-except:
-    import ldap
+    from ldapcached import ldapcached
+except ImportError:
+    logger.info('ldap query caching not available')
 
 BASE = ldap.SCOPE_BASE
 ONELEVEL = ldap.SCOPE_ONELEVEL
