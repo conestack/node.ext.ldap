@@ -15,35 +15,37 @@ from time import time
 from plone.memoize import ram
 
 # FOLLOWING DOES NOT WORK?
-#try:
-#    """Try to use memcached as caching storage
-#    """
-#    import memcache
-#    from plone.memoize.interfaces import ICacheChooser
-#    from zope.interface import directlyProvides
-#    import zope.thread
-#    import os
-#    
-#    thread_local = zope.thread.local()
-#    def choose_cache(fun_name):
-#        global servers
-#        client=getattr(thread_local, "client", None)
-#        if client is None:
-#            servers=os.environ.get("MEMCACHE_SERVER",
-#                                    "127.0.0.1:11211").split(",")
-#            client=thread_local.client=memcache.Client(servers, debug=0)
-#        return ram.MemcacheAdapter(client)
-#    directlyProvides(choose_cache, ICacheChooser)
-#    ram.choose_cache = choose_cache
-#    print("LDAP-CACHE USING MEMCACHED")
-#    
-#except:
-#    """Use default caching storage
-#    """
-#    print("LDAP-CACHE USING DEFAULT CACHE STORAGE")
-#    pass
+try:
+    """Try to use memcached as caching storage
+    """
+    import memcache
+    from plone.memoize.interfaces import ICacheChooser
+    from zope.interface import directlyProvides
+    from zope.component import provideUtility
+    import zope.thread
+    import os
+    
+    thread_local = zope.thread.local()
+    def choose_cache(fun_name):
+        global servers
+        client=getattr(thread_local, "client", None)
+        if client is None:
+            servers=os.environ.get("MEMCACHE_SERVER",
+                                    "127.0.0.1:11211").split(",")
+            client=thread_local.client=memcache.Client(servers, debug=0)
+        return ram.MemcacheAdapter(client)
+    directlyProvides(choose_cache, ICacheChooser)
+    provideUtility(choose_cache)
+    ram.choose_cache = choose_cache
+    print("LDAP-CACHE USING MEMCACHED")
+    
+except:
+    """Use default caching storage
+    """
+    print("LDAP-CACHE USING DEFAULT CACHE STORAGE")
+    pass
 
-CACHE_TIMEOUT_SECONDS = 5*60
+CACHE_TIMEOUT_SECONDS = 30*60
 
 ldapcached = ldap
 orig_search_ext = ldap.ldapobject.SimpleLDAPObject.search_ext
