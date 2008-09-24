@@ -21,12 +21,6 @@ import logging
 
 logger = logging.getLogger('bda.ldap')
 
-try:
-    #try if cached ldap connection works. depends on plone.memoize.
-    import ldapcached
-except ImportError:
-    logger.info('ldap query caching not available')
-
 BASE = ldap.SCOPE_BASE
 ONELEVEL = ldap.SCOPE_ONELEVEL
 SUBTREE = ldap.SCOPE_SUBTREE
@@ -44,6 +38,7 @@ def testLDAPConnectivity(server, port):
     except ldap.LDAPError, error:
         return error
 
+CACHED_IMPORTED = False
 
 class LDAPConnector(object):
     """Object is responsible for the LDAP connection.
@@ -62,9 +57,17 @@ class LDAPConnector(object):
     c.unbind() 
     """
     
-    def __init__(self, server, port, bindDN, bindPW):
+    def __init__(self, server, port, bindDN, bindPW, cache=True):
         """Define Server, Port, Bind DN and Bind PW to use.
         """
+        if cache and not CACHED_IMPORTED:
+            CACHED_IMPORTED = True
+            logger.info('activate ldap query caching')
+            try:
+                #try if cached ldap connection works. depends on plone.memoize.
+                import ldapcached
+            except ImportError:
+                logger.info('ldap query caching not available')
         self.protocol = ldap.VERSION3
         self.server = server
         self.port = port

@@ -18,11 +18,12 @@ from base import testLDAPConnectivity
 
 class LDAPSession(object):
     
-    def __init__(self, serverProps):
+    def __init__(self, serverProps, cache=True):
         connector = LDAPConnector(serverProps.server,
                                   serverProps.port,
                                   serverProps.user,
-                                  serverProps.password)
+                                  serverProps.password,
+                                  cache)
         self.communicator = LDAPCommunicator(connector)
     
     def checkServerProperties(self):
