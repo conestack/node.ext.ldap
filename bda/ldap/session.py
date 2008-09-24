@@ -10,7 +10,7 @@ __author__ = """Robert Niederreiter <rnix@squarewave.at>,
                 Georg Bernhard <g.bernhard@akbild.ac.at>,
                 Florian Friesdorf <flo@chaoflow.net>"""
 
-from ldap import SERVER_DOWN
+import ldap
 
 from base import LDAPConnector
 from base import LDAPCommunicator
