@@ -38,8 +38,6 @@ def testLDAPConnectivity(server, port):
     except ldap.LDAPError, error:
         return error
 
-CACHED_IMPORTED = False
-
 class LDAPConnector(object):
     """Object is responsible for the LDAP connection.
     
@@ -57,11 +55,13 @@ class LDAPConnector(object):
     c.unbind() 
     """
     
+    CACHED_IMPORTED = False
+    
     def __init__(self, server, port, bindDN, bindPW, cache=True):
         """Define Server, Port, Bind DN and Bind PW to use.
         """
-        if cache and not CACHED_IMPORTED:
-            CACHED_IMPORTED = True
+        if cache and not self.CACHED_IMPORTED:
+            self.CACHED_IMPORTED = True
             logger.info('activate ldap query caching')
             try:
                 #try if cached ldap connection works. depends on plone.memoize.
