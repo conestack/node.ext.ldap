@@ -12,7 +12,7 @@ setup.py bdist_egg
 from setuptools import setup, find_packages
 import sys, os
 
-version = '1.1'
+version = '1.2'
 shortdesc = "LDAP convenience library"
 longdesc = open(os.path.join(os.path.dirname(__file__), 'README.txt')).read()
 
