@@ -28,9 +28,9 @@ bda.cache (if caching query results is desired)
 TODO
 ====
 
-- Improve retry logic in LDAPSession
-  
-- Extend LDAPSession object to handle Fallback server(s)
+  * TLS/SSL Support. in LDAPConnector
+  * Improve retry logic in LDAPSession
+  * Extend LDAPSession object to handle Fallback server(s)
 
 
 Copyright

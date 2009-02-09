@@ -78,6 +78,9 @@ class LDAPSession(object):
         """Try to perform the given function with the given argument.
         
         If LDAP directory is down, bind again and retry given function.
+        
+        XXX: * Improve retry logic in LDAPSession 
+             * Extend LDAPSession object to handle Fallback server(s)
         """
         if self.communicator._con is None:
             self.communicator.bind()

@@ -26,6 +26,9 @@ ONELEVEL = ldap.SCOPE_ONELEVEL
 SUBTREE = ldap.SCOPE_SUBTREE
 SCOPES = [BASE, ONELEVEL, SUBTREE]
 
+from bda.cache import ICacheManager
+from bda.cache import Memcache
+
 def testLDAPConnectivity(server, port):
     """Function to test the availability of the LDAP Server.
     """
@@ -55,24 +58,17 @@ class LDAPConnector(object):
     c.unbind() 
     """
     
-    CACHED_IMPORTED = False
+    #CACHED_IMPORTED = False
     
     def __init__(self, server, port, bindDN, bindPW, cache=True):
         """Define Server, Port, Bind DN and Bind PW to use.
         """
-        if cache and not self.CACHED_IMPORTED:
-            self.CACHED_IMPORTED = True
-            logger.info('activate ldap query caching')
-            try:
-                #try if cached ldap connection works. depends on plone.memoize.
-                import ldapcached
-            except ImportError:
-                logger.info('ldap query caching not available')
         self.protocol = ldap.VERSION3
         self.server = server
         self.port = port
         self.bindDN = bindDN
         self._bindPW = bindPW
+        self.cache = cache
     
     def setProtocol(self, protocol):
         """Set the LDAP Protocol Version to use.
@@ -122,6 +118,11 @@ class LDAPCommunicator(object):
         self._connector = connector
         self._con = None
         self._baseDN = ''
+        if connector.cache:
+            # XXX: get memcache settings from utility
+            self.cache = ICacheManager(Memcache("127.0.0.1:11211"))
+        else:
+            self.cache = None
         
     def bind(self):
         """Bind to LDAP Server.
@@ -144,15 +145,22 @@ class LDAPCommunicator(object):
         """
         return self._baseDN
         
-    def search(self, queryFilter, scope, baseDN=None):
+    def search(self, queryFilter, scope, baseDN=None, force_reload=False):
         """Search the directory.
         
         Take the query filter, the search scope and optional the base DN if
         you want to use another base DN than set by setBaseDN() for this
         oparation.
+        
+        Force reload only affects if cache is enabled and available.
         """
         if baseDN is None:
             baseDN = self._baseDN
+        if self.cache:
+            key = '%s-%s-%i' % (self._connector.bindDN, query, scope)
+            args = [baseDN, scope, queryFilter]
+            return self.cache.getData(self._con.search_s, key,
+                                      force_reload, args)
         return self._con.search_s(baseDN, scope, queryFilter)
     
     def add(self, dn, data):
