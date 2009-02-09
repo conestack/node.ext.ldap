@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 #
-# Copyright 2006-2008, BlueDynamics Alliance, Austria
-# www.bluedynamics.com
+# Copyright 2008, Blue Dynamics Alliance, Austria - http://bluedynamics.com
 #
-# GNU General Public Licence Version 2 or later - see LICENCE.GPL
+# GNU General Public Licence Version 2 or later
 
 """Module bda.ldap.properties
 

@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 #
-# Copyright 2006-2008, BlueDynamics Alliance, Austria
-# www.bluedynamics.com
+# Copyright 2008, Blue Dynamics Alliance, Austria - http://bluedynamics.com
 #
-# GNU General Public Licence Version 2 or later - see LICENCE.GPL
+# GNU General Public Licence Version 2 or later
 
 """Module bda.ldap.base
 
@@ -26,8 +24,11 @@ ONELEVEL = ldap.SCOPE_ONELEVEL
 SUBTREE = ldap.SCOPE_SUBTREE
 SCOPES = [BASE, ONELEVEL, SUBTREE]
 
+from zope.component import getUtility
+
 from bda.cache import ICacheManager
-from bda.cache import Memcache
+
+from interfaces import ICacheProviderFactory
 
 def testLDAPConnectivity(server, port):
     """Function to test the availability of the LDAP Server.
@@ -119,8 +120,8 @@ class LDAPCommunicator(object):
         self._con = None
         self._baseDN = ''
         if connector.cache:
-            # XXX: get memcache settings from utility
-            self.cache = ICacheManager(Memcache("127.0.0.1:11211"))
+            cacheprovider = getUtility(ICacheProviderFactory)
+            self.cache = ICacheManager(cacheprovider)
         else:
             self.cache = None
         
