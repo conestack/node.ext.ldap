@@ -39,6 +39,7 @@ setup(name='bda.ldap',
       install_requires=[
           'setuptools',  
           'interlude',
+          'bda.cache',
           # several zope eggs missing, coming soon (atm fake-eggs
       ],
       extras_require={

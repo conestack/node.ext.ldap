@@ -24,11 +24,13 @@ when instanciating the properties obeject.
   ...                              'secret',
   ...                              cache=False)
 
+
 Dependencies
 ============
 
   * python-ldap
   * bda.cache
+
 
 TODO
 ====
@@ -36,6 +38,7 @@ TODO
   * TLS/SSL Support. in LDAPConnector
   * Improve retry logic in LDAPSession
   * Extend LDAPSession object to handle Fallback server(s)
+  * Tests
 
 
 Copyright
