@@ -1,5 +1,5 @@
 #
-# Copyright 2008, Blue Dynamics Alliance, Austria - http://bluedynamics.com
+# Copyright 2009, Blue Dynamics Alliance, Austria - http://bluedynamics.com
 #
 # GNU General Public Licence Version 2 or later
 
@@ -59,8 +59,6 @@ class LDAPConnector(object):
     c.unbind() 
     """
     
-    #CACHED_IMPORTED = False
-    
     def __init__(self, server, port, bindDN, bindPW, cache=True):
         """Define Server, Port, Bind DN and Bind PW to use.
         """
@@ -119,11 +117,13 @@ class LDAPCommunicator(object):
         self._connector = connector
         self._con = None
         self._baseDN = ''
+        self.cache = None
         if connector.cache:
-            cacheprovider = getUtility(ICacheProviderFactory)
+            cacheprovider = getUtility(ICacheProviderFactory)()
             self.cache = ICacheManager(cacheprovider)
-        else:
-            self.cache = None
+            logger.info(u"LDAP Caching activated for instance '%s'. Use '%s' "
+                         "as cache provider" % (repr(self.cache),
+                                                repr(cacheprovider)))
         
     def bind(self):
         """Bind to LDAP Server.
@@ -158,7 +158,7 @@ class LDAPCommunicator(object):
         if baseDN is None:
             baseDN = self._baseDN
         if self.cache:
-            key = '%s-%s-%i' % (self._connector.bindDN, query, scope)
+            key = '%s-%s-%i' % (self._connector.bindDN, queryFilter, scope)
             args = [baseDN, scope, queryFilter]
             return self.cache.getData(self._con.search_s, key,
                                       force_reload, args)
