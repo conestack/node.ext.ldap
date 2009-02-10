@@ -40,7 +40,7 @@ class LDAPSession(object):
         """
         self.communicator.setBaseDN(baseDN)
     
-    def search(self, queryFilter, scope, baseDN=None):
+    def search(self, queryFilter, scope, baseDN=None, force_reload=False):
         """Search the directory.
         
         Look at bda.ldap.base.LDAPCommunicator.search() for details.

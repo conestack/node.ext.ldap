@@ -121,9 +121,9 @@ class LDAPCommunicator(object):
         if connector.cache:
             cacheprovider = getUtility(ICacheProviderFactory)()
             self.cache = ICacheManager(cacheprovider)
-            logger.info(u"LDAP Caching activated for instance '%s'. Use '%s' "
-                         "as cache provider" % (repr(self.cache),
-                                                repr(cacheprovider)))
+            logger.debug(u"LDAP Caching activated for instance '%s'. Use '%s' "
+                          "as cache provider" % (repr(self.cache),
+                                                 repr(cacheprovider)))
         
     def bind(self):
         """Bind to LDAP Server.

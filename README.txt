@@ -38,7 +38,17 @@ TODO
   * TLS/SSL Support. in LDAPConnector
   * Improve retry logic in LDAPSession
   * Extend LDAPSession object to handle Fallback server(s)
-  * Tests
+
+Changes
+=======
+
+  * 1.2.1 (rnix - 2009-02-10)
+    - provide same ``search()`` signature in ``LDAPSession`` as in
+      ``LDAPCommunicator``
+    - log only on debug
+
+  * <= 1.2 (all contributors)
+    - make it work
 
 
 Copyright
