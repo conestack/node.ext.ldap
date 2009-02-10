@@ -37,15 +37,14 @@ setup(name='bda.ldap',
       include_package_data=True,
       zip_safe=False,
       install_requires=[
-          'setuptools',  
-          'interlude',
+          'setuptools',
+          'python-ldap',  
           'bda.cache',
-          # several zope eggs missing, coming soon (atm fake-eggs
       ],
       extras_require={
           'test': [
               'interlude',
-              # several zope eggs missing, coming soon (atm fake-eggs            
+              'bda.cache [test]',        
           ]
       },
       entry_points="""
