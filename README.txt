@@ -26,44 +26,57 @@ when instanciating the properties obeject.
 
 
 Dependencies
-============
+------------
 
   * python-ldap
   * bda.cache
 
+Notes on python-ldap
+--------------------
+
+  Although python-ldap is available via pypi, we excluded it from
+  ``install_requires`` due to different compile issues on different
+  platforms.
+  
+  So you have to make sure that ``pyhon-ldap`` is available on your system in
+  any way.
 
 TODO
-====
+----
 
   * TLS/SSL Support. in LDAPConnector
   * Improve retry logic in LDAPSession
   * Extend LDAPSession object to handle Fallback server(s)
 
 Changes
-=======
+-------
+
+  * 1.2.3 (rnix, 2009-02-11)
+    * bugfix in ``LDAPSession``. pass ``force_reload`` to relevant execution
+      function
 
   * 1.2.2 (rnix, jensens - 2009-02-11)
-    - add buildout for standalone testing
-    - add tests
-    - provide relevant objects via package ``__init__``
+    * add buildout for standalone testing
+    * add tests
+    * provide relevant objects via package ``__init__``
 
   * 1.2.1 (rnix - 2009-02-10)
-    - provide same ``search()`` signature in ``LDAPSession`` as in
-      ``LDAPCommunicator``
-    - log only on debug
+    * provide same ``search()`` signature in ``LDAPSession`` as
+      in ``LDAPCommunicator``
+    * log only on debug
 
   * <= 1.2 (all contributors)
-    - make it work
+    * make it work
 
 
 Copyright
-=========
+---------
 
 Copyright (c) 2006-2009: BlueDynamics Alliance, Austria
 
 
 Credits
-=======
+-------
 
   * Robert Niederreiter <rnix@squarewave.at>
   * Jens Klein <jens@bluedynamics.com>

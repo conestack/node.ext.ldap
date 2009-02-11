@@ -46,7 +46,7 @@ class LDAPSession(object):
         Look at bda.ldap.base.LDAPCommunicator.search() for details.
         """
         func = self.communicator.search
-        return self._perform(func, queryFilter, scope, baseDN)
+        return self._perform(func, queryFilter, scope, baseDN, force_reload)
     
     def add(self, dn, data):
         """Insert an entry into directory.
