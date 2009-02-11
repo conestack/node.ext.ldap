@@ -38,10 +38,12 @@ setup(name='bda.ldap',
       zip_safe=False,
       install_requires=[
           'setuptools',
-          'python-ldap',  
           'bda.cache',
       ],
       extras_require={
+          'withpythonldap': [
+              'python-ldap',
+          ],
           'test': [
               'interlude',
               'bda.cache [test]',        

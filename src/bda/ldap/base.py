@@ -14,10 +14,15 @@ depends on python-ldap.
 __docformat__ = 'plaintext'
 __author__ = """Robert Niederreiter <rnix@squarewave.at>"""
 
-import ldap
 import logging
-
 logger = logging.getLogger('bda.ldap')
+
+try:
+    import ldap
+except ImportError:
+    logger.error(u"bda.ldap requires a working python-ldap installation."
+                  "See README for details.")
+    raise
 
 BASE = ldap.SCOPE_BASE
 ONELEVEL = ldap.SCOPE_ONELEVEL
