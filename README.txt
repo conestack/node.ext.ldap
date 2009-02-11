@@ -42,6 +42,11 @@ TODO
 Changes
 =======
 
+  * 1.2.2 (rnix, jensens - 2009-02-11)
+    - add buildout for standalone testing
+    - add tests
+    - provide relevant objects via package ``__init__``
+
   * 1.2.1 (rnix - 2009-02-10)
     - provide same ``search()`` signature in ``LDAPSession`` as in
       ``LDAPCommunicator``

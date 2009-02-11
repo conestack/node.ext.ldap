@@ -1,0 +1,38 @@
+dn: dc=my-domain,dc=com
+objectClass: top
+objectClass: dcObject
+objectClass: organization
+o: my-organization
+dc: my-domain
+
+dn: ou=customers,dc=my-domain,dc=com
+ou: customers
+objectClass: top
+objectClass: organizationalUnit
+structuralObjectClass: organizationalUnit
+
+dn: ou=customer-1,ou=customers,dc=my-domain,dc=com
+ou: customer-1
+structuralObjectClass: organizationalUnit
+objectClass: top
+objectClass: organizationalUnit
+
+dn: uid=customer-1,ou=customer-1,ou=customers,dc=my-domain,dc=com
+cn: Max Mustermann
+objectClass: top
+objectClass: person
+sn: Mustermann
+uid: customer-1
+
+dn: ou=customer-2,ou=customers,dc=my-domain,dc=com
+ou: customer-2
+structuralObjectClass: organizationalUnit
+objectClass: top
+objectClass: organizationalUnit
+
+dn: uid=customer-2,ou=customer-2,ou=customers,dc=my-domain,dc=com
+cn: Susi Musterfrau
+objectClass: top
+objectClass: person
+sn: Mustermann
+uid: customer-2
