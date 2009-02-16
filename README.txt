@@ -47,6 +47,8 @@ TODO
   * TLS/SSL Support. in LDAPConnector
   * Improve retry logic in LDAPSession
   * Extend LDAPSession object to handle Fallback server(s)
+  * Convenience for modification calls refering to adding modifying and deleting
+    attributes.
 
 Changes
 -------
