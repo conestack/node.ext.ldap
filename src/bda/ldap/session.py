@@ -56,10 +56,16 @@ class LDAPSession(object):
         func = self.communicator.add
         return self._perform(func, dn, data)
     
-    def modify(self, dn, data):
+    def modify(self, dn, data, replace=False):
         """Modify an existing entry in the directory.
         
-        Look at bda.ldap.base.LDAPCommunicator.modify() for details.
+        @param dn: Modification DN
+        @param data: either list of 3 tuples (look at
+                     bda.ldap.base.LDAPCommunicator.modify for details), or
+                     a dictionary representing the entry or parts of the entry.
+        @param replace: if set to True, replace entry at DN entirely with data.
+        
+        XXX: implement described behaviour for data
         """
         func = self.communicator.modify
         return self._perform(func, dn, data)
