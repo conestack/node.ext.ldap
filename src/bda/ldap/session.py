@@ -32,13 +32,15 @@ class LDAPSession(object):
         """
         self.communicator.setBaseDN(baseDN)
     
-    def search(self, queryFilter, scope, baseDN=None, force_reload=False):
+    def search(self, queryFilter, scope, baseDN=None,
+               force_reload=False, attrlist=None, attrsonly=0):
         """Search the directory.
         
         Look at bda.ldap.base.LDAPCommunicator.search() for details.
         """
         func = self.communicator.search
-        return self._perform(func, queryFilter, scope, baseDN, force_reload)
+        return self._perform(func, queryFilter, scope, baseDN,
+                             force_reload, attrlist, attrsonly)
     
     def add(self, dn, data):
         """Insert an entry into directory.

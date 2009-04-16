@@ -5,8 +5,35 @@ LDAP Entries
   >>> from bda.ldap import LDAPServerProperties
   >>> from bda.ldap import LDAPEntry
   
-  >>> props = LDAPServerProperties('localhost', 389,
-  ...                              user='admin', password='secret')
+  >>> user = 'cn=admin,dc=example,dc=com'
+  >>> pwd = 'secret'
+  >>> props = LDAPServerProperties('192.168.1.100', 389, user, pwd)
   
-  >>> dn = ''
-  >>> entry = LDAPEntry()
+  >>> LDAPEntry('dc=example,dc=com')
+  Traceback (most recent call last):
+    ...
+  ValueError: Wrong initialization.
+  
+  >>> LDAPEntry(props=props)
+  Traceback (most recent call last):
+    ...
+  ValueError: Wrong initialization.
+  
+  >>> entry = LDAPEntry('dc=example,dc=com', props=props)
+  >>> entry.keys()
+  ['...']
+  
+  >>> foo = entry['foo']
+  Traceback (most recent call last):
+    ...
+  KeyError: u'Entry not existent: foo'
+  
+  >>> groups = entry['cn=groups']
+  >>> groups.attributes
+  {'objectClass': ['container'], 'cn': ['groups']}
+  
+  >>> groups.DN
+  'cn=groups,dc=example,dc=com'
+  
+  >>> groups.__name__
+  'cn=groups'

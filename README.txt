@@ -53,11 +53,12 @@ TODO
 Changes
 -------
 
-  * 1.3 (rnix, 2009-xx-xx)
-    * extend with ldap entry wrapper
+  * 1.3 (rnix, 2009-04-16)
+    * support ``attrlist`` and ``attrsonly`` for search functions
+    * add LDAPEntry object
 
   * 1.2.3 (rnix, 2009-02-11)
-    * bugfix in ``LDAPSession``. pass ``force_reload`` to relevant execution
+    * bugfix in ``LDAPSession``. Pass ``force_reload`` to relevant execution
       function
 
   * 1.2.2 (rnix, jensens - 2009-02-11)

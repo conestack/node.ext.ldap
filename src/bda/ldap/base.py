@@ -144,7 +144,8 @@ class LDAPCommunicator(object):
         """
         return self._baseDN
         
-    def search(self, queryFilter, scope, baseDN=None, force_reload=False):
+    def search(self, queryFilter, scope, baseDN=None,
+               force_reload=False, attrlist=None, attrsonly=0):
         """Search the directory.
         
         Take the query filter, the search scope and optional the base DN if
@@ -157,10 +158,11 @@ class LDAPCommunicator(object):
             baseDN = self._baseDN
         if self.cache:
             key = '%s-%s-%i' % (self._connector.bindDN, queryFilter, scope)
-            args = [baseDN, scope, queryFilter]
+            args = [baseDN, scope, queryFilter, attrlist, attrsonly]
             return self.cache.getData(self._con.search_s, key,
                                       force_reload, args)
-        return self._con.search_s(baseDN, scope, queryFilter)
+        return self._con.search_s(baseDN, scope, queryFilter,
+                                  attrlist, attrsonly)
     
     def add(self, dn, data):
         """Insert an entry into directory.
