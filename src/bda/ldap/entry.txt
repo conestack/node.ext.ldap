@@ -7,6 +7,7 @@ LDAP Entries
   
   >>> user = 'cn=admin,dc=example,dc=com'
   >>> pwd = 'secret'
+  >>> pwd = 'hallo'
   >>> props = LDAPServerProperties('192.168.1.100', 389, user, pwd)
   
   >>> LDAPEntry('dc=example,dc=com')
@@ -19,21 +20,46 @@ LDAP Entries
     ...
   ValueError: Wrong initialization.
   
-  >>> entry = LDAPEntry('dc=example,dc=com', props=props)
-  >>> entry.keys()
+  >>> root = LDAPEntry('dc=example,dc=com', props=props)
+  >>> root.keys()
   ['...']
   
-  >>> foo = entry['foo']
+  >>> foo = root['foo']
   Traceback (most recent call last):
     ...
   KeyError: u'Entry not existent: foo'
   
-  >>> groups = entry['cn=groups']
+  >>> groups = root['cn=groups']
   >>> groups.attributes
-  {'objectClass': ['container'], 'cn': ['groups']}
+  {'objectClass': 'container', 'cn': 'groups'}
   
   >>> groups.DN
   'cn=groups,dc=example,dc=com'
   
   >>> groups.__name__
   'cn=groups'
+  
+  >>> users = root['cn=users']
+  >>> users.DN
+  'cn=users,dc=example,dc=com'
+  
+  >>> len(users.keys())
+  1490
+  
+  >>> user = users['uid=l47']
+  >>> user.DN
+  'uid=l47,dc=example,dc=com'
+  
+  >>> user = LDAPEntry()
+  >>> user.attributes['uid'] = ['e1', 'robert.niederreiter']
+  >>> user.attributes['cn'] = 'Robert Niederreiter'
+  >>> user.attributes['objectClass'] = ['posixAccount', 'shadowAccount', 'person']
+  >>> user.attributes['loginShell'] = '/bin/bash'
+  >>> user.attributes['userPassword'] = 'secret'
+  >>> user.attributes['uidNumber'] = '1234567890'
+  >>> user.attributes['gidNumber'] = '20'
+  >>> user.attributes['sn'] = 'Niederreiter'
+  >>> user.attributes['homeDirectory'] = '/dev/null'
+  
+  >>> users['uid=e1'] = user
+  >>> user()
