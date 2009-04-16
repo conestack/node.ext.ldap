@@ -5,6 +5,7 @@ from base import LDAPConnector
 from base import LDAPCommunicator
 from properties import LDAPServerProperties
 from session import LDAPSession
+from entry import LDAPEntry
 
 # legacy
 import base

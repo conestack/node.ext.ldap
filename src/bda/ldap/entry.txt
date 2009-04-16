@@ -1,0 +1,12 @@
+
+LDAP Entries
+============
+
+  >>> from bda.ldap import LDAPServerProperties
+  >>> from bda.ldap import LDAPEntry
+  
+  >>> props = LDAPServerProperties('localhost', 389,
+  ...                              user='admin', password='secret')
+  
+  >>> dn = ''
+  >>> entry = LDAPEntry()

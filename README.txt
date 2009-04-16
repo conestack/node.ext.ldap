@@ -53,6 +53,9 @@ TODO
 Changes
 -------
 
+  * 1.3 (rnix, 2009-xx-xx)
+    * extend with ldap entry wrapper
+
   * 1.2.3 (rnix, 2009-02-11)
     * bugfix in ``LDAPSession``. pass ``force_reload`` to relevant execution
       function

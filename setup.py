@@ -1,15 +1,7 @@
-#
-# Copyright 2008, Blue Dynamics Alliance, Austria - http://bluedynamics.com
-#
-# GNU General Public Licence Version 2 or later
-
-__author__ = """Robert Niederreiter <rnix@squarewave.at>"""
-__docformat__ = 'plaintext'
-
 from setuptools import setup, find_packages
 import sys, os
 
-version = '1.2.3'
+version = '1.3'
 shortdesc = "LDAP convenience library"
 longdesc = open(os.path.join(os.path.dirname(__file__), 'README.txt')).read()
 
@@ -39,6 +31,7 @@ setup(name='bda.ldap',
       install_requires=[
           'setuptools',
           'bda.cache',
+          'zodict',
       ],
       extras_require={
           'withpythonldap': [

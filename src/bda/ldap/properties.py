@@ -1,6 +1,4 @@
-#
-# Copyright 2008, Blue Dynamics Alliance, Austria - http://bluedynamics.com
-#
+# Copyright 2008-2009, BlueDynamics Alliance, Austria - http://bluedynamics.com
 # GNU General Public Licence Version 2 or later
 
 """Module bda.ldap.properties
@@ -8,9 +6,6 @@
 This module provides a Class for wrapping LDAP directory Server connection
 properties.
 """
-
-__docformat__ = 'plaintext'
-__author__ = """Robert Niederreiter <rnix@squarewave.at>"""
 
 class LDAPServerProperties(object):
     """Wrapper Class for LDAP Server connection properties.

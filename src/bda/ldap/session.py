@@ -1,15 +1,7 @@
-#
-# Copyright 2008, Blue Dynamics Alliance, Austria - http://bluedynamics.com
-#
+# Copyright 2008-2009, BlueDynamics Alliance, Austria - http://bluedynamics.com
 # GNU General Public Licence Version 2 or later
 
-__docformat__ = 'plaintext'
-__author__ = """Robert Niederreiter <rnix@squarewave.at>,
-                Georg Bernhard <g.bernhard@akbild.ac.at>,
-                Florian Friesdorf <flo@chaoflow.net>"""
-
 import ldap
-
 from base import LDAPConnector
 from base import LDAPCommunicator
 from base import testLDAPConnectivity
@@ -93,4 +85,3 @@ class LDAPSession(object):
         except ldap.SERVER_DOWN:
             self.communicator.bind()
             return function(*args, **kwargs)
-    
