@@ -223,5 +223,10 @@ class LDAPNode(Node):
         self._action = None
     
     def _delete(self):
-        self.session.delete(self.DN)
+        # the key was already kicked by self.__delitem__ to keep state sane.
+        # we might want to add another property to this object keeping the
+        # deleted keys to avoid reloading the keys from the directory.
+        self.__parent__._keys = None
+        keys = self.__parent__.keys()
         Node.__delitem__(self.__parent__, self.__name__)
+        self._session.delete(self.DN)

@@ -207,7 +207,7 @@ Check removing of an attribute.:
   'sn': ['Mustermann'], 
   'cn': ['Max']})]
 
-Check adding of attributes.:
+Check adding of an attribute.:
 
   >>> person.attributes['description'] = 'Brandnew description'
   >>> customer()
@@ -217,3 +217,10 @@ Check adding of attributes.:
   'description': ['Brandnew description'], 
   'sn': ['Mustermann'], 
   'cn': ['Max']})]
+
+Check deleting of entries.:
+
+  >>> del customer['cn=max']
+  >>> customer()
+  >>> queryPersonDirectly()
+  []
