@@ -122,3 +122,98 @@ Now the new entry is present in the directory as well.:
   ...                                 force_reload=True)
   >>> len(res)
   3
+
+Add a person to test modification stuff.:
+
+  >>> person = LDAPNode()
+  >>> person.attributes['objectClass'] = ['top', 'person']
+  >>> person.attributes['sn'] = 'Mustermann'
+  >>> person.attributes['cn'] = 'Max'
+  >>> person.attributes['description'] = 'Initial Description'
+  >>> customer['cn=max'] = person
+  >>> customer.keys()
+  ['cn=max']
+  
+Again, not in directory yet.:
+
+  >>> res = customer._session.search('(objectClass=person)',
+  ...                                1,
+  ...                                baseDN=customer.DN,
+  ...                                force_reload=True)
+  >>> len(res)
+  0
+  
+But after __call__.:
+
+  >>> customer()
+
+Creatre Customer convenience query function. Need this more than once.:
+
+  >>> def queryPersonDirectly():
+  ...     res = customer._session.search('(objectClass=person)',
+  ...                                    1,
+  ...                                    baseDN=customer.DN,
+  ...                                    force_reload=True)
+  ...     return res
+  
+  >>> queryPersonDirectly()
+  [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com', 
+  {'objectClass': ['top', 'person'], 
+  'cn': ['Max'], 
+  'description': ['Initial Description'], 
+  'sn': ['Mustermann']})]
+
+Lets modify this person. First look at the node flags.:
+
+  >>> person._changed
+  False
+  
+  >>> person._action
+
+Now do modification.:
+
+  >>> person.attributes['description'] = 'Another description'
+
+We have the problem here that this change is not detected directly, but at
+__call__ time this way.:
+
+  >>> person._checkattrchanged()
+  >>> person._changed
+  True
+  
+  >>> person._action == ACTION_MODIFY
+  True
+
+Write changed to directory.:
+
+  >>> customer()
+
+And check the changes in the directory.:
+
+  >>> queryPersonDirectly()
+  [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com', 
+  {'objectClass': ['top', 'person'], 
+  'description': ['Another description'], 
+  'sn': ['Mustermann'], 
+  'cn': ['Max']})]
+
+Check removing of an attribute.:
+  
+  >>> del person.attributes['description']
+  >>> customer()
+  >>> queryPersonDirectly()
+  [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com', 
+  {'objectClass': ['top', 'person'], 
+  'sn': ['Mustermann'], 
+  'cn': ['Max']})]
+
+Check adding of attributes.:
+
+  >>> person.attributes['description'] = 'Brandnew description'
+  >>> customer()
+  >>> queryPersonDirectly()
+  [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com', 
+  {'objectClass': ['top', 'person'], 
+  'description': ['Brandnew description'], 
+  'sn': ['Mustermann'], 
+  'cn': ['Max']})]

@@ -22,8 +22,8 @@ print """
 *******************************************************************************
 Starting openldap server...
 
-If this test fails, please check first if memcached is installed and stop it if
-running.
+If testing while development fails, please check if memcached is installed and
+stop it if running.
 *******************************************************************************
 """
 

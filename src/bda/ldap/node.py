@@ -2,6 +2,7 @@
 # GNU General Public Licence Version 2 or later
 
 import types
+import copy
 from zodict.node import Node
 from bda.ldap import ONELEVEL
 from bda.ldap import LDAPSession
@@ -27,12 +28,15 @@ class LDAPNode(Node):
             raise ValueError(u"Wrong initialization.")
         Node.__init__(self, name)
         self._session = None
+        
         if props:
             self._session = LDAPSession(props)
             self._session.setBaseDN(self.DN)
+        
         self.attributes = dict()
         self._orginattrs = dict()
         self._changed = False
+        
         if name and props:
             self._action = None
         else:
@@ -60,11 +64,13 @@ class LDAPNode(Node):
         if not self.__parent__:
             # root XXX
             return
+        
         dn = self.__parent__.DN
         entry = self._session.search('(%s)' % self.__name__,
                                      ONELEVEL,
                                      baseDN=dn,
                                      force_reload=self._reload)
+        
         if len(entry) != 1:
             raise RuntimeError(u"Fatal. Expected entry does not exist or "
                                 "more than one entry found")
@@ -78,6 +84,7 @@ class LDAPNode(Node):
     def __iter__(self):
         if self._reload:
             self._keys = None
+        
         if self._keys is None:
             self._keys = list()
             children = self._session.search('(objectClass=*)',
@@ -87,6 +94,7 @@ class LDAPNode(Node):
                                             attrsonly=1)
             for dn, attrs in children:
                 self._keys.append(dn[:dn.rfind(self.DN)].strip(','))
+        
         for key in self._keys:
             yield key
     
@@ -95,12 +103,14 @@ class LDAPNode(Node):
     def __getitem__(self, key):
         if not key in self.keys():
             raise KeyError(u"Entry not existent: %s" % key)
+        
         try:
             child = Node.__getitem__(self, key)
         except KeyError, e:
             child = LDAPNode()
             child._action = ACTION_READ
             self[key] = child
+        
         return child
     
     def __setitem__(self, key, val):
@@ -143,36 +153,59 @@ class LDAPNode(Node):
         self._checkattrchanged()
         if not self._changed and not self._action:
             return
+        
         if self._action == ACTION_ADD:
             self._add()
+            self.__parent__._keys = None
+            keys = self.__parent__.keys()
+        
         if self._action == ACTION_MODIFY:
             self._modify()
+            self._reload = True
+            self.readattrs()
+            self._reload = False
+        
         if self._action == ACTION_DELETE:
             self._delete()
-        self.reload()
+            self.__parent__._keys = None
+            keys = self.__parent__.keys()
     
     def _checkattrchanged(self):
-        if len(self.attributes) != len(self._orginattrs):
-            self._changed = True
+        if self._action == ACTION_ADD:
             return
+        
+        if len(self.attributes) != len(self._orginattrs):
+            curattrs = copy.copy(self.attributes)
+            self._reload = True
+            self.readattrs()
+            self._reload = False
+            self.attributes = curattrs
+            if len(self.attributes) != len(self._orginattrs):
+                self._changed = True
+                self._action = ACTION_MODIFY
+                return
         for key in self.attributes.keys():
             if self.attributes[key] != self._orginattrs[key]:
                 self._changed = True
+                self._action = ACTION_MODIFY
                 return
     
     def _add(self):
         self._session.add(self.DN, self.attributes)
+        self._changed = False
+        self._action = None
     
     def _modify(self):
-        print 'modify'
         modlist = list()
         orginkeys = self._orginattrs.keys()
         attrkeys = self.attributes.keys()
+        
         for key in orginkeys:
             # MOD_DELETE
             if not key in attrkeys:
                 moddef = (MOD_DELETE, key, None)
                 modlist.append(moddef)
+        
         for key in attrkeys:
             # MOD_ADD
             if not key in orginkeys:
@@ -183,10 +216,12 @@ class LDAPNode(Node):
                 if self.attributes[key] != self._orginattrs[key]:
                     moddef = (MOD_REPLACE, key, self.attributes[key])
                     modlist.append(moddef)
+        
         if modlist:
             self._session.modify(self.DN, modlist)
+        self._changed = False
+        self._action = None
     
     def _delete(self):
-        print 'delete'
         self.session.delete(self.DN)
         Node.__delitem__(self.__parent__, self.__name__)
