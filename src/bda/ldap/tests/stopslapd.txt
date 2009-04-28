@@ -2,3 +2,12 @@ Stop openldap server.
 
   >>> import os
   >>> os.kill(slapdpid + 1, 9)
+  
+Flush openldap db files.
+
+  >>> import os
+  >>> dbdir = os.environ.get('DBDIR')
+  >>> for file in os.listdir(dbdir):
+  ...     os.remove('%s/%s' % (dbdir, file))
+  >>> os.listdir(dbdir)
+  []

@@ -10,24 +10,12 @@ ou: customers
 objectClass: top
 objectClass: organizationalUnit
 
-dn: ou=customer-1,ou=customers,dc=my-domain,dc=com
-ou: customer-1
+dn: ou=customer1,ou=customers,dc=my-domain,dc=com
+ou: customer1
 objectClass: top
 objectClass: organizationalUnit
 
-dn: uid=customer-1,ou=customer-1,ou=customers,dc=my-domain,dc=com
-cn: Max Mustermann
-objectClass: top
-objectClass: person
-sn: Mustermann
-
-dn: ou=customer-2,ou=customers,dc=my-domain,dc=com
-ou: customer-2
+dn: ou=customer2,ou=customers,dc=my-domain,dc=com
+ou: customer2
 objectClass: top
 objectClass: organizationalUnit
-
-dn: uid=customer-2,ou=customer-2,ou=customers,dc=my-domain,dc=com
-cn: Susi Musterfrau
-objectClass: top
-objectClass: person
-sn: Musterfrau

@@ -1,14 +1,7 @@
-Flush OPENLDAP DB files if existent.
+Import test data.
 
   >>> import os
   >>> from subprocess import call
-  >>> dbdir = os.environ.get('DBDIR')
-  >>> cmd = ['rm', '%s/*' % dbdir]
-  >>> retcode = call(cmd)
-  >>> retcode
-
-Import test data.
-
   >>> testldif = os.environ.get('TESTLDIF')
   >>> ldapaddbin = os.environ.get('LDAPADDBIN')
   
