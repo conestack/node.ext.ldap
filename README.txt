@@ -1,8 +1,10 @@
+
 LDAP convenience library with caching support
 =============================================
 
-This Package provides objects for LDAP communication. You probably be
-interrested in the LDAPSession object.
+This Package provides objects for LDAP communication.
+
+You can work with the LDAPSession object.:
 
   >>> from bda.ldap.base import ONELEVEL
   >>> from bda.ldap.session import LDAPSession
@@ -16,7 +18,7 @@ interrested in the LDAPSession object.
   >>> res = session.search('(uid=*)', ONELEVEL)
 
 LDAP Queries are cached by default. You can disable this via ``cache`` kw arg
-when instanciating the properties obeject.
+when instanciating the properties obeject.:
 
   >>> props = LDAPServerProperties('localhost',
   ...                              389,
@@ -24,6 +26,44 @@ when instanciating the properties obeject.
   ...                              'secret',
   ...                              cache=False)
 
+Since version 1.3 there exists an LDAPNode object, which behaves mostly like a
+dictionary and is the prefered method to access and modify the tree.
+
+The root Node expects the base DN and the server properties to initialize.:
+
+  >>> root = LDAPNode('dc=my-domain,dc=com', props=props)
+  >>> root.keys()
+  ['ou=customers']
+
+You can create and add new LDAP entries:
+
+  >>> person = LDAPNode()
+  >>> person.attributes['objectClass'] = ['top', 'person']
+  >>> person.attributes['sn'] = 'Mustermann'
+  >>> person.attributes['cn'] = 'Max'
+  >>> person.attributes['description'] = 'Description'
+  >>> customers['cn=max'] = person
+  >>> customers.keys()
+  ['cn=max']
+
+On ``__call__`` the modifications of the tree are written to the directory.:
+
+  >>> customers()
+
+Modification of entry attributes.:
+
+  >>> person.attributes['description'] = 'Another description'
+  >>> person()
+
+  >>> del person.attributes['description']
+  >>> person()
+
+Deleting of entries.:
+
+  >>> del customers['cn=max']
+  >>> customers()
+
+For more details see the corresponding source and test files.
 
 Dependencies
 ------------
@@ -47,8 +87,7 @@ TODO
   * TLS/SSL Support. in LDAPConnector
   * Improve retry logic in LDAPSession
   * Extend LDAPSession object to handle Fallback server(s)
-  * Convenience for modification calls refering to adding modifying and deleting
-    attributes.
+  * Modification bug if cache is enabled
 
 Changes
 -------
@@ -56,6 +95,7 @@ Changes
   * 1.3 (rnix, 2009-04-16)
     * support ``attrlist`` and ``attrsonly`` for search functions
     * add LDAPEntry object
+    * add search base to cache key
 
   * 1.2.3 (rnix, 2009-02-11)
     * bugfix in ``LDAPSession``. Pass ``force_reload`` to relevant execution

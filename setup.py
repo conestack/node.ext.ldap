@@ -10,7 +10,7 @@ setup(name='bda.ldap',
       description=shortdesc,
       long_description=longdesc,
       classifiers=[
-            'Development Status :: 5 - Production/Stable',
+            'Development Status :: 4 - Beta',
             'Environment :: Web Environment',
             'Framework :: Zope2',
             'License :: OSI Approved :: GNU General Public License (GPL)',
