@@ -1,6 +1,14 @@
 Stop openldap server.
 
   >>> import os
+
+Normally the os increases the pid of the forked process by 1. There might be
+the case where some other process is started between the root process and the
+forking of the child process, in this case the simple pid + 1 increasing will
+fail and we kill the wrong process
+
+XXX: improve this
+
   >>> os.kill(slapdpid + 1, 9)
   
 Flush openldap db files.
