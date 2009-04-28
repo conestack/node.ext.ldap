@@ -1,0 +1,124 @@
+
+LDAP Nodes
+==========
+
+  >>> from bda.ldap import LDAPServerProperties
+  >>> from bda.ldap import LDAPNode
+  
+Create LDAP properties.:
+
+  >>> user = 'cn=Manager,dc=my-domain,dc=com'
+  >>> pwd = 'secret'
+  >>> props = LDAPServerProperties('127.0.0.1', 12345, user, pwd)
+
+Create the root node. The Root node expects the initial base DN as name and
+the server properties.:
+
+  >>> LDAPNode('dc=my-domain,dc=com')
+  Traceback (most recent call last):
+    ...
+  ValueError: Wrong initialization.
+  
+  >>> LDAPNode(props=props)
+  Traceback (most recent call last):
+    ...
+  ValueError: Wrong initialization.
+  
+  >>> root = LDAPNode('dc=my-domain,dc=com', props=props)
+  >>> root
+  <bda.ldap.node.LDAPNode object at ...>
+
+Check child keys of root.:
+
+  >>> root.keys()
+  ['ou=customers']
+
+Access inexistent child.:
+
+  >>> foo = root['foo']
+  Traceback (most recent call last):
+    ...
+  KeyError: u'Entry not existent: foo'
+
+Access existent child and it's attributes.:
+  
+  >>> customers = root['ou=customers']
+  >>> customers
+  <bda.ldap.node.LDAPNode object at ...>
+  
+  >>> customers.attributes
+  {'objectClass': ['top', 'organizationalUnit'], 'ou': 'customers'}
+  
+  >>> customers.DN
+  'ou=customers,dc=my-domain,dc=com'
+  
+  >>> customers.__name__
+  'ou=customers'
+  
+  >>> customers.keys()
+  ['ou=customer1', 'ou=customer2']
+  
+  >>> customers._changed
+  False
+
+Create a new LDAPNode and add it to customers.:
+
+  >>> customer = LDAPNode()
+  >>> customer.attributes['ou'] = 'customer3'
+  >>> customer.attributes['objectClass'] = ['top', 'organizationalUnit']
+  >>> customers['ou=customer3'] = customer
+
+This entry was not written yet to the directory, but marked that it has to be
+written.
+
+Note that calling keys() of the container now, returns the already added key
+anyway, since this is the sane state of the node structure, at least for
+itself.:
+
+  >>> customers.keys()
+  ['ou=customer1', 'ou=customer2', 'ou=customer3']
+
+The Container itself has changed.:
+
+  >>> customers._changed
+  True
+
+But there's no action on the container since a child was added and the
+attributes of the contained has not been changed.:
+
+  >>> customers._action
+
+The added child has been marked as changed as well.:
+
+  >>> customer._changed
+  True
+
+But there's also the action set that it has to be added.:
+
+  >>> from bda.ldap.node import ACTION_ADD, ACTION_MODIFY, \
+  ...                           ACTION_DELETE, ACTION_READ
+  
+  >>> customer._action == ACTION_ADD
+  True
+
+Check the directory state, not added yet.:
+
+  >>> res = customers._session.search('(objectClass=*)',
+  ...                                 1,
+  ...                                 baseDN=customers.DN,
+  ...                                 force_reload=True)
+  >>> len(res)
+  2
+
+On call the new entry is written to the directory.:
+
+  >>> root()
+
+Now the new entry is present in the directory as well.:
+
+  >>> res = customers._session.search('(objectClass=*)',
+  ...                                 1,
+  ...                                 baseDN=customers.DN,
+  ...                                 force_reload=True)
+  >>> len(res)
+  3

@@ -18,6 +18,15 @@ optionflags = doctest.NORMALIZE_WHITESPACE | \
               doctest.ELLIPSIS | \
               doctest.REPORT_ONLY_FIRST_FAILURE
 
+print """
+*******************************************************************************
+Starting openldap server...
+
+If this test fails, please check first if memcached is installed and stop it if
+running.
+*******************************************************************************
+"""
+
 slapdbin = os.environ.get('SLAPDBIN', None)
 pr = Popen([slapdbin, '-h', 'ldap://127.0.0.1:12345/'])
 slapdpid = pr.pid
@@ -26,7 +35,7 @@ time.sleep(1)
 TESTFILES = [
     'prepareslapd.txt',
     '../base.txt',
-#   '../entry.txt',
+    '../node.txt',
     'stopslapd.txt',
 ]
 
