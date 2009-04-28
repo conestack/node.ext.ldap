@@ -157,7 +157,10 @@ class LDAPCommunicator(object):
         if baseDN is None:
             baseDN = self._baseDN
         if self.cache:
-            key = '%s-%s-%i' % (self._connector.bindDN, queryFilter, scope)
+            key = '%s-%s-%s-%i' % (self._connector.bindDN,
+                                   baseDN,
+                                   queryFilter,
+                                   scope)
             args = [baseDN, scope, queryFilter, attrlist, attrsonly]
             return self.cache.getData(self._con.search_s, key,
                                       force_reload, args)
