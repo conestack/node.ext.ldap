@@ -1,7 +1,9 @@
 __author__ = """Robert Niederreiter <rnix@squarewave.at>"""
 __docformat__ = 'plaintext'
 
+import time
 import os
+from subprocess import Popen
 import unittest
 import interlude
 import zope.component
@@ -16,9 +18,16 @@ optionflags = doctest.NORMALIZE_WHITESPACE | \
               doctest.ELLIPSIS | \
               doctest.REPORT_ONLY_FIRST_FAILURE
 
+slapdbin = os.environ.get('SLAPDBIN', None)
+pr = Popen([slapdbin, '-h', 'ldap://127.0.0.1:12345/'])
+slapdpid = pr.pid
+time.sleep(1)
+
 TESTFILES = [
-#    '../base.txt',
-     '../entry.txt',
+    'prepareslapd.txt',
+    '../base.txt',
+#   '../entry.txt',
+    'stopslapd.txt',
 ]
 
 def test_suite():
@@ -30,10 +39,11 @@ def test_suite():
             file, 
             optionflags=optionflags,
             globs={'interact': interlude.interact,
-                   'pprint': pprint},
+                   'pprint': pprint,
+                   'slapdpid': slapdpid},
         ) for file in TESTFILES
     ])
     tearDown()
 
 if __name__ == '__main__':
-    unittest.main(defaultTest='test_suite') 
+    unittest.main(defaultTest='test_suite')

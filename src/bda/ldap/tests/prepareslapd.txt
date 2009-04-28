@@ -1,0 +1,20 @@
+Flush OPENLDAP DB files if existent.
+
+  >>> import os
+  >>> from subprocess import call
+  >>> dbdir = os.environ.get('DBDIR')
+  >>> cmd = ['rm', '%s/*' % dbdir]
+  >>> retcode = call(cmd)
+  >>> retcode
+
+Import test data.
+
+  >>> testldif = os.environ.get('TESTLDIF')
+  >>> ldapaddbin = os.environ.get('LDAPADDBIN')
+  
+  >>> binddn = "cn=Manager,dc=my-domain,dc=com"
+  >>> bindpw = "secret"
+  >>> cmd = [ldapaddbin, '-f', testldif, '-x', '-D',
+  ...        '%s' % binddn, '-w', bindpw, '-c', '-a', 
+  ...        '-p', '12345', '-h', '127.0.0.1']
+  >>> retcode = call(cmd)

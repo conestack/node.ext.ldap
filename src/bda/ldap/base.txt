@@ -1,41 +1,11 @@
-Start openldap server.
+LDAP credentials.
 
-  >>> import os, time
-  >>> from os import popen
-  >>> from subprocess import Popen
-  >>> slapdbin = os.environ.get('SLAPDBIN', None)
-  >>> slapdbin is not None
-  True
-  
-  >>> p = Popen([slapdbin, '-h', '"ldap://127.0.0.1:12345/'])
-  >>> interact()
-
-LDAP credentials
-
-  >>> host = 'localhost'
+  >>> host = "127.0.0.1"
   >>> port = 12345
-  >>> binddn = 'cn=Manager,dc=my-domain,dc=com'
-  >>> bindpw = 'secret'
+  >>> binddn = "cn=Manager,dc=my-domain,dc=com"
+  >>> bindpw = "secret"
 
-Import test data if not done yet.
-
-  >>> testldif = os.environ.get('TESTLDIF', None)
-  >>> testldif is not None
-  True
-  
-  >>> ldapaddbin = os.environ.get('LDAPADDBIN', None)
-  >>> ldapaddbin is not None
-  True
-  
-  >>> from subprocess import call
-  >>> cmd = [ldapaddbin, '-f', testldif, '-x', '-D',
-  ...        "%s" % binddn, '-w', bindpw, '-c', '-a']
-  >>> retcode = call(ldapaddbin)
-  
-  >>> #from subprocess import call
-  >>> #call(ldapaddbin)
-
-Test bda.ldap base objects
+Test bda.ldap base objects.
 
   >>> from bda.ldap import BASE, ONELEVEL, SUBTREE
   >>> from bda.ldap import LDAPConnector
@@ -48,7 +18,9 @@ Test bda.ldap base objects
   >>> communicator = LDAPCommunicator(connector)
   >>> communicator
   <bda.ldap.base.LDAPCommunicator object at ...>
-
-Shutdown ldap
-
-  >>> os.kill(p.pid, 5)
+  
+  >>> communicator.bind()
+  >>> communicator.setBaseDN('dc=my-domain,dc=com')
+  >>> res = communicator.search('(objectClass=*)', SUBTREE)
+  >>> len(res)
+  4

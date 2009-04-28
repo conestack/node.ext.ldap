@@ -1,0 +1,4 @@
+Stop openldap server.
+
+  >>> import os
+  >>> os.kill(slapdpid + 1, 9)
