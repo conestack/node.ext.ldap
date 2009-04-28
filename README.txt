@@ -1,10 +1,9 @@
-
 LDAP convenience library with caching support
 =============================================
 
 This Package provides objects for LDAP communication.
 
-You can work with the LDAPSession object.:
+You can work with the LDAPSession object:
 
   >>> from bda.ldap.base import ONELEVEL
   >>> from bda.ldap.session import LDAPSession
@@ -17,8 +16,9 @@ You can work with the LDAPSession object.:
   >>> session = LDAPSession(props)
   >>> res = session.search('(uid=*)', ONELEVEL)
 
+
 LDAP Queries are cached by default. You can disable this via ``cache`` kw arg
-when instanciating the properties obeject.:
+when instanciating the properties obeject:
 
   >>> props = LDAPServerProperties('localhost',
   ...                              389,
@@ -29,11 +29,12 @@ when instanciating the properties obeject.:
 Since version 1.3 there exists an LDAPNode object, which behaves mostly like a
 dictionary and is the prefered method to access and modify the tree.
 
-The root Node expects the base DN and the server properties to initialize.:
+The root Node expects the base DN and the server properties to initialize:
 
   >>> root = LDAPNode('dc=my-domain,dc=com', props=props)
   >>> root.keys()
   ['ou=customers']
+
 
 You can create and add new LDAP entries:
 
@@ -46,11 +47,12 @@ You can create and add new LDAP entries:
   >>> customers.keys()
   ['cn=max']
 
-On ``__call__`` the modifications of the tree are written to the directory.:
+On ``__call__`` the modifications of the tree are written to the directory:
 
   >>> customers()
 
-Modification of entry attributes.:
+
+Modification of entry attributes:
 
   >>> person.attributes['description'] = 'Another description'
   >>> person()
@@ -58,7 +60,8 @@ Modification of entry attributes.:
   >>> del person.attributes['description']
   >>> person()
 
-Deleting of entries.:
+
+Deleting of entries:
 
   >>> del customers['cn=max']
   >>> customers()
@@ -71,15 +74,15 @@ Dependencies
   * python-ldap
   * bda.cache
 
+
 Notes on python-ldap
 --------------------
 
-  Although python-ldap is available via pypi, we excluded it from
-  ``install_requires`` due to different compile issues on different
-  platforms.
-  
-  So you have to make sure that ``pyhon-ldap`` is available on your system in
-  any way.
+Although python-ldap is available via pypi, we excluded it from
+``install_requires`` due to different compile issues on different platforms.
+
+So you have to make sure that ``pyhon-ldap`` is available on your system in
+any way.
 
 TODO
 ----
@@ -88,6 +91,7 @@ TODO
   * Improve retry logic in LDAPSession
   * Extend LDAPSession object to handle Fallback server(s)
   * Modification bug if cache is enabled
+
 
 Changes
 -------
