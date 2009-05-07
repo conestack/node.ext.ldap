@@ -96,6 +96,10 @@ TODO
 Changes
 -------
 
+  * 1.3.1 (rnix, 2009-05-07)
+    * add ``cache`` property to ``LDAPProperties``.
+    * modify session to fit this new cache property.
+
   * 1.3 (rnix, 2009-04-16)
     * support ``attrlist`` and ``attrsonly`` for search functions
     * add LDAPEntry object
