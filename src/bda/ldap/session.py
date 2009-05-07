@@ -8,7 +8,11 @@ from base import testLDAPConnectivity
 
 class LDAPSession(object):
     
-    def __init__(self, serverProps, cache=True):
+    def __init__(self, serverProps, cache=None):
+        """XXX cache kwarg is deprecated and will be removed in version 1.4.
+        """
+        if cache is None:
+            cache = serverProps.cache
         connector = LDAPConnector(serverProps.server,
                                   serverProps.port,
                                   serverProps.user,
