@@ -16,6 +16,18 @@ ACTION_MODIFY = 1
 ACTION_DELETE = 2
 ACTION_READ = 3
 
+def queryNode(props, dn):
+    """Query an ldap entry and return as LDAPNode.
+    
+    @param props: LDAPServerPropertier instance
+    @param dn: DN of the node to query
+    @return: Node instance or None if inexistent 
+    """
+    containerdn = dn[dn.find(',') + 1:]
+    nodedn = dn[:dn.find(',')]
+    container = LDAPNode(name=containerdn, props=props)
+    return container.get(nodedn, None)
+
 class LDAPNode(Node):
     """An LDAP Node.
     """

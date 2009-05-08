@@ -6,7 +6,7 @@ from base import LDAPCommunicator
 from properties import LDAPServerProperties
 from session import LDAPSession
 from node import LDAPNode
-#from entry import LDAPEntry
+from node import queryNode
 
 # legacy
 import base
