@@ -93,6 +93,11 @@ class LDAPNode(Node):
         self.attributes.update(attrs)
         self._orginattrs.update(attrs)
     
+    def get(self, key, default=None):
+        if key in self:
+            return self[key]
+        return default
+    
     def __iter__(self):
         if self._reload:
             self._keys = None

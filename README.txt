@@ -96,10 +96,11 @@ TODO
 Changes
 -------
 
-  * 1.3.1 (rnix, 2009-05-07)
+  * 1.3.1 (rnix, 2009-05-07, 2009-05-08)
     * add ``cache`` property to ``LDAPProperties``.
     * modify session to fit this new cache property.
     * add ``queryNode`` function.
+    * add ``get`` function to node, this failed due LDAP read logic
 
   * 1.3 (rnix, 2009-04-16)
     * support ``attrlist`` and ``attrsonly`` for search functions
