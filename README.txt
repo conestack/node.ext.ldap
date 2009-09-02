@@ -91,10 +91,15 @@ TODO
   * Improve retry logic in LDAPSession
   * Extend LDAPSession object to handle Fallback server(s)
   * Modification bug if cache is enabled
+  * accept LDAPServerProperties object instead of it's attributes when
+    constructing LDAPConnector.
 
 
 Changes
 -------
+
+  * 1.3.2 (rnix, 2009-09-02)
+    * handle timeout of cache, workaround atm
 
   * 1.3.1 (rnix, 2009-05-07, 2009-05-08)
     * add ``cache`` property to ``LDAPProperties``.

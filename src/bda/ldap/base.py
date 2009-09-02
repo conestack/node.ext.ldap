@@ -119,6 +119,7 @@ class LDAPCommunicator(object):
         if connector.cache:
             cacheprovider = getUtility(ICacheProviderFactory)()
             self.cache = ICacheManager(cacheprovider)
+            self.cache.setTimeout(43200) # XXX: workaround
             logger.debug(u"LDAP Caching activated for instance '%s'. Use '%s' "
                           "as cache provider" % (repr(self.cache),
                                                  repr(cacheprovider)))
