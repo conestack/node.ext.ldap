@@ -10,6 +10,8 @@ depends on python-ldap.
 """
 
 import logging
+import md5
+
 logger = logging.getLogger('bda.ldap')
 
 try:
@@ -119,7 +121,6 @@ class LDAPCommunicator(object):
         if connector.cache:
             cacheprovider = getUtility(ICacheProviderFactory)()
             self.cache = ICacheManager(cacheprovider)
-            self.cache.setTimeout(43200) # XXX: workaround
             logger.debug(u"LDAP Caching activated for instance '%s'. Use '%s' "
                           "as cache provider" % (repr(self.cache),
                                                  repr(cacheprovider)))
@@ -162,6 +163,7 @@ class LDAPCommunicator(object):
                                    baseDN,
                                    queryFilter,
                                    scope)
+            key=md5.new(key).hexdigest() # Hash keys to make them short Gogo.
             args = [baseDN, scope, queryFilter, attrlist, attrsonly]
             return self.cache.getData(self._con.search_s, key,
                                       force_reload, args)
