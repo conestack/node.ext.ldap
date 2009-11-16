@@ -31,12 +31,9 @@ setup(name='bda.ldap',
       install_requires=[
           'setuptools',
           'bda.cache',
-          'zodict',
+          'python-ldap',
       ],
       extras_require={
-          'withpythonldap': [
-              'python-ldap',
-          ],
           'test': [
               'interlude',
               'bda.cache [test]',        
