@@ -98,6 +98,11 @@ TODO
 Changes
 -------
 
+  * 1.3.3 (unreleased)
+    * improved stop mechanism of ldap server in tests (jensens, 2009-12-16)
+    * remove deprecation warning: use `hashlib` for md5 and fallback to `md5`  
+      with python2.4. (jensens, 2009-12-16)
+
   * 1.3.2 (rnix, 2009-09-02)
     * handle timeout of cache, workaround atm
 

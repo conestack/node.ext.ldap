@@ -10,7 +10,23 @@ depends on python-ldap.
 """
 
 import logging
-import md5
+
+    
+def md5digest(key):
+    """needed to support both, python 2.4 and python >=2.5
+    
+    remove when python 2.4 support is skipped.
+    """
+    try:
+        # in python >=2.5
+        import hashlib
+    except ImportError:
+        # fallback if python 2.4
+        import md5
+        return md5.new(key).hexdigest()
+    m = hashlib.md5()
+    m.update(key)
+    return m.hexdigest()
 
 logger = logging.getLogger('bda.ldap')
 
@@ -163,7 +179,7 @@ class LDAPCommunicator(object):
                                    baseDN,
                                    queryFilter,
                                    scope)
-            key=md5.new(key).hexdigest() # Hash keys to make them short Gogo.
+            key = md5digest(key)
             args = [baseDN, scope, queryFilter, attrlist, attrsonly]
             return self.cache.getData(self._con.search_s, key,
                                       force_reload, args)
@@ -174,7 +190,7 @@ class LDAPCommunicator(object):
         """Insert an entry into directory.
         
         Takes the DN of the entry and the data this object contains. data is a
-        dictionary and looks ike this:
+        dictionary and looks like this:
         
         data = {
             'uid':'foo',
@@ -213,15 +229,18 @@ class LDAPCommunicator(object):
         """
         self._con.delete_s(deleteDN)
 
-if __name__ == "__main__":
+
+def main():    
     """Use this module from command line for testing the connectivity to the
     LDAP Server.
     
     Expects server and port as arguments."""
-    
     import sys
     if len(sys.argv) < 3:
         print 'usage: python base.py [server] [port]'
     else:
         server, port = sys.argv[1:]
         print testLDAPConnectivity(server, int(port))
+        
+if __name__ == "__main__":
+    main()

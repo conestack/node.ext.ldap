@@ -37,7 +37,8 @@ setup(name='bda.ldap',
       extras_require={
           'test': [
               'interlude',
-              'bda.cache [test]',        
+              'zope.configuration',
+              'zope.testing',        
           ]
       },
       entry_points="""
