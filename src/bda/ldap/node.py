@@ -34,7 +34,6 @@ class LDAPNodeAttributes(NodeAttributes):
     def __init__(self, node):
         super(LDAPNodeAttributes, self).__init__(node)
         self.load()
-        self.changed = False
     
     def load(self):
         self.clear()
@@ -53,11 +52,23 @@ class LDAPNodeAttributes(NodeAttributes):
                 self[key] = item[0]
             else:
                 self[key] = item
+        self.changed = False
+        if self._node._action not in [ACTION_ADD, ACTION_DELETE]:
+            self._node._action = None
+            self._node._changed = False
                 
     def __setitem__(self, key, val):
         super(LDAPNodeAttributes, self).__setitem__(key, val)
+        self._set_attrs_modified()
+    
+    def __delitem__(self, key):
+        super(LDAPNodeAttributes, self).__delitem__(key)
+        self._set_attrs_modified()
+    
+    def _set_attrs_modified(self):
         if self._node._action not in [ACTION_ADD, ACTION_DELETE]:
-            self._node._action = ACTION_MODIFY            
+            self._node._action = ACTION_MODIFY
+            self._node._changed = True
 
 class LDAPNode(LifecycleNode):
     """An LDAP Node.
@@ -120,18 +131,23 @@ class LDAPNode(LifecycleNode):
         if not key in self:
             raise KeyError(u"Entry not existent: %s" % key)
         try:
-            child = super(LDAPNode, self).__getitem__(key)
+            val = super(LDAPNode, self).__getitem__(key)
         except KeyError, e:
-            child = LDAPNode()
-            self[key] = child
-        return child
+            val = LDAPNode()
+            val._session = self._session
+            super(LDAPNode, self).__setitem__(key, val)
+            self._keys.append(key)
+        return val
     
     def __setitem__(self, key, val):
         val._session = self._session
+        if self._keys is None:
+            self._keys = list()
         try:
             self._keys.remove(key)
         except ValueError, e:
             val._action = ACTION_ADD
+            val._changed = True
             self._changed = True
         self._notify_suppress = True
         super(LDAPNode, self).__setitem__(key, val)
@@ -159,28 +175,10 @@ class LDAPNode(LifecycleNode):
                 self._ldap_modify()
             elif self._action == ACTION_DELETE:
                 self._ldap_delete()
+            if hasattr(self, '_attributes'):
+                self.attributes.changed = False
         for node in super(LDAPNode, self).values():
             node()
-    
-    def _checkattrchanged(self):
-        if self._action == ACTION_ADD:
-            return
-        
-        if len(self.attributes) != len(self._orginattrs):
-            curattrs = copy.copy(self.attributes)
-            self._reload = True
-            self.readattrs()
-            self._reload = False
-            self.attributes = curattrs
-            if len(self.attributes) != len(self._orginattrs):
-                self._changed = True
-                self._action = ACTION_MODIFY
-                return
-        for key in self.attributes.keys():
-            if self.attributes[key] != self._orginattrs[key]:
-                self._changed = True
-                self._action = ACTION_MODIFY
-                return
     
     def _ldap_add(self):
         """adds self to the ldap directory.
@@ -196,7 +194,7 @@ class LDAPNode(LifecycleNode):
         orgin = self.attributes_factory(self)
         for key in orgin:
             # MOD_DELETE
-            if not key in attrkeys:
+            if not key in self.attributes:
                 moddef = (MOD_DELETE, key, None)
                 modlist.append(moddef)
         for key in self.attributes:
@@ -215,10 +213,8 @@ class LDAPNode(LifecycleNode):
     
     def _ldap_delete(self):
         """delete self from the ldap-directory.
-        
-        the key was already kicked by self.__delitem__ to keep state sane.
-        we might want to add another property to this object keeping the
-        deleted keys to avoid reloading the keys from the directory.
         """
+        self.__parent__._keys.append(self.__name__)
+        super(LifecycleNode, self.__parent__).__delitem__(self.__name__)
+        self.__parent__._keys.remove(self.__name__)
         self._session.delete(self.DN)
-        super(LDAPNode, self).__delitem__(self.__parent__, self.__name__)

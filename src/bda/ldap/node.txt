@@ -100,8 +100,7 @@ The added child has been marked as changed as well.:
 
 But there's also the action set that it has to be added.:
 
-    >>> from bda.ldap.node import ACTION_ADD, ACTION_MODIFY, \
-    ...                           ACTION_DELETE, ACTION_READ
+    >>> from bda.ldap.node import ACTION_ADD, ACTION_MODIFY, ACTION_DELETE
   
     >>> customer._action == ACTION_ADD
     True
@@ -177,13 +176,11 @@ Lets modify this person. First look at the node flags.:
 
 Now do modification.:
 
+    >>> person.attributes.changed
+    False
+    
     >>> person.attributes['description'] = 'Another description'
-
-We have the problem here that this change is not detected directly, but at
-__call__ time this way.:
-
-    >>> person._checkattrchanged()
-    >>> person._changed
+    >>> person.attributes.changed
     True
   
     >>> person._action == ACTION_MODIFY
@@ -228,4 +225,7 @@ Check deleting of entries.:
     >>> del customer['cn=max']
     >>> customer()
     >>> queryPersonDirectly()
+    []
+    
+    >>> customer._keys
     []
