@@ -3,7 +3,9 @@
 
 import types
 import copy
-from zodict.node import Node
+from zope.component.event import objectEventNotify
+from zodict import LifecycleNode
+from zodict.node import NodeAttributes
 from bda.ldap import ONELEVEL
 from bda.ldap import LDAPSession
 
@@ -14,7 +16,6 @@ from ldap import MOD_REPLACE
 ACTION_ADD = 0
 ACTION_MODIFY = 1
 ACTION_DELETE = 2
-ACTION_READ = 3
 
 def queryNode(props, dn):
     """Query an ldap entry and return as LDAPNode.
@@ -28,80 +29,74 @@ def queryNode(props, dn):
     container = LDAPNode(name=containerdn, props=props)
     return container.get(nodedn, None)
 
-class LDAPNode(Node):
-    """An LDAP Node.
-    """
+class LDAPNodeAttributes(NodeAttributes):
     
-    def __init__(self, name=None, props=None):
-        """The Root node expects the initial base DN as name and the server
-        properties.
-        """
-        if name and not props or props and not name:
-            raise ValueError(u"Wrong initialization.")
-        Node.__init__(self, name)
-        self._session = None
-        
-        if props:
-            self._session = LDAPSession(props)
-            self._session.setBaseDN(self.DN)
-        
-        self.attributes = dict()
-        self._orginattrs = dict()
-        self._changed = False
-        
-        if name and props:
-            self._action = None
-        else:
-            self._action = ACTION_ADD
-        self._keys = None
-        self._reload = False
+    def __init__(self, node):
+        super(LDAPNodeAttributes, self).__init__(node)
+        self.load()
+        self.changed = False
     
-    __repr__ = object.__repr__
-            
-    @property
-    def DN(self):
-        if not hasattr(self, '_dn'):
-            path = self.path
-            path.reverse()
-            self._dn = ','.join(path)
-        return self._dn
-    
-    def reload(self):
-        self._reload = True
-        keys = self.keys()
-        self.readattrs()
-        self._reload = False
-    
-    def readattrs(self):
-        if not self.__parent__:
-            # root XXX
-            return
-        
-        dn = self.__parent__.DN
-        entry = self._session.search('(%s)' % self.__name__,
-                                     ONELEVEL,
-                                     baseDN=dn,
-                                     force_reload=self._reload)
-        
+    def load(self):
+        self.clear()
+        dn = self._node.__parent__.DN
+        search = self._node._session.search
+        entry = search('(%s)' % self._node.__name__, ONELEVEL, baseDN=dn,
+                       force_reload=self._node._reload)        
         if len(entry) != 1:
             raise RuntimeError(u"Fatal. Expected entry does not exist or "
                                 "more than one entry found")
         attrs = entry[0][1]
         for key, item in attrs.items():
             if len(item) == 1:
-                attrs[key] = item[0]
-        self.attributes.update(attrs)
-        self._orginattrs.update(attrs)
+                self[key] = item[0]
+            else:
+                self[key] = item
+                
+    def __setitem__(self, key, val):
+        super(LDAPNodeAttributes, self).__setitem__(key, val)
+        if self._node._action not in [ACTION_ADD, ACTION_DELETE]:
+            self._node._action = ACTION_MODIFY            
+
+class LDAPNode(LifecycleNode):
+    """An LDAP Node.
+    """
     
-    def get(self, key, default=None):
-        if key in self:
-            return self[key]
-        return default
+    attributes_factory = LDAPNodeAttributes
+    
+    def __init__(self, name=None, props=None):
+        """LDAP Node expects both, ``name`` and ``props`` arguments for the 
+        root LDAP Node or nothing for children as parameters. 
+        
+        ``name`` 
+            Initial base DN for the root LDAP Node.
+        
+        ``props`` 
+            ``bda.ldap.LDAPProperties`` object.
+        """
+        if (name and not props) or (props and not name):
+            raise ValueError(u"Wrong initialization.")
+        self.__name__ = name
+        self._session = None        
+        self._changed = False
+        self._action = None
+        self._keys = None
+        self._reload = False        
+        if props:
+            self._session = LDAPSession(props)
+            self._session.setBaseDN(self.DN)                
+        super(LDAPNode, self).__init__(name)
+            
+    @property
+    def DN(self):
+        if not hasattr(self, '_dn'):
+            self._dn = ','.join(reversed(self.path))
+        return self._dn                  
     
     def __iter__(self):
+        if self.__name__ is None:
+            return
         if self._reload:
-            self._keys = None
-        
+            self._keys = None        
         if self._keys is None:
             self._keys = list()
             children = self._session.search('(objectClass=*)',
@@ -110,82 +105,60 @@ class LDAPNode(Node):
                                             force_reload=self._reload,
                                             attrsonly=1)
             for dn, attrs in children:
-                self._keys.append(dn[:dn.rfind(self.DN)].strip(','))
-        
-        for key in self._keys:
-            yield key
+                key = dn[:dn.rfind(self.DN)].strip(',')
+                self._keys.append(key)
+                yield key
+        else:        
+            for key in self._keys:
+                yield key
     
     iterkeys = __iter__
     
     def __getitem__(self, key):
-        if not key in self.keys():
+        if not key in self:
             raise KeyError(u"Entry not existent: %s" % key)
-        
         try:
-            child = Node.__getitem__(self, key)
+            child = super(LDAPNode, self).__getitem__(key)
         except KeyError, e:
             child = LDAPNode()
-            child._action = ACTION_READ
             self[key] = child
-        
         return child
     
     def __setitem__(self, key, val):
         val._session = self._session
-        
-        if key in self.keys() and not val._action == ACTION_READ:
-            val._changed = True
-            val._action = ACTION_MODIFY
-            
         try:
             self._keys.remove(key)
         except ValueError, e:
-            pass
-        Node.__setitem__(self, key, val)
-        self._keys.append(key)
-        
-        if val._action == ACTION_READ:
-            val.readattrs()
-            val._action = None
-        
+            val._action = ACTION_ADD
+            self._changed = True
+        self._notify_suppress = True
+        super(LDAPNode, self).__setitem__(key, val)
+        self._notify_suppress = False
+        self._keys.append(key)    
         if val._action == ACTION_ADD:
-            val._changed = True
-        
-        # XXX: check if entry was modified if set a second time.
-        self._changed = True
+            objectEventNotify(self.events['added'](val, newParent=self, 
+                                                   newName=key))
     
     def __delitem__(self, key):
         """Do not delete immediately. Just mark LDAPNode to be deleted and
         remove key from self._keys.
         """
-        todelete = self[key]
-        todelete._changed = True
-        todelete._action = ACTION_DELETE
+        val = self[key]
+        val._changed = True
+        val._action = ACTION_DELETE
         self._keys.remove(key)
         self._changed = True
     
     def __call__(self):
-        for node in Node.values(self):
+        if self._changed:
+            if self._action == ACTION_ADD:
+                self._ldap_add()
+            elif self._action == ACTION_MODIFY:
+                self._ldap_modify()
+            elif self._action == ACTION_DELETE:
+                self._ldap_delete()
+        for node in super(LDAPNode, self).values():
             node()
-        self._checkattrchanged()
-        if not self._changed and not self._action:
-            return
-        
-        if self._action == ACTION_ADD:
-            self._add()
-            self.__parent__._keys = None
-            keys = self.__parent__.keys()
-        
-        if self._action == ACTION_MODIFY:
-            self._modify()
-            self._reload = True
-            self.readattrs()
-            self._reload = False
-        
-        if self._action == ACTION_DELETE:
-            self._delete()
-            self.__parent__._keys = None
-            keys = self.__parent__.keys()
     
     def _checkattrchanged(self):
         if self._action == ACTION_ADD:
@@ -207,43 +180,43 @@ class LDAPNode(Node):
                 self._action = ACTION_MODIFY
                 return
     
-    def _add(self):
+    def _ldap_add(self):
+        """adds self to the ldap directory.
+        """
         self._session.add(self.DN, self.attributes)
         self._changed = False
         self._action = None
     
-    def _modify(self):
+    def _ldap_modify(self):
+        """modifies attributs of self on the ldap directory.
+        """ 
         modlist = list()
-        orginkeys = self._orginattrs.keys()
-        attrkeys = self.attributes.keys()
-        
-        for key in orginkeys:
+        orgin = self.attributes_factory(self)
+        for key in orgin:
             # MOD_DELETE
             if not key in attrkeys:
                 moddef = (MOD_DELETE, key, None)
                 modlist.append(moddef)
-        
-        for key in attrkeys:
+        for key in self.attributes:
             # MOD_ADD
-            if not key in orginkeys:
+            if key not in orgin:
                 moddef = (MOD_ADD, key, self.attributes[key])
                 modlist.append(moddef)
             # MOD_REPLACE
-            if key in orginkeys:
-                if self.attributes[key] != self._orginattrs[key]:
-                    moddef = (MOD_REPLACE, key, self.attributes[key])
-                    modlist.append(moddef)
-        
+            elif self.attributes[key] != orgin[key]:
+                moddef = (MOD_REPLACE, key, self.attributes[key])
+                modlist.append(moddef)
         if modlist:
             self._session.modify(self.DN, modlist)
         self._changed = False
         self._action = None
     
-    def _delete(self):
-        # the key was already kicked by self.__delitem__ to keep state sane.
-        # we might want to add another property to this object keeping the
-        # deleted keys to avoid reloading the keys from the directory.
-        self.__parent__._keys = None
-        keys = self.__parent__.keys()
-        Node.__delitem__(self.__parent__, self.__name__)
+    def _ldap_delete(self):
+        """delete self from the ldap-directory.
+        
+        the key was already kicked by self.__delitem__ to keep state sane.
+        we might want to add another property to this object keeping the
+        deleted keys to avoid reloading the keys from the directory.
+        """
         self._session.delete(self.DN)
+        super(LDAPNode, self).__delitem__(self.__parent__, self.__name__)

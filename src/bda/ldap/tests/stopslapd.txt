@@ -1,5 +1,6 @@
 Stop openldap server.
 
+    >>> import os
     >>> PIDFILE = os.environ.get('LDAPPIDFILE')
     >>> with open(PIDFILE) as pidfile:
     ...     pid = pidfile.readline()
@@ -9,7 +10,6 @@ Stop openldap server.
   
 Flush openldap db files.
 
-    >>> import os
     >>> dbdir = os.environ.get('DBDIR')
     >>> for file in os.listdir(dbdir):
     ...     os.remove('%s/%s' % (dbdir, file))

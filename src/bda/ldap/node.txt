@@ -2,71 +2,76 @@
 LDAP Nodes
 ==========
 
-  >>> from bda.ldap import LDAPServerProperties
-  >>> from bda.ldap import LDAPNode
+    >>> from bda.ldap import LDAPServerProperties
+    >>> from bda.ldap import LDAPNode
   
-Create LDAP properties.:
+Create LDAP properties.
+::
 
-  >>> user = 'cn=Manager,dc=my-domain,dc=com'
-  >>> pwd = 'secret'
-  >>> props = LDAPServerProperties('127.0.0.1', 12345, user, pwd)
+    >>> user = 'cn=Manager,dc=my-domain,dc=com'
+    >>> pwd = 'secret'
+    >>> props = LDAPServerProperties('127.0.0.1', 12345, user, pwd)
 
 Create the root node. The Root node expects the initial base DN as name and
-the server properties.:
+the server properties.
+::
 
-  >>> LDAPNode('dc=my-domain,dc=com')
-  Traceback (most recent call last):
+    >>> LDAPNode('dc=my-domain,dc=com')
+    Traceback (most recent call last):
     ...
-  ValueError: Wrong initialization.
+    ValueError: Wrong initialization.
   
-  >>> LDAPNode(props=props)
-  Traceback (most recent call last):
+    >>> LDAPNode(props=props)
+    Traceback (most recent call last):
     ...
-  ValueError: Wrong initialization.
+    ValueError: Wrong initialization.
   
-  >>> root = LDAPNode('dc=my-domain,dc=com', props=props)
-  >>> root
-  <bda.ldap.node.LDAPNode object at ...>
+    >>> root = LDAPNode('dc=my-domain,dc=com', props)
+    >>> root
+    <LDAPNode object 'dc=my-domain,dc=com' at ...>
 
-Check child keys of root.:
+Check child keys of root.
+::
 
-  >>> root.keys()
-  ['ou=customers']
+    >>> root.keys()
+    ['ou=customers']
 
-Access inexistent child.:
+Access inexistent child.
+::
 
-  >>> foo = root['foo']
-  Traceback (most recent call last):
+    >>> foo = root['foo']
+    Traceback (most recent call last):
     ...
-  KeyError: u'Entry not existent: foo'
+    KeyError: u'Entry not existent: foo'
 
-Access existent child and it's attributes.:
+Access existent child and it's attributes.
+::
   
-  >>> customers = root['ou=customers']
-  >>> customers
-  <bda.ldap.node.LDAPNode object at ...>
+    >>> customers = root['ou=customers']
+    >>> customers
+    <LDAPNode object 'ou=customers' at ...>
   
-  >>> customers.attributes
-  {'objectClass': ['top', 'organizationalUnit'], 'ou': 'customers'}
+    >>> customers.attributes
+    {'objectClass': ['top', 'organizationalUnit'], 'ou': 'customers'}
   
-  >>> customers.DN
-  'ou=customers,dc=my-domain,dc=com'
+    >>> customers.DN
+    'ou=customers,dc=my-domain,dc=com'
   
-  >>> customers.__name__
-  'ou=customers'
+    >>> customers.__name__
+    'ou=customers'
   
-  >>> customers.keys()
-  ['ou=customer1', 'ou=customer2']
+    >>> customers.keys()
+    ['ou=customer1', 'ou=customer2']
   
-  >>> customers._changed
-  False
+    >>> customers._changed
+    False
 
 Create a new LDAPNode and add it to customers.:
 
-  >>> customer = LDAPNode()
-  >>> customer.attributes['ou'] = 'customer3'
-  >>> customer.attributes['objectClass'] = ['top', 'organizationalUnit']
-  >>> customers['ou=customer3'] = customer
+    >>> customer = LDAPNode()
+    >>> customer.attributes['ou'] = 'customer3'
+    >>> customer.attributes['objectClass'] = ['top', 'organizationalUnit']
+    >>> customers['ou=customer3'] = customer
 
 This entry was not written yet to the directory, but marked that it has to be
 written.
@@ -75,152 +80,152 @@ Note that calling keys() of the container now, returns the already added key
 anyway, since this is the sane state of the node structure, at least for
 itself.:
 
-  >>> customers.keys()
-  ['ou=customer1', 'ou=customer2', 'ou=customer3']
+    >>> customers.keys()
+    ['ou=customer1', 'ou=customer2', 'ou=customer3']
 
 The Container itself has changed.:
-
-  >>> customers._changed
-  True
+ 
+    >>> customers._changed
+    True
 
 But there's no action on the container since a child was added and the
 attributes of the contained has not been changed.:
 
-  >>> customers._action
+    >>> customers._action
 
 The added child has been marked as changed as well.:
 
-  >>> customer._changed
-  True
+    >>> customer._changed
+    True
 
 But there's also the action set that it has to be added.:
 
-  >>> from bda.ldap.node import ACTION_ADD, ACTION_MODIFY, \
-  ...                           ACTION_DELETE, ACTION_READ
+    >>> from bda.ldap.node import ACTION_ADD, ACTION_MODIFY, \
+    ...                           ACTION_DELETE, ACTION_READ
   
-  >>> customer._action == ACTION_ADD
-  True
+    >>> customer._action == ACTION_ADD
+    True
 
 Check the directory state, not added yet.:
 
-  >>> res = customers._session.search('(objectClass=*)',
-  ...                                 1,
-  ...                                 baseDN=customers.DN,
-  ...                                 force_reload=True)
-  >>> len(res)
-  2
+    >>> res = customers._session.search('(objectClass=*)',
+    ...                                 1,
+    ...                                 baseDN=customers.DN,
+    ...                                 force_reload=True)
+    >>> len(res)
+    2
 
 On call the new entry is written to the directory.:
 
-  >>> root()
+    >>> root()
 
 Now the new entry is present in the directory as well.:
 
-  >>> res = customers._session.search('(objectClass=*)',
-  ...                                 1,
-  ...                                 baseDN=customers.DN,
-  ...                                 force_reload=True)
-  >>> len(res)
-  3
+    >>> res = customers._session.search('(objectClass=*)',
+    ...                                 1,
+    ...                                 baseDN=customers.DN,
+    ...                                 force_reload=True)
+    >>> len(res)
+    3
 
 Add a person to test modification stuff.:
 
-  >>> person = LDAPNode()
-  >>> person.attributes['objectClass'] = ['top', 'person']
-  >>> person.attributes['sn'] = 'Mustermann'
-  >>> person.attributes['cn'] = 'Max'
-  >>> person.attributes['description'] = 'Initial Description'
-  >>> customer['cn=max'] = person
-  >>> customer.keys()
-  ['cn=max']
+    >>> person = LDAPNode()
+    >>> person.attributes['objectClass'] = ['top', 'person']
+    >>> person.attributes['sn'] = 'Mustermann'
+    >>> person.attributes['cn'] = 'Max'
+    >>> person.attributes['description'] = 'Initial Description'
+    >>> customer['cn=max'] = person
+    >>> customer.keys()
+    ['cn=max']
   
 Again, not in directory yet.:
 
-  >>> res = customer._session.search('(objectClass=person)',
-  ...                                1,
-  ...                                baseDN=customer.DN,
-  ...                                force_reload=True)
-  >>> len(res)
-  0
+    >>> res = customer._session.search('(objectClass=person)',
+    ...                                1,
+    ...                                baseDN=customer.DN,
+    ...                                force_reload=True)
+    >>> len(res)
+    0
   
 But after __call__.:
 
-  >>> customer()
+    >>> customer()
 
 Creatre Customer convenience query function. Need this more than once.:
 
-  >>> def queryPersonDirectly():
-  ...     res = customer._session.search('(objectClass=person)',
-  ...                                    1,
-  ...                                    baseDN=customer.DN,
-  ...                                    force_reload=True)
-  ...     return res
+    >>> def queryPersonDirectly():
+    ...     res = customer._session.search('(objectClass=person)',
+    ...                                    1,
+    ...                                    baseDN=customer.DN,
+    ...                                    force_reload=True)
+    ...     return res
   
-  >>> queryPersonDirectly()
-  [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com', 
-  {'objectClass': ['top', 'person'], 
-  'cn': ['Max'], 
-  'description': ['Initial Description'], 
-  'sn': ['Mustermann']})]
+    >>> queryPersonDirectly()
+    [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com', 
+    {'objectClass': ['top', 'person'], 
+    'cn': ['Max'], 
+    'description': ['Initial Description'], 
+    'sn': ['Mustermann']})]
 
 Lets modify this person. First look at the node flags.:
 
-  >>> person._changed
-  False
+    >>> person._changed
+    False
   
-  >>> person._action
+    >>> person._action
 
 Now do modification.:
 
-  >>> person.attributes['description'] = 'Another description'
+    >>> person.attributes['description'] = 'Another description'
 
 We have the problem here that this change is not detected directly, but at
 __call__ time this way.:
 
-  >>> person._checkattrchanged()
-  >>> person._changed
-  True
+    >>> person._checkattrchanged()
+    >>> person._changed
+    True
   
-  >>> person._action == ACTION_MODIFY
-  True
+    >>> person._action == ACTION_MODIFY
+    True
 
 Write changed to directory.:
 
-  >>> customer()
+    >>> customer()
 
 And check the changes in the directory.:
 
-  >>> queryPersonDirectly()
-  [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com', 
-  {'objectClass': ['top', 'person'], 
-  'description': ['Another description'], 
-  'sn': ['Mustermann'], 
-  'cn': ['Max']})]
+    >>> queryPersonDirectly()
+    [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com', 
+    {'objectClass': ['top', 'person'], 
+    'description': ['Another description'], 
+    'sn': ['Mustermann'], 
+    'cn': ['Max']})]
 
 Check removing of an attribute.:
   
-  >>> del person.attributes['description']
-  >>> customer()
-  >>> queryPersonDirectly()
-  [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com', 
-  {'objectClass': ['top', 'person'], 
-  'sn': ['Mustermann'], 
-  'cn': ['Max']})]
+    >>> del person.attributes['description']
+    >>> customer()
+    >>> queryPersonDirectly()
+    [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com', 
+    {'objectClass': ['top', 'person'], 
+    'sn': ['Mustermann'], 
+    'cn': ['Max']})]
 
 Check adding of an attribute.:
 
-  >>> person.attributes['description'] = 'Brandnew description'
-  >>> customer()
-  >>> queryPersonDirectly()
-  [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com', 
-  {'objectClass': ['top', 'person'], 
-  'description': ['Brandnew description'], 
-  'sn': ['Mustermann'], 
-  'cn': ['Max']})]
+    >>> person.attributes['description'] = 'Brandnew description'
+    >>> customer()
+    >>> queryPersonDirectly()
+    [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com', 
+    {'objectClass': ['top', 'person'], 
+    'description': ['Brandnew description'], 
+    'sn': ['Mustermann'], 
+    'cn': ['Max']})]
 
 Check deleting of entries.:
 
-  >>> del customer['cn=max']
-  >>> customer()
-  >>> queryPersonDirectly()
-  []
+    >>> del customer['cn=max']
+    >>> customer()
+    >>> queryPersonDirectly()
+    []

@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '1.3.2'
+version = '1.4.0'
 shortdesc = "LDAP convenience library"
 longdesc = open(os.path.join(os.path.dirname(__file__), 'README.txt')).read()
 
@@ -20,7 +20,7 @@ setup(name='bda.ldap',
       ], # Get strings from http://www.python.org/pypi?%3Aaction=list_classifiers
       keywords='',
       author='Robert Niederreiter',
-      author_email='rnix@squarewave.at',
+      author_email='dev@bluedynamics.com',
       url='https://svn.plone.org/svn/collective/bda.ldap',
       license='General Public Licence',
       packages=find_packages('src'),
@@ -30,9 +30,9 @@ setup(name='bda.ldap',
       zip_safe=False,
       install_requires=[
           'setuptools',
-          'bda.cache',
           'python-ldap',
           'zodict',
+          'bda.cache',
       ],
       extras_require={
           'test': [
