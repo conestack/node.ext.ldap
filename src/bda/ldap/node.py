@@ -38,6 +38,8 @@ class LDAPNodeAttributes(NodeAttributes):
     
     def load(self):
         self.clear()
+        if self._node.__parent__ is None:
+            return
         dn = self._node.__parent__.DN
         search = self._node._session.search
         entry = search('(%s)' % self._node.__name__, ONELEVEL, baseDN=dn,
