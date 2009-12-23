@@ -1,50 +1,22 @@
 # Copyright 2008-2009, BlueDynamics Alliance, Austria - http://bluedynamics.com
 # GNU General Public Licence Version 2 or later
 
-"""Module bda.ldap.base
-
-This module provides Classes for communicating with an LDAP directory Server
-and for managing the directory itself.
-
-depends on python-ldap.
-"""
-
 import logging
-
-    
-def md5digest(key):
-    """needed to support both, python 2.4 and python >=2.5
-    
-    remove when python 2.4 support is skipped.
-    """
-    try:
-        # in python >=2.5
-        import hashlib
-    except ImportError:
-        # fallback if python 2.4
-        import md5
-        return md5.new(key).hexdigest()
-    m = hashlib.md5()
-    m.update(key)
-    return m.hexdigest()
-
 logger = logging.getLogger('bda.ldap')
 
 try:
     import ldap
 except ImportError:
-    logger.error(u"bda.ldap requires a working python-ldap installation."
-                  "See README for details.")
-    raise
+    raise ImportError, u"bda.ldap requires a working python-ldap installation."
+
+from zope.component import getUtility
+from bda.cache import ICacheManager
+from bda.ldap.interfaces import ICacheProviderFactory
 
 BASE = ldap.SCOPE_BASE
 ONELEVEL = ldap.SCOPE_ONELEVEL
 SUBTREE = ldap.SCOPE_SUBTREE
 SCOPES = [BASE, ONELEVEL, SUBTREE]
-
-from zope.component import getUtility
-from bda.cache import ICacheManager
-from interfaces import ICacheProviderFactory
 
 def testLDAPConnectivity(server, port):
     """Function to test the availability of the LDAP Server.
@@ -58,6 +30,24 @@ def testLDAPConnectivity(server, port):
     except ldap.LDAPError, error:
         return error
 
+def md5digest(key):
+    """Needed to support both, python 2.4 and python >=2.5
+    
+    Will be remove when python 2.4 support is dropped.
+    
+    XXX: This is maybe expensive. Optimize code eventually.
+    """
+    try:
+        # in python >=2.5
+        import hashlib
+    except ImportError:
+        # fallback if python 2.4
+        import md5
+        return md5.new(key).hexdigest()
+    m = hashlib.md5()
+    m.update(key)
+    return m.hexdigest()
+
 class LDAPConnector(object):
     """Object is responsible for the LDAP connection.
     
@@ -66,48 +56,51 @@ class LDAPConnector(object):
     
     TODO: TLS/SSL Support.
     
-    Direct Usage - no need for this in general:
+    Normally you do not need to use this class directly.
         
-    c = LDAPConnector('localhost', 389, 'cn=admin,dc=foo,dc=bar', 'secret')
-    connection = c.bind()
-    # do something with connection
-    ...
-    c.unbind() 
+    >>> c = LDAPConnector('localhost', 389, 'cn=admin,dc=foo,dc=bar', 'secret')
+    >>> connection = c.bind()
+    >>> # do something with connection
+    >>> c.unbind() 
     """
     
-    def __init__(self, server, port, bindDN, bindPW, cache=True):
-        """Define Server, Port, Bind DN and Bind PW to use.
-        """
+    def __init__(self,
+                 server,
+                 port,
+                 bindDN,
+                 bindPW,
+                 cache=True,
+                 cachetimeout=43200):
         self.protocol = ldap.VERSION3
-        self.server = server
-        self.port = port
-        self.bindDN = bindDN
+        self._bindDN = bindDN
+        self._server = server
+        self._port = port
         self._bindPW = bindPW
-        self.cache = cache
+        self._cache = cache
+        self._cachetimeout = cachetimeout
     
     def setProtocol(self, protocol):
         """Set the LDAP Protocol Version to use.
         
-        For example ldap.VERSION2.
+        Deprecated: This function will be removed in version 1.5. Use
+                    ``protocol`` property directly instead.
         """
         self.protocol = protocol
     
     def bind(self):
         """Bind to Server and return the Connection Object.
         """
-        protocol, bindDN, _bindPW = self.protocol, self.bindDN, self._bindPW
-        self._con = ldap.open(self.server, self.port)
-        self._con.protocol_version = protocol
-        self._con.simple_bind(bindDN, _bindPW)
+        self._con = ldap.open(self._server, self._port)
+        self._con.protocol_version = self.protocol
+        self._con.simple_bind(self._bindDN, self._bindPW)
         return self._con
     
     def unbind(self):
-        """Unbind from the LDAP Server.
+        """Unbind from Server.
         """
         self._con.unbind()
         self._con = None
-        
-    
+
 class LDAPCommunicator(object):
     """Class LDAPCommunicator is responsible for the communication with the
     LDAP Server.
@@ -130,15 +123,16 @@ class LDAPCommunicator(object):
     def __init__(self, connector):
         """Takes LDAPConnector object as argument.
         """
+        self.baseDN = ''
         self._connector = connector
         self._con = None
-        self._baseDN = ''
-        self.cache = None
-        if connector.cache:
+        self._cache = None
+        if connector._cache:
             cacheprovider = getUtility(ICacheProviderFactory)()
-            self.cache = ICacheManager(cacheprovider)
+            self._cache = ICacheManager(cacheprovider)
+            self._cache.setTimeout(connector._cachetimeout)
             logger.debug(u"LDAP Caching activated for instance '%s'. Use '%s' "
-                          "as cache provider" % (repr(self.cache),
+                          "as cache provider" % (repr(self._cache),
                                                  repr(cacheprovider)))
         
     def bind(self):
@@ -154,35 +148,49 @@ class LDAPCommunicator(object):
         
     def setBaseDN(self, baseDN):
         """Set the base DN you want to work on.
+        
+        Deprecated: This function will be removed in version 1.5. Use
+                    ``baseDN`` property directly instead.
         """
-        self._baseDN = baseDN
+        self.baseDN = baseDN
         
     def getBaseDN(self):
         """Returns the current set base DN.
+        
+        Deprecated: This function will be removed in version 1.5. Use
+                    ``baseDN`` property directly instead.
         """
-        return self._baseDN
+        return self.baseDN
         
     def search(self, queryFilter, scope, baseDN=None,
                force_reload=False, attrlist=None, attrsonly=0):
         """Search the directory.
         
-        Take the query filter, the search scope and optional the base DN if
-        you want to use another base DN than set by setBaseDN() for this
-        oparation.
-        
-        Force reload only affects if cache is enabled and available.
+        ``queryFilter``
+            LDAP query filter
+        ``scope``
+            LDAP search scope
+        ``baseDN``
+            Search base. Defaults to ``self.baseDN``
+        ``force_reload``
+            Force cache to be ignored if enabled.
+        ``attrlist``
+            LDAP attrlist to query.
+        ``attrsonly``
+            Flag wether to load DN's (?) only.
         """
         if baseDN is None:
-            baseDN = self._baseDN
-        if self.cache:
-            key = '%s-%s-%s-%i' % (self._connector.bindDN,
+            baseDN = self.baseDN
+        if self._cache:
+            # XXX: Consider attrlist and attrsonly in cachekey.
+            key = '%s-%s-%s-%i' % (self._connector._bindDN,
                                    baseDN,
                                    queryFilter,
                                    scope)
             key = md5digest(key)
             args = [baseDN, scope, queryFilter, attrlist, attrsonly]
-            return self.cache.getData(self._con.search_s, key,
-                                      force_reload, args)
+            return self._cache.getData(self._con.search_s, key,
+                                       force_reload, args)
         return self._con.search_s(baseDN, scope, queryFilter,
                                   attrlist, attrsonly)
     
@@ -190,20 +198,20 @@ class LDAPCommunicator(object):
         """Insert an entry into directory.
         
         Takes the DN of the entry and the data this object contains. data is a
-        dictionary and looks like this:
+        dict and looks like this:
         
-        data = {
-            'uid':'foo',
-            'givenname':'foo',
-            'cn':'foo 0815',
-            'sn':'bar',
-            'telephonenumber':'123-4567',
-            'facsimiletelephonenumber':'987-6543',
-            'objectclass':('Remote-Address','person', 'Top'),
-            'physicaldeliveryofficename':'Development',
-            'mail':'foo@bar.org',
-            'title':'programmer',
-        }
+        >>> data = {
+        ...     'uid':'foo',
+        ...     'givenname':'foo',
+        ...     'cn':'foo 0815',
+        ...     'sn':'bar',
+        ...     'telephonenumber':'123-4567',
+        ...     'facsimiletelephonenumber':'987-6543',
+        ...     'objectclass':('Remote-Address','person', 'Top'),
+        ...     'physicaldeliveryofficename':'Development',
+        ...     'mail':'foo@bar.org',
+        ...     'title':'programmer',
+        ... }
         """
         attributes = [ (k,v) for k,v in data.items() ]
         self._con.add_s(dn, attributes)    
@@ -211,14 +219,11 @@ class LDAPCommunicator(object):
     def modify(self, dn, modlist):
         """Modify an existing entry in the directory.
         
-        The first argument is a string containing the dn of the object 
-        to modify, and the second argument is a list of tuples containing 
-        modifation descriptions. The first element gives the type of the 
-        modification (MOD_REPLACE, MOD_DELETE, or MOD_ADD), the second gives 
-        the name of the field to modify, and the third gives the new value 
-        for the field (for MOD_ADD and MOD_REPLACE).
-        
-        see python-ldap ldap.ldapobject.modify()
+        Takes the DN of the entry and the modlist, which is a list of tuples 
+        containing modifation descriptions. The first element gives the type 
+        of the modification (MOD_REPLACE, MOD_DELETE, or MOD_ADD), the second 
+        gives the name of the field to modify, and the third gives the new 
+        value for the field (for MOD_ADD and MOD_REPLACE).
         """
         self._con.modify_s(dn, modlist)
         
@@ -229,12 +234,12 @@ class LDAPCommunicator(object):
         """
         self._con.delete_s(deleteDN)
 
-
 def main():    
     """Use this module from command line for testing the connectivity to the
     LDAP Server.
     
-    Expects server and port as arguments."""
+    Expects server and port as arguments.
+    """
     import sys
     if len(sys.argv) < 3:
         print 'usage: python base.py [server] [port]'

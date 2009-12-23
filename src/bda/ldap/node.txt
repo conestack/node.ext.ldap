@@ -290,4 +290,3 @@ Check deleting of entries.
     
     >>> customer._keys
     odict()
-    

@@ -1,0 +1,74 @@
+Test LDAP Session.
+
+Create ``LDAPServerProperties`` instance.
+::
+
+    >>> from bda.ldap import BASE, ONELEVEL, SUBTREE
+    >>> from bda.ldap import LDAPServerProperties, LDAPSession
+    >>> props = LDAPServerProperties("127.0.0.1",
+    ...                              12345,
+    ...                              "cn=Manager,dc=my-domain,dc=com",
+    ...                              "secret",
+    ...                              False)
+
+Create the session with ``LDAPServerProperties`` as argument.
+
+    >>> session = LDAPSession(props)
+    >>> session.checkServerProperties()
+    (True, 'OK')
+
+There's no search base DN set yet.
+:: 
+
+    >>> session.baseDN
+    ''
+    
+Set a baseDN and perform LDAP search.
+::
+  
+    >>> session.baseDN = 'dc=my-domain,dc=com'
+    >>> from bda.ldap import SUBTREE
+    >>> res = session.search('(objectClass=*)', SUBTREE)
+    >>> len(res)
+    4
+
+Add an entry.
+::
+
+    >>> entry = {
+    ...     'cn':'foo',
+    ...     'sn':'bar',
+    ...     'objectclass':('person', 'top'),
+    ... }
+    >>> dn = 'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com'
+    >>> session.add(dn, entry)
+    >>> res = session.search('(objectClass=*)', SUBTREE)
+    >>> len(res)
+    5
+
+Modify this entry and check the result.
+::
+
+    >>> res = session.search('(cn=foo)', SUBTREE)
+    >>> res
+    [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com', 
+    {'objectClass': ['person', 'top'], 'cn': ['foo'], 'sn': ['bar']})]
+
+    >>> from ldap import MOD_REPLACE
+    >>> session.modify(res[0][0], [(MOD_REPLACE, 'sn', 'baz')])
+    >>> res = session.search('(cn=foo)', SUBTREE)
+    >>> res
+    [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com', 
+    {'objectClass': ['person', 'top'], 'cn': ['foo'], 'sn': ['baz']})]
+
+Delete this entry and check the result.
+::
+
+    >>> session.delete(res[0][0])
+    >>> session.search('(cn=foo)', SUBTREE)
+    []
+
+Unbind from Server.
+::
+
+    >>> session.unbind()

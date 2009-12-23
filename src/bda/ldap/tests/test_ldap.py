@@ -29,6 +29,7 @@ time.sleep(1)
 TESTFILES = [
     'prepareslapd.txt',
     '../base.txt',
+    '../session.txt',
     '../node.txt',
     'stopslapd.txt',
 ]

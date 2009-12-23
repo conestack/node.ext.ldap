@@ -1,15 +1,17 @@
-from base import BASE
-from base import ONELEVEL
-from base import SUBTREE 
-from base import LDAPConnector
-from base import LDAPCommunicator
-from properties import LDAPServerProperties
-from session import LDAPSession
-from node import LDAPNode
-from node import queryNode
-
+from bda.ldap.base import (
+    BASE,
+    ONELEVEL,
+    SUBTREE,
+    LDAPConnector,
+    LDAPCommunicator,
+)
+from bda.ldap.properties import LDAPServerProperties
+from bda.ldap.session import LDAPSession
+from bda.ldap.node import (
+    LDAPNode,
+    queryNode,
+)
 # legacy
 import base
 import properties
 import session
-

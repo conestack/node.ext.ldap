@@ -2,30 +2,29 @@
 # GNU General Public Licence Version 2 or later
 
 import ldap
-from base import LDAPConnector
-from base import LDAPCommunicator
-from base import testLDAPConnectivity
+from bda.ldap import (
+    LDAPConnector,
+    LDAPCommunicator,
+)
+from bda.ldap.base import testLDAPConnectivity
 
 class LDAPSession(object):
     
-    def __init__(self, serverProps, cache=None):
-        """XXX cache kwarg is deprecated and will be removed in version 1.4.
-        """
-        if cache is None:
-            cache = serverProps.cache
-        connector = LDAPConnector(serverProps.server,
-                                  serverProps.port,
-                                  serverProps.user,
-                                  serverProps.password,
-                                  cache)
-        self.communicator = LDAPCommunicator(connector)
+    def __init__(self, props):
+        connector = LDAPConnector(props.server,
+                                  props.port,
+                                  props.user,
+                                  props.password,
+                                  props.cache,
+                                  props.timeout)
+        self._communicator = LDAPCommunicator(connector)
     
     def checkServerProperties(self):
-        """ Test if connection can be established.
+        """Test if connection can be established.
         """
-        res = testLDAPConnectivity(\
-                self.communicator._connector.server,
-                self.communicator._connector.port)
+        res = testLDAPConnectivity(
+                  self._communicator._connector._server,
+                  self._communicator._connector._port)
         if res == 'success':
             return (True, 'OK')
         else:
@@ -33,25 +32,28 @@ class LDAPSession(object):
     
     def setBaseDN(self, baseDN):
         """Set the base DN you want to work on.
+        
+        Deprecated: This function will be removed in version 1.5. Use
+                    ``baseDN`` property directly instead.
         """
         self.communicator.setBaseDN(baseDN)
     
+    def _get_baseDN(self):
+        return self._communicator.baseDN
+    
+    def _set_baseDN(self, baseDN):
+        self._communicator.baseDN = baseDN
+    
+    baseDN = property(_get_baseDN, _set_baseDN)
+    
     def search(self, queryFilter, scope, baseDN=None,
                force_reload=False, attrlist=None, attrsonly=0):
-        """Search the directory.
-        
-        Look at bda.ldap.base.LDAPCommunicator.search() for details.
-        """
-        func = self.communicator.search
+        func = self._communicator.search
         return self._perform(func, queryFilter, scope, baseDN,
                              force_reload, attrlist, attrsonly)
     
     def add(self, dn, data):
-        """Insert an entry into directory.
-        
-        Look at bda.ldap.base.LDAPCommunicator.add() for details.
-        """
-        func = self.communicator.add
+        func = self._communicator.add
         return self._perform(func, dn, data)
     
     def modify(self, dn, data, replace=False):
@@ -65,16 +67,15 @@ class LDAPSession(object):
         
         XXX: implement described behaviour for data
         """
-        func = self.communicator.modify
+        func = self._communicator.modify
         return self._perform(func, dn, data)
     
     def delete(self, dn):
-        """Delete an entry from the directory.
-        
-        Take the DN to delete from the directory as argument.
-        """
-        func = self.communicator.delete
+        func = self._communicator.delete
         return self._perform(func, dn)
+    
+    def unbind(self):
+        self._communicator.unbind()
     
     def _perform(self, function, *args, **kwargs):
         """Try to perform the given function with the given argument.
@@ -84,10 +85,10 @@ class LDAPSession(object):
         XXX: * Improve retry logic in LDAPSession 
              * Extend LDAPSession object to handle Fallback server(s)
         """
-        if self.communicator._con is None:
-            self.communicator.bind()
+        if self._communicator._con is None:
+            self._communicator.bind()
         try:
             return function(*args, **kwargs)
         except ldap.SERVER_DOWN:
-            self.communicator.bind()
+            self._communicator.bind()
             return function(*args, **kwargs)

@@ -25,7 +25,7 @@ class LDAPServerProperties(object):
         @param user: username to bind, defaults to ''
         @param password: password to bind, defaults to ''
         @param cache: Bool wether to enable caching or not, defaults to True
-        @param timeout: cache timeout in seconds. only takes affect if cache
+        @param timeout: Cache timeout in seconds. only takes affect if cache
                         is enabled.
         """
         self.server = server

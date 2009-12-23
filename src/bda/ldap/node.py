@@ -7,12 +7,15 @@ from odict import odict
 from zope.component.event import objectEventNotify
 from zodict import LifecycleNode
 from zodict.node import NodeAttributes
-from bda.ldap import ONELEVEL
-from bda.ldap import LDAPSession
-
-from ldap import MOD_ADD
-from ldap import MOD_DELETE
-from ldap import MOD_REPLACE
+from bda.ldap import (
+    ONELEVEL,
+    LDAPSession,
+)
+from ldap import (
+    MOD_ADD,
+    MOD_DELETE,
+    MOD_REPLACE,
+)
 
 ACTION_ADD = 0
 ACTION_MODIFY = 1
@@ -100,7 +103,7 @@ class LDAPNode(LifecycleNode):
         self._reload = False        
         if props:
             self._session = LDAPSession(props)
-            self._session.setBaseDN(self.DN)                
+            self._session.baseDN = self.DN
         super(LDAPNode, self).__init__(name)
             
     @property
