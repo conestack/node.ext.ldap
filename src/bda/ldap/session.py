@@ -36,7 +36,7 @@ class LDAPSession(object):
         Deprecated: This function will be removed in version 1.5. Use
                     ``baseDN`` property directly instead.
         """
-        self.communicator.setBaseDN(baseDN)
+        self._communicator.baseDN = baseDN
     
     def _get_baseDN(self):
         return self._communicator.baseDN
