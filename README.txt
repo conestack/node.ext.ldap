@@ -98,7 +98,10 @@ TODO
 Changes
 -------
 
-  * 1.3.3 (unreleased)
+  * 1.4.0   
+    * refactored the whole ``LDAPNode`` to use LifecycleNode. Also huge clean up
+      of the LDAPNode code. (jensens, rnix, 2009-12-22)
+    * Depends now on Python 2.6
     * improved stop mechanism of ldap server in tests (jensens, 2009-12-16)
     * remove deprecation warning: use `hashlib` for md5 and fallback to `md5`  
       with python2.4. (jensens, 2009-12-16)

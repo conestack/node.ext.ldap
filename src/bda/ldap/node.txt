@@ -63,7 +63,7 @@ Access existent child and it's attributes.
     >>> customers.keys()
     ['ou=customer1', 'ou=customer2']
   
-    >>> customers._changed
+    >>> customers.changed
     False
 
 Create a new LDAPNode and add it to customers.:
@@ -85,7 +85,7 @@ itself.:
 
 The Container itself has changed.:
  
-    >>> customers._changed
+    >>> customers.changed
     True
 
 But there's no action on the container since a child was added and the
@@ -95,7 +95,7 @@ attributes of the contained has not been changed.:
 
 The added child has been marked as changed as well.:
 
-    >>> customer._changed
+    >>> customer.changed
     True
 
 But there's also the action set that it has to be added.:
@@ -167,17 +167,19 @@ Creatre Customer convenience query function. Need this more than once.:
     'description': ['Initial Description'], 
     'sn': ['Mustermann']})]
 
-Lets modify this person. First look at the node flags.:
+Lets modify this person. First look at the flags.
+::
 
-    >>> person._changed
-    False
+    >>> root.changed, customer.changed, person.changed
+    (False, False, False)
   
     >>> person._action
 
-Now do modification.:
-
     >>> person.attributes.changed
     False
+
+Now do modification.
+::
     
     >>> person.attributes['description'] = 'Another description'
     >>> person.attributes.changed
@@ -186,11 +188,23 @@ Now do modification.:
     >>> person._action == ACTION_MODIFY
     True
 
-Write changed to directory.:
+    >>> root.changed, customer.changed, person.changed
+    (True, True, True)
 
-    >>> customer()
 
-And check the changes in the directory.:
+Write changed to directory.
+::
+
+    >>> root()
+    
+Check the flags.
+::
+
+    >>> root.changed, customer.changed, person.changed
+    (False, False, False)
+
+And check the changes in the directory.
+::
 
     >>> queryPersonDirectly()
     [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com', 
@@ -199,19 +213,39 @@ And check the changes in the directory.:
     'sn': ['Mustermann'], 
     'cn': ['Max']})]
 
-Check removing of an attribute.:
-  
+Check removing of an attribute.
+::  
+    >>> root.changed, customer.changed, person.changed, \
+    ... person.attributes.changed
+    (False, False, False, False)
+
     >>> del person.attributes['description']
+    >>> root.changed, customer.changed, person.changed, \
+    ... person.attributes.changed
+    (True, True, True, True)
+
+We can call a node in the middle.
+::
+
     >>> customer()
     >>> queryPersonDirectly()
     [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com', 
     {'objectClass': ['top', 'person'], 
     'sn': ['Mustermann'], 
-    'cn': ['Max']})]
+    'cn': ['Max']})]    
 
-Check adding of an attribute.:
+    >>> root.changed, customer.changed, person.changed, \
+    ... person.attributes.changed
+    (False, False, False, False)
+
+Check adding of an attribute.
+::
 
     >>> person.attributes['description'] = 'Brandnew description'
+    >>> root.changed, customer.changed, person.changed, \
+    ... person.attributes.changed
+    (True, True, True, True)
+
     >>> customer()
     >>> queryPersonDirectly()
     [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com', 
@@ -220,12 +254,25 @@ Check adding of an attribute.:
     'sn': ['Mustermann'], 
     'cn': ['Max']})]
 
-Check deleting of entries.:
+    >>> root.changed, customer.changed, person.changed, \
+    ... person.attributes.changed
+    (False, False, False, False)
+
+Check deleting of entries.
+::
 
     >>> del customer['cn=max']
+    >>> root.changed, customer.changed, person.changed, \
+    ... person.attributes.changed
+    (True, True, True, False)
+
     >>> customer()
     >>> queryPersonDirectly()
     []
+
+    >>> root.changed, customer.changed
+    (False, False)
     
     >>> customer._keys
-    []
+    odict()
+    

@@ -3,6 +3,7 @@
 
 import types
 import copy
+from odict import odict
 from zope.component.event import objectEventNotify
 from zodict import LifecycleNode
 from zodict.node import NodeAttributes
@@ -55,7 +56,7 @@ class LDAPNodeAttributes(NodeAttributes):
         self.changed = False
         if self._node._action not in [ACTION_ADD, ACTION_DELETE]:
             self._node._action = None
-            self._node._changed = False
+            self._node.changed = False
                 
     def __setitem__(self, key, val):
         super(LDAPNodeAttributes, self).__setitem__(key, val)
@@ -68,7 +69,7 @@ class LDAPNodeAttributes(NodeAttributes):
     def _set_attrs_modified(self):
         if self._node._action not in [ACTION_ADD, ACTION_DELETE]:
             self._node._action = ACTION_MODIFY
-            self._node._changed = True
+            self._node.changed = True
 
 class LDAPNode(LifecycleNode):
     """An LDAP Node.
@@ -92,7 +93,10 @@ class LDAPNode(LifecycleNode):
         self._session = None        
         self._changed = False
         self._action = None
-        self._keys = None
+        # the _keys is None or an odict.
+        # if an odict, the value is either None or the value
+        # None means, the value wasnt loaded 
+        self._keys = None 
         self._reload = False        
         if props:
             self._session = LDAPSession(props)
@@ -111,7 +115,7 @@ class LDAPNode(LifecycleNode):
         if self._reload:
             self._keys = None        
         if self._keys is None:
-            self._keys = list()
+            self._keys = odict()
             children = self._session.search('(objectClass=*)',
                                             ONELEVEL,
                                             baseDN=self.DN,
@@ -119,7 +123,7 @@ class LDAPNode(LifecycleNode):
                                             attrsonly=1)
             for dn, attrs in children:
                 key = dn[:dn.rfind(self.DN)].strip(',')
-                self._keys.append(key)
+                self._keys[key] = None
                 yield key
         else:        
             for key in self._keys:
@@ -130,29 +134,32 @@ class LDAPNode(LifecycleNode):
     def __getitem__(self, key):
         if not key in self:
             raise KeyError(u"Entry not existent: %s" % key)
-        try:
-            val = super(LDAPNode, self).__getitem__(key)
-        except KeyError, e:
-            val = LDAPNode()
-            val._session = self._session
-            super(LDAPNode, self).__setitem__(key, val)
-            self._keys.append(key)
+        if self._keys[key] is not None:
+            return super(LDAPNode, self).__getitem__(key)
+        val = LDAPNode()
+        val._session = self._session
+        self._notify_suppress = True
+        super(LDAPNode, self).__setitem__(key, val)
+        self._notify_suppress = False
+        self._keys[key] = val
         return val
     
     def __setitem__(self, key, val):
         val._session = self._session
         if self._keys is None:
-            self._keys = list()
+            self._keys = odict()
         try:
-            self._keys.remove(key)
-        except ValueError, e:
+            # a value with key is already in the directory
+            self._keys[key]
+        except KeyError, e:
+            # the value is not yet in the directory 
             val._action = ACTION_ADD
-            val._changed = True
-            self._changed = True
+            val.changed = True
+            self.changed = True 
         self._notify_suppress = True
         super(LDAPNode, self).__setitem__(key, val)
         self._notify_suppress = False
-        self._keys.append(key)    
+        self._keys[key] = val    
         if val._action == ACTION_ADD:
             objectEventNotify(self.events['added'](val, newParent=self, 
                                                    newName=key))
@@ -162,13 +169,16 @@ class LDAPNode(LifecycleNode):
         remove key from self._keys.
         """
         val = self[key]
-        val._changed = True
+        val.changed = True
         val._action = ACTION_DELETE
-        self._keys.remove(key)
-        self._changed = True
+        del self._keys[key]
+        if not hasattr(self, '_deleted'):
+            self._deleted = list()
+        self._deleted.append(val) 
+        self.changed = True
     
     def __call__(self):
-        if self._changed:
+        if self.changed and self._action is not None:
             if self._action == ACTION_ADD:
                 self._ldap_add()
             elif self._action == ACTION_MODIFY:
@@ -177,15 +187,18 @@ class LDAPNode(LifecycleNode):
                 self._ldap_delete()
             if hasattr(self, '_attributes'):
                 self.attributes.changed = False
-        for node in super(LDAPNode, self).values():
-            node()
+            self.changed = False
+            self._action = None                    
+        if self._keys is None:
+            return
+        for node in self._keys.values() + getattr(self, '_deleted', []):
+            if node is not None and node.changed:
+                node()
     
     def _ldap_add(self):
         """adds self to the ldap directory.
         """
         self._session.add(self.DN, self.attributes)
-        self._changed = False
-        self._action = None
     
     def _ldap_modify(self):
         """modifies attributs of self on the ldap directory.
@@ -208,13 +221,36 @@ class LDAPNode(LifecycleNode):
                 modlist.append(moddef)
         if modlist:
             self._session.modify(self.DN, modlist)
-        self._changed = False
-        self._action = None
     
     def _ldap_delete(self):
         """delete self from the ldap-directory.
         """
-        self.__parent__._keys.append(self.__name__)
+        self.__parent__._keys[self.__name__] = None
         super(LifecycleNode, self.__parent__).__delitem__(self.__name__)
-        self.__parent__._keys.remove(self.__name__)
+        del self.__parent__._keys[self.__name__]
         self._session.delete(self.DN)
+    
+    def _get_changed(self):
+        return self._changed
+
+    def _set_changed(self, value):
+        self._changed = value
+        if self.__parent__ is None:
+            return
+        if not value and self.__parent__.changed:
+            # check parents loaded children if one of them is changed
+            # if so, keep parent marked as changed
+            siblings = list()
+            if self._keys:
+                siblings = [v for v in self._keys.values() if v is not None]
+            siblings += getattr(self, '_deleted', [])
+            for sibling in siblings:
+                if sibling is self:
+                    continue
+                if sibling.changed:
+                    return
+            self.__parent__.changed = value
+        elif value and not self.__parent__.changed:
+            self.__parent__.changed = value                
+            
+    changed = property(_get_changed, _set_changed) 
