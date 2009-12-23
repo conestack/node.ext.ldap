@@ -4,12 +4,12 @@ Create ``LDAPServerProperties`` instance.
 ::
 
     >>> from bda.ldap import BASE, ONELEVEL, SUBTREE
-    >>> from bda.ldap import LDAPServerProperties, LDAPSession
-    >>> props = LDAPServerProperties("127.0.0.1",
-    ...                              12345,
-    ...                              "cn=Manager,dc=my-domain,dc=com",
-    ...                              "secret",
-    ...                              False)
+    >>> from bda.ldap import LDAPProps, LDAPSession
+    >>> props = LDAPProps("127.0.0.1",
+    ...                   12345,
+    ...                   "cn=Manager,dc=my-domain,dc=com",
+    ...                   "secret",
+    ...                   False)
 
 Create the session with ``LDAPServerProperties`` as argument.
 

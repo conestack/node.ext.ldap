@@ -3,34 +3,23 @@ LDAP convenience library with caching support
 
 This Package provides objects for LDAP communication.
 
-You can work with the LDAPSession object.
+You can work with the ``LDAPSession`` object.
 ::
 
     >>> from bda.ldap import ONELEVEL
     >>> from bda.ldap import LDAPSession
-    >>> from bda.ldap import LDAPServerProperties
+    >>> from bda.ldap import LDAPProps
     
-    >>> props = LDAPServerProperties('localhost',
-    ...                              389,
-    ...                              'cn=user,dc=example,dc=com',
-    ...                              'secret'
-    ...                              cache=True,
-    ...                              timeout=12345)
+    >>> props = LDAPProps('localhost',
+    ...                   389,
+    ...                   'cn=user,dc=example,dc=com',
+    ...                   'secret'
+    ...                   cache=True,
+    ...                   timeout=12345)
     >>> session = LDAPSession(props)
     >>> res = session.search('(uid=*)', ONELEVEL)
 
-LDAP queries are cached by default. You can disable this via ``cache`` kw arg
-when instanciating the properties obeject.
-::
-
-    >>> props = LDAPServerProperties('localhost',
-    ...                              389,
-    ...                              'cn=user,dc=example,dc=com',
-    ...                              'secret',
-    ...                              cache=False,
-    ...                              timeout=12345)
-
-You can build LDAP data trees with the ``LDAPNode`` object.
+You can build and edit LDAP data trees with the ``LDAPNode`` object.
 
 The root Node expects the base DN and the server properties to initialize.
 ::
@@ -99,16 +88,15 @@ TODO
 
 - Extend LDAPSession object to handle Fallback server(s)
 
-- Modification bug if cache is enabled
-
-- accept LDAPServerProperties object instead of it's attributes when
-  constructing LDAPConnector.
-
 Changes
 =======
 
 1.4.0
 -----
+
+- Add ``LDAPProps`` object. Its points to ``LDAPServerProperties`` class. The
+  latter one will be renamed to ``LDAPProps`` in version 1.5. Too long class
+  name. (rnix, 2009-12-23)
 
 - Add ``LDAPSession.unbind`` function. (rnix, 2009-12-23)
 
@@ -118,13 +106,13 @@ Changes
   timeout and flag if cache is enabled is done due to ``LDAPServerProperties``.
   (rnix, 2009-12-23)
 
+- Deprecate Signature of ``LDAPConnector.__init__``. (rnix, 2009-12-23)
+
 - Deprecate ``LDAPConnector.setProtocol``, ``LDAPCommunicator.setBaseDN``,
   ``LDAPCommunicator.getBaseDN``, ``LDAPSession.setBaseDN``. (rnix, 2009-12-23)
   
 - Refactor the whole ``LDAPNode`` to use ``zodict.LifecycleNode``. Clean up of
   the ``LDAPNode`` code. (jensens, rnix, 2009-12-22)
-  
-- Depends now on Python 2.6
 
 - improved stop mechanism of ldap server in tests (jensens, 2009-12-16)
 

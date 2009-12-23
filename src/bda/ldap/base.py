@@ -71,6 +71,12 @@ class LDAPConnector(object):
                  bindPW,
                  cache=True,
                  cachetimeout=43200):
+        """Initialize LDAPConnector.
+        
+        Signature Deprecated: Signature will take ``LDAPServerProperties``
+                              object instead of current kwargs in future.
+                              This will be changed in Version 1.5.
+        """
         self.protocol = ldap.VERSION3
         self._bindDN = bindDN
         self._server = server

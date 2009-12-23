@@ -5,7 +5,10 @@ from bda.ldap.base import (
     LDAPConnector,
     LDAPCommunicator,
 )
-from bda.ldap.properties import LDAPServerProperties
+from bda.ldap.properties import (
+    LDAPServerProperties,
+    LDAPProps,
+)
 from bda.ldap.session import LDAPSession
 from bda.ldap.node import (
     LDAPNode,

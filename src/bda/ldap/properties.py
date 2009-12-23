@@ -1,12 +1,6 @@
 # Copyright 2008-2009, BlueDynamics Alliance, Austria - http://bluedynamics.com
 # GNU General Public Licence Version 2 or later
 
-"""Module bda.ldap.properties
-
-This module provides a Class for wrapping LDAP directory Server connection
-properties.
-"""
-
 class LDAPServerProperties(object):
     """Wrapper Class for LDAP Server connection properties.
     """
@@ -34,3 +28,5 @@ class LDAPServerProperties(object):
         self.password = password
         self.cache = cache
         self.timeout = timeout
+
+LDAPProps = LDAPServerProperties

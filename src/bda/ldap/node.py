@@ -24,9 +24,10 @@ ACTION_DELETE = 2
 def queryNode(props, dn):
     """Query an ldap entry and return as LDAPNode.
     
-    @param props: LDAPServerPropertier instance
-    @param dn: DN of the node to query
-    @return: Node instance or None if inexistent 
+    ``props``
+        ``LDAPProps`` instance
+    ``dn``
+        DN of the node to query
     """
     containerdn = dn[dn.find(',') + 1:]
     nodedn = dn[:dn.find(',')]
