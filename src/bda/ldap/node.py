@@ -4,7 +4,9 @@
 import types
 import copy
 from odict import odict
+from zope.interface import implements
 from zope.component.event import objectEventNotify
+from zodict.interfaces import ICallableNode
 from zodict import LifecycleNode
 from zodict.node import NodeAttributes
 from bda.ldap import (
@@ -78,7 +80,7 @@ class LDAPNodeAttributes(NodeAttributes):
 class LDAPNode(LifecycleNode):
     """An LDAP Node.
     """
-    
+    implements(ICallableNode)
     attributes_factory = LDAPNodeAttributes
     
     def __init__(self, name=None, props=None):
