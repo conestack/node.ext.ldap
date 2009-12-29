@@ -31,6 +31,9 @@ the server properties.
     >>> root = LDAPNode('dc=my-domain,dc=com', props)
     >>> root
     <LDAPNode object 'dc=my-domain,dc=com' at ...>
+    
+    >>> root.ldap_session
+    <bda.ldap.session.LDAPSession object at ...>
 
 Check child keys of root.
 ::
@@ -74,7 +77,12 @@ Create a new LDAPNode and add it to customers.
     >>> customer = LDAPNode()
     >>> customer.attributes['ou'] = 'customer3'
     >>> customer.attributes['objectClass'] = ['top', 'organizationalUnit']
+    >>> customer.ldap_session is None
+    True
+    
     >>> customers['ou=customer3'] = customer
+    >>> root.ldap_session
+    <bda.ldap.session.LDAPSession object at ...>
 
 This entry was not written yet to the directory, but marked that it has to be
 written.

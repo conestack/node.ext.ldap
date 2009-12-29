@@ -91,6 +91,14 @@ TODO
 Changes
 =======
 
+1.4.1
+-----
+
+- Add read property ``ldap_session`` to ``LDAPNode``. This way its clean to take  
+  the session of ``LDAPNode`` in an application i.e. for searching. Be careful 
+  while using the session directly to manipulate the LDAP; responsibility to 
+  invalidate the ``LDAPNode`` instances is on the application developer.
+
 1.4.0
 -----
 

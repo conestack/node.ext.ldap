@@ -260,3 +260,7 @@ class LDAPNode(LifecycleNode):
             self.__parent__.changed = value                
             
     changed = property(_get_changed, _set_changed) 
+    
+    @property
+    def ldap_session(self):
+        return self._session
