@@ -132,15 +132,18 @@ Changes
 - Made ``MemcachedProviderFactory`` configureable. Defaults behave like in prior
   versions. New: We can pass ``server=`` keyword argument to the 
   constructor expecting a list of servers, each in the form *server:port*.
+  (jensens, 2009-12-30)
 
 - Dont provide any cache provider factory by default. Added a 
   ``nullCacheProviderFactory`` which  provides a non-caching behaviour. Use this
   as fallback if no utility was registered.   
+  (jensens, 2009-12-30)
 
 - Add read property ``ldap_session`` to ``LDAPNode``. This way its clean to take  
   the session of ``LDAPNode`` in an application i.e. for searching. Be careful 
   while using the session directly to manipulate the LDAP; responsibility to 
   invalidate the ``LDAPNode`` instances is on the application developer.
+  (jensens, 2009-12-30)
 
 1.4.0
 -----
