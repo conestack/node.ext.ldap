@@ -9,9 +9,10 @@ try:
 except ImportError:
     raise ImportError, u"bda.ldap requires a working python-ldap installation."
 
-from zope.component import getUtility
+from zope.component import queryUtility
 from bda.cache import ICacheManager
 from bda.ldap.interfaces import ICacheProviderFactory
+from bda.ldap.cache import nullcacheProviderFactory
 
 BASE = ldap.SCOPE_BASE
 ONELEVEL = ldap.SCOPE_ONELEVEL
@@ -134,7 +135,10 @@ class LDAPCommunicator(object):
         self._con = None
         self._cache = None
         if connector._cache:
-            cacheprovider = getUtility(ICacheProviderFactory)()
+            cachefactory = queryUtility(ICacheProviderFactory)
+            if cachefactory is None:
+                cachefactory = nullcacheProviderFactory
+            cacheprovider = cachefactory()          
             self._cache = ICacheManager(cacheprovider)
             self._cache.setTimeout(connector._cachetimeout)
             logger.debug(u"LDAP Caching activated for instance '%s'. Use '%s' "

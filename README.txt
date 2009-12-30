@@ -1,7 +1,10 @@
-LDAP convenience library with caching support
-=============================================
+LDAP convenience library
+========================
 
-This Package provides objects for LDAP communication.
+This Package provides objects for LDAP communication. 
+
+LDAP Session
+------------
 
 You can work with the ``LDAPSession`` object.
 ::
@@ -18,8 +21,12 @@ You can work with the ``LDAPSession`` object.
     ...                   timeout=12345)
     >>> session = LDAPSession(props)
     >>> res = session.search('(uid=*)', ONELEVEL)
+    
+LDAP Node
+---------
 
-You can build and edit LDAP data trees with the ``LDAPNode`` object.
+You can build and edit LDAP data trees with the ``LDAPNode`` which is based on 
+``zodict.Node``. 
 
 The root Node expects the base DN and the server properties to initialize.
 ::
@@ -63,15 +70,43 @@ Deleting of entries.
 
 For more details see the corresponding source and test files.
 
+Caching Support
+---------------
+
+``bda.ldap`` caches LDAP searches using the lightweight ``bda.cache``. You need 
+to provide a utility in you application in order to make caching work. If you
+dont, ``bda.ldap`` falls back to use the NullCache, which does not cache 
+anything. 
+
+To provide an cache based on ``Memcached`` install the memcached server,  
+configure and start it. I suppose its started on localhost port 11211 (which is 
+a common default). Then you need to provide a utility acting as a factory.  
+::
+    
+    >>> from bda.ldap.cache import MemcachedProviderFactory
+    >>> providerfactory = MemcachedProviderFactory()
+    >>> from zope.component import provideUtility
+    >>> provideUtility(providerfactory)
+    
+In the case you have more than one memcached server running or hav it running on 
+another maschine, you need to initialize the factory different::    
+
+    >>> providerfactory = MemcachedProviderFactory(servers=[10.0.0.10:22122,
+    ...                                                     10.0.0.11:22322])
+    >>> provideUtility(providerfactory)
+
 Dependencies
-------------
+============
 
 - python-ldap
 
+- zodict
+
 - bda.cache
 
+
 Notes on python-ldap
---------------------
+====================
 
 Although python-ldap is available via pypi, we excluded it from
 ``install_requires`` due to different compile issues on different platforms.
@@ -80,7 +115,7 @@ So you have to make sure that ``pyhon-ldap`` is available on your system in
 any way.
 
 TODO
-----
+====
 
 - TLS/SSL Support. in LDAPConnector
 
@@ -91,8 +126,16 @@ TODO
 Changes
 =======
 
-1.4.1
+1.5.0
 -----
+
+- Made ``MemcachedProviderFactory`` configureable. Defaults behave like in prior
+  versions. New: We can pass ``server=`` keyword argument to the 
+  constructor expecting a list of servers, each in the form *server:port*.
+
+- Dont provide any cache provider factory by default. Added a 
+  ``nullCacheProviderFactory`` which  provides a non-caching behaviour. Use this
+  as fallback if no utility was registered.   
 
 - Add read property ``ldap_session`` to ``LDAPNode``. This way its clean to take  
   the session of ``LDAPNode`` in an application i.e. for searching. Be careful 
