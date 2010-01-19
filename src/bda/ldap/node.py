@@ -120,7 +120,7 @@ class LDAPNode(LifecycleNode):
             return
         if self._reload:
             self._keys = None        
-        if self._keys is None:
+        if self._keys is None and self._action != ACTION_ADD:
             self._keys = odict()
             children = self._session.search('(objectClass=*)',
                                             ONELEVEL,
@@ -131,7 +131,7 @@ class LDAPNode(LifecycleNode):
                 key = dn[:dn.rfind(self.DN)].strip(',')
                 self._keys[key] = None
                 yield key
-        else:        
+        elif self._keys:        
             for key in self._keys:
                 yield key
     

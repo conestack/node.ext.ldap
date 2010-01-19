@@ -129,7 +129,10 @@ Changes
 1.5.1 unreleased
 ----------------
 
-- If an Node was added we cant load its attributes. Takes this into account now.
+- If a Node was added and no child added __iter__ failed. Fixed now.
+  (jensens, 2010-01-19) 
+
+- If a Node was added we cant load its attributes. Takes this into account now.
   (jensens, 2010-01-17) 
 
 1.5.0
