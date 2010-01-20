@@ -87,6 +87,13 @@ Create a new LDAPNode and add it to customers.
 This entry was not written yet to the directory, but marked that it has to be
 written.
 
+New entry has no childs, but was added to the parent. There
+were an bug where iteration tried to load from ldap at this stage. Lets test
+if this works
+::
+    >>> customer.keys()
+    []     
+
 Note that calling keys() of the container now, returns the already added key
 anyway, since this is the sane state of the node structure, at least for
 itself.
@@ -94,6 +101,7 @@ itself.
 
     >>> customers.keys()
     ['ou=customer1', 'ou=customer2', 'ou=customer3']
+
 
 The Container itself has changed.
 ::
@@ -263,7 +271,6 @@ We can call a node in the middle.
 
 Check adding of an attribute.
 ::
-
     >>> person.attributes['description'] = 'Brandnew description'
     >>> root.changed, customer.changed, person.changed, \
     ... person.attributes.changed
@@ -280,6 +287,15 @@ Check adding of an attribute.
     >>> root.changed, customer.changed, person.changed, \
     ... person.attributes.changed
     (False, False, False, False)
+    
+Check access to attributes on a fresh but added-to-parent node. There were a bug
+so we test it.
+::
+
+    >>> customerattrempty = LDAPNode()
+    >>> customers['cn=customerattrempty'] = customerattrempty
+    >>> customerattrempty.attributes.keys()
+    []
 
 Check deleting of entries.
 ::
