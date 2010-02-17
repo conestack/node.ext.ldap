@@ -129,6 +129,9 @@ Changes
 1.5.1 unreleased
 ----------------
 
+- BBB compatibility for zope2.9
+  (rnix, jensens, 2010-02-17)
+
 - If a Node was added and no child added __iter__ failed. Fixed now.
   (jensens, 2010-01-19) 
 

@@ -5,7 +5,10 @@ import types
 import copy
 from odict import odict
 from zope.interface import implements
-from zope.component.event import objectEventNotify
+try:
+    from zope.app.event.objectevent import objectEventNotify # BBB
+except ImportError, e:
+    from zope.component.event import objectEventNotify
 from zodict.interfaces import ICallableNode
 from zodict import LifecycleNode
 from zodict.node import NodeAttributes
