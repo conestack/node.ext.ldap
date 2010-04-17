@@ -140,6 +140,16 @@ class LDAPNode(LifecycleNode):
     
     iterkeys = __iter__
     
+    def iteritems(self):
+        for key in self:
+            yield key, self[key]
+
+    def sort(self, cmp=None, key=None, reverse=False):
+        #  first wake up all entries 
+        dummy = self.items()
+        # second sort them
+        self._keys.sort(cmp=cmp, key=key, reverse=reverse)
+    
     def __getitem__(self, key):
         if not key in self:
             raise KeyError(u"Entry not existent: %s" % key)

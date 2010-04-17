@@ -129,6 +129,12 @@ Changes
 1.5.1 unreleased
 ----------------
 
+- added support for sort to node. Note: This wakes up all children of Node.
+  (jensens, 2010-04-16) 
+
+- added support for "items() to Node".
+  (jensens, 2010-04-16) 
+
 - BBB compatibility for zope2.9
   (rnix, jensens, 2010-02-17)
 
