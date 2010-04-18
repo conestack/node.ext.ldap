@@ -147,6 +147,8 @@ class LDAPNode(LifecycleNode):
     def sort(self, cmp=None, key=None, reverse=False):
         #  first wake up all entries 
         dummy = self.items()
+        if not dummy:
+            return
         # second sort them
         self._keys.sort(cmp=cmp, key=key, reverse=reverse)
     
