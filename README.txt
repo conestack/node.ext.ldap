@@ -118,8 +118,20 @@ TODO
 ====
 
 - TLS/SSL Support. in LDAPConnector
+  could be useful, python-ldap's
+    class SmartLDAPObject(ReconnectLDAPObject)
+     |  Mainly the __init__() method does some smarter things
+     |  like negotiating the LDAP protocol version and calling
+     |  LDAPObject.start_tls_s().
+
 
 - Improve retry logic in LDAPSession
+  could be useful, python-ldap's
+    class ReconnectLDAPObject(SimpleLDAPObject)
+     |  In case of server failure (ldap.SERVER_DOWN) the implementations
+     |  of all synchronous operation methods (search_s() etc.) are doing
+     |  an automatic reconnect and rebind and will retry the very same
+     |  operation.
 
 - Extend LDAPSession object to handle Fallback server(s)
 
