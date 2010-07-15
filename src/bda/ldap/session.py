@@ -53,8 +53,11 @@ class LDAPSession(object):
         if queryFilter in ('', u'', None):
             queryFilter = '(objectClass=*)'
         func = self._communicator.search
-        return self._perform(func, queryFilter, scope, baseDN,
-                             force_reload, attrlist, attrsonly)
+        res = self._perform(func, queryFilter, scope, baseDN,
+                            force_reload, attrlist, attrsonly)
+        # ActiveDirectory returns entries with dn None, which can be ignored
+        res = filter(lambda x: x[0] is not None, res)
+        return res
     
     def add(self, dn, data):
         func = self._communicator.add
