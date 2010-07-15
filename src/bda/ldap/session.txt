@@ -61,6 +61,20 @@ Modify this entry and check the result.
     [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com', 
     {'objectClass': ['person', 'top'], 'cn': ['foo'], 'sn': ['baz']})]
 
+Query only specific attributes.
+::
+
+    >>> res = session.search('(cn=foo)', SUBTREE, attrlist=('sn',))
+    >>> res
+    [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com', {'sn': ['baz']})]
+
+And only the attributes without the values.
+::
+
+    >>> res = session.search('(cn=foo)', SUBTREE, attrlist=('sn',), attrsonly=True)
+    >>> res
+    [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com', {'sn': []})]
+
 Delete this entry and check the result.
 ::
 
