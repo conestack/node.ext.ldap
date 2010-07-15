@@ -75,6 +75,12 @@ class LDAPNodeAttributes(NodeAttributes):
         super(LDAPNodeAttributes, self).__delitem__(key)
         self._set_attrs_modified()
     
+    def __getattribute__(self, name):
+        return object.__getattribute__(self, name)
+    
+    def __setattr__(self, name, value):
+        object.__setattr__(self, name, value)
+    
     def _set_attrs_modified(self):
         if self._node._action not in [ACTION_ADD, ACTION_DELETE]:
             self._node._action = ACTION_MODIFY
@@ -133,6 +139,7 @@ class LDAPNode(LifecycleNode):
             for dn, attrs in children:
                 key = dn[:dn.rfind(self.DN)].strip(',')
                 self._keys[key] = None
+            for key in self._keys:
                 yield key
         elif self._keys:        
             for key in self._keys:
@@ -215,6 +222,17 @@ class LDAPNode(LifecycleNode):
         for node in self._keys.values() + getattr(self, '_deleted', []):
             if node is not None and node.changed:
                 node()
+    
+    def __repr__(self):
+        if self.__parent__ is None:
+            return "<%s - %s>" % (self.DN, self.changed)
+        return "<%s:%s - %s>" % (self.DN, self.__name__, self.changed)
+    
+    __str__ = __repr__
+    
+    @property
+    def noderepr(self):
+        return repr(self)
     
     def _ldap_add(self):
         """adds self to the ldap directory.

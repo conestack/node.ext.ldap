@@ -30,7 +30,7 @@ the server properties.
   
     >>> root = LDAPNode('dc=my-domain,dc=com', props)
     >>> root
-    <LDAPNode object 'dc=my-domain,dc=com' at ...>
+    <dc=my-domain,dc=com - False>
     
     >>> root.ldap_session
     <bda.ldap.session.LDAPSession object at ...>
@@ -54,7 +54,7 @@ Access existent child and it's attributes.
   
     >>> customers = root['ou=customers']
     >>> customers
-    <LDAPNode object 'ou=customers' at ...>
+    <ou=customers,dc=my-domain,dc=com:ou=customers - False>
   
     >>> customers.attributes
     {'objectClass': ['top', 'organizationalUnit'], 'ou': 'customers'}
@@ -293,24 +293,56 @@ so we test it.
 ::
 
     >>> customerattrempty = LDAPNode()
-    >>> customers['cn=customerattrempty'] = customerattrempty
+    >>> customers['cn=customer99'] = customerattrempty
     >>> customerattrempty.attributes.keys()
     []
+    
+Add some attributes to make call work
+    
+    >>> customerattrempty.attributes['objectClass'] = \
+    ...     ['organizationalRole', 'simpleSecurityObject']
+    >>> customerattrempty.attributes['userPassword'] = 'fooo'
 
 Check deleting of entries.
 ::
+
+    >>> [k for k in customer._keys]
+    ['cn=max']
 
     >>> del customer['cn=max']
     >>> root.changed, customer.changed, person.changed, \
     ... person.attributes.changed
     (True, True, True, False)
-
+    
+    >>> [k for k in customer._keys]
+    []
+    
+    >>> root.printtree()
+    <dc=my-domain,dc=com - True>
+      <ou=customers,dc=my-domain,dc=com:ou=customers - True>
+        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
+          <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - True>
+        <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
+    
     >>> customer()
     >>> queryPersonDirectly()
     []
+    
+    XXX This fails ATM - check ``LDAPNode._get_changed``
+    >>> root.printtree()
+    <dc=my-domain,dc=com - True>
+      <ou=customers,dc=my-domain,dc=com:ou=customers - True>
+        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
+        <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
 
     >>> root.changed, customer.changed
-    (False, False)
+    (True, False)
     
-    >>> customer._keys
-    odict()
+    >>> customerattrempty()
+    
+    XXX This fails ATM - check ``LDAPNode._get_changed``
+    >>> root.printtree()
+    <dc=my-domain,dc=com - False>
+      <ou=customers,dc=my-domain,dc=com:ou=customers - False>
+        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
+        <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
