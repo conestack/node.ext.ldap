@@ -181,7 +181,7 @@ But after __call__.
 
     >>> customer()
 
-Creatre Customer convenience query function. Need this more than once.
+Create Customer convenience query function. Need this more than once.
 ::
 
     >>> def queryPersonDirectly():
