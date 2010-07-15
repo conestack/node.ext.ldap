@@ -141,6 +141,9 @@ Changes
 1.5.1 unreleased
 ----------------
 
+- adopt for latest zodict.
+  (rnix, 2010-07-15)
+
 - added support for sort to node. Note: This wakes up all children of Node.
   (jensens, 2010-04-16) 
 
