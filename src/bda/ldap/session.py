@@ -48,6 +48,10 @@ class LDAPSession(object):
     
     def search(self, queryFilter, scope, baseDN=None,
                force_reload=False, attrlist=None, attrsonly=0):
+        # default filter for python-ldap methods is '(objectClass=*)', should be
+        # the same here - alternative: kw arg, problem: scope
+        if queryFilter in ('', u'', None):
+            queryFilter = '(objectClass=*)'
         func = self._communicator.search
         return self._perform(func, queryFilter, scope, baseDN,
                              force_reload, attrlist, attrsonly)
