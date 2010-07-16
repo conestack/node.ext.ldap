@@ -171,6 +171,8 @@ TODO
   key error resulting in a failing test. Either we need to forbid normal
   strings or decode them, too.
 
+- check/implement silent sort on only the keys LDAPNode.sortonkeys()
+
 
 Changes
 =======

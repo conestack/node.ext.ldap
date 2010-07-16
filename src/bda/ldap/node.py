@@ -77,9 +77,11 @@ class LDAPNodeAttributes(NodeAttributes):
         self._set_attrs_modified()
     
     def __getattribute__(self, name):
+        # XXX: why is that necessary?
         return object.__getattribute__(self, name)
     
     def __setattr__(self, name, value):
+        # XXX: why is that necessary?
         object.__setattr__(self, name, value)
     
     def _set_attrs_modified(self):
@@ -128,6 +130,8 @@ class LDAPNode(LifecycleNode):
         return self._dn                  
     
     def __iter__(self):
+        """This is where keys are retrieved from ldap
+        """
         if self.__name__ is None:
             return
         if self._reload:
@@ -155,6 +159,8 @@ class LDAPNode(LifecycleNode):
             yield key, self[key]
 
     def sort(self, cmp=None, key=None, reverse=False):
+        # XXX: a sort working only on the keys could work without wakeup -->
+        # sortonkeys()
         #  first wake up all entries 
         dummy = self.items()
         if not dummy:
@@ -163,6 +169,8 @@ class LDAPNode(LifecycleNode):
         self._keys.sort(cmp=cmp, key=key, reverse=reverse)
     
     def __getitem__(self, key):
+        """Here nodes are created for keys, iff they do not exist already
+        """
         if not key in self:
             raise KeyError(u"Entry not existent: %s" % key)
         if self._keys[key] is not None:
