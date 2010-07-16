@@ -31,6 +31,10 @@ the server properties.
     >>> root = LDAPNode('dc=my-domain,dc=com', props)
     >>> root
     <dc=my-domain,dc=com - False>
+
+    The non-unicode name got decoded
+    >>> root.__name__
+    u'dc=my-domain,dc=com'
     
     >>> root.ldap_session
     <bda.ldap.session.LDAPSession object at ...>

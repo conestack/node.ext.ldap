@@ -105,6 +105,8 @@ class LDAPNode(LifecycleNode):
         """
         if (name and not props) or (props and not name):
             raise ValueError(u"Wrong initialization.")
+        if name and not isinstance(name, unicode):
+            name = name.decode(props.encoding)
         self.__name__ = name
         self._session = None        
         self._changed = False
