@@ -19,3 +19,8 @@ dn: ou=customer2,ou=customers,dc=my-domain,dc=com
 ou: customer2
 objectClass: top
 objectClass: organizationalUnit
+
+dn: ou=nasty\, customer,ou=customers,dc=my-domain,dc=com
+ou: nasty\, customer
+objectClass: top
+objectClass: organizationalUnit

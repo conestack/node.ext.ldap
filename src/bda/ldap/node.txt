@@ -66,7 +66,7 @@ Access existent child and it's attributes.
     'ou=customers'
   
     >>> customers.keys()
-    ['ou=customer1', 'ou=customer2']
+    ['ou=customer1', 'ou=customer2', 'ou=nasty\\2C customer']
   
     >>> customers.changed
     False
@@ -100,7 +100,7 @@ itself.
 ::
 
     >>> customers.keys()
-    ['ou=customer1', 'ou=customer2', 'ou=customer3']
+    ['ou=customer1', 'ou=customer2', 'ou=nasty\\2C customer', 'ou=customer3']
 
 
 The Container itself has changed.
@@ -137,7 +137,7 @@ Check the directory state, not added yet.
     ...                                 baseDN=customers.DN,
     ...                                 force_reload=True)
     >>> len(res)
-    2
+    3
 
 On call the new entry is written to the directory.
 ::
@@ -152,7 +152,7 @@ Now the new entry is present in the directory as well.
     ...                                 baseDN=customers.DN,
     ...                                 force_reload=True)
     >>> len(res)
-    3
+    4
 
 Add a person to test modification stuff.
 ::

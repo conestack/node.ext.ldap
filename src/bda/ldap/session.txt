@@ -30,7 +30,7 @@ Set a baseDN and perform LDAP search.
     >>> from bda.ldap import SUBTREE
     >>> res = session.search('(objectClass=*)', SUBTREE)
     >>> len(res)
-    4
+    5
 
 Add an entry.
 ::
@@ -44,7 +44,7 @@ Add an entry.
     >>> session.add(dn, entry)
     >>> res = session.search('(objectClass=*)', SUBTREE)
     >>> len(res)
-    5
+    6
 
 Modify this entry and check the result.
 ::
