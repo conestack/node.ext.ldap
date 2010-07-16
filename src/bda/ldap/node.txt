@@ -306,8 +306,15 @@ Check adding of an attribute.
 Check queryNode with nasty dn.
 ::
     >>> from bda.ldap.node import queryNode
-    >>> node = queryNode(props, r'ou=nasty\, customer,ou=customers,dc=my-domain,dc=com')
-    
+    >>> node = queryNode(props, \
+    ...     r'ou=nasty\, customer,ou=customers,dc=my-domain,dc=com')
+    >>> node.__name__
+    'ou=nasty\\, customer'
+    >>> node.__parent__
+    <ou=customers,dc=my-domain,dc=com - False>
+
+    XXX inconsistent encoding
+
 Check access to attributes on a fresh but added-to-parent node. There were a bug
 so we test it.
 ::
