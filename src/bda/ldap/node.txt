@@ -66,7 +66,7 @@ Access existent child and it's attributes.
     'ou=customers'
   
     >>> customers.keys()
-    ['ou=customer1', 'ou=customer2', 'ou=nasty\\2C customer']
+    ['ou=customer1', 'ou=customer2', 'ou=nasty\\, customer']
   
     >>> customers.changed
     False
@@ -100,7 +100,7 @@ itself.
 ::
 
     >>> customers.keys()
-    ['ou=customer1', 'ou=customer2', 'ou=nasty\\2C customer', 'ou=customer3']
+    ['ou=customer1', 'ou=customer2', 'ou=nasty\\, customer', 'ou=customer3']
 
 
 The Container itself has changed.

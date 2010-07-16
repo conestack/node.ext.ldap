@@ -138,7 +138,7 @@ class LDAPNode(LifecycleNode):
                                             force_reload=self._reload,
                                             attrsonly=1)
             for dn, attrs in children:
-                key = dn[:dn.rfind(self.DN)].strip(',')
+                key = explode_dn(dn)[0]
                 self._keys[key] = None
             for key in self._keys:
                 yield key
