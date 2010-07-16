@@ -5,6 +5,7 @@ from bda.ldap.base import (
     LDAPConnector,
     LDAPCommunicator,
 )
+from bda.ldap.strcodec import StrCodec
 from bda.ldap.properties import (
     LDAPServerProperties,
     LDAPProps,
