@@ -172,7 +172,18 @@ class LDAPNode(LifecycleNode):
         self._notify_suppress = False
         self._keys[key] = val
         return val
-    
+
+    def get(self, key, default=None):
+        """Otherwise odict/pyodicts __getitem__ is used...
+
+        XXX: Maybe this could be higher up in the hierarchy
+        """
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+
     def __setitem__(self, key, val):
         val._session = self._session
         if self._keys is None:
