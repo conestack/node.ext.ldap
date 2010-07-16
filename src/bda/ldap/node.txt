@@ -287,6 +287,11 @@ Check adding of an attribute.
     >>> root.changed, customer.changed, person.changed, \
     ... person.attributes.changed
     (False, False, False, False)
+
+Check queryNode with nasty dn.
+::
+    >>> from bda.ldap.node import queryNode
+    >>> node = queryNode(props, r'ou=nasty\, customer,ou=customers,dc=my-domain,dc=com')
     
 Check access to attributes on a fresh but added-to-parent node. There were a bug
 so we test it.
