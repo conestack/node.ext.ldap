@@ -3,6 +3,7 @@
 
 import types
 import copy
+from ldap.functions import explode_dn
 from odict import odict
 from zope.interface import implements
 try:
@@ -34,8 +35,8 @@ def queryNode(props, dn):
     ``dn``
         DN of the node to query
     """
-    containerdn = dn[dn.find(',') + 1:]
-    nodedn = dn[:dn.find(',')]
+    containerdn = ','.join(explode_dn(dn)[1:])
+    nodedn = explode_dn(dn)[0]
     container = LDAPNode(name=containerdn, props=props)
     return container.get(nodedn, None)
 
