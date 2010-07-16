@@ -18,6 +18,7 @@ class LDAPSession(object):
                                   props.cache,
                                   props.timeout)
         self._communicator = LDAPCommunicator(connector)
+        self.ldap_encoding = props.encoding
     
     def checkServerProperties(self):
         """Test if connection can be established.
@@ -84,6 +85,39 @@ class LDAPSession(object):
     def unbind(self):
         self._communicator.unbind()
     
+    def _encode(self, arg):
+        """Return an encoded copy of the argument
+        - strs are decoded and reencode to make sure they conform to the
+          encoding
+        - unicodes are encoded as str according to ldap_encoding
+        - lists/tuples/dicts are recursively worked on
+        - everything else is left untouched
+        """
+        if isinstance(arg, (list, tuple)):
+            arg = arg.__class__(map(self._encode, arg))
+        elif isinstance(arg, dict):
+            arg = dict(
+                [self._encode(t) for t in arg.iteritems()]
+                )
+        elif isinstance(arg, str):
+            arg = self._encode(
+                    self._decode(arg)
+                    )
+        elif isinstance(arg, unicode):
+            arg = arg.encode(self.ldap_encoding)
+        return arg
+
+    def _decode(self, arg):
+        if isinstance(arg, (list, tuple)):
+            arg = arg.__class__(map(self._decode, arg))
+        elif isinstance(arg, dict):
+            arg = dict(
+                [self._decode(t) for t in arg.iteritems()]
+                )
+        elif isinstance(arg, str):
+            arg = arg.decode(self.ldap_encoding)
+        return arg
+
     def _perform(self, function, *args, **kwargs):
         """Try to perform the given function with the given argument.
         
@@ -92,10 +126,13 @@ class LDAPSession(object):
         XXX: * Improve retry logic in LDAPSession 
              * Extend LDAPSession object to handle Fallback server(s)
         """
+        args = self._encode(args)
+        kwargs = self._encode(kwargs)
+
         if self._communicator._con is None:
             self._communicator.bind()
         try:
-            return function(*args, **kwargs)
+            return self._decode(function(*args, **kwargs))
         except ldap.SERVER_DOWN:
             self._communicator.bind()
-            return function(*args, **kwargs)
+            return self._decode(function(*args, **kwargs))

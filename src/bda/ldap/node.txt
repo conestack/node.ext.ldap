@@ -38,6 +38,7 @@ the server properties.
 Check child keys of root.
 ::
 
+    XXX inconsistent encoding
     >>> root.keys()
     ['ou=customers']
 
@@ -57,14 +58,16 @@ Access existent child and it's attributes.
     <ou=customers,dc=my-domain,dc=com:ou=customers - False>
   
     >>> customers.attributes
-    {'objectClass': ['top', 'organizationalUnit'], 'ou': 'customers'}
+    {u'objectClass': [u'top', u'organizationalUnit'], u'ou': u'customers'}
   
     >>> customers.DN
-    'ou=customers,dc=my-domain,dc=com'
+    u'ou=customers,dc=my-domain,dc=com'
   
+    XXX inconsistent encoding
     >>> customers.__name__
     'ou=customers'
   
+    XXX inconsistent encoding
     >>> customers.keys()
     ['ou=customer1', 'ou=customer2', 'ou=nasty\\, customer']
   
@@ -99,6 +102,7 @@ anyway, since this is the sane state of the node structure, at least for
 itself.
 ::
 
+    XXX inconsistent encoding
     >>> customers.keys()
     ['ou=customer1', 'ou=customer2', 'ou=nasty\\, customer', 'ou=customer3']
 
@@ -165,6 +169,8 @@ Add a person to test modification stuff.
     >>> customer['cn=max'] = person
     >>> customer.keys()
     ['cn=max']
+
+    XXX inconsistent encoding
   
 Again, not in directory yet.
 ::
@@ -191,12 +197,12 @@ Create Customer convenience query function. Need this more than once.
     ...                                    force_reload=True)
     ...     return res
   
-    >>> queryPersonDirectly()
-    [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com', 
-    {'objectClass': ['top', 'person'], 
-    'cn': ['Max'], 
-    'description': ['Initial Description'], 
-    'sn': ['Mustermann']})]
+    >>> pprint(queryPersonDirectly())
+    [(u'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com',
+      {u'cn': [u'Max'],
+       u'description': [u'Initial Description'],
+       u'objectClass': [u'top', u'person'],
+       u'sn': [u'Mustermann']})]
 
 Lets modify this person. First look at the flags.
 ::
@@ -237,12 +243,12 @@ Check the flags.
 And check the changes in the directory.
 ::
 
-    >>> queryPersonDirectly()
-    [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com', 
-    {'objectClass': ['top', 'person'], 
-    'description': ['Another description'], 
-    'sn': ['Mustermann'], 
-    'cn': ['Max']})]
+    >>> pprint(queryPersonDirectly())
+    [(u'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com',
+      {u'cn': [u'Max'],
+       u'description': [u'Another description'],
+       u'objectClass': [u'top', u'person'],
+       u'sn': [u'Mustermann']})]
 
 Check removing of an attribute.
 ::  
@@ -259,11 +265,9 @@ We can call a node in the middle.
 ::
 
     >>> customer()
-    >>> queryPersonDirectly()
-    [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com', 
-    {'objectClass': ['top', 'person'], 
-    'sn': ['Mustermann'], 
-    'cn': ['Max']})]    
+    >>> pprint(queryPersonDirectly())
+    [(u'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com',
+      {u'cn': [u'Max'], u'objectClass': [u'top', u'person'], u'sn': [u'Mustermann']})]
 
     >>> root.changed, customer.changed, person.changed, \
     ... person.attributes.changed
@@ -271,37 +275,45 @@ We can call a node in the middle.
 
 Check adding of an attribute.
 ::
-    >>> person.attributes['description'] = 'Brandnew description'
+    >>> person.attributes['description'] = u'Brandnew description'
     >>> root.changed, customer.changed, person.changed, \
     ... person.attributes.changed
     (True, True, True, True)
 
     >>> customer()
-    >>> queryPersonDirectly()
-    [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com', 
-    {'objectClass': ['top', 'person'], 
-    'description': ['Brandnew description'], 
-    'sn': ['Mustermann'], 
-    'cn': ['Max']})]
+    >>> pprint(queryPersonDirectly())
+    [(u'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com',
+      {u'cn': [u'Max'],
+       u'description': [u'Brandnew description'],
+       u'objectClass': [u'top', u'person'],
+       u'sn': [u'Mustermann']})]
 
     >>> root.changed, customer.changed, person.changed, \
     ... person.attributes.changed
     (False, False, False, False)
 
-#Attribute with non-ascii (str utf8 encoded). - This should fail, I think -cfl
-#::
-#    >>> person.attributes['sn'] = 'i\xc4\x8di\xc4\x87'
-#    >>> person()
-#    Traceback (most recent call last):
-#    ...
-#    TypeError: ('expected a string in the list', u'i')
-#
-#Attribute with non-ascii (as unicode). - This should succeed, I think -cfl
-#::
-#    >>> person.attributes['sn'] = u'i\u010di\u0107'
-#    >>> person()
-#    >>> queryPersonDirectly()[0][1]['sn'][0]
-#    'i\xc4\x8di\xc4\x87'
+Attribute with non-ascii unicode returns as is.
+::
+    >>> person.attributes['sn'] = u'i\u0107'
+    >>> person()
+    >>> queryPersonDirectly()[0][1]['sn'][0]
+    u'i\u0107'
+
+Attribute with non-ascii str (utf8) returns as unicode.
+::
+    >>> person.attributes['sn'] = 'i\xc4\x87'
+    >>> person()
+    >>> queryPersonDirectly()[0][1]['sn'][0]
+    u'i\u0107'
+
+Attribute with utf16 str fails.
+::
+    >>> person.attributes['sn'] = '\xff\xfei\x00\x07\x01'
+    >>> person()
+    Traceback (most recent call last):
+    ...
+    UnicodeDecodeError:
+      'utf8' codec can't decode byte 0xff in position 0: unexpected code byte
 
 Check queryNode with nasty dn.
 ::
@@ -324,7 +336,8 @@ so we test it.
     >>> customerattrempty.attributes.keys()
     []
     
-Add some attributes to make call work
+Add some attributes to make call work.
+::
     
     >>> customerattrempty.attributes['objectClass'] = \
     ...     ['organizationalRole', 'simpleSecurityObject']
@@ -333,6 +346,7 @@ Add some attributes to make call work
 Check deleting of entries.
 ::
 
+    XXX inconsistent encoding
     >>> [k for k in customer._keys]
     ['cn=max']
 

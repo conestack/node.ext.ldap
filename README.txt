@@ -70,6 +70,30 @@ Deleting of entries.
 
 For more details see the corresponding source and test files.
 
+
+Character Encoding
+------------------
+
+LDAP (v3 at least, `RFC 2251`_) uses utf8 string encoding. Since 1.5.1, bda.ldap
+translates these to unicodes for you. Consider it a bug, if you receive anything
+else than unicode from bda.ldap.
+
+Unicode strings you pass to bda.ldap are automatically encoded to uft8 for
+LDAP. If you pass normal strings to bda.ldap they are decoded as utf8 and
+reencoded as utf8 to make sure they are utf8 or compatible, e.g. ascii.
+
+If you have an LDAP server that does not use utf8, you can set the encoding via
+the LDAPServerProperties.
+
+If you are confused by all that encoding/decoding: python knows in what
+encoding it stores its unicodes, however, it cannot know for normal strs.
+Therefore, you should only use unicodes. In order to get a unicode for a str, a
+string is decoded according to a given encoding schema (eg utf8). And encoding
+a unicode produces a str in a specific encoding (eg utf8).
+
+.. _`RFC 2251`: http://www.ietf.org/rfc/rfc2251.txt
+
+
 Caching Support
 ---------------
 
@@ -95,6 +119,7 @@ another maschine, you need to initialize the factory different::
     ...                                                     10.0.0.11:22322])
     >>> provideUtility(providerfactory)
 
+
 Dependencies
 ============
 
@@ -113,6 +138,7 @@ Although python-ldap is available via pypi, we excluded it from
 
 So you have to make sure that ``pyhon-ldap`` is available on your system in
 any way.
+
 
 TODO
 ====
@@ -135,11 +161,40 @@ TODO
 
 - Extend LDAPSession object to handle Fallback server(s)
 
+- LDAPSession._encode_for_ldap results in changed order of dict entries,
+  probably due to dict implementation. Investigate effects of that. I had the
+  impression so far that ldap (at least openldap) preserves the order if you
+  give it an ldif file. Iff then python-ldap should use odicts not dicts.
+
+- currently all ldap stuff is returned as unicode, but values that did not pass
+  LDAPSession._perform remain as str - VERY INCONSISTENT and further we have
+  key error resulting in a failing test. Either we need to forbid normal
+  strings or decode them, too.
+
+
 Changes
 =======
 
 1.5.1 unreleased
 ----------------
+
+- character encoding: bda.ldap mostly returns unicode see ``Character Encoding``
+  (chaoflow, 2010-07-16)
+
+- add LDAPNode.get to use LDAPNode.__getitem__ instead of odict's
+  (chaoflow, 2010-07-16)
+
+- more tests, explode_dn for dn handling (with spaces and escaped commas)
+  (chaoflow, 2010-07-16)
+
+- ignore results with dn=None. ActiveDirectory produces them
+  (chaoflow, 2010-07-15)
+
+- default filter for session.search, if you pass '', u'' or None as filter
+  (chaoflow, 2010-07-15)
+
+- tests for attrlist and attrsonly
+  (chaoflow, 2010-07-15)
 
 - adopt for latest zodict.
   (rnix, 2010-07-15)
