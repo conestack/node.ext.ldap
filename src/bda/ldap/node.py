@@ -3,7 +3,6 @@
 
 import types
 import copy
-from ldap.functions import explode_dn
 from odict import odict
 from zope.interface import implements
 try:
@@ -17,6 +16,8 @@ from bda.ldap import (
     ONELEVEL,
     LDAPSession,
 )
+from bda.ldap.strcodec import encode, decode
+from ldap.functions import explode_dn
 from ldap import (
     MOD_ADD,
     MOD_DELETE,
@@ -45,7 +46,7 @@ class LDAPNodeAttributes(NodeAttributes):
     def __init__(self, node):
         super(LDAPNodeAttributes, self).__init__(node)
         self.load()
-    
+
     def load(self):
         if self._node.__parent__ is None or self._node._action == ACTION_ADD:
             return
@@ -69,10 +70,16 @@ class LDAPNodeAttributes(NodeAttributes):
             self._node.changed = False
                 
     def __setitem__(self, key, val):
+        if isinstance(key, str):
+            key = decode(key)
+        if isinstance(val, str):
+            val = decode(val)
         super(LDAPNodeAttributes, self).__setitem__(key, val)
         self._set_attrs_modified()
     
     def __delitem__(self, key):
+        if isinstance(key, str):
+            key = decode(key)
         super(LDAPNodeAttributes, self).__delitem__(key)
         self._set_attrs_modified()
     
@@ -144,7 +151,8 @@ class LDAPNode(LifecycleNode):
                                             force_reload=self._reload,
                                             attrsonly=1)
             for dn, attrs in children:
-                key = explode_dn(dn)[0]
+                # explode_dn is ldap world
+                key = decode(explode_dn(encode(dn))[0])
                 self._keys[key] = None
             for key in self._keys:
                 yield key
@@ -171,6 +179,8 @@ class LDAPNode(LifecycleNode):
     def __getitem__(self, key):
         """Here nodes are created for keys, iff they do not exist already
         """
+        if isinstance(key, str):
+            key = decode(key)
         if not key in self:
             raise KeyError(u"Entry not existent: %s" % key)
         if self._keys[key] is not None:
@@ -193,8 +203,9 @@ class LDAPNode(LifecycleNode):
         except KeyError:
             return default
 
-
     def __setitem__(self, key, val):
+        if isinstance(key, str):
+            key = decode(key)
         val._session = self._session
         if self._keys is None:
             self._keys = odict()
@@ -218,6 +229,8 @@ class LDAPNode(LifecycleNode):
         """Do not delete immediately. Just mark LDAPNode to be deleted and
         remove key from self._keys.
         """
+        if isinstance(key, str):
+            key = decode(key)
         val = self[key]
         val.changed = True
         val._action = ACTION_DELETE

@@ -5,9 +5,9 @@ import ldap
 from bda.ldap import (
     LDAPConnector,
     LDAPCommunicator,
-    StrCodec,
 )
 from bda.ldap.base import testLDAPConnectivity
+from bda.ldap.strcodec import encode, decode
 
 class LDAPSession(object):
     
@@ -19,7 +19,6 @@ class LDAPSession(object):
                                   props.cache,
                                   props.timeout)
         self._communicator = LDAPCommunicator(connector)
-        self._strcodec = StrCodec(props.encoding)
     
     def checkServerProperties(self):
         """Test if connection can be established.
@@ -38,12 +37,18 @@ class LDAPSession(object):
         Deprecated: This function will be removed in version 1.5. Use
                     ``baseDN`` property directly instead.
         """
-        self._communicator.baseDN = baseDN
+        self.baseDN = baseDN
     
     def _get_baseDN(self):
-        return self._communicator.baseDN
+        baseDN = self._communicator.baseDN
+        baseDN = decode(baseDN)
+        return baseDN
     
     def _set_baseDN(self, baseDN):
+        if isinstance(baseDN, str):
+            # make sure its utf8
+            baseDN = decode(baseDN)
+        baseDN = encode(baseDN)
         self._communicator.baseDN = baseDN
     
     baseDN = property(_get_baseDN, _set_baseDN)
@@ -94,13 +99,13 @@ class LDAPSession(object):
         XXX: * Improve retry logic in LDAPSession 
              * Extend LDAPSession object to handle Fallback server(s)
         """
-        args = self._strcodec.encode(args)
-        kwargs = self._strcodec.encode(kwargs)
+        args = encode(args)
+        kwargs = encode(kwargs)
 
         if self._communicator._con is None:
             self._communicator.bind()
         try:
-            return self._strcodec.decode(function(*args, **kwargs))
+            return decode(function(*args, **kwargs))
         except ldap.SERVER_DOWN:
             self._communicator.bind()
-            return self._strcodec.decode(function(*args, **kwargs))
+            return decode(function(*args, **kwargs))

@@ -42,9 +42,8 @@ the server properties.
 Check child keys of root.
 ::
 
-    XXX inconsistent encoding
     >>> root.keys()
-    ['ou=customers']
+    [u'ou=customers']
 
 Access inexistent child.
 ::
@@ -67,13 +66,11 @@ Access existent child and it's attributes.
     >>> customers.DN
     u'ou=customers,dc=my-domain,dc=com'
   
-    XXX inconsistent encoding
     >>> customers.__name__
-    'ou=customers'
+    u'ou=customers'
   
-    XXX inconsistent encoding
     >>> customers.keys()
-    ['ou=customer1', 'ou=customer2', 'ou=nasty\\, customer']
+    [u'ou=customer1', u'ou=customer2', u'ou=nasty\\, customer']
   
     >>> customers.changed
     False
@@ -106,9 +103,8 @@ anyway, since this is the sane state of the node structure, at least for
 itself.
 ::
 
-    XXX inconsistent encoding
     >>> customers.keys()
-    ['ou=customer1', 'ou=customer2', 'ou=nasty\\, customer', 'ou=customer3']
+    [u'ou=customer1', u'ou=customer2', u'ou=nasty\\, customer', u'ou=customer3']
 
 
 The Container itself has changed.
@@ -172,9 +168,7 @@ Add a person to test modification stuff.
     >>> person.attributes['description'] = 'Initial Description'
     >>> customer['cn=max'] = person
     >>> customer.keys()
-    ['cn=max']
-
-    XXX inconsistent encoding
+    [u'cn=max']
   
 Again, not in directory yet.
 ::
@@ -313,7 +307,6 @@ Attribute with non-ascii str (utf8) returns as unicode.
 Attribute with utf16 str fails.
 ::
     >>> person.attributes['sn'] = '\xff\xfei\x00\x07\x01'
-    >>> person()
     Traceback (most recent call last):
     ...
     UnicodeDecodeError:
@@ -325,11 +318,9 @@ Check queryNode with nasty dn.
     >>> node = queryNode(props, \
     ...     r'ou=nasty\, customer,ou=customers,dc=my-domain,dc=com')
     >>> node.__name__
-    'ou=nasty\\, customer'
+    u'ou=nasty\\, customer'
     >>> node.__parent__
     <ou=customers,dc=my-domain,dc=com - False>
-
-    XXX inconsistent encoding
 
 Check access to attributes on a fresh but added-to-parent node. There were a bug
 so we test it.
@@ -350,9 +341,8 @@ Add some attributes to make call work.
 Check deleting of entries.
 ::
 
-    XXX inconsistent encoding
     >>> [k for k in customer._keys]
-    ['cn=max']
+    [u'cn=max']
 
     >>> del customer['cn=max']
     >>> root.changed, customer.changed, person.changed, \

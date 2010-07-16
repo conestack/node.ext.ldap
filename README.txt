@@ -74,16 +74,18 @@ For more details see the corresponding source and test files.
 Character Encoding
 ------------------
 
-LDAP (v3 at least, `RFC 2251`_) uses utf8 string encoding. Since 1.5.1, bda.ldap
-translates these to unicodes for you. Consider it a bug, if you receive anything
-else than unicode from bda.ldap.
+LDAP (v3 at least, `RFC 2251`_) uses utf8 string encoding. Since 1.5.1,
+LDAPSession and LDAPNode translate these to unicodes for you. Consider it a
+bug, if you receive anything else than unicode from LDAPSession or LDAPNode.
+Everything below that LDAPConnector and LDAPCommunicator give you the real ldap
+experience. - Should we change that, too?
 
-Unicode strings you pass to bda.ldap are automatically encoded to uft8 for
-LDAP. If you pass normal strings to bda.ldap they are decoded as utf8 and
+Unicode strings you pass to nodes or sessions are automatically encoded to uft8
+for LDAP. If you feed them normal strings they are decoded as utf8 and
 reencoded as utf8 to make sure they are utf8 or compatible, e.g. ascii.
 
-If you have an LDAP server that does not use utf8, you can set the encoding via
-the LDAPServerProperties.
+If you have an LDAP server that does not use utf8, monkey-patch
+bda.ldap.strcodec.LDAP_CHARACTER_ENCODING.
 
 If you are confused by all that encoding/decoding: python knows in what
 encoding it stores its unicodes, however, it cannot know for normal strs.
@@ -161,15 +163,10 @@ TODO
 
 - Extend LDAPSession object to handle Fallback server(s)
 
-- LDAPSession._encode_for_ldap results in changed order of dict entries,
+- Encoding/Decoding the data sent to ldap changed the order of dict entries,
   probably due to dict implementation. Investigate effects of that. I had the
   impression so far that ldap (at least openldap) preserves the order if you
-  give it an ldif file. Iff then python-ldap should use odicts not dicts.
-
-- currently all ldap stuff is returned as unicode, but values that did not pass
-  LDAPSession._perform remain as str - VERY INCONSISTENT and further we have
-  key error resulting in a failing test. Either we need to forbid normal
-  strings or decode them, too.
+  give it an ldif file. Iff, then python-ldap should use odicts not dicts.
 
 - check/implement silent sort on only the keys LDAPNode.sortonkeys()
 
@@ -180,8 +177,13 @@ Changes
 1.5.1 unreleased
 ----------------
 
-- character encoding: bda.ldap mostly returns unicode see ``Character Encoding``
-  (chaoflow, 2010-07-16)
+- character encoding: LDAPSession and LDAPNode only return unicode and
+  enforces utf8 or compatible encoding on all strings they receive,
+  see ``Character Encoding``.
+  (chaoflow, 2010-07-17)
+
+- introduced strcodec module for unicode->str->unicode translation
+  (chaoflow, 2010-07-17)
 
 - add LDAPNode.get to use LDAPNode.__getitem__ instead of odict's
   (chaoflow, 2010-07-16)

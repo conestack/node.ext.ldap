@@ -1,5 +1,7 @@
 # XXX: This could be moved to its own egg
 
+LDAP_CHARACTER_ENCODING='utf8'
+
 class StrCodec(object):
     """Encode unicodes to strs and decode strs to unicodes
 
@@ -8,8 +10,8 @@ class StrCodec(object):
     During that process a deep copy is produces leaving the orginal data
     structure intact.
     """
-    def __init__(self, encoding='utf8'):
-        self.encoding = encoding
+    def __init__(self,encoding=LDAP_CHARACTER_ENCODING):
+        self._encoding = encoding
 
     def encode(self, arg):
         """Return an encoded copy of the argument
@@ -30,7 +32,7 @@ class StrCodec(object):
                     self.decode(arg)
                     )
         elif isinstance(arg, unicode):
-            arg = arg.encode(self.encoding)
+            arg = arg.encode(self._encoding)
         return arg
 
     def decode(self, arg):
@@ -41,6 +43,10 @@ class StrCodec(object):
                 [self.decode(t) for t in arg.iteritems()]
                 )
         elif isinstance(arg, str):
-            arg = arg.decode(self.encoding)
+            arg = arg.decode(self._encoding)
         return arg
 
+# make one global encoder available + convenience methods
+strcodec = StrCodec()
+encode = strcodec.encode
+decode = strcodec.decode
