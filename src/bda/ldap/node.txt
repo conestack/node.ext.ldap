@@ -133,7 +133,8 @@ But there's no action on the container since a child was added and the
 attributes of the contained has not been changed.
 ::
 
-    >>> customers._action
+    >>> print customers._action
+    None
 
 The added child has been marked as changed as well.
 ::
@@ -195,11 +196,40 @@ Again, not in directory yet.
     ...                                force_reload=True)
     >>> len(res)
     0
-  
+
+The whole tree is now in changed state.
+::
+
+    >>> root.printtree()
+    <dc=my-domain,dc=com - True>
+      <ou=customers,dc=my-domain,dc=com:ou=customers - True>
+        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
+          <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - True>
+
+
+Let's also change the container of the person.
+::
+
+    >>> customer.attrs['street'] = 'foo'
+
+
+And tell the person to commit its changes. The container (customer3) is still
+changed because of its attributes
+::
+
+    >>> person()
+    >>> root.printtree()
+    <dc=my-domain,dc=com - True>
+      <ou=customers,dc=my-domain,dc=com:ou=customers - True>
+        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
+          <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
+
+
 But after __call__.
 ::
 
     >>> customer()
+    >>> root.printtree()
 
 Create Customer convenience query function. Need this more than once.
 ::
