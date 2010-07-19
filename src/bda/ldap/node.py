@@ -36,6 +36,10 @@ def queryNode(props, dn):
         ``LDAPProps`` instance
     ``dn``
         DN of the node to query
+
+    The difference to just LDAPNode(props=props, name=dn) is, that the node
+    generated here will have only the rdn as its name, whereas LDAPNode() would
+    generate a root node, with the full dn as its name.
     """
     containerdn = ','.join(explode_dn(dn)[1:])
     nodedn = explode_dn(dn)[0]
