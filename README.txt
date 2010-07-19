@@ -175,8 +175,8 @@ TODO
 Changes
 =======
 
-1.5.2 unreleased
-----------------
+1.5.2
+-----
 
 - assume strings that fail to decode to be binary and leave them as-is
   (chaoflow, 2010-07-19)
