@@ -134,6 +134,7 @@ class LDAPNode(LifecycleNode):
         # if an odict, the value is either None or the value
         # None means, the value wasnt loaded 
         self._keys = None 
+        self._child_dns = {}
         self._reload = False        
         if props:
             self._session = LDAPSession(props)
@@ -143,12 +144,15 @@ class LDAPNode(LifecycleNode):
     @property
     def DN(self):
         if self.__parent__ is not None:
-            return ','.join((self.__name__, self.__parent__.DN))
+            return self.__parent__.child_dn(self.__name__)
         elif self.__name__ is not None:
             # We should not have a name if we are not a root node
             return self.__name__
         else:
             return u''
+
+    def child_dn(self, key):
+        return self._child_dns[key]
     
     def __iter__(self):
         """This is where keys are retrieved from ldap
@@ -156,7 +160,8 @@ class LDAPNode(LifecycleNode):
         if self.__name__ is None:
             return
         if self._reload:
-            self._keys = None        
+            self._keys = None
+            self._child_dns.clear()
         if self._keys is None and self._action != ACTION_ADD:
             self._keys = odict()
             children = self._session.search('(objectClass=*)',
@@ -168,9 +173,10 @@ class LDAPNode(LifecycleNode):
                 # explode_dn is ldap world
                 key = decode(explode_dn(encode(dn))[0])
                 self._keys[key] = None
-            for key in self._keys:
-                yield key
-        elif self._keys:        
+                # We know the dn of the child but don't have a child yet, it
+                # seems sane to cache it
+                self._child_dns[key] = dn
+        if self._keys:
             for key in self._keys:
                 yield key
     
@@ -237,6 +243,7 @@ class LDAPNode(LifecycleNode):
         super(LDAPNode, self).__setitem__(key, val)
         self._notify_suppress = False
         self._keys[key] = val    
+        self._child_dns[key] = ','.join((val.__name__, self.DN))
         if val._action == ACTION_ADD:
             objectEventNotify(self.events['added'](val, newParent=self, 
                                                    newName=key))

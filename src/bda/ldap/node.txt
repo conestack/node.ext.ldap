@@ -190,6 +190,8 @@ Add a person to test modification stuff.
     >>> customer['cn=max'] = person
     >>> customer.keys()
     [u'cn=max']
+    >>> person.DN
+    u'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com'
   
 Again, not in directory yet.
 ::
