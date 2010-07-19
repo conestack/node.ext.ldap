@@ -45,6 +45,22 @@ Check child keys of root.
     >>> root.keys()
     [u'ou=customers']
 
+Check/modify attributes of root.
+::
+    >>> root.attrs
+    {u'objectClass': [u'top', u'dcObject', u'organization'],
+     u'dc': u'my-domain',
+     u'o': u'my-organization'}
+
+    >>> root.attrs['o'] = 'foo'
+    >>> root()
+    >>> root.attrs
+    {u'objectClass': [u'top', u'dcObject', u'organization'],
+     u'dc': u'my-domain',
+     u'o': u'foo'}
+    >>> root.attrs['o'] = 'my-organization'
+    >>> root()
+
 Access inexistent child.
 ::
 

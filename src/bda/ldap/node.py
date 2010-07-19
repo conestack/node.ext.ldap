@@ -13,6 +13,7 @@ from zodict.interfaces import ICallableNode
 from zodict import LifecycleNode
 from zodict.node import NodeAttributes
 from bda.ldap import (
+    BASE,
     ONELEVEL,
     LDAPSession,
 )
@@ -48,13 +49,15 @@ class LDAPNodeAttributes(NodeAttributes):
         self.load()
 
     def load(self):
-        if self._node.__parent__ is None or self._node._action == ACTION_ADD:
+        if not self._node.__name__ or self._node._action == ACTION_ADD:
             return
         self.clear()
-        dn = self._node.__parent__.DN
-        search = self._node._session.search
-        entry = search('(%s)' % self._node.__name__, ONELEVEL, baseDN=dn,
-                       force_reload=self._node._reload)        
+        # fetch our node with all attributes
+        entry = self._node._session.search(
+                scope=BASE,
+                baseDN=self._node.DN,
+                force_reload=self._node._reload
+                )
         if len(entry) != 1:
             raise RuntimeError(u"Fatal. Expected entry does not exist or "
                                 "more than one entry found")
@@ -189,6 +192,8 @@ class LDAPNode(LifecycleNode):
             return super(LDAPNode, self).__getitem__(key)
         val = LDAPNode()
         val._session = self._session
+        # XXX: currently it seems we don't really use LifecycleNode, why are we
+        # not subclassing from AttributedNode?
         self._notify_suppress = True
         super(LDAPNode, self).__setitem__(key, val)
         self._notify_suppress = False
