@@ -174,8 +174,8 @@ TODO
 Changes
 =======
 
-1.5.1 unreleased
-----------------
+1.5.1
+-----
 
 - character encoding: LDAPSession and LDAPNode only return unicode and
   enforces utf8 or compatible encoding on all strings they receive,
