@@ -150,7 +150,6 @@ TODO
   Mainly the __init__() method does some smarter things like negotiating the
   LDAP protocol version and calling LDAPObject.start_tls_s().
 
-
 - Improve retry logic in LDAPSession
   could be useful, python-ldap's class ReconnectLDAPObject(SimpleLDAPObject) -
   In case of server failure (ldap.SERVER_DOWN) the implementations of all
@@ -169,6 +168,11 @@ TODO
 
 Changes
 =======
+
+1.5.2 unreleased
+----------------
+
+
 
 1.5.1
 -----
