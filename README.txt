@@ -178,6 +178,12 @@ Changes
 1.5.3 (unreleased)
 ------------------
 
+- dont unset parent's changed flag, if parent's attributes are changed
+  (chaoflow, 2010-07-19)
+
+- enable loading/modifying of root node's attributes
+  (chaoflow, 2010-07-19)
+
 - fixed _set_changed to properly protect parents changed flag, if the parent
   has other changed childs
   (chaoflow, 2010-07-19)
