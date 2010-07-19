@@ -64,6 +64,8 @@ class LDAPNodeAttributes(NodeAttributes):
                 self[key] = item[0]
             else:
                 self[key] = item
+        # superclass' __setitem__ set our changed flag. We just loaded from
+        # ldap and are not changed.
         self.changed = False
         if self._node._action not in [ACTION_ADD, ACTION_DELETE]:
             self._node._action = None
@@ -232,13 +234,13 @@ class LDAPNode(LifecycleNode):
         if isinstance(key, str):
             key = decode(key)
         val = self[key]
-        val.changed = True
         val._action = ACTION_DELETE
+        # this will also trigger the changed chain
+        val.changed = True
         del self._keys[key]
         if not hasattr(self, '_deleted'):
             self._deleted = list()
         self._deleted.append(val) 
-        self.changed = True
     
     def __call__(self):
         if self.changed and self._action is not None:
