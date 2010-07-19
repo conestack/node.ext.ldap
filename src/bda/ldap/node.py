@@ -93,11 +93,11 @@ class LDAPNodeAttributes(NodeAttributes):
         self._set_attrs_modified()
     
     def __getattribute__(self, name):
-        # XXX: why is that necessary?
+        # XXX: We don't support node.attrs.foo syntax yet
         return object.__getattribute__(self, name)
     
     def __setattr__(self, name, value):
-        # XXX: why is that necessary?
+        # XXX: We don't support node.attrs.foo = 1 syntax yet
         object.__setattr__(self, name, value)
     
     def _set_attrs_modified(self):
