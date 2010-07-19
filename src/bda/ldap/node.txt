@@ -210,15 +210,13 @@ The whole tree is now in changed state.
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - True>
 
-
 Let's also change the container of the person.
 ::
 
     >>> customer.attrs['street'] = 'foo'
 
-
 And tell the person to commit its changes. The container (customer3) is still
-changed because of its attributes
+changed because of its attributes.
 ::
 
     >>> person()
@@ -227,7 +225,6 @@ changed because of its attributes
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
-
 
 But after __call__.
 ::
