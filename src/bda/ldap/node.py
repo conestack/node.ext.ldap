@@ -126,6 +126,7 @@ class LDAPNode(LifecycleNode):
         if name and not isinstance(name, unicode):
             name = name.decode(props.encoding)
         self.__name__ = name
+        self.__parent__ = None
         self._session = None        
         self._changed = False
         self._action = None
@@ -141,9 +142,13 @@ class LDAPNode(LifecycleNode):
             
     @property
     def DN(self):
-        if not hasattr(self, '_dn'):
-            self._dn = ','.join(reversed(self.path))
-        return self._dn                  
+        if self.__parent__ is not None:
+            return ','.join((self.__name__, self.__parent__.DN))
+        elif self.__name__ is not None:
+            # We should not have a name if we are not a root node
+            return self.__name__
+        else:
+            return u''
     
     def __iter__(self):
         """This is where keys are retrieved from ldap
