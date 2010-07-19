@@ -84,6 +84,9 @@ Unicode strings you pass to nodes or sessions are automatically encoded to uft8
 for LDAP. If you feed them normal strings they are decoded as utf8 and
 reencoded as utf8 to make sure they are utf8 or compatible, e.g. ascii.
 
+If decoding as utf8 fails, the value is assumed to be in binary and left as a
+string (see TODO).
+
 If you have an LDAP server that does not use utf8, monkey-patch
 bda.ldap.strcodec.LDAP_CHARACTER_ENCODING.
 
@@ -165,12 +168,18 @@ TODO
 
 - check/implement silent sort on only the keys LDAPNode.sortonkeys()
 
+- binary attributes: 1. introduce Binary: ``node['cn=foo'].attributes['image']
+  = Binary(stream)``, 2. parse ldap schema to identify binary attributes
+
 
 Changes
 =======
 
 1.5.2 unreleased
 ----------------
+
+- assume strings that fail to decode to be binary and leave them as-is
+  (chaoflow, 2010-07-19)
 
 - session.search, default filter ``'(objectClass=*)'`` and scope ``BASE``, i.e.
   just calling search returns the basedn entry. Further it is possible to call

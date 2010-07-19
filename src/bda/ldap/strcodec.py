@@ -10,8 +10,13 @@ class StrCodec(object):
     During that process a deep copy is produces leaving the orginal data
     structure intact.
     """
-    def __init__(self,encoding=LDAP_CHARACTER_ENCODING):
+    def __init__(self, encoding=LDAP_CHARACTER_ENCODING, soft=True):
+        """@param encoding: the character encoding to decode from/encode to
+           @param soft: if True, catch UnicodeDecodeErrors and leave this
+           strings as-is.
+        """
         self._encoding = encoding
+        self._soft = soft
 
     def encode(self, arg):
         """Return an encoded copy of the argument
@@ -43,7 +48,13 @@ class StrCodec(object):
                 [self.decode(t) for t in arg.iteritems()]
                 )
         elif isinstance(arg, str):
-            arg = arg.decode(self._encoding)
+            try:
+                arg = arg.decode(self._encoding)
+            except UnicodeDecodeError:
+                # in soft mode we leave the string, otherwise we raise the
+                # exception
+                if not self._soft:
+                    raise
         return arg
 
 # make one global encoder available + convenience methods
