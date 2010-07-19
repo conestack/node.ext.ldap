@@ -230,6 +230,10 @@ But after __call__.
 
     >>> customer()
     >>> root.printtree()
+    <dc=my-domain,dc=com - False>
+      <ou=customers,dc=my-domain,dc=com:ou=customers - False>
+        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
+          <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
 
 Create Customer convenience query function. Need this more than once.
 ::

@@ -325,6 +325,9 @@ class LDAPNode(LifecycleNode):
         if self.__parent__ is None:
             return
         if not value and self.__parent__.changed:
+            # check parents attrs and keep parent changed, iff they are changed
+            if self.__parent__.attributes.changed:
+                return
             # check parents loaded children if one of them is changed
             # if so, keep parent marked as changed
             siblings = list()
