@@ -3,6 +3,7 @@
 
 import ldap
 from bda.ldap import (
+    BASE,
     LDAPConnector,
     LDAPCommunicator,
 )
@@ -53,12 +54,13 @@ class LDAPSession(object):
     
     baseDN = property(_get_baseDN, _set_baseDN)
     
-    def search(self, queryFilter, scope, baseDN=None,
+    def search(self, queryFilter='(objectClass=*)', scope=BASE, baseDN=None,
                force_reload=False, attrlist=None, attrsonly=0):
-        # default filter for python-ldap methods is '(objectClass=*)', should be
-        # the same here - alternative: kw arg, problem: scope
+        # It makes no sense to really pass these to LDAP, therefore, we
+        # interpret them as "don't filter" which in LDAP terms is
+        # '(objectClass=*)'
         if queryFilter in ('', u'', None):
-            queryFilter = '(objectClass=*)'
+            queryFilter='(objectClass=*)'
         func = self._communicator.search
         res = self._perform(func, queryFilter, scope, baseDN,
                             force_reload, attrlist, attrsonly)

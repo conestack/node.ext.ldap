@@ -172,7 +172,10 @@ Changes
 1.5.2 unreleased
 ----------------
 
-
+- session.search, default filter ``'(objectClass=*)'`` and scope ``BASE``, i.e.
+  just calling search returns the basedn entry. Further it is possible to call
+  session.search(scope=ONELEVEL) to get all entries one level below the basedn.
+  (chaoflow, 2010-07-19)
 
 1.5.1
 -----
