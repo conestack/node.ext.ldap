@@ -97,10 +97,14 @@ Create a new LDAPNode and add it to customers.
     >>> customer = LDAPNode()
     >>> customer.attributes['ou'] = 'customer3'
     >>> customer.attributes['objectClass'] = ['top', 'organizationalUnit']
+    >>> customer.DN
+    u''
     >>> customer.ldap_session is None
     True
     
     >>> customers['ou=customer3'] = customer
+    >>> customer.DN
+    u'ou=customer3,ou=customers,dc=my-domain,dc=com'
     >>> root.ldap_session
     <bda.ldap.session.LDAPSession object at ...>
 
