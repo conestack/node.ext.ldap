@@ -175,6 +175,13 @@ TODO
 Changes
 =======
 
+1.5.3 (unreleased)
+------------------
+
+- fixed _set_changed to properly protect parents changed flag, if the parent
+  has other changed childs
+  (chaoflow, 2010-07-19)
+
 1.5.2
 -----
 

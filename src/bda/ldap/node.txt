@@ -331,7 +331,7 @@ so we test it.
     >>> customers['cn=customer99'] = customerattrempty
     >>> customerattrempty.attributes.keys()
     []
-    
+
 Add some attributes to make call work.
 ::
     
@@ -341,6 +341,13 @@ Add some attributes to make call work.
 
 Check deleting of entries.
 ::
+
+    >>> root.printtree()
+    <dc=my-domain,dc=com - True>
+      <ou=customers,dc=my-domain,dc=com:ou=customers - True>
+        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
+          <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
+        <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
 
     >>> [k for k in customer._keys]
     [u'cn=max']
@@ -352,7 +359,7 @@ Check deleting of entries.
     
     >>> [k for k in customer._keys]
     []
-    
+
     >>> root.printtree()
     <dc=my-domain,dc=com - True>
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
@@ -364,7 +371,6 @@ Check deleting of entries.
     >>> queryPersonDirectly()
     []
     
-    XXX This fails ATM - check ``LDAPNode._get_changed``
     >>> root.printtree()
     <dc=my-domain,dc=com - True>
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
@@ -376,7 +382,6 @@ Check deleting of entries.
     
     >>> customerattrempty()
     
-    XXX This fails ATM - check ``LDAPNode._get_changed``
     >>> root.printtree()
     <dc=my-domain,dc=com - False>
       <ou=customers,dc=my-domain,dc=com:ou=customers - False>

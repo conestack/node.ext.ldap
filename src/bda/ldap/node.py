@@ -301,6 +301,7 @@ class LDAPNode(LifecycleNode):
         """
         self.__parent__._keys[self.__name__] = None
         super(LifecycleNode, self.__parent__).__delitem__(self.__name__)
+        # XXX: Shouldnt this raise a KeyError
         del self.__parent__._keys[self.__name__]
         self._session.delete(self.DN)
     
@@ -308,6 +309,7 @@ class LDAPNode(LifecycleNode):
         return self._changed
 
     def _set_changed(self, value):
+        # XXX: shouldnt this logic be in the parent?
         self._changed = value
         if self.__parent__ is None:
             return
@@ -315,9 +317,9 @@ class LDAPNode(LifecycleNode):
             # check parents loaded children if one of them is changed
             # if so, keep parent marked as changed
             siblings = list()
-            if self._keys:
-                siblings = [v for v in self._keys.values() if v is not None]
-            siblings += getattr(self, '_deleted', [])
+            if self.__parent__._keys:
+                siblings = [v for v in self.__parent__._keys.values() if v is not None]
+            siblings += getattr(self.__parent__, '_deleted', [])
             for sibling in siblings:
                 if sibling is self:
                     continue
