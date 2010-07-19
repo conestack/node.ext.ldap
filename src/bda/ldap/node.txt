@@ -304,13 +304,14 @@ Attribute with non-ascii str (utf8) returns as unicode.
     >>> queryPersonDirectly()[0][1]['sn'][0]
     u'i\u0107'
 
-Attribute with utf16 str fails.
-::
-    >>> person.attributes['sn'] = '\xff\xfei\x00\x07\x01'
-    Traceback (most recent call last):
-    ...
-    UnicodeDecodeError:
-      'utf8' codec can't decode byte 0xff in position 0: unexpected code byte
+# XXX: Don't test this until we have proper binary attr support
+#Attribute with utf16 str fails.
+#::
+#    >>> person.attributes['sn'] = '\xff\xfei\x00\x07\x01'
+#    Traceback (most recent call last):
+#    ...
+#    UnicodeDecodeError:
+#      'utf8' codec can't decode byte 0xff in position 0: unexpected code byte
 
 Check queryNode with nasty dn.
 ::
