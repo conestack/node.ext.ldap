@@ -15,6 +15,7 @@ from bda.ldap.node import (
     LDAPNode,
     queryNode,
 )
+from bda.ldap.schema import LDAPSchemaInfo
 # legacy
 import base
 import properties
