@@ -152,6 +152,8 @@ TODO
   could be useful: python-ldap's class SmartLDAPObject(ReconnectLDAPObject) -
   Mainly the __init__() method does some smarter things like negotiating the
   LDAP protocol version and calling LDAPObject.start_tls_s().
+  XXX: SmartLDAPObject has been removed from the most recent python-ldap,
+  because of being too buggy.
 
 - Improve retry logic in LDAPSession
   could be useful, python-ldap's class ReconnectLDAPObject(SimpleLDAPObject) -
@@ -159,7 +161,17 @@ TODO
   synchronous operation methods (search_s() etc.) are doing an automatic
   reconnect and rebind and will retry the very same operation.
 
-- Extend LDAPSession object to handle Fallback server(s)
+- more complex retry logic with fallback servers, eg. try immediately again,
+  iff fails use backup server, start to test other server after timespan,
+  report status of ldap servers, preferred server, equal servers, load balance;
+  on the other hand people should/could use pound in front of their servers
+
+- define how our retry logic should look like that rethink job of session,
+  communicator and connector.
+
+- consider search_st with timeout.
+
+- investigate ``ReconnectLDAPObject.set_cache_options``
 
 - Encoding/Decoding the data sent to ldap changed the order of dict entries,
   probably due to dict implementation. Investigate effects of that. I had the
