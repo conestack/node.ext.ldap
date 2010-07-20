@@ -17,7 +17,7 @@ from bda.ldap import (
     ONELEVEL,
     LDAPSession,
 )
-from bda.ldap.strcodec import encode, decode
+from bda.ldap.strcodec import encode, decode, LDAP_CHARACTER_ENCODING
 from ldap.functions import explode_dn
 from ldap import (
     MOD_ADD,
@@ -124,7 +124,7 @@ class LDAPNode(LifecycleNode):
         if (name and not props) or (props and not name):
             raise ValueError(u"Wrong initialization.")
         if name and not isinstance(name, unicode):
-            name = name.decode(props.encoding)
+            name = name.decode(LDAP_CHARACTER_ENCODING)
         self.__name__ = name
         self.__parent__ = None
         self._session = None        

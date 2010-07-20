@@ -11,8 +11,7 @@ class LDAPServerProperties(object):
                  user='',
                  password='',
                  cache=True,
-                 timeout=43200,
-                 encoding='utf8'):
+                 timeout=43200):
         """Take the connection properties as arguments.
         
         @param server: servername, defaults to 'localhost'
@@ -22,7 +21,6 @@ class LDAPServerProperties(object):
         @param cache: Bool wether to enable caching or not, defaults to True
         @param timeout: Cache timeout in seconds. only takes affect if cache
                         is enabled.
-        @param encoding: Character encoding used by the LDAP server.
         """
         self.server = server
         self.port = port
@@ -30,6 +28,5 @@ class LDAPServerProperties(object):
         self.password = password
         self.cache = cache
         self.timeout = timeout
-        self.encoding = encoding
 
 LDAPProps = LDAPServerProperties
