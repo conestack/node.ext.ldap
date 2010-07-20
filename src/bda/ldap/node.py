@@ -168,7 +168,7 @@ class LDAPNode(LifecycleNode):
                                             ONELEVEL,
                                             baseDN=self.DN,
                                             force_reload=self._reload,
-                                            attrsonly=1)
+                                            attrlist=())
             for dn, attrs in children:
                 # explode_dn is ldap world
                 key = decode(explode_dn(encode(dn))[0])

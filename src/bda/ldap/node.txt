@@ -47,6 +47,7 @@ Check child keys of root.
 
 Check/modify attributes of root.
 ::
+
     >>> root.attrs
     {u'objectClass': [u'top', u'dcObject', u'organization'],
      u'dc': u'my-domain',
