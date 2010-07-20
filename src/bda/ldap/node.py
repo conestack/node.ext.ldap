@@ -140,6 +140,7 @@ class LDAPNode(LifecycleNode):
             self._session = LDAPSession(props)
             self._session.baseDN = self.DN
         super(LDAPNode, self).__init__(name)
+        self._key_attr = 'rdn'
             
     @property
     def DN(self):
@@ -153,7 +154,24 @@ class LDAPNode(LifecycleNode):
 
     def child_dn(self, key):
         return self._child_dns[key]
-    
+
+    def _calculate_key(self, dn, attrs):
+        if self._key_attr is 'rdn':
+            # explode_dn is ldap world
+            return decode(explode_dn(encode(dn))[0])
+        else:
+            key = attrs[self._key_attr]
+            if isinstance(key, list):
+                if len(key) != 1:
+                    raise RuntimeError(u"Expected one value for '%s' "+
+                            u"not %s: '%s'." % \
+                                    (self._key_attr, len(key), key))
+                key = key[0]
+            if key in self._keys:
+                raise RuntimeError(u"Key not unique: %s='%s'" % \
+                        (self._key_attr, key))
+            return key
+
     def __iter__(self):
         """This is where keys are retrieved from ldap
         """
@@ -164,14 +182,17 @@ class LDAPNode(LifecycleNode):
             self._child_dns.clear()
         if self._keys is None and self._action != ACTION_ADD:
             self._keys = odict()
+            if self._key_attr is 'rdn':
+                attrlist = ()
+            else:
+                attrlist = (self._key_attr,)
             children = self._session.search('(objectClass=*)',
                                             ONELEVEL,
                                             baseDN=self.DN,
                                             force_reload=self._reload,
-                                            attrlist=())
+                                            attrlist=attrlist)
             for dn, attrs in children:
-                # explode_dn is ldap world
-                key = decode(explode_dn(encode(dn))[0])
+                key = self._calculate_key(dn, attrs)
                 self._keys[key] = None
                 # We know the dn of the child but don't have a child yet, it
                 # seems sane to cache it
@@ -207,8 +228,8 @@ class LDAPNode(LifecycleNode):
             return super(LDAPNode, self).__getitem__(key)
         val = LDAPNode()
         val._session = self._session
-        # XXX: currently it seems we don't really use LifecycleNode, why are we
-        # not subclassing from AttributedNode?
+        # We are suppressing notification, as val is not really added to us,
+        # rather, it is activated.
         self._notify_suppress = True
         super(LDAPNode, self).__setitem__(key, val)
         self._notify_suppress = False
@@ -228,6 +249,8 @@ class LDAPNode(LifecycleNode):
     def __setitem__(self, key, val):
         if isinstance(key, str):
             key = decode(key)
+        if self._key_attr is not 'rdn':
+            raise NotImplementedError(u"Adding with key != rdn not supported")
         val._session = self._session
         if self._keys is None:
             self._keys = odict()
@@ -243,7 +266,7 @@ class LDAPNode(LifecycleNode):
         super(LDAPNode, self).__setitem__(key, val)
         self._notify_suppress = False
         self._keys[key] = val    
-        self._child_dns[key] = ','.join((val.__name__, self.DN))
+        self._child_dns[key] = ','.join((key, self.DN))
         if val._action == ACTION_ADD:
             objectEventNotify(self.events['added'](val, newParent=self, 
                                                    newName=key))
