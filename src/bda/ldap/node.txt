@@ -490,7 +490,7 @@ __parent__!
     >>> node.keys()
     Traceback (most recent call last):
     ...
-    RuntimeError: Key not unique: description='Initial Description'
+    RuntimeError: Key not unique: description='Initial Description'.
 
     >>> node = LDAPNode(props=props, name=customer.DN)
     >>> node._key_attr = 'sn'
@@ -544,7 +544,7 @@ We cannot add items.
     >>> node['foo'] = LDAPNode()
     Traceback (most recent call last):
     ...
-    NotImplementedError: Adding with key != rdn not supported
+    NotImplementedError: Adding with key != rdn not supported.
 
 But we can delete them.
 ::
@@ -557,3 +557,47 @@ But we can delete them.
     >>> customer._reload = True
     >>> customer.keys()
     [u'cn=max']
+
+Using filter and scope. Let's first create a collision.
+::
+
+    >>> tmp = LDAPNode()
+    >>> tmp.attributes['ou'] = 'customer3'
+    >>> tmp.attributes['objectClass'] = ['top', 'organizationalUnit']
+    >>> root['ou=customer3'] = tmp
+    >>> root()
+
+    >>> from bda.ldap import SUBTREE
+    >>> node = LDAPNode(props=props, name=root.DN)
+    >>> node._search_scope = SUBTREE
+    >>> node.keys()
+    Traceback (most recent call last):
+    ...
+    RuntimeError: Key not unique: rdn='ou=customer3'.
+
+We need a different key. As a side-effect a filter will be used: '(cn=*)'
+::
+
+    >>> node = LDAPNode(props=props, name=root.DN)
+    >>> node._search_scope = SUBTREE
+    >>> node._key_attr = 'cn'
+    >>> node.keys()
+    [u'customer99', u'Max']
+
+Again, we can query/change/delete these.
+::
+
+    >>> max = node['Max']
+    >>> node['Max'].attrs['description'] = 'bar'
+    >>> node()
+    >>> max.attrs['description']
+    u'bar'
+    >>> node['foo'] = LDAPNode()
+    Traceback (most recent call last):
+    ...
+    NotImplementedError: Adding with scope != ONELEVEL not supported.
+
+    >>> del node['Max']
+    >>> node()
+    >>> node.keys()
+    [u'customer99']

@@ -141,6 +141,8 @@ class LDAPNode(LifecycleNode):
             self._session.baseDN = self.DN
         super(LDAPNode, self).__init__(name)
         self._key_attr = 'rdn'
+        self._search_scope = ONELEVEL
+        self._search_filter = '(objectClass=*)'
             
     @property
     def DN(self):
@@ -158,7 +160,7 @@ class LDAPNode(LifecycleNode):
     def _calculate_key(self, dn, attrs):
         if self._key_attr is 'rdn':
             # explode_dn is ldap world
-            return decode(explode_dn(encode(dn))[0])
+            key = decode(explode_dn(encode(dn))[0])
         else:
             key = attrs[self._key_attr]
             if isinstance(key, list):
@@ -167,10 +169,10 @@ class LDAPNode(LifecycleNode):
                             u"not %s: '%s'." % \
                                     (self._key_attr, len(key), key))
                 key = key[0]
-            if key in self._keys:
-                raise RuntimeError(u"Key not unique: %s='%s'" % \
-                        (self._key_attr, key))
-            return key
+        if key in self._keys:
+            raise RuntimeError(u"Key not unique: %s='%s'." % \
+                    (self._key_attr, key))
+        return key
 
     def __iter__(self):
         """This is where keys are retrieved from ldap
@@ -184,10 +186,13 @@ class LDAPNode(LifecycleNode):
             self._keys = odict()
             if self._key_attr is 'rdn':
                 attrlist = ()
+                effective_filter = self._search_filter
             else:
                 attrlist = (self._key_attr,)
-            children = self._session.search('(objectClass=*)',
-                                            ONELEVEL,
+                effective_filter = '(&(%s=*)%s)' % \
+                        (self._key_attr, self._search_filter)
+            children = self._session.search(effective_filter,
+                                            self._search_scope,
                                             baseDN=self.DN,
                                             force_reload=self._reload,
                                             attrlist=attrlist)
@@ -249,8 +254,11 @@ class LDAPNode(LifecycleNode):
     def __setitem__(self, key, val):
         if isinstance(key, str):
             key = decode(key)
+        if self._search_scope is not ONELEVEL:
+            raise NotImplementedError(
+                    u"Adding with scope != ONELEVEL not supported.")
         if self._key_attr is not 'rdn':
-            raise NotImplementedError(u"Adding with key != rdn not supported")
+            raise NotImplementedError(u"Adding with key != rdn not supported.")
         val._session = self._session
         if self._keys is None:
             self._keys = odict()
