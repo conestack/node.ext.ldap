@@ -178,6 +178,15 @@ Changes
 1.5.3 (unreleased)
 ------------------
 
+- hidden support for _search_filter/_search_scope, see node.txt
+  (chaoflow, 2010-07-20)
+
+- hidden support for non-rdn key, see node.txt
+  (chaoflow, 2010-07-20)
+
+- parent caches child dns, ``__parent__.child_dn(key)``
+  (chaoflow, 2010-07-20)
+
 - dont unset parent's changed flag, if parent's attributes are changed
   (chaoflow, 2010-07-19)
 
