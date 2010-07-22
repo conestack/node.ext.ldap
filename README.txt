@@ -183,6 +183,13 @@ TODO
 - binary attributes: 1. introduce Binary: ``node['cn=foo'].attributes['image']
   = Binary(stream)``, 2. parse ldap schema to identify binary attributes
 
+- improve test framework to support running of single tests, currently the
+  setUp and tearDown are tests themselves run at the very beginning and end.
+  Having them as setUp and tearDown for DocFileSuite is one way, but then they
+  are run for every test, maybe even good. Nice would be an LDAPTestLayer, but
+  I don't see how to achieve that without Testing.ZopeTestCase, which would
+  mean to pull in the complete Zope2 for testing. Ideas?
+
 
 Changes
 =======
