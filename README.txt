@@ -138,11 +138,10 @@ Dependencies
 Notes on python-ldap
 ====================
 
-Although python-ldap is available via pypi, we excluded it from
-``install_requires`` due to different compile issues on different platforms.
-
-So you have to make sure that ``pyhon-ldap`` is available on your system in
-any way.
+There are different compile issues on different platforms. If you experience
+problems with ``python-ldap``, make sure it is available in the python
+environment you run buildout in, so it won't be fetched and build by buildout
+itself.
 
 
 TODO
