@@ -314,9 +314,13 @@ class LDAPNode(LifecycleNode):
                 node()
     
     def __repr__(self):
+        # XXX: This is mainly used in doctest, I think
+        # doctest fails if we output utf-8
+        dn = self.DN.encode('ascii', 'replace')
+        name = self.__name__.encode('ascii', 'replace')
         if self.__parent__ is None:
-            return "<%s - %s>" % (self.DN, self.changed)
-        return "<%s:%s - %s>" % (self.DN, self.__name__, self.changed)
+            return "<%s - %s>" % (dn, self.changed)
+        return "<%s:%s - %s>" % (dn, name, self.changed)
     
     __str__ = __repr__
     

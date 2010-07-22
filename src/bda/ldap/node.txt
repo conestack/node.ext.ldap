@@ -383,7 +383,7 @@ Attribute with non-ascii str (utf8) returns as unicode.
 #    UnicodeDecodeError:
 #      'utf8' codec can't decode byte 0xff in position 0: unexpected code byte
 
-Check queryNode with nasty dn.
+Check queryNode with nästy dn. XXX: see node.__repr__
 ::
     >>> from bda.ldap.node import queryNode
     >>> node = queryNode(props, \
@@ -391,6 +391,7 @@ Check queryNode with nasty dn.
     >>> node.__name__
     u'ou=n\xe4sty\\, customer'
     >>> node
+    <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
     >>> node.__parent__
     <ou=customers,dc=my-domain,dc=com - False>
 
