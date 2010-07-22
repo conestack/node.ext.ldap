@@ -187,7 +187,9 @@ TODO
   Having them as setUp and tearDown for DocFileSuite is one way, but then they
   are run for every test, maybe even good. Nice would be an LDAPTestLayer, but
   I don't see how to achieve that without Testing.ZopeTestCase, which would
-  mean to pull in the complete Zope2 for testing. Ideas?
+  mean to pull in the complete Zope2 for testing.
+  It works by running prepareslapd.txt, then the single test(s), then
+  stopslapd.txt.
 
 
 Changes
