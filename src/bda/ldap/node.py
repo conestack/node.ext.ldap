@@ -143,7 +143,7 @@ class LDAPNode(LifecycleNode):
         self._key_attr = 'rdn'
         self._search_scope = ONELEVEL
         self._search_filter = '(objectClass=*)'
-        self._childFactory = LDAPNode
+        self._ChildClass = LDAPNode
             
     @property
     def DN(self):
@@ -232,7 +232,7 @@ class LDAPNode(LifecycleNode):
             raise KeyError(u"Entry not existent: %s" % key)
         if self._keys[key] is not None:
             return super(LDAPNode, self).__getitem__(key)
-        val = self._childFactory()
+        val = self._ChildClass()
         val._session = self._session
         # We are suppressing notification, as val is not really added to us,
         # rather, it is activated.
