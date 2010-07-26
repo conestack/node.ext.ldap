@@ -13,6 +13,7 @@ from bda.ldap.strcodec import encode, decode
 class LDAPSession(object):
     
     def __init__(self, props):
+        self._props = props
         connector = LDAPConnector(props.server,
                                   props.port,
                                   props.user,
@@ -72,6 +73,18 @@ class LDAPSession(object):
         func = self._communicator.add
         return self._perform(func, dn, data)
     
+    def authenticate(self, dn, pw):
+        """Verify credentials, but don't rebind the session to that user
+        """
+        # Let's bypass connector/communicator until they are sorted out
+        con = ldap.open(self._props.server, self._props.port)
+        try:
+            con.simple_bind_s(dn, pw)
+        except ldap.INVALID_CREDENTIALS:
+            return False
+        else:
+            return True
+
     def modify(self, dn, data, replace=False):
         """Modify an existing entry in the directory.
         
@@ -90,6 +103,10 @@ class LDAPSession(object):
         func = self._communicator.delete
         return self._perform(func, dn)
     
+    def passwd(self, userdn, oldpw, newpw):
+        func = self._communicator.passwd
+        self._perform(func, userdn, oldpw, newpw)
+
     def unbind(self):
         self._communicator.unbind()
     

@@ -32,6 +32,7 @@ TESTFILES = [
     '../session.txt',
     '../node.txt',
     '../schema.txt',
+    '../users.txt',
     'stopslapd.txt',
 ]
 

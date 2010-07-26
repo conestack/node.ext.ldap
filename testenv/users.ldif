@@ -1,0 +1,33 @@
+dn: cn=user1,dc=my-domain,dc=com
+cn: user1
+objectClass: top
+objectClass: person
+userPassword: foo1
+sn: Meier
+
+dn: cn=user2,ou=customers,dc=my-domain,dc=com
+cn: user2
+objectClass: top
+objectClass: person
+userPassword: foo2
+sn: Müller
+
+dn: cn=user3,ou=customers,dc=my-domain,dc=com
+cn: user3
+objectClass: top
+objectClass: person
+userPassword: foo3
+sn: Schmidt
+
+dn: cn=nästy\, User,oU=Customers,DC=My-Domain, dc=com
+cn: nästy\, User
+objectClass: top
+objectClass: person
+userPassword: nästy
+sn: Umhauer
+
+dn: ou=usershere,dc=my-domain,dc=com
+ou: usershere
+objectClass: top
+objectClass: organizationalUnit
+

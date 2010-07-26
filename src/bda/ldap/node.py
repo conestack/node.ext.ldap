@@ -17,6 +17,7 @@ from bda.ldap import (
     ONELEVEL,
     LDAPSession,
 )
+from bda.ldap.filter import LDAPFilter, LDAPDictFilter
 from bda.ldap.strcodec import encode, decode, LDAP_CHARACTER_ENCODING
 from ldap.functions import explode_dn
 from ldap import (
@@ -142,7 +143,8 @@ class LDAPNode(LifecycleNode):
         super(LDAPNode, self).__init__(name)
         self._key_attr = 'rdn'
         self._search_scope = ONELEVEL
-        self._search_filter = '(objectClass=*)'
+        self._search_filter = None
+        self._search_criteria = None
         self._ChildClass = LDAPNode
             
     @property
@@ -170,10 +172,48 @@ class LDAPNode(LifecycleNode):
                             u"not %s: '%s'." % \
                                     (self._key_attr, len(key), key))
                 key = key[0]
-        if key in self._keys:
-            raise RuntimeError(u"Key not unique: %s='%s'." % \
-                    (self._key_attr, key))
         return key
+
+    def search(self, queryFilter=None, criteria=None, exact_match=False):
+        """Returns a list of matching keys.
+        """
+        # Do we need attributes?
+        if self._key_attr is 'rdn':
+            attrlist = ()
+        else:
+            attrlist = (self._key_attr,)
+
+        _filter = LDAPFilter(self._search_filter)
+        _filter &= LDAPDictFilter(self._search_criteria)
+        _filter &= LDAPFilter(queryFilter)
+        _filter &= LDAPDictFilter(criteria)
+        if self._key_attr is not 'rdn' and self._key_attr not in _filter:
+            _filter &= '(%s=*)' % (self._key_attr,)
+
+        children = self._session.search(str(_filter),
+                                        self._search_scope,
+                                        baseDN=self.DN,
+                                        force_reload=self._reload,
+                                        attrlist=attrlist)
+        if exact_match and len(children) != 1:
+            # XXX: Is ValueError appropriate?
+            raise ValueError(u"Exact match asked but search not exact")
+        keys = []
+        for dn, attrs in children:
+            key = self._calculate_key(dn, attrs)
+            # For the initial search we need to cache the dns
+            # This could be optimized by an initial=False argument
+            # The initial search happens without an additional filter
+            if queryFilter is None:
+                try:
+                    self._child_dns[key]
+                except KeyError:
+                    self._child_dns[key] = dn
+            keys.append(key)
+        if exact_match:
+            return keys[0]
+        else:
+            return keys
 
     def __iter__(self):
         """This is where keys are retrieved from ldap
@@ -185,24 +225,14 @@ class LDAPNode(LifecycleNode):
             self._child_dns.clear()
         if self._keys is None and self._action != ACTION_ADD:
             self._keys = odict()
-            if self._key_attr is 'rdn':
-                attrlist = ()
-                effective_filter = self._search_filter
-            else:
-                attrlist = (self._key_attr,)
-                effective_filter = '(&(%s=*)%s)' % \
-                        (self._key_attr, self._search_filter)
-            children = self._session.search(effective_filter,
-                                            self._search_scope,
-                                            baseDN=self.DN,
-                                            force_reload=self._reload,
-                                            attrlist=attrlist)
-            for dn, attrs in children:
-                key = self._calculate_key(dn, attrs)
-                self._keys[key] = None
-                # We know the dn of the child but don't have a child yet, it
-                # seems sane to cache it
-                self._child_dns[key] = dn
+            for key in self.search():
+                try:
+                    self._keys[key]
+                except KeyError:
+                    self._keys[key] = None
+                else:
+                    raise RuntimeError(u"Key not unique: %s='%s'." % \
+                            (self._key_attr, key))
         if self._keys:
             for key in self._keys:
                 yield key

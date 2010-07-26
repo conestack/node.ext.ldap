@@ -182,6 +182,8 @@ TODO
 - binary attributes: 1. introduce Binary: ``node['cn=foo'].attributes['image']
   = Binary(stream)``, 2. parse ldap schema to identify binary attributes
 
+- think about login (LDAPUsers), if we keep it, we need to check uniquness
+
 - improve test framework to support running of single tests, currently the
   setUp and tearDown are tests themselves run at the very beginning and end.
   Having them as setUp and tearDown for DocFileSuite is one way, but then they

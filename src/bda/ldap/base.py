@@ -244,6 +244,9 @@ class LDAPCommunicator(object):
         """
         self._con.delete_s(deleteDN)
 
+    def passwd(self, userdn, oldpw, newpw):
+        self._con.passwd_s(userdn, oldpw, newpw)
+
 def main():    
     """Use this module from command line for testing the connectivity to the
     LDAP Server.
