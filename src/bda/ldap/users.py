@@ -96,7 +96,7 @@ class LDAPUsers(LDAPNode):
         if pw is None:
             raise ValueError(u"You need to specify a password")
         if login:
-            if self._login_attr is self._key_attr:
+            if self._login_attr == self._key_attr:
                 id = login
             else:
                 id = self.idbylogin(login)
