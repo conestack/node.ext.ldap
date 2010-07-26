@@ -1,6 +1,26 @@
 from bda.ldap import LDAPProps, LDAPNode
 from bda.ldap import BASE, ONELEVEL, SUBTREE
 
+class LDAPPrincipal(LDAPNode):
+    """Superclass for LDAPUser and LDAPGroup
+    """
+    @property
+    def id(self):
+        return self.__name__
+
+class LDAPPrincipals(LDAPNode):
+    """Superclass for LDAPUsers and LDAPGroups
+    """
+    # principals have ids
+    ids = LDAPNode.keys
+
+    def __init__(self, cfg):
+        super(LDAPPrincipals, self).__init__(name=cfg.baseDN, props=cfg.props)
+        self._search_filter = cfg.queryFilter
+        self._search_scope = cfg.scope
+        self._key_attr = cfg.id_attr
+
+
 class LDAPUsersConfig(object):
     """Define how users look and where they are
     """
@@ -38,7 +58,7 @@ def ldapUsersConfigFromLUF(luf):
             )
     return uc
 
-class LDAPUser(LDAPNode):
+class LDAPUser(LDAPPrincipal):
     """An ldap user
 
     XXX: should this be a node or an adpater for a node?
@@ -52,10 +72,6 @@ class LDAPUser(LDAPNode):
     adapter around a real normal node.
     """
     @property
-    def id(self):
-        return self.__name__
-
-    @property
     def login(self):
         return self.attrs[self.__parent__._login_attr]
 
@@ -67,21 +83,15 @@ class LDAPUser(LDAPNode):
         """
         self._session.passwd(self.DN, oldpw, newpw)
 
-class LDAPUsers(LDAPNode):
-    """An ldap users collection
+class LDAPUsers(LDAPPrincipals):
+    """Manage LDAP users
     """
-    # principals have ids
-    ids = LDAPNode.keys
-
-    def __init__(self, config):
-        super(LDAPUsers, self).__init__(name=config.baseDN, props=config.props)
-        self._search_filter = config.queryFilter
-        self._search_scope = config.scope
-        self._key_attr = config.id_attr
-        self._login_attr = config.login_attr
+    def __init__(self, cfg):
+        super(LDAPUsers, self).__init__(cfg)
+        self._login_attr = cfg.login_attr
         self._ChildClass = LDAPUser
         if self._login_attr is not self._key_attr:
-            self._seckey_attrs = (config.login_attr,)
+            self._seckey_attrs = (cfg.login_attr,)
 
     def idbylogin(self, login):
         return self._seckeys[self._login_attr][login]
