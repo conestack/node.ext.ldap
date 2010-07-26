@@ -80,6 +80,11 @@ class LDAPUsers(LDAPNode):
         self._key_attr = config.id_attr
         self._login_attr = config.login_attr
         self._ChildClass = LDAPUser
+        if self._login_attr is not self._key_attr:
+            self._seckey_attrs = (config.login_attr,)
+
+    def idbylogin(self, login):
+        return self._seckeys[self._login_attr][login]
 
     def authenticate(self, id=None, login=None, pw=None):
         """Authenticate a user either by id xor by login
@@ -91,7 +96,10 @@ class LDAPUsers(LDAPNode):
         if pw is None:
             raise ValueError(u"You need to specify a password")
         if login:
-            id = self.search(criteria={self._login_attr: login}, exact_match=True)
+            if self._login_attr is self._key_attr:
+                id = login
+            else:
+                id = self.idbylogin(login)
         userdn = self.child_dn(id)
         if self._session.authenticate(userdn, pw):
             return id

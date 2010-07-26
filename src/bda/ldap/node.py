@@ -135,6 +135,8 @@ class LDAPNode(LifecycleNode):
         # if an odict, the value is either None or the value
         # None means, the value wasnt loaded 
         self._keys = None 
+        self._seckeys = None
+        self._seckey_attrs = None
         self._child_dns = {}
         self._reload = False        
         if props:
@@ -168,52 +170,91 @@ class LDAPNode(LifecycleNode):
             key = attrs[self._key_attr]
             if isinstance(key, list):
                 if len(key) != 1:
-                    raise RuntimeError(u"Expected one value for '%s' "+
+                    raise KeyError(u"Expected one value for '%s' "+
                             u"not %s: '%s'." % \
                                     (self._key_attr, len(key), key))
                 key = key[0]
         return key
 
-    def search(self, queryFilter=None, criteria=None, exact_match=False):
-        """Returns a list of matching keys.
-        """
-        # Do we need attributes?
-        if self._key_attr is 'rdn':
-            attrlist = ()
-        else:
-            attrlist = (self._key_attr,)
+    def _calculate_seckeys(self, attrs):
+        if not self._seckey_attrs:
+            return {}
+        seckeys = {}
+        for seckey_attr in self._seckey_attrs:
+            try:
+                seckey = attrs[seckey_attr]
+            except KeyError:
+                raise KeyError(
+                        u"Secondary key '%s' missing on: %s." % \
+                                (seckey_attr, attrs['dn']))
+            else:
+                if isinstance(seckey, list):
+                    if len(seckey) != 1:
+                        raise KeyError(u"Expected one value for '%s' "+
+                                u"not %s: '%s'." % \
+                                        (seckey_attr, len(seckey), seckey))
+                    seckey = seckey[0]
+                seckeys[seckey_attr] = seckey
+        return seckeys
 
+    def search(self, queryFilter=None, criteria=None, attrlist=None,
+               exact_match=False):
+        """Returns a list of matching keys.
+
+        All search criteria are additive and will be ``&``ed. ``queryFilter``
+        and ``criteria`` further narrow down the search space defined by
+        ``self._search_filter`` and ``self._search_criteria``.
+
+        ``queryFilter``
+            ldap queryFilter, e.g. ``(objectClass=foo)``
+        ``criteria``
+            dictionary of attribute value(s) (string or list of string)
+        ``attrlist``
+            Normally a list of keys is returned. By defining attrlist the
+            return format will be ``[(key, {attr1: [value1, ...]}), ...]``. To
+            get this format without any attributs, i.e. empty dicts in the
+            tuples, specify an empty attrlist.
+        ``exact_match``
+            raise ValueError if not one match, return format is a single key or
+            tuple, if attrlist is specified.
+        """
+        _attrlist = []
+        if attrlist:
+            _attrlist.extend(filter(lambda x: x is not 'dn', attrlist))
+        if not self._key_attr is 'rdn' and self._key_attr not in _attrlist:
+            _attrlist.append(self._key_attr)
         _filter = LDAPFilter(self._search_filter)
         _filter &= LDAPDictFilter(self._search_criteria)
         _filter &= LDAPFilter(queryFilter)
         _filter &= LDAPDictFilter(criteria)
+        # XXX: Is it really good to filter out entries without the key attr or
+        # would it be better to fail? (see also __iter__ secondary key)
         if self._key_attr is not 'rdn' and self._key_attr not in _filter:
             _filter &= '(%s=*)' % (self._key_attr,)
-
         children = self._session.search(str(_filter),
                                         self._search_scope,
                                         baseDN=self.DN,
                                         force_reload=self._reload,
-                                        attrlist=attrlist)
+                                        attrlist=_attrlist)
         if exact_match and len(children) != 1:
             # XXX: Is ValueError appropriate?
+            # XXX: Really also fail, if there are 0 matches?
             raise ValueError(u"Exact match asked but search not exact")
-        keys = []
+        res = []
         for dn, attrs in children:
             key = self._calculate_key(dn, attrs)
-            # For the initial search we need to cache the dns
-            # This could be optimized by an initial=False argument
-            # The initial search happens without an additional filter
-            if queryFilter is None:
-                try:
-                    self._child_dns[key]
-                except KeyError:
-                    self._child_dns[key] = dn
-            keys.append(key)
+            if attrlist is not None:
+                resattr = dict([(k,v) for k,v in attrs.iteritems()
+                        if k in attrlist])
+                if 'dn' in attrlist:
+                    resattr['dn'] = dn
+                res.append((key, resattr))
+            else:
+                res.append(key)
         if exact_match:
-            return keys[0]
+            return res[0]
         else:
-            return keys
+            return res
 
     def __iter__(self):
         """This is where keys are retrieved from ldap
@@ -222,14 +263,34 @@ class LDAPNode(LifecycleNode):
             return
         if self._reload:
             self._keys = None
+            self._seckeys = None
             self._child_dns.clear()
         if self._keys is None and self._action != ACTION_ADD:
             self._keys = odict()
-            for key in self.search():
+            attrlist = ['dn']
+            if self._seckey_attrs:
+                self._seckeys = dict()
+                attrlist.extend(self._seckey_attrs)
+            for key, attrs in self.search(attrlist=attrlist):
                 try:
                     self._keys[key]
                 except KeyError:
                     self._keys[key] = None
+                    self._child_dns[key] = attrs['dn']
+                    for seckey_attr, seckey in \
+                            self._calculate_seckeys(attrs).items():
+                        try:
+                            self._seckeys[seckey_attr]
+                        except KeyError:
+                            self._seckeys[seckey_attr] = {}
+                        try:
+                            self._seckeys[seckey_attr][seckey]
+                        except KeyError:
+                            self._seckeys[seckey_attr][seckey] = key
+                        else:
+                            raise KeyError(
+                                u"Secondary key not unique: %s='%s'." % \
+                                        (seckey_attr, seckey))
                 else:
                     raise RuntimeError(u"Key not unique: %s='%s'." % \
                             (self._key_attr, key))

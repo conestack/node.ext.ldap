@@ -16,7 +16,9 @@ Import test users.
     >>> retcode = call(cmd)
 
 
-Get an LDAPUsers node and configure it.
+Get an LDAPUsers node and configure it. In addition to the key attribute, the
+login attribute also needs to be unique, which will be checked upon calling
+ids() the first time.
 ::
 
     >>> from bda.ldap.properties import LDAPProps
@@ -26,18 +28,40 @@ Get an LDAPUsers node and configure it.
     >>> user = 'cn=Manager,dc=my-domain,dc=com'
     >>> pwd = 'secret'
     >>> props = LDAPProps('127.0.0.1', 12345, user, pwd, cache=False)
+
     >>> ucfg = LDAPUsersConfig(props,
     ...                        baseDN='dc=my-domain,dc=com',
     ...                        id_attr='sn',
-    ...                        login_attr='cn',
+    ...                        login_attr='description',
     ...                        scope=SUBTREE,
     ...                        queryFilter='(objectClass=person)',
     ...                        )
     >>> users = LDAPUsers(ucfg)
 
-Query all user ids.
+Query all user ids. ``description`` is missing on some.
 ::
 
+    >>> users.ids()
+    Traceback (most recent call last):
+    ...
+    KeyError:
+      u"Secondary key 'description' missing on: cn=user1,dc=my-domain,dc=com."
+
+Query all user ids. ``telephoneNumber`` is not uniqe.
+::
+
+    >>> ucfg.login_attr = 'telephoneNumber'
+    >>> users = LDAPUsers(ucfg)
+    >>> users.ids()
+    Traceback (most recent call last):
+    ...
+    KeyError: u"Secondary key not unique: telephoneNumber='1234'."
+
+Query all user ids. ``cn`` finally in this case is unique and therefore
+suitable as login attr.
+::
+    >>> ucfg.login_attr = 'cn'
+    >>> users = LDAPUsers(ucfg)
     >>> users.ids()
     [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
 
@@ -65,6 +89,7 @@ And attributes.
 
     >>> mueller.attrs
     {u'objectClass': [u'top', u'person'],
+     u'telephoneNumber': u'1234',
      u'userPassword': u'foo2',
      u'cn': u'user2',
      u'sn': u'M\xfcller'}
@@ -99,7 +124,7 @@ Change a users password, supplying the old password, via the user object.
     >>> mueller.authenticate('new')
     True
 
-And via the LDAPUsers.
+And via LDAPUsers.
 ::
     >>> oldpw = newpw
     >>> newpw = 'newer'
@@ -123,6 +148,8 @@ id is returned if sucessful, otherwise None.
 Find a user by login.
 ::
 
+    >>> users.idbylogin(mueller.login) == mueller.id
+    True
 
 Search users by criteria.
 ::
