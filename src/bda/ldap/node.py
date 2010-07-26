@@ -368,6 +368,14 @@ class LDAPNode(LifecycleNode):
         return self._changed
 
     def _set_changed(self, value):
+        """Set/Unset the changed flag
+
+        Set:
+            - if self.attrs are changed
+            - if a child is changed / added / removed
+        Unset:
+            - if neither a child nor the own attrs are changed
+        """
         # XXX: shouldnt this logic be in the parent?
         self._changed = value
         if self.__parent__ is None:

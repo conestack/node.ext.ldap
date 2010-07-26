@@ -230,6 +230,24 @@ changed because of its attributes.
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
 
+Now we change the person again and discard the attribute change of the
+container. It must not delete the changed state of the whole tree, as the
+person is still changed.
+::
+
+    >>> person.attrs['description'] = 'foo'
+    >>> root.printtree()
+    <dc=my-domain,dc=com - True>
+      <ou=customers,dc=my-domain,dc=com:ou=customers - True>
+        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
+          <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - True>
+    >>> customer.attrs.load()
+    >>> root.printtree()
+    <dc=my-domain,dc=com - True>
+      <ou=customers,dc=my-domain,dc=com:ou=customers - True>
+        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
+          <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - True>
+
 But after __call__.
 ::
 
