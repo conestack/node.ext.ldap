@@ -291,9 +291,11 @@ class LDAPNode(LifecycleNode):
         # this will also trigger the changed chain
         val.changed = True
         del self._keys[key]
-        if not hasattr(self, '_deleted'):
+        try:
+            self._deleted.append(val)
+        except AttributeError:
             self._deleted = list()
-        self._deleted.append(val) 
+            self._deleted.append(val)
     
     def __call__(self):
         if self.changed and self._action is not None:
@@ -371,33 +373,39 @@ class LDAPNode(LifecycleNode):
         """Set/Unset the changed flag
 
         Set:
-            - if self.attrs are changed
-            - if a child is changed / added / removed
+            - if self.attrs are changed (attrs set us)
+            - if a child is changed / added / removed (child sets us)
         Unset:
-            - if neither a child nor the own attrs are changed
+            - if neither a child nor the own attrs are changed (attrs or child
+              tries to unset us)
+        Anyway:
+            - tell our parent in case we changed state
         """
-        # XXX: shouldnt this logic be in the parent?
-        self._changed = value
-        if self.__parent__ is None:
+        # only get active, if new state differs from old state
+        oldval = self._changed
+        if value is oldval:
             return
-        if not value and self.__parent__.changed:
-            # check parents attrs and keep parent changed, iff they are changed
-            if self.__parent__.attributes.changed:
-                return
-            # check parents loaded children if one of them is changed
-            # if so, keep parent marked as changed
-            siblings = list()
-            if self.__parent__._keys:
-                siblings = [v for v in self.__parent__._keys.values() if v is not None]
-            siblings += getattr(self.__parent__, '_deleted', [])
-            for sibling in siblings:
-                if sibling is self:
-                    continue
-                if sibling.changed:
+        if value:
+            # Setting is easy
+            self._changed = True
+        else:
+            # Unsetting needs more checks
+            try:
+                if self._attributes.changed:
                     return
-            self.__parent__.changed = value
-        elif value and not self.__parent__.changed:
-            self.__parent__.changed = value                
+            except AttributeError:
+                # No attributes loaded, yet - cannot be changed
+                pass
+            childs = getattr(self, '_deleted', [])
+            if self._keys is not None:
+                childs.extend(filter(lambda x: x is not None, self._keys.values()))
+            for child in childs:
+                if child.changed:
+                    return
+            self._changed = False
+        # And propagate to parent
+        if self._changed is not oldval and self.__parent__ is not None:
+            self.__parent__.changed = self._changed
             
     changed = property(_get_changed, _set_changed) 
     

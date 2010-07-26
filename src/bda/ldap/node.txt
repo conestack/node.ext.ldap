@@ -258,6 +258,14 @@ But after __call__.
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
 
+Changing attributes on a node, where keys are not loaded, yet.
+::
+
+    >>> from bda.ldap.node import queryNode
+    >>> tmp = queryNode(props, 'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com')
+    >>> tmp.attrs['description'] = 'Initial Description'
+    >>> tmp()
+
 Changing the rdn attribute fails, when committing (XXX: could be on assignment)
 ::
     >>> person.attrs['cn'] = 'foo'
@@ -401,9 +409,8 @@ Attribute with non-ascii str (utf8) returns as unicode.
 #    UnicodeDecodeError:
 #      'utf8' codec can't decode byte 0xff in position 0: unexpected code byte
 
-Check queryNode with nästy dn. XXX: see node.__repr__
+Check queryNode with nästy dn. (see node.__repr__)
 ::
-    >>> from bda.ldap.node import queryNode
     >>> node = queryNode(props, \
     ...     r'ou=nästy\, customer,ou=customers,dc=my-domain,dc=com')
     >>> node.__name__
