@@ -154,19 +154,12 @@ TODO
   XXX: SmartLDAPObject has been removed from the most recent python-ldap,
   because of being too buggy.
 
-- Improve retry logic in LDAPSession
-  could be useful, python-ldap's class ReconnectLDAPObject(SimpleLDAPObject) -
-  In case of server failure (ldap.SERVER_DOWN) the implementations of all
-  synchronous operation methods (search_s() etc.) are doing an automatic
-  reconnect and rebind and will retry the very same operation.
-
-- more complex retry logic with fallback servers, eg. try immediately again,
-  iff fails use backup server, start to test other server after timespan,
-  report status of ldap servers, preferred server, equal servers, load balance;
-  on the other hand people should/could use pound in front of their servers
-
-- define how our retry logic should look like that rethink job of session,
-  communicator and connector.
+- define how our retry logic should look like, rethink job of session,
+  communicator and connector. (check ldap.ldapobject.ReconnectLDAPObject)
+  ideas: more complex retry logic with fallback servers, eg. try immediately
+  again, if fails use backup server, start to test other server after
+  timespan, report status of ldap servers, preferred server, equal servers,
+  load balance; Are there ldap load balancers to recommend?
 
 - consider search_st with timeout.
 
@@ -182,8 +175,6 @@ TODO
 - binary attributes: 1. introduce Binary: ``node['cn=foo'].attributes['image']
   = Binary(stream)``, 2. parse ldap schema to identify binary attributes
 
-- think about login (LDAPUsers), if we keep it, we need to check uniquness
-
 - improve test framework to support running of single tests, currently the
   setUp and tearDown are tests themselves run at the very beginning and end.
   Having them as setUp and tearDown for DocFileSuite is one way, but then they
@@ -193,6 +184,43 @@ TODO
   It works by running prepareslapd.txt, then the single test(s), then
   stopslapd.txt.
 
+- bda.ldap.filter unicode/utf-8 and tests
+
+- unicode decorator
+
+Sauna Sprint TODO
+-----------------
+
+- define reconnect logic
+
+- investigate ReconnectLDAPObject, how does it behave?
+
+- write missing interfaces, iterfaces subpackage
+
+- tests for LDAPNode.search
+
+- tests for LDAPGroups
+
+- implement LDAPGroups
+
+- pas integration: bda.pasldap
+  - use bda.ldap test setup
+  - multiplugin that contains persistent LDAPUsersConfig, LDAPGroupsConfig
+  - otherwise very thin layer, all functionality goes into bda.ldap
+  - take Products.LDAPMultiPlugins as boilerplate example, but get rid off
+    everything obscure and readd with comments until it works
+
+- plone integration: bda.ploneldap
+  - views for LDAPUsersConfig, LDAPGroupsConfig for the plone-control-panel
+    working directly on the ones in bda.pasldap's multiplugin
+  - nothing else, everything else -> bda.pasldap or better bda.ldap
+
+- test with plone4
+
+- test with plone3
+
+- config presets for AD, openldap, OpenDirectory? or documentation in the plone
+  views (see bda.ploneldap) or autodetection?
 
 Changes
 =======
