@@ -4,6 +4,7 @@ Import test users.
 ::
 
     >>> import os
+    >>> import code; 
     >>> from subprocess import call
     >>> testldif = os.environ.get('USERLDIF')
     >>> ldapaddbin = os.environ.get('LDAPADDBIN')
@@ -151,10 +152,29 @@ Find a user by login.
     >>> users.idbylogin(mueller.login) == mueller.id
     True
 
-Search users by criteria.
+Search users by criteria OR queryFilter. eg. person, top, foo.
 ::
 
-#    >>> users.search(criteria=dict(sn=mueller.attrs['sn']), exact_match=True)
+	>>> schmidt = users['Schmidt']
+	>>> users.search(criteria=dict(sn=schmidt.attrs['sn']), exact_match=True)
+	u'Schmidt'
+
+	>>> users.search(queryFilter='(objectClass=person)')
+	[u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
+
+	>>> users.search(criteria=dict(sn=schmidt.attrs['sn']), exact_match=False)
+    [u'Schmidt']
+
+	>>> users.search(criteria=dict(sn=schmidt.attrs['sn']), attrlist=['description'], exact_match=False)
+	[(u'Schmidt', {u'description': [u'foo']})]
+
+	>>> users.search(criteria=dict(sn=[schmidt.attrs['sn'], mueller.attrs['sn']]), attrlist=['description'], exact_match=False)	
+	[]
+
+	>>> mueller.attrs['description'] = u'Mueller\'s foo description'
+	>>> mueller()
+	>>> users.search(attrlist=['description'], exact_match=False)
+	[(u'Meier', {}), (u'M\xfcller', {u'description': [u"Mueller's foo description"]}), (u'Schmidt', {u'description': [u'foo']}), (u'Umhauer', {u'description': [u'foo']})]
 
 
 Add a user.
