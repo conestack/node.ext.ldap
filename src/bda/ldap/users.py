@@ -1,5 +1,7 @@
+from zope.interface import implements
 from bda.ldap import LDAPProps, LDAPNode
 from bda.ldap import BASE, ONELEVEL, SUBTREE
+from bda.ldap.interfaces import ILDAPUsersConfig
 
 class LDAPPrincipal(LDAPNode):
     """Superclass for LDAPUser and LDAPGroup
@@ -23,6 +25,8 @@ class LDAPPrincipals(LDAPNode):
 class LDAPUsersConfig(object):
     """Define how users look and where they are
     """
+    implements(ILDAPUsersConfig)
+    
     def __init__(self,
             props,
             baseDN='',

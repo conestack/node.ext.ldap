@@ -1,10 +1,14 @@
+from zope.interface import implements
 from bda.ldap import LDAPProps, LDAPNode
 from bda.ldap import BASE, ONELEVEL, SUBTREE
+from bda.ldap.interfaces import ILDAPGroupsConfig
 from bda.ldap.users import LDAPPrincipal, LDAPPrincipals
 
 class LDAPGroupsConfig(object):
     """Define how groups look and where they are
     """
+    implements(ILDAPGroupsConfig)
+    
     def __init__(self,
             props,
             baseDN='',
