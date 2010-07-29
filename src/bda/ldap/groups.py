@@ -18,7 +18,7 @@ class LDAPGroupsConfig(object):
         self.queryFilter = queryFilter
 
 class LDAPGroup(LDAPPrincipal):
-    """An LDAP group :D
+    """An LDAP groupz
     """
 
 class LDAPGroups(LDAPPrincipals):
