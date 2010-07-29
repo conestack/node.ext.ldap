@@ -195,7 +195,7 @@ Sauna Sprint TODO
 
 - investigate ReconnectLDAPObject, how does it behave?
 
-- write missing interfaces, iterfaces subpackage
+- write missing interfaces, interfaces subpackage
 
 - tests for LDAPNode.search
 

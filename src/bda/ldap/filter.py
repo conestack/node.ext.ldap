@@ -1,5 +1,8 @@
+from ldap.filter import filter_format
+
 class LDAPFilter(object):
     def __init__(self, queryFilter=None):
+        # We expect queryFilter to be correctly escaped
         self._filter = queryFilter
 
     def __and__(self, other):
@@ -7,10 +10,10 @@ class LDAPFilter(object):
             return self
         res = ''
         if isinstance(other, LDAPFilter):
-            other = str(other)
+            other = other.__str__()
         elif not isinstance(other, basestring):
             raise TypeError(u"unsupported operand type")
-        us = str(self)
+        us = self.__str__()
         if us and other:
             res = '(&%s%s)' % (us, other)
         elif us:
@@ -35,7 +38,7 @@ class LDAPDictFilter(LDAPFilter):
         self.criteria = criteria
 
     def __str__(self):
-        return self.criteria and str(dict_to_filter(self.criteria)) or ''
+        return self.criteria and dict_to_filter(self.criteria).__str__() or ''
 
     def __repr__(self):
         return "LDAPDictFilter(criteria=%r)" % (self.criteria,)

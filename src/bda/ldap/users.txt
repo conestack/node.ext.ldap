@@ -97,7 +97,7 @@ And attributes.
 Query all user nodes.
 ::
 
-    >>> [users[x] for x in users]
+    >>> [users[id] for id in users]
     [<cn=user1,dc=my-domain,dc=com:Meier - False>,
     <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>,
     <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>,

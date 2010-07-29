@@ -231,7 +231,7 @@ class LDAPNode(LifecycleNode):
         # would it be better to fail? (see also __iter__ secondary key)
         if self._key_attr is not 'rdn' and self._key_attr not in _filter:
             _filter &= '(%s=*)' % (self._key_attr,)
-        children = self._session.search(str(_filter),
+        children = self._session.search(_filter.__str__(),
                                         self._search_scope,
                                         baseDN=self.DN,
                                         force_reload=self._reload,

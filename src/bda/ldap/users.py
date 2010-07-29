@@ -20,7 +20,6 @@ class LDAPPrincipals(LDAPNode):
         self._search_scope = cfg.scope
         self._key_attr = cfg.id_attr
 
-
 class LDAPUsersConfig(object):
     """Define how users look and where they are
     """
