@@ -6,7 +6,7 @@ Import test users.
     >>> import os
     >>> import code; 
     >>> from subprocess import call
-    >>> testldif = os.environ.get('USERLDIF')
+    >>> testldif = os.environ.get('PRINCSLDIF')
     >>> ldapaddbin = os.environ.get('LDAPADDBIN')
 
     >>> binddn = "cn=Manager,dc=my-domain,dc=com"

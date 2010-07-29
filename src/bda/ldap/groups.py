@@ -3,7 +3,7 @@ from bda.ldap import BASE, ONELEVEL, SUBTREE
 from bda.ldap.users import LDAPPrincipal, LDAPPrincipals
 
 class LDAPGroupsConfig(object):
-    """Define how users look and where they are
+    """Define how groups look and where they are
     """
     def __init__(self,
             props,
