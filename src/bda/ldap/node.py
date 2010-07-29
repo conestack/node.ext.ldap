@@ -106,21 +106,73 @@ class LDAPNodeAttributes(NodeAttributes):
             self._node._action = ACTION_MODIFY
             self._node.changed = True
 
+
+class MappedAttributes(object):
+    def __init__(self, node, attrmap):
+        """
+        ``node``
+            the parent node from which to fetch the mapped attributes
+        ``attrmap``
+            an attribute map, eg {'key_here': 'key_in_node.attrs'}.
+        """
+        self._node = node
+        self._map = decode(attrmap)
+
+    def __contains__(self, key):
+        return key in self._map
+
+    def __iter__(self):
+        # Just return the iterator of our keymap
+        return self._map.__iter__()
+
+    iterkeys = __iter__
+
+    def iteritems(self):
+        for key in self._map:
+            yield key, self[key]
+
+    def itervalues(self):
+        for key in self._map:
+            yield self[key]
+
+    def keys(self):
+        return [x for x in self._map]
+
+    def __len__(self):
+        return self._map.__len__()
+
+    def __getitem__(self, key):
+        mkey = self._map[key]
+        return self._node.attrs[mkey]
+
+    def __setitem__(self, key, val):
+        mkey = self._map[key]
+        self._node.attrs[mkey] = val
+
+    def values(self):
+        return [x for x in self.itervalues()]
+
+
 class LDAPNode(LifecycleNode):
     """An LDAP Node.
     """
     implements(ICallableNode)
     attributes_factory = LDAPNodeAttributes
     
-    def __init__(self, name=None, props=None):
-        """LDAP Node expects both, ``name`` and ``props`` arguments for the 
-        root LDAP Node or nothing for children as parameters. 
+    def __init__(self, name=None, props=None, attrmap=None):
+        """LDAP Node expects ``name`` and ``props`` arguments for the root LDAP
+        Node or nothing for children. ``attrmap`` is an optional rood node
+        argument.
         
         ``name`` 
             Initial base DN for the root LDAP Node.
         
         ``props`` 
             ``bda.ldap.LDAPProperties`` object.
+
+        ``attrmap``
+            an optional map of attributes, mapped attributes will be available
+            via node.mattrs.
         """
         if (name and not props) or (props and not name):
             raise ValueError(u"Wrong initialization.")
@@ -148,6 +200,10 @@ class LDAPNode(LifecycleNode):
         self._search_filter = None
         self._search_criteria = None
         self._ChildClass = LDAPNode
+        if attrmap is not None:
+            self._mattrs = MappedAttributes(self, attrmap)
+        else:
+            self._mattrs = None
             
     @property
     def DN(self):
@@ -158,6 +214,12 @@ class LDAPNode(LifecycleNode):
             return self.__name__
         else:
             return u''
+
+    @property
+    def mattrs(self):
+        if self._mattrs is None:
+            raise AttributeError(u"No mapped attributes!")
+        return self._mattrs
 
     def child_dn(self, key):
         return self._child_dns[key]

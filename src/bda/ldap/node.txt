@@ -629,3 +629,42 @@ Again, we can query/change/delete these.
     >>> node()
     >>> node.keys()
     [u'customer99']
+
+It is possible to define attribute mappings, i.e attributes in .attrs are also
+available in .mattrs via a different name. If you did not define an attribute
+map, accessing .mattrs will raise an AttributeError.
+::
+
+    >>> root.mattrs
+    Traceback (most recent call last):
+    ...
+    AttributeError: No mapped attributes!
+
+    >>> attrmap = dict(organization='o', oc='objectClass')
+    >>> root = LDAPNode('dc=my-domain,dc=com', props, attrmap=attrmap)
+    >>> root.attrs
+    {u'objectClass': [u'top', u'dcObject', u'organization'],
+     u'dc': u'my-domain',
+     u'o': u'my-organization'}
+    >>> root.mattrs
+    <bda.ldap.node.MappedAttributes object at ...>
+    >>> root.mattrs.keys()
+    [u'organization', u'oc']
+    >>> root.mattrs.values()
+    [u'my-organization', [u'top',
+     u'dcObject', u'organization']]
+    >>> len(root.mattrs)
+    2
+    >>> 'organization' in root.mattrs
+    True
+    >>> 'foo' in root.mattrs
+    False
+    >>> [x for x in root.mattrs.iteritems()]
+    [(u'organization', u'my-organization'),
+     (u'oc', [u'top', u'dcObject', u'organization'])]
+    >>> root.mattrs['organization']
+    u'my-organization'
+    >>> root.mattrs['organization'] = 'foo'
+    >>> root.attrs['o']
+    u'foo'
+
