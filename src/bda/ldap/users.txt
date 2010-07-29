@@ -171,12 +171,6 @@ Search users by criteria OR queryFilter. eg. person, top, foo.
     >>> users.search(criteria=dict(sn=[schmidt.attrs['sn'], mueller.attrs['sn']]), attrlist=['description'], exact_match=False)
     []
 
-    >>> mueller.attrs['description'] = u'Mueller\'s foo description'
-    >>> mueller()
-    >>> users.search(attrlist=['description'], exact_match=False)
-    [(u'Meier', {}), (u'M\xfcller', {u'description': [u"Mueller's foo description"]}), (u'Schmidt', {u'description': [u'foo']}), (u'Umhauer', {u'description': [u'foo']})]
-
-
 Add a user.
 ::
 
