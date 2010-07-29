@@ -177,3 +177,46 @@ Add a user.
 
 Make sure it is in the right location.
 ::
+
+
+XXX: tests that need to be moved to good locations
+
+    >>> mueller.attrs['telephoneNumber'] = '9876'
+    >>> users.printtree()
+    <dc=my-domain,dc=com - True>
+      <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - True>
+      <cn=user1,dc=my-domain,dc=com:Meier - False>
+      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
+      <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>
+    >>> mueller()
+    >>> users.printtree()
+    <dc=my-domain,dc=com - False>
+      <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
+      <cn=user1,dc=my-domain,dc=com:Meier - False>
+      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
+      <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>
+    >>> from bda.ldap.node import queryNode
+    >>> queryNode(props, mueller.DN).attrs
+    {u'objectClass': [u'top', u'person'],
+     u'telephoneNumber': u'9876',
+     u'userPassword': u'foo2',
+     u'cn': u'user2',
+     u'sn': u'M\xfcller'}
+    >>> del users['Müller']
+    >>> users.printtree()
+    <dc=my-domain,dc=com - True>
+      <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - True>
+      <cn=user1,dc=my-domain,dc=com:Meier - False>
+      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
+      <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>
+    >>> mueller()
+    >>> users.printtree()
+    <dc=my-domain,dc=com - False>
+      <cn=user1,dc=my-domain,dc=com:Meier - False>
+      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
+      <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>
+
+XXX: How does mueller know he is not in ldap anymore?
+
+    >>> queryNode(props, mueller.DN) is None
+    True

@@ -110,9 +110,6 @@ Create a new LDAPNode and add it to customers.
     >>> root.ldap_session
     <bda.ldap.session.LDAPSession object at ...>
 
-This entry was not written yet to the directory, but marked that it has to be
-written.
-
 New entry has no childs, but was added to the parent. There
 were an bug where iteration tried to load from ldap at this stage. Lets test
 if this works
