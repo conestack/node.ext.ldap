@@ -1,0 +1,110 @@
+# -*- coding: utf-8 -*-
+
+Group Management
+================
+
+OpenLDAP groupOfNames
+---------------------
+
+Get an LDAPGroups node and configure it.
+::
+
+    >>> from bda.ldap.properties import LDAPProps
+    >>> from bda.ldap.groups import LDAPGroups, LDAPGroupsConfig
+    >>> from bda.ldap import SUBTREE
+
+    >>> user = 'cn=Manager,dc=my-domain,dc=com'
+    >>> pwd = 'secret'
+    >>> props = LDAPProps('127.0.0.1', 12345, user, pwd, cache=False)
+
+    >>> gcfg = LDAPGroupsConfig(props,
+    ...                        baseDN='dc=my-domain,dc=com',
+    ...                        id_attr='cn',
+    ...                        scope=SUBTREE,
+    ...                        queryFilter='(objectClass=groupOfNames)',
+    ...                        )
+    >>> groups = LDAPGroups(gcfg)
+
+Query all group ids.
+::
+
+    >>> groups.ids()
+    [u'group1', u'group2']
+
+Query all groups.
+::
+
+    >>> [groups[x] for x in groups]
+    [<cn=group1,dc=my-domain,dc=com:group1 - False>,
+     <cn=group2,dc=my-domain,dc=com:group2 - False>]
+
+Query groups by id.
+::
+
+    >>> group1 = groups['group1']
+    >>> group1
+    <cn=group1,dc=my-domain,dc=com:group1 - False>
+
+    >>> group2 = groups['group2']
+    >>> group2
+    <cn=group2,dc=my-domain,dc=com:group2 - False>
+
+Query group attributes.
+::
+
+    >>> group1.attrs
+    {u'objectClass': [u'top', u'groupOfNames'],
+     u'member': [u'cn=user3,ou=customers,dc=my-domain,dc=com',
+                 u'cn=user2,ou=customers,dc=my-domain,dc=com',
+                 u'cn=group2,dc=my-domain,dc=com'],
+     u'cn': u'group1'}
+
+Query ids of group members.
+::
+
+#    >>> group1.ids()
+
+Remove a member from group.
+::
+
+#    >>> group.remove(uid)
+
+Add a member to a group.
+::
+
+#    >>> group.append(uid)
+
+
+Group stored as user attribute (memberOf)
+-----------------------------------------
+
+This is the same to find the groups, but we support to retrieve the membership
+info from the user object.
+
+We use a slapd without memberOf support, (atm), so we abuse other attributes.
+
+    >>> gcfg = LDAPGroupsConfig(props,
+    ...                        baseDN='dc=my-domain,dc=com',
+    ...                        id_attr='cn',
+    ...                        scope=SUBTREE,
+    ...                        queryFilter='(objectClass=groupOfNames)',
+    ...                        )
+    >>> groups = LDAPGroups(gcfg)
+
+
+posixGroups
+-----------
+
+    >>> gcfg = LDAPGroupsConfig(props,
+    ...                        baseDN='dc=my-domain,dc=com',
+    ...                        id_attr='o',
+    ...                        scope=SUBTREE,
+    ...                        queryFilter='(&(objectClass=organization)(st=*))',
+    ...                        )
+    >>> groups = LDAPGroups(gcfg)
+
+    >>> groups.ids()
+    [u'group3', u'group4']
+
+
+
