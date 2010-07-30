@@ -96,7 +96,7 @@ class LDAPUsers(LDAPPrincipals):
         super(LDAPUsers, self).__init__(cfg)
         self._login_attr = cfg.login_attr
         self._ChildClass = LDAPUser
-        if self._login_attr is not self._key_attr:
+        if self._login_attr != self._key_attr:
             self._seckey_attrs = (cfg.login_attr,)
 
     def idbylogin(self, login):
