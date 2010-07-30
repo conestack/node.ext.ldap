@@ -100,7 +100,11 @@ class LDAPUsers(LDAPPrincipals):
             self._seckey_attrs = (cfg.login_attr,)
 
     def idbylogin(self, login):
-        return self._seckeys[self._login_attr][login]
+        if self._login_attr != self._key_attr:
+            return self._seckeys[self._login_attr][login]
+        else:
+            # XXX: Is this sane, or should we tell that they are the same?
+            return login
 
     def authenticate(self, id=None, login=None, pw=None):
         """Authenticate a user either by id xor by login
