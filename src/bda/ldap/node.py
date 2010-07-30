@@ -225,7 +225,7 @@ class LDAPNode(LifecycleNode):
         return self._child_dns[key]
 
     def _calculate_key(self, dn, attrs):
-        if self._key_attr is 'rdn':
+        if self._key_attr == 'rdn':
             # explode_dn is ldap world
             key = decode(explode_dn(encode(dn))[0])
         else:
@@ -282,8 +282,8 @@ class LDAPNode(LifecycleNode):
         """
         _attrlist = []
         if attrlist:
-            _attrlist.extend(filter(lambda x: x is not 'dn', attrlist))
-        if not self._key_attr is 'rdn' and self._key_attr not in _attrlist:
+            _attrlist.extend(filter(lambda x: x != 'dn', attrlist))
+        if not self._key_attr == 'rdn' and self._key_attr not in _attrlist:
             _attrlist.append(self._key_attr)
         _filter = LDAPFilter(self._search_filter)
         _filter &= LDAPDictFilter(self._search_criteria)
@@ -291,7 +291,7 @@ class LDAPNode(LifecycleNode):
         _filter &= LDAPDictFilter(criteria)
         # XXX: Is it really good to filter out entries without the key attr or
         # would it be better to fail? (see also __iter__ secondary key)
-        if self._key_attr is not 'rdn' and self._key_attr not in _filter:
+        if self._key_attr != 'rdn' and self._key_attr not in _filter:
             _filter &= '(%s=*)' % (self._key_attr,)
         children = self._session.search(_filter.__str__(),
                                         self._search_scope,
@@ -411,7 +411,7 @@ class LDAPNode(LifecycleNode):
         if self._search_scope is not ONELEVEL:
             raise NotImplementedError(
                     u"Adding with scope != ONELEVEL not supported.")
-        if self._key_attr is not 'rdn':
+        if self._key_attr != 'rdn':
             raise NotImplementedError(u"Adding with key != rdn not supported.")
         val._session = self._session
         if self._keys is None:
