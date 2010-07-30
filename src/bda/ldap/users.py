@@ -27,6 +27,9 @@ class LDAPUsersConfig(object):
     """
     implements(ILDAPUsersConfig)
     
+     #when a user is modified, killed etc an event is emmited. To grab it you must:
+    #zope.component.provideHandler(funct_to_be_executed,[1st_arg_objecttype,2nd_arg_objecttype,..])
+
     def __init__(self,
             props,
             baseDN='',
