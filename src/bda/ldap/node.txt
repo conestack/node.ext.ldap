@@ -644,8 +644,6 @@ map, accessing .mattrs will raise an AttributeError.
     {u'objectClass': [u'top', u'dcObject', u'organization'],
      u'dc': u'my-domain',
      u'o': u'my-organization'}
-    >>> root.mattrs
-    <zodict.node.MappedAttributes object at ...>
     >>> root.mattrs.keys()
     [u'organization', u'oc']
     >>> root.mattrs.values()
