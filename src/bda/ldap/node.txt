@@ -594,7 +594,7 @@ Using filter and scope. Let's first create a collision.
 
     >>> from bda.ldap import SUBTREE
     >>> node = LDAPNode(props=props, name=root.DN)
-    >>> node._search_scope = SUBTREE
+    >>> node._child_scope = SUBTREE
     >>> node.keys()
     Traceback (most recent call last):
     ...
@@ -604,7 +604,7 @@ We need a different key. As a side-effect a filter will be used: '(cn=*)'
 ::
 
     >>> node = LDAPNode(props=props, name=root.DN)
-    >>> node._search_scope = SUBTREE
+    >>> node._child_scope = SUBTREE
     >>> node._key_attr = 'cn'
     >>> node.keys()
     [u'customer99', u'Max']

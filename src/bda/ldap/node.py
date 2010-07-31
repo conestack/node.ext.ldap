@@ -196,9 +196,9 @@ class LDAPNode(LifecycleNode):
             self._session.baseDN = self.DN
         super(LDAPNode, self).__init__(name)
         self._key_attr = 'rdn'
-        self._search_scope = ONELEVEL
-        self._search_filter = None
-        self._search_criteria = None
+        self._child_scope = ONELEVEL
+        self._child_filter = None
+        self._child_criteria = None
         self._ChildClass = LDAPNode
         if attrmap is not None:
             self._mattrs = MappedAttributes(self, attrmap)
@@ -285,16 +285,19 @@ class LDAPNode(LifecycleNode):
             _attrlist.extend(filter(lambda x: x != 'dn', attrlist))
         if not self._key_attr == 'rdn' and self._key_attr not in _attrlist:
             _attrlist.append(self._key_attr)
-        _filter = LDAPFilter(self._search_filter)
-        _filter &= LDAPDictFilter(self._search_criteria)
-        _filter &= LDAPFilter(queryFilter)
-        _filter &= LDAPDictFilter(criteria)
+        # filter for this search ANDed with the basic filter which is always
+        # effective
+        search_filter = LDAPFilter(queryFilter)
+        search_filter &= LDAPDictFilter(criteria)
+        _filter = LDAPFilter(self._child_filter)
+        _filter &= LDAPDictFilter(self._child_criteria)
+        _filter &= search_filter
         # XXX: Is it really good to filter out entries without the key attr or
         # would it be better to fail? (see also __iter__ secondary key)
         if self._key_attr != 'rdn' and self._key_attr not in _filter:
             _filter &= '(%s=*)' % (self._key_attr,)
         children = self._session.search(_filter.__str__(),
-                                        self._search_scope,
+                                        self._child_scope,
                                         baseDN=self.DN,
                                         force_reload=self._reload,
                                         attrlist=_attrlist)
@@ -408,7 +411,7 @@ class LDAPNode(LifecycleNode):
     def __setitem__(self, key, val):
         if isinstance(key, str):
             key = decode(key)
-        if self._search_scope is not ONELEVEL:
+        if self._child_scope is not ONELEVEL:
             raise NotImplementedError(
                     u"Adding with scope != ONELEVEL not supported.")
         if self._key_attr != 'rdn':

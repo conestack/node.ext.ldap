@@ -18,8 +18,8 @@ class LDAPPrincipals(LDAPNode):
 
     def __init__(self, cfg):
         super(LDAPPrincipals, self).__init__(name=cfg.baseDN, props=cfg.props)
-        self._search_filter = cfg.queryFilter
-        self._search_scope = cfg.scope
+        self._child_filter = cfg.queryFilter
+        self._child_scope = cfg.scope
         self._key_attr = cfg.id_attr
 
 class LDAPUsersConfig(object):
