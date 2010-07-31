@@ -225,7 +225,7 @@ Sauna Sprint TODO
 Changes
 =======
 
-1.5.3 (unreleased)
+1.6.0 (unreleased)
 ------------------
 
 - hidden support for _search_filter/_search_scope, see node.txt
