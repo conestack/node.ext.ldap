@@ -48,6 +48,7 @@ def queryNode(props, dn):
     container = LDAPNode(name=containerdn, props=props)
     return container.get(nodedn, None)
 
+
 class LDAPNodeAttributes(NodeAttributes):
     
     def __init__(self, node):
@@ -154,8 +155,10 @@ class LDAPNode(LifecycleNode):
         self._child_scope = ONELEVEL
         self._child_filter = None
         self._child_criteria = None
+        self._child_relation = None
         self._ChildClass = LDAPNode
             
+    # This is really ldap
     @property
     def DN(self):
         if self.__parent__ is not None:
@@ -166,9 +169,11 @@ class LDAPNode(LifecycleNode):
         else:
             return u''
 
+    # This is really ldap
     def child_dn(self, key):
         return self._child_dns[key]
 
+    # a keymapper
     def _calculate_key(self, dn, attrs):
         if self._key_attr == 'rdn':
             # explode_dn is ldap world
@@ -183,6 +188,7 @@ class LDAPNode(LifecycleNode):
                 key = key[0]
         return key
 
+    # secondary keys
     def _calculate_seckeys(self, attrs):
         if not self._seckey_attrs:
             return {}
@@ -204,32 +210,44 @@ class LDAPNode(LifecycleNode):
                 seckeys[seckey_attr] = seckey
         return seckeys
 
-    def search(self, queryFilter=None, criteria=None, attrlist=None,
-               exact_match=False):
+    def search(self, queryFilter=None, criteria=None, relation=None,
+            attrlist=None, exact_match=False):
         """Returns a list of matching keys.
 
         All search criteria are additive and will be ``&``ed. ``queryFilter``
         and ``criteria`` further narrow down the search space defined by
-        ``self._search_filter`` and ``self._search_criteria``.
+        ``self._child_filter``, ``self._child_criteria`` and
+        ``self._child_relation``.
 
         ``queryFilter``
             ldap queryFilter, e.g. ``(objectClass=foo)``
         ``criteria``
             dictionary of attribute value(s) (string or list of string)
+        ``relation``
+            the nodes we search has a relation to us.  A relation is defined as
+            a string of attribute pairs:
+            ``<relation> = '<our_attr>:<child_attr>'``.
+            The value of these attributes must match for relation to match.
+            Multiple pairs can be or-joined with
         ``attrlist``
             Normally a list of keys is returned. By defining attrlist the
             return format will be ``[(key, {attr1: [value1, ...]}), ...]``. To
             get this format without any attributs, i.e. empty dicts in the
-            tuples, specify an empty attrlist.
+            tuples, specify an empty attrlist. In addition to the normal ldap
+            attributes you can also the request the dn to be included.
         ``exact_match``
             raise ValueError if not one match, return format is a single key or
             tuple, if attrlist is specified.
         """
+        # dn as attr support and keymapper
         _attrlist = []
         if attrlist:
             _attrlist.extend(filter(lambda x: x != 'dn', attrlist))
         if not self._key_attr == 'rdn' and self._key_attr not in _attrlist:
             _attrlist.append(self._key_attr)
+
+        # create queryFilter from all filter things - needs only to happen just
+        # before ldap, could be in the backedn
         # filter for this search ANDed with the basic filter which is always
         # effective
         search_filter = LDAPFilter(queryFilter)
@@ -237,21 +255,27 @@ class LDAPNode(LifecycleNode):
         _filter = LDAPFilter(self._child_filter)
         _filter &= LDAPDictFilter(self._child_criteria)
         _filter &= search_filter
+
         # XXX: Is it really good to filter out entries without the key attr or
         # would it be better to fail? (see also __iter__ secondary key)
+        # configurable?
         if self._key_attr != 'rdn' and self._key_attr not in _filter:
             _filter &= '(%s=*)' % (self._key_attr,)
-        children = self._session.search(_filter.__str__(),
-                                        self._child_scope,
-                                        baseDN=self.DN,
-                                        force_reload=self._reload,
-                                        attrlist=_attrlist)
-        if exact_match and len(children) != 1:
+
+        # perform the backend search
+        matches = self._session.search(_filter.__str__(),
+                                       self._child_scope,
+                                       baseDN=self.DN,
+                                       force_reload=self._reload,
+                                       attrlist=_attrlist)
+        if exact_match and len(matches) != 1:
             # XXX: Is ValueError appropriate?
             # XXX: Really also fail, if there are 0 matches?
             raise ValueError(u"Exact match asked but search not exact")
+
+        # extract key and desired attributes
         res = []
-        for dn, attrs in children:
+        for dn, attrs in matches:
             key = self._calculate_key(dn, attrs)
             if attrlist is not None:
                 resattr = dict([(k,v) for k,v in attrs.iteritems()
@@ -261,6 +285,7 @@ class LDAPNode(LifecycleNode):
                 res.append((key, resattr))
             else:
                 res.append(key)
+
         if exact_match:
             return res[0]
         else:
