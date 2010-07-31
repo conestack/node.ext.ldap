@@ -627,6 +627,7 @@ Again, we can query/change/delete these.
     >>> node.keys()
     [u'customer99']
 
+# XXX: (in part) to be moved to zodict
 It is possible to define attribute mappings, i.e attributes in .attrs are also
 available in .mattrs via a different name. If you did not define an attribute
 map, accessing .mattrs will raise an AttributeError.
@@ -644,7 +645,7 @@ map, accessing .mattrs will raise an AttributeError.
      u'dc': u'my-domain',
      u'o': u'my-organization'}
     >>> root.mattrs
-    <bda.ldap.node.MappedAttributes object at ...>
+    <zodict.node.MappedAttributes object at ...>
     >>> root.mattrs.keys()
     [u'organization', u'oc']
     >>> root.mattrs.values()

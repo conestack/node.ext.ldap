@@ -107,52 +107,6 @@ class LDAPNodeAttributes(NodeAttributes):
             self._node.changed = True
 
 
-class MappedAttributes(object):
-    def __init__(self, node, attrmap):
-        """
-        ``node``
-            the parent node from which to fetch the mapped attributes
-        ``attrmap``
-            an attribute map, eg {'key_here': 'key_in_node.attrs'}.
-        """
-        self._node = node
-        self._map = decode(attrmap)
-
-    def __contains__(self, key):
-        return key in self._map
-
-    def __iter__(self):
-        # Just return the iterator of our keymap
-        return self._map.__iter__()
-
-    iterkeys = __iter__
-
-    def iteritems(self):
-        for key in self._map:
-            yield key, self[key]
-
-    def itervalues(self):
-        for key in self._map:
-            yield self[key]
-
-    def keys(self):
-        return [x for x in self._map]
-
-    def __len__(self):
-        return self._map.__len__()
-
-    def __getitem__(self, key):
-        mkey = self._map[key]
-        return self._node.attrs[mkey]
-
-    def __setitem__(self, key, val):
-        mkey = self._map[key]
-        self._node.attrs[mkey] = val
-
-    def values(self):
-        return [x for x in self.itervalues()]
-
-
 class LDAPNode(LifecycleNode):
     """An LDAP Node.
     """
@@ -194,16 +148,12 @@ class LDAPNode(LifecycleNode):
         if props:
             self._session = LDAPSession(props)
             self._session.baseDN = self.DN
-        super(LDAPNode, self).__init__(name)
+        super(LDAPNode, self).__init__(name, decode(attrmap))
         self._key_attr = 'rdn'
         self._child_scope = ONELEVEL
         self._child_filter = None
         self._child_criteria = None
         self._ChildClass = LDAPNode
-        if attrmap is not None:
-            self._mattrs = MappedAttributes(self, attrmap)
-        else:
-            self._mattrs = None
             
     @property
     def DN(self):
@@ -214,12 +164,6 @@ class LDAPNode(LifecycleNode):
             return self.__name__
         else:
             return u''
-
-    @property
-    def mattrs(self):
-        if self._mattrs is None:
-            raise AttributeError(u"No mapped attributes!")
-        return self._mattrs
 
     def child_dn(self, key):
         return self._child_dns[key]
