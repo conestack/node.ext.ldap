@@ -22,6 +22,23 @@ class LDAPFilter(object):
             res = other
         return LDAPFilter(res)
 
+    def __or__(self, other):
+        if other is None:
+            return self
+        res = ''
+        if isinstance(other, LDAPFilter):
+            other = other.__str__()
+        elif not isinstance(other, basestring):
+            raise TypeError(u"unsupported operand type")
+        us = self.__str__()
+        if us or other:
+            res = '(|%s%s)' % (us, other)
+        elif us:
+            res = us
+        elif other:
+            res = other
+        return LDAPFilter(res)
+
     def __contains__(self, attr):
         attr = '(%s=' % (attr,)
         return attr in self._filter
@@ -34,23 +51,28 @@ class LDAPFilter(object):
 
 
 class LDAPDictFilter(LDAPFilter):
-    def __init__(self, criteria):
+    def __init__(self, criteria, or_search=False):
         self.criteria = criteria
+        self.or_search = or_search
 
     def __str__(self):
-        return self.criteria and dict_to_filter(self.criteria).__str__() or ''
+        return self.criteria and dict_to_filter(criteria=self.criteria, or_search=self.or_search).__str__() or ''
 
     def __repr__(self):
         return "LDAPDictFilter(criteria=%r)" % (self.criteria,)
 
 
-def dict_to_filter(criteria):
+def dict_to_filter(criteria, or_search):
     """Turn dictionary criteria into ldap queryFilter string
     """
     _filter = LDAPFilter()
     for attr, values in criteria.items():
         if not isinstance(values, list):
             values = [values]
-        for value in values:
-            _filter &= '(%s=%s)' % (attr, value)
+	if ( or_search ):
+		for value in values:
+			_filter |= '(%s=%s)' % (attr, value)
+	else:
+		for value in values:
+			_filter &= '(%s=%s)' % (attr, value)
     return _filter

@@ -5,6 +5,7 @@ Import test users.
 
     >>> import os
     >>> from subprocess import call
+    >>> from bda.ldap.filter import LDAPFilter
     >>> testldif = os.environ.get('PRINCSLDIF')
     >>> ldapaddbin = os.environ.get('LDAPADDBIN')
 

@@ -211,7 +211,7 @@ class LDAPNode(LifecycleNode):
         return seckeys
 
     def search(self, queryFilter=None, criteria=None, relation=None,
-            attrlist=None, exact_match=False):
+            attrlist=None, exact_match=False, or_search=False):
         """Returns a list of matching keys.
 
         All search criteria are additive and will be ``&``ed. ``queryFilter``
@@ -251,7 +251,7 @@ class LDAPNode(LifecycleNode):
         # filter for this search ANDed with the basic filter which is always
         # effective
         search_filter = LDAPFilter(queryFilter)
-        search_filter &= LDAPDictFilter(criteria)
+        search_filter &= LDAPDictFilter(criteria, or_search=or_search)
         _filter = LDAPFilter(self._child_filter)
         _filter &= LDAPDictFilter(self._child_criteria)
         _filter &= search_filter
