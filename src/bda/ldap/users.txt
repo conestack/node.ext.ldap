@@ -168,8 +168,21 @@ XXX - Review: Search users by criteria OR queryFilter. eg. person, top, foo.
     >>> users.search(criteria=dict(sn=schmidt.attrs['sn']), attrlist=['description'], exact_match=False)
     [(u'Schmidt', {u'description': [u'foo']})]
 
-    >>> users.search(criteria=dict(sn=[schmidt.attrs['sn'], mueller.attrs['sn']]), attrlist=['description'], exact_match=False)
+    >>> qFilter = LDAPFilter('(objectClass=person)')
+    >>> qFilter |= LDAPFilter('(objectClass=some)')
+    >>> users.search(queryFilter=qFilter, exact_match=False)
+    [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
+
+    >>> cFilter = dict(sn=['meier','schmidt'])
+    >>> users.search(criteria=cFilter, exact_match=False, or_search=False)
     []
+
+    >>> cFilter = dict(sn=['meier','schmidt'])
+    >>> users.search(criteria=cFilter, exact_match=False, or_search=True)
+    [u'Meier', u'Schmidt']
+
+    >>> users.search(queryFilter=qFilter, criteria=cFilter, exact_match=False, or_search=True)
+    [u'Meier', u'Schmidt']
 
 Add a user.
 ::
