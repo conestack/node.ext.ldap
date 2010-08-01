@@ -78,8 +78,12 @@ class LDAPRelationFilter(LDAPFilter):
         _filter = LDAPFilter()
         dictionary = dict()
 
+        parsedRelation = dict((k,v) for (k,_,v) in (pair.partition(':') for
+            pair in self.relation.split('|'))) 
+
         for k,v in parsedRelation.items():
-            if v.__str__() == '' or k.__str__() == '':
+            if str(v) == '' or str(k) == '' or str(k) not in self.gattrs:
+                #might be inefficient, wip
                 continue
             dictionary[v.__str__()] = self.gattrs[k.__str__()]
 
