@@ -184,6 +184,32 @@ XXX - Review: Search users by criteria OR queryFilter. eg. person, top, foo.
     >>> users.search(queryFilter=qFilter, criteria=cFilter, exact_match=False, or_search=True)
     [u'Meier', u'Schmidt']
 
+	>>> from bda.ldap.filter import *
+	>>> node = FooNode({'groupattr1': 'Member #1', 'groupattr2':'Member #2', 'groupattr3':'Member #3'})
+	>>> rel_empty = LDAPRelationFilter(node, '')
+	>>> rel_empty.__str__()
+	''
+
+	>>> rel_empty |= LDAPRelationFilter(node, 'groupattr1:member1')
+	>>> rel_empty.__str__()
+	''
+
+	>>> rel_empty &= LDAPRelationFilter(node, 'groupattr1:member1')
+	>>> rel_empty.__str__()
+	'(member1=Member #1)'
+
+	>>> rel_single = LDAPRelationFilter(node, 'groupattr1:member1')
+	>>> rel_single.__str__()
+	'(member1=Member #1)'
+
+	>>> rel_double = LDAPRelationFilter(node, 'groupattr1:member1|groupattr2:member2')
+	>>> rel_double.__str__()
+	'(|(member1=Member #1)(member2=Member #2))'
+
+	>>> rel_double &= LDAPFilter('(objectClass=person)')
+	>>> rel_double.__str__()
+	'(&(|(member1=Member #1)(member2=Member #2))(objectClass=person))'
+
 Add a user.
 ::
 
