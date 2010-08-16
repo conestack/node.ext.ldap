@@ -10,8 +10,7 @@ try:
 except ImportError, e:
     from zope.component.event import objectEventNotify
 from zodict.interfaces import ICallableNode
-#from zodict import LifecycleNode
-from _znode import LifecycleNode
+from zodict import LifecycleNode
 from zodict.node import NodeAttributes
 from bda.ldap import (
     BASE,
