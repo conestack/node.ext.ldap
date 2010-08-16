@@ -151,14 +151,18 @@ Authenticate a user via LDAPUsers, either by id or by login, but not both. The
 id is returned if sucessful, otherwise None.
 ::
 
+    >>> users.authenticate('wrong', 'creds')
+
+    >>> users.authenticate(mueller.login, 'newer')
+    u'M\xfcller'
+
     >>> print users.authenticate(id='wrong', pw='cresd')
     None
     >>> print users.authenticate(id=mueller.id, pw='bar')
     None
     >>> users.authenticate(id=mueller.id, pw='newer')
     u'M\xfcller'
-    >>> users.authenticate(login=mueller.login, pw='newer')
-    u'M\xfcller'
+
     >>> users.authenticate(id=mueller.id, login=mueller.login, pw='new')
     Traceback (most recent call last):
     ...

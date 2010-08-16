@@ -96,8 +96,10 @@ class LDAPUsers(LDAPPrincipals):
             return login
         return self._seckeys[self._login_attr][login]
 
-    def authenticate(self, id=None, login=None, pw=None):
+    def authenticate(self, login=None, pw=None, id=None):
         """Authenticate a user either by id xor by login
+
+        XXX: remove support for id, that's kind of the purpose of a login?
 
         If successful, the user's id is returned, otherwise None
         """
@@ -106,10 +108,10 @@ class LDAPUsers(LDAPPrincipals):
         if pw is None:
             raise ValueError(u"You need to specify a password")
         if login:
-            if self._login_attr == self._key_attr:
-                id = login
-            else:
+            try:
                 id = self.idbylogin(login)
+            except KeyError:
+                return None
         try:
             userdn = self.child_dn(id)
         except KeyError:
