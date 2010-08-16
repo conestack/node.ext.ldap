@@ -82,17 +82,19 @@ class LDAPUsers(LDAPPrincipals):
         if self._login_attr != self._key_attr:
             self._seckey_attrs = (cfg.attrmap['login'],)
 
+    # XXX: do we really need this?
+    # XXX: login is a mapped attr, we could simply search on it
     def idbylogin(self, login):
-        if self._login_attr != self._key_attr:
-            try:
-                return self._seckeys[self._login_attr][login]
-            except TypeError:
-                # not initialized, yet
-                self.ids()
-                return self._seckeys[self._login_attr][login]
-        else:
+        """Return the users id or raise KeyError
+        """
+        if self._keys is None:
+            self.keys()
+        if self._login_attr == self._key_attr:
+            if login not in self:
+                raise KeyError(login)
             # XXX: Is this sane, or should we tell that they are the same?
             return login
+        return self._seckeys[self._login_attr][login]
 
     def authenticate(self, id=None, login=None, pw=None):
         """Authenticate a user either by id xor by login
