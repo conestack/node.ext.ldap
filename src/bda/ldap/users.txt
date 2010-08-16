@@ -76,6 +76,19 @@ Query a user by id (utf-8 or unicode).
     >>> mueller
     <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
 
+Find a user by login.
+::
+
+    >>> users.idbylogin(mueller.login) == mueller.id
+    True
+
+Using idbylogin before calling .ids() works - was a bug.
+::
+
+    >>> users2 = LDAPUsers(ucfg)
+    >>> users2.idbylogin(mueller.login) == mueller.id
+    True
+
 The '?' is just __repr__ going to ascii, the id is in proper unicode.
 ::
 
@@ -148,12 +161,6 @@ id is returned if sucessful, otherwise None.
     Traceback (most recent call last):
     ...
     ValueError: Either specify id or login, not both.
-
-Find a user by login.
-::
-
-    >>> users.idbylogin(mueller.login) == mueller.id
-    True
 
 XXX - Review: Search users by criteria OR queryFilter. eg. person, top, foo.
 ::

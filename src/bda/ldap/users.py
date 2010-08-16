@@ -84,7 +84,12 @@ class LDAPUsers(LDAPPrincipals):
 
     def idbylogin(self, login):
         if self._login_attr != self._key_attr:
-            return self._seckeys[self._login_attr][login]
+            try:
+                return self._seckeys[self._login_attr][login]
+            except TypeError:
+                # not initialized, yet
+                self.ids()
+                return self._seckeys[self._login_attr][login]
         else:
             # XXX: Is this sane, or should we tell that they are the same?
             return login
