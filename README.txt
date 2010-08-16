@@ -165,11 +165,6 @@ TODO
 
 - investigate ``ReconnectLDAPObject.set_cache_options``
 
-- Encoding/Decoding the data sent to ldap changed the order of dict entries,
-  probably due to dict implementation. Investigate effects of that. I had the
-  impression so far that ldap (at least openldap) preserves the order if you
-  give it an ldif file. Iff, then python-ldap should use odicts not dicts.
-
 - check/implement silent sort on only the keys LDAPNode.sortonkeys()
 
 - binary attributes: 1. introduce Binary: ``node['cn=foo'].attributes['image']
