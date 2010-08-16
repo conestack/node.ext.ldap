@@ -110,7 +110,10 @@ class LDAPUsers(LDAPPrincipals):
                 id = login
             else:
                 id = self.idbylogin(login)
-        userdn = self.child_dn(id)
+        try:
+            userdn = self.child_dn(id)
+        except KeyError:
+            return None
         if self._session.authenticate(userdn, pw):
             return id
         else:
