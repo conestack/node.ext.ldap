@@ -79,6 +79,10 @@ class ILDAPProps(Interface):
         description=u"",
         required=True)
 
+
+#XXX: ILDAPPrincipalsConfig
+#XXX: make sure attrmap contains id for principals and login for users
+
 class ILDAPGroupsConfig(Interface):
     """LDAP groups configuration interface.
     """

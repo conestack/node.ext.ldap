@@ -9,8 +9,10 @@ props = LDAPProps('127.0.0.1', 12345, user, pwd, cache=False)
 ucfg = LDAPUsersConfig(
         props,
         baseDN='dc=my-domain,dc=com',
-        id_attr='sn',
-        login_attr='description',
+        attrmap={
+            'id': 'sn',
+            'login': 'cn',
+            },
         scope=SUBTREE,
         queryFilter='(objectClass=person)',
         )

@@ -30,13 +30,16 @@ ids() the first time.
     >>> pwd = 'secret'
     >>> props = LDAPProps('127.0.0.1', 12345, user, pwd, cache=False)
 
-    >>> ucfg = LDAPUsersConfig(props,
-    ...                        baseDN='dc=my-domain,dc=com',
-    ...                        id_attr='sn',
-    ...                        login_attr='description',
-    ...                        scope=SUBTREE,
-    ...                        queryFilter='(objectClass=person)',
-    ...                        )
+    >>> ucfg = LDAPUsersConfig(
+    ...         props,
+    ...         baseDN='dc=my-domain,dc=com',
+    ...         attrmap={
+    ...             'id': 'sn',
+    ...             'login': 'description',
+    ...             },
+    ...         scope=SUBTREE,
+    ...         queryFilter='(objectClass=person)',
+    ...         )
     >>> users = LDAPUsers(ucfg)
 
 Query all user ids. ``description`` is missing on some.
@@ -51,7 +54,7 @@ Query all user ids. ``description`` is missing on some.
 Query all user ids. ``telephoneNumber`` is not uniqe.
 ::
 
-    >>> ucfg.login_attr = 'telephoneNumber'
+    >>> ucfg.attrmap['login'] = 'telephoneNumber'
     >>> users = LDAPUsers(ucfg)
     >>> users.ids()
     Traceback (most recent call last):
@@ -61,7 +64,7 @@ Query all user ids. ``telephoneNumber`` is not uniqe.
 Query all user ids. ``cn`` finally in this case is unique and therefore
 suitable as login attr.
 ::
-    >>> ucfg.login_attr = 'cn'
+    >>> ucfg.attrmap['login'] = 'cn'
     >>> users = LDAPUsers(ucfg)
     >>> users.ids()
     [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']

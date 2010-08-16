@@ -2,7 +2,7 @@ from zope.interface import implements
 from bda.ldap import LDAPProps, LDAPNode
 from bda.ldap import BASE, ONELEVEL, SUBTREE
 from bda.ldap.interfaces import ILDAPGroupsConfig
-from bda.ldap.users import LDAPPrincipal, LDAPPrincipals
+from bda.ldap.users import LDAPPrincipal, LDAPPrincipals, LDAPPrincipalsConfig
   
 def EventHandler(event):
   """handle for emmited events
@@ -10,22 +10,11 @@ def EventHandler(event):
   
   
 
-class LDAPGroupsConfig(object):
+class LDAPGroupsConfig(LDAPPrincipalsConfig):
     """Define how groups look and where they are
     """
     implements(ILDAPGroupsConfig)
     
-    def __init__(self,
-            props,
-            baseDN='',
-            id_attr='cn',
-            scope=ONELEVEL,
-            queryFilter='(objectClass=groupOfNames)'):
-        self.props = props
-        self.baseDN = baseDN
-        self.id_attr = id_attr
-        self.scope = scope
-        self.queryFilter = queryFilter
 
 class LDAPGroup(LDAPPrincipal):
     """An LDAP group

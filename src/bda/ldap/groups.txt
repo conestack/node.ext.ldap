@@ -18,11 +18,13 @@ Get an LDAPGroups node and configure it.
     >>> props = LDAPProps('127.0.0.1', 12345, user, pwd, cache=False)
 
     >>> gcfg = LDAPGroupsConfig(props,
-    ...                        baseDN='dc=my-domain,dc=com',
-    ...                        id_attr='cn',
-    ...                        scope=SUBTREE,
-    ...                        queryFilter='(objectClass=groupOfNames)',
-    ...                        )
+    ...         baseDN='dc=my-domain,dc=com',
+    ...         attrmap={
+    ...             'id': 'cn',
+    ...             },
+    ...         scope=SUBTREE,
+    ...         queryFilter='(objectClass=groupOfNames)',
+    ...         )
     >>> groups = LDAPGroups(gcfg)
 
 Query all group ids.
@@ -84,11 +86,13 @@ info from the user object.
 We use a slapd without memberOf support, (atm), so we abuse other attributes.
 
     >>> gcfg = LDAPGroupsConfig(props,
-    ...                        baseDN='dc=my-domain,dc=com',
-    ...                        id_attr='cn',
-    ...                        scope=SUBTREE,
-    ...                        queryFilter='(objectClass=groupOfNames)',
-    ...                        )
+    ...         baseDN='dc=my-domain,dc=com',
+    ...         attrmap={
+    ...             'id': 'cn',
+    ...             },
+    ...         scope=SUBTREE,
+    ...         queryFilter='(objectClass=groupOfNames)',
+    ...         )
     >>> groups = LDAPGroups(gcfg)
 
 
@@ -96,11 +100,13 @@ posixGroups
 -----------
 
     >>> gcfg = LDAPGroupsConfig(props,
-    ...                        baseDN='dc=my-domain,dc=com',
-    ...                        id_attr='o',
-    ...                        scope=SUBTREE,
-    ...                        queryFilter='(&(objectClass=organization)(st=*))',
-    ...                        )
+    ...         baseDN='dc=my-domain,dc=com',
+    ...         attrmap={
+    ...             'id': 'o',
+    ...             },
+    ...         scope=SUBTREE,
+    ...         queryFilter='(&(objectClass=organization)(st=*))',
+    ...         )
     >>> groups = LDAPGroups(gcfg)
 
     >>> groups.ids()

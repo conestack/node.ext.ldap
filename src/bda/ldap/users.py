@@ -3,6 +3,21 @@ from bda.ldap import LDAPProps, LDAPNode
 from bda.ldap import BASE, ONELEVEL, SUBTREE
 from bda.ldap.interfaces import ILDAPUsersConfig
 
+class LDAPPrincipalsConfig(object):
+    """Superclass for LDAPUsersConfig and LDAPGroupsConfig
+    """
+    def __init__(self,
+            props,
+            baseDN='',
+            attrmap={},
+            scope=ONELEVEL,
+            queryFilter=''):
+        self.props = props
+        self.baseDN = baseDN
+        self.attrmap = attrmap
+        self.scope = scope
+        self.queryFilter = queryFilter
+
 class LDAPPrincipal(LDAPNode):
     """Superclass for LDAPUser and LDAPGroup
     """
@@ -17,32 +32,20 @@ class LDAPPrincipals(LDAPNode):
     ids = LDAPNode.keys
 
     def __init__(self, cfg):
-        super(LDAPPrincipals, self).__init__(name=cfg.baseDN, props=cfg.props)
+        super(LDAPPrincipals, self).__init__(
+                name=cfg.baseDN, props=cfg.props, attrmap=cfg.attrmap)
         self._child_filter = cfg.queryFilter
         self._child_scope = cfg.scope
-        self._key_attr = cfg.id_attr
+        self._key_attr = cfg.attrmap['id']
 
-class LDAPUsersConfig(object):
+
+class LDAPUsersConfig(LDAPPrincipalsConfig):
     """Define how users look and where they are
     """
     implements(ILDAPUsersConfig)
     
      #when a user is modified, killed etc an event is emmited. To grab it you must:
     #zope.component.provideHandler(funct_to_be_executed,[1st_arg_objecttype,2nd_arg_objecttype,..])
-
-    def __init__(self,
-            props,
-            baseDN='',
-            id_attr='uid',
-            login_attr='uid',
-            scope=ONELEVEL,
-            queryFilter='(objectClass=inetOrgPerson)'):
-        self.props = props
-        self.baseDN = baseDN
-        self.id_attr = id_attr
-        self.login_attr = login_attr
-        self.scope = scope
-        self.queryFilter = queryFilter
 
 # XXX: hanging out, waiting for a better home
 def ldapUsersConfigFromLUF(luf):
@@ -94,10 +97,10 @@ class LDAPUsers(LDAPPrincipals):
     """
     def __init__(self, cfg):
         super(LDAPUsers, self).__init__(cfg)
-        self._login_attr = cfg.login_attr
+        self._login_attr = cfg.attrmap['login']
         self._ChildClass = LDAPUser
         if self._login_attr != self._key_attr:
-            self._seckey_attrs = (cfg.login_attr,)
+            self._seckey_attrs = (cfg.attrmap['login'],)
 
     def idbylogin(self, login):
         if self._login_attr != self._key_attr:
