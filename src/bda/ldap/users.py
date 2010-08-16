@@ -1,6 +1,7 @@
 from zope.interface import implements
 from bda.ldap import LDAPProps, LDAPNode
 from bda.ldap import BASE, ONELEVEL, SUBTREE
+from bda.ldap.debug import debug
 from bda.ldap.interfaces import ILDAPUsersConfig
 
 class LDAPPrincipalsConfig(object):
@@ -25,6 +26,10 @@ class LDAPPrincipal(LDAPNode):
     def id(self):
         return self.__name__
 
+    @property
+    def _attrmap(self):
+        return self.__parent__._cfg.attrmap
+
 class LDAPPrincipals(LDAPNode):
     """Superclass for LDAPUsers and LDAPGroups
     """
@@ -34,6 +39,7 @@ class LDAPPrincipals(LDAPNode):
     def __init__(self, cfg):
         super(LDAPPrincipals, self).__init__(
                 name=cfg.baseDN, props=cfg.props, attrmap=cfg.attrmap)
+        self._cfg = cfg
         self._child_filter = cfg.queryFilter
         self._child_scope = cfg.scope
         self._key_attr = cfg.attrmap['id']
@@ -62,11 +68,13 @@ class LDAPUser(LDAPPrincipal):
     """
     @property
     def login(self):
-        return self.attrs[self.__parent__._login_attr]
+        return self.mattrs['login']
 
+    @debug(['authentication'])
     def authenticate(self, pw):
         return self._session.authenticate(self.DN, pw)
 
+    @debug(['authentication'])
     def passwd(self, oldpw, newpw):
         """set a users password
         """
@@ -96,6 +104,7 @@ class LDAPUsers(LDAPPrincipals):
             return login
         return self._seckeys[self._login_attr][login]
 
+    @debug(['authentication'])
     def authenticate(self, login=None, pw=None, id=None):
         """Authenticate a user either by id xor by login
 
@@ -121,6 +130,7 @@ class LDAPUsers(LDAPPrincipals):
         else:
             return None
 
+    @debug(['authentication'])
     def passwd(self, id, oldpw, newpw):
         """Change a users password
         """

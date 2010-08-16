@@ -645,10 +645,9 @@ map, accessing .mattrs will raise an AttributeError.
      u'dc': u'my-domain',
      u'o': u'my-organization'}
     >>> root.mattrs.keys()
-    [u'organization', u'oc']
+    ['organization', 'oc']
     >>> root.mattrs.values()
-    [u'my-organization', [u'top',
-     u'dcObject', u'organization']]
+    [u'my-organization', [u'top', u'dcObject', u'organization']]
     >>> len(root.mattrs)
     2
     >>> 'organization' in root.mattrs
@@ -656,8 +655,8 @@ map, accessing .mattrs will raise an AttributeError.
     >>> 'foo' in root.mattrs
     False
     >>> [x for x in root.mattrs.iteritems()]
-    [(u'organization', u'my-organization'),
-     (u'oc', [u'top', u'dcObject', u'organization'])]
+    [('organization', u'my-organization'),
+     ('oc', [u'top', u'dcObject', u'organization'])]
     >>> root.mattrs['organization']
     u'my-organization'
     >>> root.mattrs['organization'] = 'foo'

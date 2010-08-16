@@ -18,6 +18,7 @@ from bda.ldap import (
     LDAPSession,
 )
 from bda.ldap.filter import LDAPFilter, LDAPDictFilter
+from bda.ldap.debug import debug
 from bda.ldap.strcodec import encode, decode, LDAP_CHARACTER_ENCODING
 from ldap.functions import explode_dn
 from ldap import (
@@ -114,7 +115,7 @@ class LDAPNode(LifecycleNode):
     implements(ICallableNode)
     attributes_factory = LDAPNodeAttributes
     
-    def __init__(self, name=None, props=None, attrmap=None):
+    def __init__(self, name=None, props=None, attrmap=None, child_attrmap=None):
         """LDAP Node expects ``name`` and ``props`` arguments for the root LDAP
         Node or nothing for children. ``attrmap`` is an optional rood node
         argument.
@@ -128,6 +129,8 @@ class LDAPNode(LifecycleNode):
         ``attrmap``
             an optional map of attributes, mapped attributes will be available
             via node.mattrs.
+
+
         """
         if (name and not props) or (props and not name):
             raise ValueError(u"Wrong initialization.")
@@ -149,7 +152,7 @@ class LDAPNode(LifecycleNode):
         if props:
             self._session = LDAPSession(props)
             self._session.baseDN = self.DN
-        super(LDAPNode, self).__init__(name, decode(attrmap))
+        super(LDAPNode, self).__init__(name, attrmap)
         self._key_attr = 'rdn'
         self._child_scope = ONELEVEL
         self._child_filter = None
@@ -209,6 +212,7 @@ class LDAPNode(LifecycleNode):
                 seckeys[seckey_attr] = seckey
         return seckeys
 
+    @debug(['searching'])
     def search(self, queryFilter=None, criteria=None, relation=None,
             attrlist=None, exact_match=False, or_search=False):
         """Returns a list of matching keys.
@@ -238,12 +242,16 @@ class LDAPNode(LifecycleNode):
             raise ValueError if not one match, return format is a single key or
             tuple, if attrlist is specified.
         """
-        # dn as attr support and keymapper
-        _attrlist = []
-        if attrlist:
-            _attrlist.extend(filter(lambda x: x != 'dn', attrlist))
-        if not self._key_attr == 'rdn' and self._key_attr not in _attrlist:
-            _attrlist.append(self._key_attr)
+        attrset = set(attrlist or [])
+        attrset.discard('dn')
+        # fetch also the key attribute
+        if not self._key_attr == 'rdn':
+            attrset.add(self._key_attr)
+
+#        for attr in attrset:
+#            if attr in self._cfg.attrmap:
+#                attrset.discard(attr)
+#                attrset.add(self._cfg.attrmap[attr])
 
         # create queryFilter from all filter things - needs only to happen just
         # before ldap, could be in the backedn
@@ -266,7 +274,7 @@ class LDAPNode(LifecycleNode):
                                        self._child_scope,
                                        baseDN=self.DN,
                                        force_reload=self._reload,
-                                       attrlist=_attrlist)
+                                       attrlist=list(attrset))
         if exact_match and len(matches) != 1:
             # XXX: Is ValueError appropriate?
             # XXX: Really also fail, if there are 0 matches?
