@@ -47,26 +47,6 @@ class LDAPUsersConfig(LDAPPrincipalsConfig):
      #when a user is modified, killed etc an event is emmited. To grab it you must:
     #zope.component.provideHandler(funct_to_be_executed,[1st_arg_objecttype,2nd_arg_objecttype,..])
 
-# XXX: hanging out, waiting for a better home
-def ldapUsersConfigFromLUF(luf):
-    """Create LDAPUsersConfig from an LDAPUserFolder
-    """
-    server = luf._delegate._servers[0]
-    props = self._props = LDAPProps(
-            server=server['host'],
-            port=int(server['port']),
-            user=luf._binduid,
-            password=luf._bindpwd,
-            )
-    uc = LDAPUsersConfig(props,
-            baseDN=luf.users_base,
-            id_attr=luf.getProperty('_uid_attr'),
-            login_attr=luf.getProperty('_login_attr'),
-            scope=luf._delegate.getScopes()[luf.users_scope],
-            queryFilter=luf._getUserFilterString(),
-            )
-    return uc
-
 class LDAPUser(LDAPPrincipal):
     """An ldap user
 
