@@ -344,12 +344,6 @@ class LDAPNode(LifecycleNode):
             for key in self._keys:
                 yield key
     
-    iterkeys = __iter__
-    
-    def iteritems(self):
-        for key in self:
-            yield key, self[key]
-
     def sort(self, cmp=None, key=None, reverse=False):
         # XXX: a sort working only on the keys could work without wakeup -->
         # sortonkeys()
@@ -378,16 +372,6 @@ class LDAPNode(LifecycleNode):
         self._notify_suppress = False
         self._keys[key] = val
         return val
-
-    def get(self, key, default=None):
-        """Otherwise odict/pyodicts __getitem__ is used...
-
-        XXX: Maybe this could be higher up in the hierarchy
-        """
-        try:
-            return self[key]
-        except KeyError:
-            return default
 
     def __setitem__(self, key, val):
         if isinstance(key, str):
