@@ -163,6 +163,7 @@ class LDAPNode(LifecycleNode):
         self._child_criteria = None
         self._child_relation = None
         self._ChildClass = LDAPNode
+        self.attribute_access_for_attrs = False
             
     # This is really ldap
     @property
