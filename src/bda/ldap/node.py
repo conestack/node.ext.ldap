@@ -359,7 +359,7 @@ class LDAPNode(LifecycleNode):
         """
         if isinstance(key, str):
             key = decode(key)
-        if not key in self:
+        if not key in self._keys:
             raise KeyError(u"Entry not existent: %s" % key)
         if self._keys[key] is not None:
             return super(LDAPNode, self).__getitem__(key)
