@@ -49,6 +49,9 @@ def queryNode(props, dn):
     return container.get(nodedn, None)
 
 
+# XXX: Needs to be adapted to new Node-based NodeAttributes
+# child backends vs attribute backends
+# check __attrs__ nodespace in zodict
 class LDAPNodeAttributes(NodeAttributes):
     
     def __init__(self, node):
@@ -152,7 +155,8 @@ class LDAPNode(LifecycleNode):
         if props:
             self._session = LDAPSession(props)
             self._session.baseDN = self.DN
-        super(LDAPNode, self).__init__(name, attrmap)
+        # XXX: do soemthing about attrmap
+        super(LDAPNode, self).__init__(name, index=False)
         self._key_attr = 'rdn'
         self._child_scope = ONELEVEL
         self._child_filter = None
