@@ -49,17 +49,17 @@ Check child keys of root.
 Check/modify attributes of root.
 ::
 
-    >>> root.attrs
-    {u'objectClass': [u'top', u'dcObject', u'organization'],
-     u'dc': u'my-domain',
-     u'o': u'my-organization'}
+    >>> root.attrs.items()
+    [(u'objectClass', [u'top', u'dcObject', u'organization']),
+     (u'dc', u'my-domain'),
+     (u'o', u'my-organization')]
 
     >>> root.attrs['o'] = 'foo'
     >>> root()
-    >>> root.attrs
-    {u'objectClass': [u'top', u'dcObject', u'organization'],
-     u'dc': u'my-domain',
-     u'o': u'foo'}
+    >>> root.attrs.items()
+    [(u'objectClass', [u'top', u'dcObject', u'organization']),
+     (u'dc', u'my-domain'),
+     (u'o', u'foo')]
     >>> root.attrs['o'] = 'my-organization'
     >>> root()
 
@@ -78,8 +78,9 @@ Access existent child and it's attributes.
     >>> customers
     <ou=customers,dc=my-domain,dc=com:ou=customers - False>
   
-    >>> customers.attributes
-    {u'objectClass': [u'top', u'organizationalUnit'], u'ou': u'customers'}
+    >>> customers.attributes.items()
+    [(u'objectClass', [u'top', u'organizationalUnit']),
+     (u'ou', u'customers')]
   
     >>> customers.DN
     u'ou=customers,dc=my-domain,dc=com'
