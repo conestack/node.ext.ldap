@@ -369,6 +369,7 @@ class LDAPNode(LifecycleNode):
         # We are suppressing notification, as val is not really added to us,
         # rather, it is activated.
         self._notify_suppress = True
+        # XXX: this looks like val is stored twice. Why?
         super(LDAPNode, self).__setitem__(key, val)
         self._notify_suppress = False
         self._keys[key] = val
