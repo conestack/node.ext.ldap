@@ -49,9 +49,7 @@ def queryNode(props, dn):
     return container.get(nodedn, None)
 
 
-# XXX: Needs to be adapted to new Node-based NodeAttributes
-# child backends vs attribute backends
-# check __attrs__ nodespace in zodict
+# XXX: m(
 class LDAPNodeAttributes(NodeAttributes):
     
     def __init__(self, node):
@@ -99,14 +97,15 @@ class LDAPNodeAttributes(NodeAttributes):
         self._set_attrs_modified()
     
     def __getattribute__(self, name):
-        # XXX: We don't support node.attrs.foo syntax yet
+        # XXX: We don't support node.attrs.foo syntax (yet)
         return object.__getattribute__(self, name)
     
     def __setattr__(self, name, value):
-        # XXX: We don't support node.attrs.foo = 1 syntax yet
+        # XXX: We don't support node.attrs.foo = 1 syntax (yet)
         object.__setattr__(self, name, value)
     
     def _set_attrs_modified(self):
+        self.changed = True
         if self._node._action not in [ACTION_ADD, ACTION_DELETE]:
             self._node._action = ACTION_MODIFY
             self._node.changed = True
@@ -428,8 +427,10 @@ class LDAPNode(LifecycleNode):
                 self._ldap_modify()
             elif self._action == ACTION_DELETE:
                 self._ldap_delete()
-            if hasattr(self, '_attributes'):
-                self.attributes.changed = False
+            try:
+                self.nodespaces['__attrs__'].changed = False
+            except KeyError:
+                pass
             self.changed = False
             self._action = None                    
         if self._keys is None:
@@ -514,9 +515,9 @@ class LDAPNode(LifecycleNode):
         else:
             # Unsetting needs more checks
             try:
-                if self._attributes.changed:
+                if self.nodespaces['__attrs__'].changed:
                     return
-            except AttributeError:
+            except KeyError:
                 # No attributes loaded, yet - cannot be changed
                 pass
             childs = getattr(self, '_deleted', [])
