@@ -143,14 +143,9 @@ class LDAPNode(LifecycleNode):
         self._session = None        
         self._changed = False
         self._action = None
-        # the _keys is None or an odict.
-        # if an odict, the value is either None or the value
-        # None means, the value wasnt loaded 
-        self._keys = None 
-        self._seckeys = None
         self._seckey_attrs = None
-        self._child_dns = {}
-        self._reload = False        
+        self._reload = False
+        self._init_keys()
         if props:
             self._session = LDAPSession(props)
             self._session.baseDN = self.DN
@@ -163,6 +158,14 @@ class LDAPNode(LifecycleNode):
         self._child_relation = None
         self._ChildClass = LDAPNode
         self.attribute_access_for_attrs = False
+
+    def _init_keys(self):
+        # the _keys is None or an odict.
+        # if an odict, the value is either None or the value
+        # None means, the value wasnt loaded
+        self._keys = None
+        self._seckeys = None
+        self._child_dns = None
             
     # This is really ldap
     @property
@@ -302,47 +305,52 @@ class LDAPNode(LifecycleNode):
         else:
             return res
 
+    def _load_keys(self):
+        self._keys = odict()
+        self._child_dns = {}
+        attrlist = ['dn']
+        if self._seckey_attrs:
+            self._seckeys = dict()
+            attrlist.extend(self._seckey_attrs)
+        for key, attrs in self.search(attrlist=attrlist):
+            try:
+                self._keys[key]
+            except KeyError:
+                self._keys[key] = None
+                self._child_dns[key] = attrs['dn']
+                for seckey_attr, seckey in \
+                        self._calculate_seckeys(attrs).items():
+                    try:
+                        self._seckeys[seckey_attr]
+                    except KeyError:
+                        self._seckeys[seckey_attr] = {}
+                    try:
+                        self._seckeys[seckey_attr][seckey]
+                    except KeyError:
+                        self._seckeys[seckey_attr][seckey] = key
+                    else:
+                        raise KeyError(
+                            u"Secondary key not unique: %s='%s'." % \
+                                    (seckey_attr, seckey))
+            else:
+                raise RuntimeError(u"Key not unique: %s='%s'." % \
+                        (self._key_attr, key))
+
     def __iter__(self):
         """This is where keys are retrieved from ldap
         """
         if self.__name__ is None:
             return
         if self._reload:
-            self._keys = None
-            self._seckeys = None
-            self._child_dns.clear()
+            self._init_keys()
         if self._keys is None and self._action != ACTION_ADD:
-            self._keys = odict()
-            attrlist = ['dn']
-            if self._seckey_attrs:
-                self._seckeys = dict()
-                attrlist.extend(self._seckey_attrs)
-            for key, attrs in self.search(attrlist=attrlist):
-                try:
-                    self._keys[key]
-                except KeyError:
-                    self._keys[key] = None
-                    self._child_dns[key] = attrs['dn']
-                    for seckey_attr, seckey in \
-                            self._calculate_seckeys(attrs).items():
-                        try:
-                            self._seckeys[seckey_attr]
-                        except KeyError:
-                            self._seckeys[seckey_attr] = {}
-                        try:
-                            self._seckeys[seckey_attr][seckey]
-                        except KeyError:
-                            self._seckeys[seckey_attr][seckey] = key
-                        else:
-                            raise KeyError(
-                                u"Secondary key not unique: %s='%s'." % \
-                                        (seckey_attr, seckey))
-                else:
-                    raise RuntimeError(u"Key not unique: %s='%s'." % \
-                            (self._key_attr, key))
-        if self._keys:
+            self._load_keys()
+        try:
             for key in self._keys:
                 yield key
+        except TypeError:
+            # no keys loaded
+            pass
     
     def sort(self, cmp=None, key=None, reverse=False):
         # XXX: a sort working only on the keys could work without wakeup -->
@@ -359,6 +367,8 @@ class LDAPNode(LifecycleNode):
         """
         if isinstance(key, str):
             key = decode(key)
+        if not self._keys:
+            self._load_keys()
         if not key in self._keys:
             raise KeyError(u"Entry not existent: %s" % key)
         if self._keys[key] is not None:
@@ -384,7 +394,7 @@ class LDAPNode(LifecycleNode):
             raise NotImplementedError(u"Adding with key != rdn not supported.")
         val._session = self._session
         if self._keys is None:
-            self._keys = odict()
+            self._load_keys()
         try:
             # a value with key is already in the directory
             self._keys[key]
