@@ -449,6 +449,15 @@ class LDAPNode(LifecycleNode):
             if node is not None and node.changed:
                 node()
     
+    def printtree(self, indent=0):
+        print "%s%s" % (indent * ' ', self.noderepr)
+        for node in self._node_impl().itervalues(self):
+            try:
+                node.printtree(indent+2)
+            except AttributeError:
+                # Non-Node values are just printed
+                print "%s%s" % (indent * ' ', node)
+
     def __repr__(self):
         # XXX: This is mainly used in doctest, I think
         # doctest fails if we output utf-8
