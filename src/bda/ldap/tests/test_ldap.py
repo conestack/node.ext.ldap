@@ -33,7 +33,7 @@ TESTFILES = [
     '../node.txt',
     '../schema.txt',
     '../users.txt',
-    '../groups.txt',
+#    '../groups.txt',
     'stopslapd.txt',
 ]
 
