@@ -3,6 +3,7 @@
 
 from zope.interface import Interface
 from zope import schema
+from zope.schema.vocabulary import SimpleVocabulary
 
 from bda.ldap.scope import ONELEVEL, SUBTREE
 
@@ -45,7 +46,7 @@ class ILDAPProps(Interface):
             required=True,
             )
     
-    timeout = schema.TextLine(
+    timeout = schema.Int(
             title=u"Cache timeout",
             description=u"Cache timeout in seconds",
             default=600,
@@ -77,17 +78,17 @@ class ILDAPProps(Interface):
 #        description=u"",
 #        required=True)
 #
-    retry_max = schema.TextLine(
+    retry_max = schema.Int(
             title=u"Retry max",
             description=u"Maximum number of reconnection attempts",
             default=1,
             required=True,
             )
     
-    retry_delay = schema.TextLine(
+    retry_delay = schema.Int(
             title=u"Retry delay",
             description=u"Delay between reconnection attempts",
-            default=5.0,
+            default=5,
             required=True,
             )
 
@@ -107,8 +108,11 @@ class ILDAPPrincipalsConfig(Interface):
 #            )
 #
     scope = schema.Choice(
-            title="Search scope",
-            values=(ONELEVEL, SUBTREE),
+            title=u"Search scope",
+            values=SimpleVocabulary.fromItems((
+                (ONELEVEL, 'ONELEVEL'),
+                (SUBTREE, 'SUBTREE'),
+                ))
             )
 
     queryFilter = schema.TextLine(
