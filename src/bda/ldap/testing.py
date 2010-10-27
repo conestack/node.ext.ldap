@@ -1,6 +1,6 @@
 from bda.ldap import LDAPProps
-from bda.ldap.groups import LDAPGroupsConfig
 from bda.ldap.users import LDAPUsersConfig
+from bda.ldap.users import LDAPGroupsConfig
 from bda.ldap import SUBTREE
 
 user = 'cn=Manager,dc=my-domain,dc=com'
