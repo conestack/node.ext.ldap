@@ -300,11 +300,7 @@ class LDAPNode(LifecycleNode):
                 res.append((key, resattr))
             else:
                 res.append(key)
-
-        if exact_match:
-            return res[0]
-        else:
-            return res
+        return res
 
     def _load_keys(self):
         self._keys = odict()

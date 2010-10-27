@@ -187,7 +187,7 @@ XXX - Review: Search users by criteria OR queryFilter. eg. person, top, foo.
 
     >>> schmidt = users['Schmidt']
     >>> users.search(criteria=dict(sn=schmidt.attrs['sn']), exact_match=True)
-    u'Schmidt'
+    [u'Schmidt']
 
     >>> users.search()
     [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']

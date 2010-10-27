@@ -127,12 +127,8 @@ class Principals(_Node):
                 )
         if attrlist is None:
             return results
-        if exact_match:
-            results = (results, )
         aliased_results = \
                 [(id, self._alias_dict(attrs)) for id, attrs in results]
-        if exact_match:
-            aliased_results = aliased_results[0]
         return aliased_results
 
 
