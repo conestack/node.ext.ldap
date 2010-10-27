@@ -282,9 +282,10 @@ class LDAPNode(LifecycleNode):
                                        baseDN=self.DN,
                                        force_reload=self._reload,
                                        attrlist=list(attrset))
-        if exact_match and len(matches) != 1:
+        if exact_match and len(matches) > 1:
             # XXX: Is ValueError appropriate?
-            # XXX: Really also fail, if there are 0 matches?
+            # XXX: why do we need to fail at all? shouldn't this be about
+            # substring vs equality match?
             raise ValueError(u"Exact match asked but search not exact")
 
         # extract key and desired attributes
