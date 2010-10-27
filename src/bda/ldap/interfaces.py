@@ -4,7 +4,7 @@
 from zope.interface import Interface
 from zope import schema
 
-from bda.ldap import SUBTREE
+from bda.ldap.scope import ONELEVEL, SUBTREE
 
 
 class ICacheProviderFactory(Interface):

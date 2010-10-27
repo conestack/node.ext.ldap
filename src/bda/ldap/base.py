@@ -14,10 +14,9 @@ from bda.cache import ICacheManager
 from bda.ldap.interfaces import ICacheProviderFactory
 from bda.ldap.cache import nullcacheProviderFactory
 
-BASE = ldap.SCOPE_BASE
-ONELEVEL = ldap.SCOPE_ONELEVEL
-SUBTREE = ldap.SCOPE_SUBTREE
-SCOPES = [BASE, ONELEVEL, SUBTREE]
+# BBB: moved due to circular dependency 2010-10-27
+from bda.ldap.scope import BASE, ONELEVEL, SUBTREE, SCOPES
+
 
 def testLDAPConnectivity(server, port):
     """Function to test the availability of the LDAP Server.

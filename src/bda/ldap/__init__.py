@@ -1,7 +1,9 @@
-from bda.ldap.base import (
+from bda.ldap.scope import (
     BASE,
     ONELEVEL,
     SUBTREE,
+)
+from bda.ldap.base import (
     LDAPConnector,
     LDAPCommunicator,
 )
