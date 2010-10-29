@@ -103,15 +103,15 @@ class ILDAPPrincipalsConfig(Interface):
 
 #    attrmap = schema.Dict(
 #            title=u"Attribute mapping",
-#            description=u"The minimum required is 'id' and 'login'."
+#            description=u"The minimum required is 'id' and 'login'.",
 #            required=True,
 #            )
-#
+
     scope = schema.Choice(
             title=u"Search scope",
-            values=SimpleVocabulary.fromItems((
-                (ONELEVEL, 'ONELEVEL'),
-                (SUBTREE, 'SUBTREE'),
+            vocabulary=SimpleVocabulary.fromItems((
+                ('ONELEVEL', ONELEVEL),
+                ('SUBTREE', SUBTREE),
                 ))
             )
 

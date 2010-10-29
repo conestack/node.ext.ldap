@@ -136,12 +136,10 @@ class LDAPPrincipalsConfig(object):
     """Superclass for LDAPUsersConfig and LDAPGroupsConfig
     """
     def __init__(self,
-            props,
             baseDN='',
             attrmap={},
             scope=ONELEVEL,
             queryFilter=''):
-        self.props = props
         self.baseDN = baseDN
         self.attrmap = attrmap
         self.scope = scope
@@ -166,8 +164,8 @@ class LDAPGroupsConfig(LDAPPrincipalsConfig):
 class LDAPPrincipals(Principals):
     """Superclass for LDAPUsers and LDAPGroups
     """
-    def __init__(self, cfg):
-        context = LDAPNode(name=cfg.baseDN, props=cfg.props)
+    def __init__(self, props, cfg):
+        context = LDAPNode(name=cfg.baseDN, props=props)
         super(LDAPPrincipals, self).__init__(context, cfg.attrmap)
         self.context._child_filter = cfg.queryFilter
         self.context._child_scope = cfg.scope
@@ -179,8 +177,8 @@ class LDAPUsers(LDAPPrincipals):
     """
     principal_factory = User
 
-    def __init__(self, cfg):
-        super(LDAPUsers, self).__init__(cfg)
+    def __init__(self, props, cfg):
+        super(LDAPUsers, self).__init__(props, cfg)
         if cfg.attrmap['login'] != cfg.attrmap['id']:
             self.context._seckey_attrs = (cfg.attrmap['login'],)
 

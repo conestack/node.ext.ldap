@@ -31,7 +31,6 @@ ids() the first time.
     >>> props = LDAPProps('127.0.0.1', 12345, user, pwd, cache=False)
 
     >>> ucfg = LDAPUsersConfig(
-    ...         props,
     ...         baseDN='dc=my-domain,dc=com',
     ...         attrmap={
     ...             'id': 'sn',
@@ -42,7 +41,7 @@ ids() the first time.
     ...         scope=SUBTREE,
     ...         queryFilter='(objectClass=person)',
     ...         )
-    >>> users = LDAPUsers(ucfg)
+    >>> users = LDAPUsers(props, ucfg)
 
 Query all user ids. ``description`` is missing on some.
 ::
@@ -57,7 +56,7 @@ Query all user ids. ``telephoneNumber`` is not uniqe.
 ::
 
     >>> ucfg.attrmap['login'] = 'telephoneNumber'
-    >>> users = LDAPUsers(ucfg)
+    >>> users = LDAPUsers(props, ucfg)
     >>> users.ids()
     Traceback (most recent call last):
     ...
@@ -67,7 +66,7 @@ Query all user ids. ``cn`` finally in this case is unique and therefore
 suitable as login attr.
 ::
     >>> ucfg.attrmap['login'] = 'cn'
-    >>> users = LDAPUsers(ucfg)
+    >>> users = LDAPUsers(props, ucfg)
     >>> users.ids()
     [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
 
@@ -94,7 +93,7 @@ Find a user by login.
 Using idbylogin before calling .ids() works - was a bug.
 ::
 
-    >>> users2 = LDAPUsers(ucfg)
+    >>> users2 = LDAPUsers(props, ucfg)
     >>> users2.idbylogin(mueller.login) == mueller.id
     True
 
