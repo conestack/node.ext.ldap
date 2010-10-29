@@ -147,6 +147,29 @@ itself.
 TODO
 ====
 
+- increase test coverage
+
+- changed info and __call__ on user object
+
+- adding ldap nodes, users, groups
+
+- finish pas plugin
+
+- plone integration: bda.ploneldap
+  - views for LDAPUsersConfig, LDAPGroupsConfig for the plone-control-panel
+    working directly on the ones in bda.pasldap's multiplugin
+  - nothing else, everything else -> bda.pasldap or better bda.ldap
+
+- test with plone4
+
+- figure out how to store config and when to create the users and groups
+  folders
+
+- control panel beautification: fieldsets, three tabs: server, users, groups
+
+- config presets for common setups in bda.ldap, with loading/choosing support
+  in bda.plone.ldap
+
 - TLS/SSL Support. in LDAPConnector
   could be useful: python-ldap's class SmartLDAPObject(ReconnectLDAPObject) -
   Mainly the __init__() method does some smarter things like negotiating the
@@ -167,8 +190,9 @@ TODO
 
 - check/implement silent sort on only the keys LDAPNode.sortonkeys()
 
-- binary attributes: 1. introduce Binary: ``node['cn=foo'].attributes['image']
-  = Binary(stream)``, 2. parse ldap schema to identify binary attributes
+- binary attributes: 1. introduce Binary: ``node['cn=foo'].attrs['image']
+  = Binary(stream)``, 2. parse ldap schema to identify binary attributes, also
+  further types like BOOL
 
 - improve test framework to support running of single tests, currently the
   setUp and tearDown are tests themselves run at the very beginning and end.
@@ -183,39 +207,12 @@ TODO
 
 - unicode decorator
 
-Sauna Sprint TODO
------------------
+- auto-detection of rdn attribute
 
-- define reconnect logic
-
-- investigate ReconnectLDAPObject, how does it behave?
-
-- write missing interfaces, interfaces subpackage
-
-- tests for LDAPNode.search
-
-- tests for LDAPGroups
-
-- implement LDAPGroups
-
-- pas integration: bda.pasldap
-  - use bda.ldap test setup
-  - multiplugin that contains persistent LDAPUsersConfig, LDAPGroupsConfig
-  - otherwise very thin layer, all functionality goes into bda.ldap
-  - take Products.LDAPMultiPlugins as boilerplate example, but get rid off
-    everything obscure and readd with comments until it works
-
-- plone integration: bda.ploneldap
-  - views for LDAPUsersConfig, LDAPGroupsConfig for the plone-control-panel
-    working directly on the ones in bda.pasldap's multiplugin
-  - nothing else, everything else -> bda.pasldap or better bda.ldap
-
-- test with plone4
+- interactive configuration showing life how many users/groups are found with
+  the current config and how a selected user/group would look like
 
 - test with plone3
-
-- config presets for AD, openldap, OpenDirectory? or documentation in the plone
-  views (see bda.ploneldap) or autodetection?
 
 Changes
 =======
