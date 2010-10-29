@@ -155,6 +155,8 @@ TODO
 
 - finish pas plugin
 
+- figure out how and whether to merge attribute access into the basic node
+
 - plone integration: bda.ploneldap
   - views for LDAPUsersConfig, LDAPGroupsConfig for the plone-control-panel
     working directly on the ones in bda.pasldap's multiplugin
