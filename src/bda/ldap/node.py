@@ -57,6 +57,7 @@ class LDAPNodeAttributes(NodeAttributes):
         self.load()
 
     def load(self):
+        # XXX: we need a whitelist
         if not self._node.__name__ or self._node._action == ACTION_ADD:
             return
         self.clear()
