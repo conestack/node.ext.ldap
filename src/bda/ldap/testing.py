@@ -7,7 +7,6 @@ user = 'cn=Manager,dc=my-domain,dc=com'
 pwd = 'secret'
 props = LDAPProps('127.0.0.1', 12345, user, pwd, cache=False)
 ucfg = LDAPUsersConfig(
-        props,
         baseDN='dc=my-domain,dc=com',
         attrmap={
             'id': 'sn',
