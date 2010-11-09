@@ -1,57 +1,54 @@
-# Copyright 2008-2009, BlueDynamics Alliance, Austria - http://bluedynamics.com
+# Copyright 2008-2010, BlueDynamics Alliance, Austria - http://bluedynamics.com
 # GNU General Public Licence Version 2 or later
 
-import time
-import os
-import subprocess
-import unittest
+import doctest
 import interlude
 import pprint
-from zope.testing import doctest
+import unittest2 as unittest
+
+from plone.testing import layered
+
+from bda.ldap.testing import LDIF_data
+from bda.ldap.testing import LDIF_principals
+
+
+DOCFILES = [
+    ('../base.txt', LDIF_data),
+    ('../session.txt', LDIF_data),
+    ('../node.txt', LDIF_data),
+    ('../schema.txt', LDIF_data),
+    ('../users.txt', LDIF_principals),
+]
 
 optionflags = doctest.NORMALIZE_WHITESPACE | \
               doctest.ELLIPSIS | \
               doctest.REPORT_ONLY_FIRST_FAILURE
 
+
 print """
 *******************************************************************************
-Starting openldap server...
-
 If testing while development fails, please check if memcached is installed and
 stop it if running.
 *******************************************************************************
 """
 
-slapdbin = os.environ.get('SLAPDBIN', None)
-pr = subprocess.Popen([slapdbin, '-h', 'ldap://127.0.0.1:12345/'])
-time.sleep(1)
-
-TESTFILES = [
-    'prepareslapd.txt',
-    '../base.txt',
-    '../session.txt',
-    '../node.txt',
-    '../schema.txt',
-    '../users.txt',
-#    '../groups.txt',
-    'stopslapd.txt',
-]
-
 def test_suite():
-    from zope.configuration.xmlconfig import XMLConfig
-    import zope.component
-    XMLConfig('meta.zcml', zope.component)()
-    import bda.ldap
-    XMLConfig('configure.zcml', bda.ldap)()
-    return unittest.TestSuite([
-        doctest.DocFileSuite(
-            file, 
-            optionflags=optionflags,
-            globs={'interact': interlude.interact,
-                   'pprint': pprint.pprint,
-                  },
-        ) for file in TESTFILES
-    ])
+    suite = unittest.TestSuite()
+    suite.addTests([
+        layered(
+            doctest.DocFileSuite(
+                docfile,
+                globs={'interact': interlude.interact,
+                           'pprint': pprint.pprint,
+                           'pp': pprint.pprint,
+                           },
+                optionflags=optionflags,
+                ),
+            layer=layer,
+            )
+        for docfile, layer in DOCFILES
+        ])
+    return suite
 
 if __name__ == '__main__':
     unittest.main(defaultTest='test_suite')

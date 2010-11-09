@@ -1,22 +1,5 @@
 # -*- coding: utf-8 -*-
 
-Import test users.
-::
-
-    >>> import os
-    >>> from subprocess import call
-    >>> from bda.ldap.filter import LDAPFilter
-    >>> testldif = os.environ.get('PRINCSLDIF')
-    >>> ldapaddbin = os.environ.get('LDAPADDBIN')
-
-    >>> binddn = "cn=Manager,dc=my-domain,dc=com"
-    >>> bindpw = "secret"
-    >>> cmd = [ldapaddbin, '-f', testldif, '-x', '-D',
-    ...        '%s' % binddn, '-w', bindpw, '-c', '-a',
-    ...        '-p', '12345', '-h', '127.0.0.1']
-    >>> retcode = call(cmd)
-
-
 Get an LDAPUsers node and configure it. In addition to the key attribute, the
 login attribute also needs to be unique, which will be checked upon calling
 ids() the first time.
