@@ -3,27 +3,6 @@ from bda.ldap.users import LDAPUsersConfig
 from bda.ldap.users import LDAPGroupsConfig
 from bda.ldap import SUBTREE
 
-user = 'cn=Manager,dc=my-domain,dc=com'
-pwd = 'secret'
-props = LDAPProps('127.0.0.1', 12345, user, pwd, cache=False)
-ucfg = LDAPUsersConfig(
-        baseDN='dc=my-domain,dc=com',
-        attrmap={
-            'id': 'sn',
-            'login': 'cn',
-            },
-        scope=SUBTREE,
-        queryFilter='(objectClass=person)',
-        )
-#gcfg_openldap = LDAPGroupsConfig(
-#        props,
-#        baseDN='dc=my-domain,dc=com',
-#        id_attr='cn',
-#        scope=SUBTREE,
-#        queryFilter='(objectClass=groupOfNames)',
-#        member_relation='member:dn',
-#        )
-
 # === the new stuff ============
 
 import os
@@ -34,6 +13,29 @@ import time
 
 from plone.testing import Layer
 from pkg_resources import resource_filename
+
+user = 'cn=Manager,dc=my-domain,dc=com'
+pwd = 'secret'
+props = LDAPProps('127.0.0.1', 12345, user, pwd, cache=False)
+ucfg = LDAPUsersConfig(
+        baseDN='dc=my-domain,dc=com',
+        attrmap={
+            'id': 'sn',
+            'login': 'description',
+            'telephoneNumber': 'telephoneNumber',
+            'sn': 'sn',
+            },
+        scope=SUBTREE,
+        queryFilter='(objectClass=person)',
+        )
+
+#gcfg_openldap = LDAPGroupsConfig(
+#        baseDN='dc=my-domain,dc=com',
+#        id_attr='cn',
+#        scope=SUBTREE,
+#        queryFilter='(objectClass=groupOfNames)',
+#        member_relation='member:dn',
+#        )
 
 
 def resource(string):
@@ -98,11 +100,13 @@ class SlapdConf(Layer):
                 schema=schema
                 ))
         os.mkdir(dbdir)
+        print "SlapdConf set up."
 
     def tearDown(self):
         """remove our traces
         """
         shutil.rmtree(self['confdir'])
+        print "SlapdConf torn down."
 
 schema = (
         resource('schema/core.schema'),

@@ -1,10 +1,6 @@
 
     >>> from bda.ldap import LDAPProps, LDAPSchemaInfo
-    >>> props = LDAPProps("127.0.0.1",
-    ...                   12345,
-    ...                   "cn=Manager,dc=my-domain,dc=com",
-    ...                   "secret",
-    ...                   False)
+    >>> from bda.ldap.testing import props
     
     >>> info = LDAPSchemaInfo(props)
     >>> info.baseDN = 'dc=my-domain,dc=com'

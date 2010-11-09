@@ -7,13 +7,7 @@ LDAP Nodes
 
     >>> from bda.ldap import LDAPProps
     >>> from bda.ldap import LDAPNode
-  
-Create LDAP properties.
-::
-
-    >>> user = 'cn=Manager,dc=my-domain,dc=com'
-    >>> pwd = 'secret'
-    >>> props = LDAPProps('127.0.0.1', 12345, user, pwd, cache=False)
+    >>> from bda.ldap.testing import props
 
 Create the root node. The Root node expects the initial base DN as name and
 the server properties.

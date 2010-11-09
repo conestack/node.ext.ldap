@@ -13,9 +13,9 @@ Get an LDAPGroups node and configure it.
     >>> from bda.ldap.groups import LDAPGroups, LDAPGroupsConfig
     >>> from bda.ldap import SUBTREE
 
-    >>> user = 'cn=Manager,dc=my-domain,dc=com'
-    >>> pwd = 'secret'
-    >>> props = LDAPProps('127.0.0.1', 12345, user, pwd, cache=False)
+    >>> from bda.ldap.testing import props
+
+XXX: im port from bda.ldap.testing, and put there
 
     >>> gcfg = LDAPGroupsConfig(props,
     ...         baseDN='dc=my-domain,dc=com',

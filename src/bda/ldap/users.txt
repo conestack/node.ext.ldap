@@ -9,21 +9,7 @@ ids() the first time.
     >>> from bda.ldap.users import LDAPUsers, LDAPUsersConfig
     >>> from bda.ldap import SUBTREE
 
-    >>> user = 'cn=Manager,dc=my-domain,dc=com'
-    >>> pwd = 'secret'
-    >>> props = LDAPProps('127.0.0.1', 12345, user, pwd, cache=False)
-
-    >>> ucfg = LDAPUsersConfig(
-    ...         baseDN='dc=my-domain,dc=com',
-    ...         attrmap={
-    ...             'id': 'sn',
-    ...             'login': 'description',
-    ...             'telephoneNumber': 'telephoneNumber',
-    ...             'sn': 'sn',
-    ...             },
-    ...         scope=SUBTREE,
-    ...         queryFilter='(objectClass=person)',
-    ...         )
+    >>> from bda.ldap.testing import props, ucfg
     >>> users = LDAPUsers(props, ucfg)
 
 Query all user ids. ``description`` is missing on some.
