@@ -27,7 +27,9 @@ ucfg = LDAPUsersConfig(
 # === the new stuff ============
 
 import os
+import shutil
 import subprocess
+import tempfile
 import time
 
 from plone.testing import Layer
@@ -38,30 +40,86 @@ def resource(string):
     return resource_filename(__name__, 'tests/'+string)
 
 
+SCHEMA = os.environ.get('SCHEMA')
 try:
     SLAPDBIN = os.environ['SLAPD_BIN']
-    SLAPDCONF = os.environ['SLAPD_CONF']
     SLAPDURIS = os.environ['SLAPD_URIS']
     LDAPADDBIN = os.environ['LDAP_ADD_BIN']
     LDAPDELETEBIN = os.environ['LDAP_DELETE_BIN']
 except KeyError:
-    raise RuntimeError("Environment variables SLAPD_BIN, SLAPD_CONF,"
+    raise RuntimeError("Environment variables SLAPD_BIN,"
             " SLAPD_URIS, LDAP_ADD_BIN, LDAP_DELETE_BIN needed.")
+
+
+slapdconf_template = """\
+%(schema)s
+
+pidfile		%(confdir)s/slapd.pid
+argsfile	%(confdir)s/slapd.args
+
+database	bdb
+suffix		"dc=my-domain,dc=com"
+rootdn		"%(binddn)s"
+rootpw		%(bindpw)s
+directory	%(dbdir)s
+# Indices to maintain
+index	objectClass	eq
+"""
+
+class SlapdConf(Layer):
+    """generate slapd.conf
+    """
+    def __init__(self, schema):
+        """
+        ``schema``: List of paths to our schema files
+        """
+        super(SlapdConf, self).__init__()
+        self.schema = schema
+
+    def setUp(self):
+        """take a template, replace, write slapd.conf store path for others to
+        knows
+        """
+        binddn = self['binddn'] = "cn=Manager,dc=my-domain,dc=com"
+        bindpw = self['bindpw'] = "secret"
+        confdir = self['confdir'] = tempfile.mkdtemp()
+        dbdir = self['dbdir'] = "%s/openldap-data" % (confdir,)
+        slapdconf = self['slapdconf'] = "%s/slapd.conf" % (confdir,)
+        schema = '\n'.join(
+                ["include %s" % (schema,) for schema in self.schema]
+                )
+        # generate config file
+        with open(slapdconf, 'w') as slapdconf:
+            slapdconf.write(slapdconf_template % dict(
+                binddn=binddn,
+                bindpw=bindpw,
+                confdir=confdir,
+                dbdir=dbdir,
+                schema=schema
+                ))
+        os.mkdir(dbdir)
+
+    def tearDown(self):
+        """remove our traces
+        """
+        shutil.rmtree(self['confdir'])
+
+schema = (
+        resource('schema/core.schema'),
+        resource('schema/cosine.schema'),
+        resource('schema/inetorgperson.schema'),
+        )
+SLAPD_CONF = SlapdConf(schema)
 
 
 class LDAPLayer(Layer):
     """Base class for ldap layers to _subclass_ from
     """
-    def __init__(self, slapdconf=SLAPDCONF, uris=SLAPDURIS, **kws):
+    defaultBases = (SLAPD_CONF,)
+
+    def __init__(self, uris=SLAPDURIS, **kws):
         super(LDAPLayer, self).__init__(**kws)
-        self.slapdconf = slapdconf
-        self.uris = uris
-        with open(slapdconf) as slapdconf:
-            data = dict([x.strip().split() for x in slapdconf if x[:6] in
-                ('direct', 'rootdn', 'rootpw')])
-        self.dbdir = data['directory']
-        self.binddn = data['rootdn'].split('"')[1]
-        self.bindpw = data['rootpw']
+        self['uris'] = uris
 
 
 class Slapd(LDAPLayer):
@@ -75,10 +133,9 @@ class Slapd(LDAPLayer):
         """start slapd
         """
         print "\nStarting LDAP server: ",
-        self.slapd = subprocess.Popen(
-                [self.slapdbin, '-f', self.slapdconf, '-h', self.uris,
-                    '-d', '0']
-                )
+        cmd = [self.slapdbin, '-f', self['slapdconf'], '-h', self['uris'],
+                '-d', '0']
+        self.slapd = subprocess.Popen(cmd)
         time.sleep(1)
         print "done."
 
@@ -90,9 +147,9 @@ class Slapd(LDAPLayer):
         print "waiting for slapd to terminate...",
         self.slapd.wait()
         print "done."
-        print "Whiping ldap data directory %s: " % (self.dbdir,),
-        for file in os.listdir(self.dbdir):
-            os.remove('%s/%s' % (self.dbdir, file))
+        print "Whiping ldap data directory %s: " % (self['dbdir'],),
+        for file in os.listdir(self['dbdir']):
+            os.remove('%s/%s' % (self['dbdir'], file))
         print "done."
 
 SLAPD = Slapd()
@@ -119,8 +176,8 @@ class Ldif(LDAPLayer):
         print
         for ldif in self.ldifs:
             print "Adding ldif %s: " % (ldif,),
-            cmd = [self.ldapaddbin, '-f', ldif, '-x', '-D', self.binddn, '-w',
-                    self.bindpw, '-c', '-a', '-H', self.uris]
+            cmd = [self.ldapaddbin, '-f', ldif, '-x', '-D', self['binddn'], '-w',
+                    self['bindpw'], '-c', '-a', '-H', self['uris']]
             retcode = subprocess.call(cmd)
             print "done."
 
@@ -133,8 +190,8 @@ class Ldif(LDAPLayer):
             with open(ldif) as ldif:
                 dns = [x.strip().split(' ',1)[1]  for x in ldif if
                         x.startswith('dn: ')]
-            cmd = [self.ldapdeletebin, '-x', '-D', self.binddn, '-c', '-r',
-                    '-w', self.bindpw, '-H', self.uris] + dns
+            cmd = [self.ldapdeletebin, '-x', '-D', self['binddn'], '-c', '-r',
+                    '-w', self['bindpw'], '-H', self['uris']] + dns
             retcode = subprocess.call(cmd, stderr=subprocess.PIPE)
             print "done."
 
@@ -167,7 +224,7 @@ LDIF_users1000 = Ldif(
         bases=(LDIF_base,),
         name="LDIF_users1000",
         )
-LDIF_users1000 = Ldif(
+LDIF_users2000 = Ldif(
         resource('ldifs/users2000.ldif'),
         bases=(LDIF_base,),
         name="LDIF_users2000",
