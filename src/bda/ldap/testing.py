@@ -151,16 +151,24 @@ LDIF_principals = Ldif(
         )
 
 # new ones
-#LDIF_base = Ldif(resource('base.ldif'))
-#LDIF_users300 = Ldif(
-#        resource('users300.ldif'),
-#        bases=(LDIF_base,),
-#        )
-#LDIF_users700 = Ldif(
-#        resource('users700.ldif'),
-#        bases=(LDIF_base,),
-#        )
-#LDIF_users1000 = Ldif(
-#        resource('users1000.ldif'),
-#        bases=(LDIF_base,),
-#        )
+LDIF_base = Ldif(resource('ldifs/base.ldif'))
+LDIF_users300 = Ldif(
+        resource('ldifs/users300.ldif'),
+        bases=(LDIF_base,),
+        name="LDIF_users300",
+        )
+LDIF_users700 = Ldif(
+        resource('ldifs/users700.ldif'),
+        bases=(LDIF_base,),
+        name="LDIF_users700",
+        )
+LDIF_users1000 = Ldif(
+        resource('ldifs/users1000.ldif'),
+        bases=(LDIF_base,),
+        name="LDIF_users1000",
+        )
+LDIF_users1000 = Ldif(
+        resource('ldifs/users2000.ldif'),
+        bases=(LDIF_base,),
+        name="LDIF_users2000",
+        )
