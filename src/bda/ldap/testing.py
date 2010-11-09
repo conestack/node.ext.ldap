@@ -141,11 +141,11 @@ class Ldif(LDAPLayer):
 
 # old ones used by current bda.ldap tests - 2010-11-09
 LDIF_data = Ldif(
-        resource('data.ldif'),
+        resource('ldifs/data.ldif'),
         name='LDIF_data',
         )
 LDIF_principals = Ldif(
-        resource('principals.ldif'),
+        resource('ldifs/principals.ldif'),
         bases=(LDIF_data,),
         name='LDIF_principals',
         )
