@@ -31,6 +31,8 @@ class Principal(_Node):
                 unicode(self.id).encode('ascii', 'replace'),
                 )
 
+    def __iter__(self):
+        return iter([])
 
 class User(Principal):
     """Turns a node into a user
