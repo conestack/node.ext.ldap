@@ -15,76 +15,6 @@ from bda.ldap.users import (
     LDAPGroupsConfig,
 )
 
-user = 'cn=Manager,dc=my-domain,dc=com'
-pwd = 'secret'
-props = LDAPProps('127.0.0.1', 12345, user, pwd, cache=False)
-ucfg = LDAPUsersConfig(
-        baseDN='dc=my-domain,dc=com',
-        attrmap={
-            'id': 'sn',
-            'login': 'description',
-            'telephoneNumber': 'telephoneNumber',
-            'sn': 'sn',
-            },
-        scope=SUBTREE,
-        queryFilter='(objectClass=person)',
-        )
-#gcfg_openldap = LDAPGroupsConfig(
-#        baseDN='dc=my-domain,dc=com',
-#        id_attr='cn',
-#        scope=SUBTREE,
-#        queryFilter='(objectClass=groupOfNames)',
-#        member_relation='member:dn',
-#        )
-ucfg300 = LDAPUsersConfig(
-        baseDN='ou=users300,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'uid',
-            'login': 'uid',
-            'cn': 'cn',
-            'sn': 'sn',
-            'mail': 'mail',
-            },
-        scope=ONELEVEL,
-        queryFilter='(objectClass=inetOrgPerson)',
-        )
-ucfg700 = LDAPUsersConfig(
-        baseDN='ou=users700,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'uid',
-            'login': 'uid',
-            'cn': 'cn',
-            'sn': 'sn',
-            'mail': 'mail',
-            },
-        scope=ONELEVEL,
-        queryFilter='(objectClass=inetOrgPerson)',
-        )
-ucfg1000 = LDAPUsersConfig(
-        baseDN='ou=users1000,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'uid',
-            'login': 'uid',
-            'cn': 'cn',
-            'sn': 'sn',
-            'mail': 'mail',
-            },
-        scope=ONELEVEL,
-        queryFilter='(objectClass=inetOrgPerson)',
-        )
-ucfg2000 = LDAPUsersConfig(
-        baseDN='ou=users2000,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'uid',
-            'login': 'uid',
-            'cn': 'cn',
-            'sn': 'sn',
-            'mail': 'mail',
-            },
-        scope=ONELEVEL,
-        queryFilter='(objectClass=inetOrgPerson)',
-        )
-
 SCHEMA = os.environ.get('SCHEMA')
 try:
     SLAPDBIN = os.environ['SLAPD_BIN']
@@ -282,6 +212,89 @@ class Ldif(LDAPLayer):
             del self['ucfg']
         except KeyError:
             pass
+
+# testing ldap props
+user = 'cn=Manager,dc=my-domain,dc=com'
+pwd = 'secret'
+props = LDAPProps('127.0.0.1', 12345, user, pwd, cache=False)
+
+# base users config
+ucfg = LDAPUsersConfig(
+        baseDN='dc=my-domain,dc=com',
+        attrmap={
+            'id': 'sn',
+            'login': 'description',
+            'telephoneNumber': 'telephoneNumber',
+            'sn': 'sn',
+            },
+        scope=SUBTREE,
+        queryFilter='(objectClass=person)',
+        )
+
+# users config for 300-users data.
+ucfg300 = LDAPUsersConfig(
+        baseDN='ou=users300,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'uid',
+            'login': 'uid',
+            'cn': 'cn',
+            'sn': 'sn',
+            'mail': 'mail',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=inetOrgPerson)',
+        )
+
+# users config for 700-users data.
+ucfg700 = LDAPUsersConfig(
+        baseDN='ou=users700,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'uid',
+            'login': 'uid',
+            'cn': 'cn',
+            'sn': 'sn',
+            'mail': 'mail',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=inetOrgPerson)',
+        )
+
+# users config for 1000-users data.
+ucfg1000 = LDAPUsersConfig(
+        baseDN='ou=users1000,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'uid',
+            'login': 'uid',
+            'cn': 'cn',
+            'sn': 'sn',
+            'mail': 'mail',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=inetOrgPerson)',
+        )
+
+# users config for 2000-users data.
+ucfg2000 = LDAPUsersConfig(
+        baseDN='ou=users2000,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'uid',
+            'login': 'uid',
+            'cn': 'cn',
+            'sn': 'sn',
+            'mail': 'mail',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=inetOrgPerson)',
+        )
+
+# base groups config
+#gcfg_openldap = LDAPGroupsConfig(
+#        baseDN='dc=my-domain,dc=com',
+#        id_attr='cn',
+#        scope=SUBTREE,
+#        queryFilter='(objectClass=groupOfNames)',
+#        member_relation='member:dn',
+#        )
 
 # old ones used by current bda.ldap tests - 2010-11-09
 LDIF_data = Ldif(
