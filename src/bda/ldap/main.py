@@ -17,6 +17,12 @@ CMD = {
 }
 
 def slapd():
+    import os
+    print os.environ['SLAPD_BIN']
+    print os.environ['SLAPD_URIS']
+    print os.environ['LDAP_DELETE_BIN']
+    print os.environ['LDAP_ADD_BIN']
+    return
     args = sys.argv[1:]
     if len(args) != 2:
         print u"Usage: ./bin/testldap LDIFLayer start|stop"

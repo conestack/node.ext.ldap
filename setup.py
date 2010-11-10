@@ -45,6 +45,6 @@ setup(name='bda.ldap',
       },
       entry_points="""
       [console_scripts]
-      testldap = bda.ldap.main.slapd
+      testldap = bda.ldap.main:slapd
       """,
       )
