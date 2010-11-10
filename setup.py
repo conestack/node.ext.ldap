@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '2.0.0dev'
+version = '2.0'
 shortdesc = "LDAP convenience library"
 longdesc = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 

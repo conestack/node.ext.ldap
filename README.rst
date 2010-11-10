@@ -219,8 +219,15 @@ TODO
 Changes
 =======
 
-1.6.0 (unreleased)
-------------------
+2.0 (unreleased)
+----------------
+
+- console support for starting/stopping a slapd using the test layers and data
+  presets as desired in a temporary environment for application testing.
+  (rnix, 2010-11-10)
+
+- test layers with data presets
+  (chaoflow, 2010-11-09)
 
 - hidden support for _search_filter/_search_scope, see node.txt
   (chaoflow, 2010-07-20)
