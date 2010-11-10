@@ -216,7 +216,13 @@ class Ldif(LDAPLayer):
 # testing ldap props
 user = 'cn=Manager,dc=my-domain,dc=com'
 pwd = 'secret'
-props = LDAPProps('127.0.0.1', 12345, user, pwd, cache=False)
+# old: props = LDAPProps('127.0.0.1', 12345, user, pwd, cache=False)
+props = LDAPProps(
+        uri='ldap://127.0.0.1:12345/',
+        user=user,
+        password=pwd,
+        cache=False,
+        )
 
 # base users config
 ucfg = LDAPUsersConfig(
@@ -303,6 +309,18 @@ LDIF_data = Ldif(
         ucfg=ucfg,
         )
 LDIF_principals = Ldif(
+        resource('ldifs/principals.ldif'),
+        bases=(LDIF_data,),
+        name='LDIF_principals',
+        ucfg=ucfg,
+        )
+
+LDIF_data_old_props = Ldif(
+        resource('ldifs/data.ldif'),
+        name='LDIF_data',
+        ucfg=ucfg,
+        )
+LDIF_principals_old_props = Ldif(
         resource('ldifs/principals.ldif'),
         bases=(LDIF_data,),
         name='LDIF_principals',

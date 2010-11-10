@@ -14,20 +14,13 @@ class LDAPSession(object):
     
     def __init__(self, props):
         self._props = props
-        connector = LDAPConnector(props.server,
-                                  props.port,
-                                  props.user,
-                                  props.password,
-                                  props.cache,
-                                  props.timeout)
+        connector = LDAPConnector(props=props)
         self._communicator = LDAPCommunicator(connector)
     
     def checkServerProperties(self):
         """Test if connection can be established.
         """
-        res = testLDAPConnectivity(
-                  self._communicator._connector._server,
-                  self._communicator._connector._port)
+        res = testLDAPConnectivity(props=self._props)
         if res == 'success':
             return (True, 'OK')
         else:
@@ -77,7 +70,7 @@ class LDAPSession(object):
         """Verify credentials, but don't rebind the session to that user
         """
         # Let's bypass connector/communicator until they are sorted out
-        con = ldap.open(self._props.server, self._props.port)
+        con = ldap.initialize(self._props.uri)
         try:
             con.simple_bind_s(dn, pw)
         except ldap.INVALID_CREDENTIALS:

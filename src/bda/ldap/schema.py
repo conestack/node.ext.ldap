@@ -14,11 +14,12 @@ class LDAPSchemaInfo(object):
         self.baseDN = ''
     
     def binary(self):
-        hostport = '%s:%s' % (self.props.server, self.props.port)
-        ldap_url = ldapurl.LDAPUrl(hostport=hostport,
-                                   dn=self.baseDN,
-                                   who=self.props.user,
-                                   cred=self.props.password)
+        base_uri = self.props.uri or "ldap://%s:%d/" % (self.props.server,
+                self.props.port)
+        ldap_url = ldapurl.LDAPUrl(ldapUrl=base_uri)
+        ldap_url.dn = self.baseDN
+        ldap_url.who = self.props.user
+        ldap_url.cred = self.props.password
         uri = ldap_url.unparse()
         rdn, subschema = urlfetch(uri)
         syntaxes = subschema.sed[LDAPSyntax]

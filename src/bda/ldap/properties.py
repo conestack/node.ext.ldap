@@ -59,6 +59,7 @@ class LDAPServerProperties(object):
             # old school
             self.server = server or 'localhost'
             self.port = port or 389
+            uri = "ldap://%s:%d/" % (self.server, self.port)
         self.uri = uri
         self.user = user
         self.password = password

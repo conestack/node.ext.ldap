@@ -18,11 +18,11 @@ from bda.ldap.cache import nullcacheProviderFactory
 from bda.ldap.scope import BASE, ONELEVEL, SUBTREE, SCOPES
 
 
-def testLDAPConnectivity(server, port):
+def testLDAPConnectivity(server=None, port=None, props=None):
     """Function to test the availability of the LDAP Server.
     """
     try:
-        c = LDAPConnector(server, port, '', '')
+        c = LDAPConnector(server, port, '', '', props=props)
         lc = LDAPCommunicator(c)
         lc.bind()
         lc.unbind()
@@ -65,12 +65,13 @@ class LDAPConnector(object):
     """
     
     def __init__(self,
-                 server,
-                 port,
-                 bindDN,
-                 bindPW,
+                 server=None,
+                 port=None,
+                 bindDN=None,
+                 bindPW=None,
                  cache=True,
-                 cachetimeout=43200):
+                 cachetimeout=43200,
+                 props=None):
         """Initialize LDAPConnector.
         
         Signature Deprecated: Signature will take ``LDAPServerProperties``
@@ -78,12 +79,20 @@ class LDAPConnector(object):
                               This will be changed in Version 1.5.
         """
         self.protocol = ldap.VERSION3
-        self._bindDN = bindDN
-        self._server = server
-        self._port = port
-        self._bindPW = bindPW
-        self._cache = cache
-        self._cachetimeout = cachetimeout
+        if props is None:
+            # old
+            self._uri = "ldap://%s:%d/" % (server, port)
+            self._bindDN = bindDN
+            self._bindPW = bindPW
+            self._cache = cache
+            self._cachetimeout = cachetimeout
+        else:
+            # new
+            self._uri = props.uri
+            self._bindDN = props.user
+            self._bindPW = props.password
+            self._cache = props.cache
+            self._cachetimeout = props.timeout
     
     def setProtocol(self, protocol):
         """Set the LDAP Protocol Version to use.
@@ -96,7 +105,7 @@ class LDAPConnector(object):
     def bind(self):
         """Bind to Server and return the Connection Object.
         """
-        self._con = ldap.open(self._server, self._port)
+        self._con = ldap.initialize(self._uri)
         self._con.protocol_version = self.protocol
         self._con.simple_bind(self._bindDN, self._bindPW)
         return self._con
@@ -106,6 +115,7 @@ class LDAPConnector(object):
         """
         self._con.unbind()
         self._con = None
+
 
 class LDAPCommunicator(object):
     """Class LDAPCommunicator is responsible for the communication with the
