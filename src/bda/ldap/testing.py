@@ -245,6 +245,7 @@ class Ldif(LDAPLayer):
         self.ldifs = type(ldifs) is tuple and ldifs or (ldifs,)
         #self['ucfg'] = ucfg
         self.ucfg = ucfg
+        self.kw_bases = kws.get('bases', list())
 
     def setUp(self):
         """run ldapadd for list of ldifs
@@ -252,6 +253,8 @@ class Ldif(LDAPLayer):
         read_env(self)
         self['ucfg'] = self.ucfg
         print
+        for base in self.kw_bases:
+            base.setUp()
         for ldif in self.ldifs:
             print "Adding ldif %s: " % (ldif,),
             cmd = [self.ldapaddbin, '-f', ldif, '-x', '-D', self['binddn'], '-w',
@@ -264,6 +267,8 @@ class Ldif(LDAPLayer):
         """
         print
         read_env(self)
+        for base in self.kw_bases:
+            base.tearDown()
         for ldif in self.ldifs:
             print "Removing ldif %s recursively: " % (ldif,),
             with open(ldif) as ldif:
