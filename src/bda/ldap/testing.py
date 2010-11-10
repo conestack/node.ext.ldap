@@ -1,6 +1,7 @@
 from bda.ldap import LDAPProps
 from bda.ldap.users import LDAPUsersConfig
 from bda.ldap.users import LDAPGroupsConfig
+from bda.ldap import ONELEVEL
 from bda.ldap import SUBTREE
 
 # === the new stuff ============
@@ -37,6 +38,54 @@ ucfg = LDAPUsersConfig(
 #        member_relation='member:dn',
 #        )
 
+ucfg300 = LDAPUsersConfig(
+        baseDN='ou=users300,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'uid',
+            'login': 'uid',
+            'cn': 'cn',
+            'sn': 'sn',
+            'mail': 'mail',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=inetOrgPerson)',
+        )
+ucfg700 = LDAPUsersConfig(
+        baseDN='ou=users700,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'uid',
+            'login': 'uid',
+            'cn': 'cn',
+            'sn': 'sn',
+            'mail': 'mail',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=inetOrgPerson)',
+        )
+ucfg1000 = LDAPUsersConfig(
+        baseDN='ou=users1000,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'uid',
+            'login': 'uid',
+            'cn': 'cn',
+            'sn': 'sn',
+            'mail': 'mail',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=inetOrgPerson)',
+        )
+ucfg2000 = LDAPUsersConfig(
+        baseDN='ou=users2000,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'uid',
+            'login': 'uid',
+            'cn': 'cn',
+            'sn': 'sn',
+            'mail': 'mail',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=inetOrgPerson)',
+        )
 
 def resource(string):
     return resource_filename(__name__, 'tests/'+string)
@@ -100,6 +149,7 @@ class SlapdConf(Layer):
                 schema=schema
                 ))
         os.mkdir(dbdir)
+        self['props'] = props
         print "SlapdConf set up."
 
     def tearDown(self):
@@ -107,6 +157,7 @@ class SlapdConf(Layer):
         """
         shutil.rmtree(self['confdir'])
         print "SlapdConf torn down."
+
 
 schema = (
         resource('schema/core.schema'),
@@ -168,15 +219,19 @@ class Ldif(LDAPLayer):
             ldifs=tuple(),
             ldapaddbin=LDAPADDBIN,
             ldapdeletebin=LDAPDELETEBIN,
+            ucfg=None,
             **kws):
         super(Ldif, self).__init__(**kws)
         self.ldapaddbin = ldapaddbin
         self.ldapdeletebin = ldapdeletebin
         self.ldifs = type(ldifs) is tuple and ldifs or (ldifs,)
+        #self['ucfg'] = ucfg
+        self.ucfg = ucfg
 
     def setUp(self):
         """run ldapadd for list of ldifs
         """
+        self['ucfg'] = self.ucfg
         print
         for ldif in self.ldifs:
             print "Adding ldif %s: " % (ldif,),
@@ -198,17 +253,20 @@ class Ldif(LDAPLayer):
                     '-w', self['bindpw'], '-H', self['uris']] + dns
             retcode = subprocess.call(cmd, stderr=subprocess.PIPE)
             print "done."
+        del self['ucfg']
 
 
 # old ones used by current bda.ldap tests - 2010-11-09
 LDIF_data = Ldif(
         resource('ldifs/data.ldif'),
         name='LDIF_data',
+        ucfg=ucfg,
         )
 LDIF_principals = Ldif(
         resource('ldifs/principals.ldif'),
         bases=(LDIF_data,),
         name='LDIF_principals',
+        ucfg=ucfg,
         )
 
 # new ones
@@ -217,19 +275,23 @@ LDIF_users300 = Ldif(
         resource('ldifs/users300.ldif'),
         bases=(LDIF_base,),
         name="LDIF_users300",
+        ucfg=ucfg300,
         )
 LDIF_users700 = Ldif(
         resource('ldifs/users700.ldif'),
         bases=(LDIF_base,),
         name="LDIF_users700",
+        ucfg=ucfg700,
         )
 LDIF_users1000 = Ldif(
         resource('ldifs/users1000.ldif'),
         bases=(LDIF_base,),
         name="LDIF_users1000",
+        ucfg=ucfg1000,
         )
 LDIF_users2000 = Ldif(
         resource('ldifs/users2000.ldif'),
         bases=(LDIF_base,),
         name="LDIF_users2000",
+        ucfg=ucfg2000,
         )
