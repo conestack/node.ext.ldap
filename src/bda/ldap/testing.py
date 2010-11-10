@@ -101,6 +101,17 @@ except KeyError:
     raise RuntimeError("Environment variables SLAPD_BIN,"
             " SLAPD_URIS, LDAP_ADD_BIN, LDAP_DELETE_BIN needed.")
 
+def read_env(layer):
+    if layer.get('confdir', None) is not None:
+        return
+    tmpdir = os.environ.get('bda.ldap.testldap.env', None)
+    if tmpdir is None:
+        tmpdir = tempfile.mkdtemp()
+    layer['confdir'] = tmpdir
+    layer['dbdir'] = "%s/openldap-data" % (layer['confdir'],)
+    layer['slapdconf'] = "%s/slapd.conf" % (layer['confdir'],)
+    layer['binddn'] = "cn=Manager,dc=my-domain,dc=com"
+    layer['bindpw'] = "secret"
 
 slapdconf_template = """\
 %(schema)s
@@ -131,11 +142,12 @@ class SlapdConf(Layer):
         """take a template, replace, write slapd.conf store path for others to
         knows
         """
-        binddn = self['binddn'] = "cn=Manager,dc=my-domain,dc=com"
-        bindpw = self['bindpw'] = "secret"
-        confdir = self['confdir'] = tempfile.mkdtemp()
-        dbdir = self['dbdir'] = "%s/openldap-data" % (confdir,)
-        slapdconf = self['slapdconf'] = "%s/slapd.conf" % (confdir,)
+        read_env(self)
+        binddn = self['binddn']
+        bindpw = self['bindpw']
+        confdir = self['confdir']
+        dbdir = self['dbdir']
+        slapdconf = self['slapdconf']
         schema = '\n'.join(
                 ["include %s" % (schema,) for schema in self.schema]
                 )
@@ -155,6 +167,7 @@ class SlapdConf(Layer):
     def tearDown(self):
         """remove our traces
         """
+        read_env(self)
         shutil.rmtree(self['confdir'])
         print "SlapdConf torn down."
 
@@ -188,6 +201,7 @@ class Slapd(LDAPLayer):
         """start slapd
         """
         print "\nStarting LDAP server: ",
+        read_env(self)
         cmd = [self.slapdbin, '-f', self['slapdconf'], '-h', self['uris'],
                 '-d', '0']
         self.slapd = subprocess.Popen(cmd)
@@ -198,6 +212,7 @@ class Slapd(LDAPLayer):
         """stop the previously started slapd
         """
         print "\nStopping LDAP Server: ",
+        read_env(self)
         os.kill(self.slapd.pid, 15)
         print "waiting for slapd to terminate...",
         self.slapd.wait()
@@ -231,6 +246,7 @@ class Ldif(LDAPLayer):
     def setUp(self):
         """run ldapadd for list of ldifs
         """
+        read_env(self)
         self['ucfg'] = self.ucfg
         print
         for ldif in self.ldifs:
@@ -244,6 +260,7 @@ class Ldif(LDAPLayer):
         """remove previously added ldifs
         """
         print
+        read_env(self)
         for ldif in self.ldifs:
             print "Removing ldif %s recursively: " % (ldif,),
             with open(ldif) as ldif:
@@ -253,7 +270,10 @@ class Ldif(LDAPLayer):
                     '-w', self['bindpw'], '-H', self['uris']] + dns
             retcode = subprocess.call(cmd, stderr=subprocess.PIPE)
             print "done."
-        del self['ucfg']
+        try:
+            del self['ucfg']
+        except KeyError:
+            pass
 
 
 # old ones used by current bda.ldap tests - 2010-11-09
