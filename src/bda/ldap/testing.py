@@ -1,19 +1,19 @@
-from bda.ldap import LDAPProps
-from bda.ldap.users import LDAPUsersConfig
-from bda.ldap.users import LDAPGroupsConfig
-from bda.ldap import ONELEVEL
-from bda.ldap import SUBTREE
-
-# === the new stuff ============
-
 import os
 import shutil
 import subprocess
 import tempfile
 import time
-
 from plone.testing import Layer
 from pkg_resources import resource_filename
+from bda.ldap import (
+    ONELEVEL,
+    SUBTREE,
+    LDAPProps,
+)
+from bda.ldap.users import (
+    LDAPUsersConfig,
+    LDAPGroupsConfig,
+)
 
 user = 'cn=Manager,dc=my-domain,dc=com'
 pwd = 'secret'
@@ -29,7 +29,6 @@ ucfg = LDAPUsersConfig(
         scope=SUBTREE,
         queryFilter='(objectClass=person)',
         )
-
 #gcfg_openldap = LDAPGroupsConfig(
 #        baseDN='dc=my-domain,dc=com',
 #        id_attr='cn',
@@ -37,7 +36,6 @@ ucfg = LDAPUsersConfig(
 #        queryFilter='(objectClass=groupOfNames)',
 #        member_relation='member:dn',
 #        )
-
 ucfg300 = LDAPUsersConfig(
         baseDN='ou=users300,dc=my-domain,dc=com',
         attrmap={
@@ -87,10 +85,6 @@ ucfg2000 = LDAPUsersConfig(
         queryFilter='(objectClass=inetOrgPerson)',
         )
 
-def resource(string):
-    return resource_filename(__name__, 'tests/'+string)
-
-
 SCHEMA = os.environ.get('SCHEMA')
 try:
     SLAPDBIN = os.environ['SLAPD_BIN']
@@ -101,12 +95,18 @@ except KeyError:
     raise RuntimeError("Environment variables SLAPD_BIN,"
             " SLAPD_URIS, LDAP_ADD_BIN, LDAP_DELETE_BIN needed.")
 
+def resource(string):
+    return resource_filename(__name__, 'tests/'+string)
+
 def read_env(layer):
     if layer.get('confdir', None) is not None:
         return
     tmpdir = os.environ.get('bda.ldap.testldap.env', None)
     if tmpdir is None:
         tmpdir = tempfile.mkdtemp()
+        layer['externalpidfile'] = False
+    else:
+        layer['externalpidfile'] = True
     layer['confdir'] = tmpdir
     layer['dbdir'] = "%s/openldap-data" % (layer['confdir'],)
     layer['slapdconf'] = "%s/slapd.conf" % (layer['confdir'],)
@@ -171,14 +171,12 @@ class SlapdConf(Layer):
         shutil.rmtree(self['confdir'])
         print "SlapdConf torn down."
 
-
 schema = (
         resource('schema/core.schema'),
         resource('schema/cosine.schema'),
         resource('schema/inetorgperson.schema'),
         )
 SLAPD_CONF = SlapdConf(schema)
-
 
 class LDAPLayer(Layer):
     """Base class for ldap layers to _subclass_ from
@@ -189,13 +187,13 @@ class LDAPLayer(Layer):
         super(LDAPLayer, self).__init__(**kws)
         self['uris'] = uris
 
-
 class Slapd(LDAPLayer):
     """Start/Stop an LDAP Server
     """
     def __init__(self, slapdbin=SLAPDBIN, **kws):
         super(Slapd, self).__init__(**kws)
         self.slapdbin = slapdbin
+        self.slapd = None
 
     def setUp(self):
         """start slapd
@@ -213,9 +211,15 @@ class Slapd(LDAPLayer):
         """
         print "\nStopping LDAP Server: ",
         read_env(self)
-        os.kill(self.slapd.pid, 15)
-        print "waiting for slapd to terminate...",
-        self.slapd.wait()
+        if self['externalpidfile']:
+            with open(os.path.join(self['confdir'], 'slapd.pid')) as pidfile:
+                pid = int(pidfile.read())
+        else:
+            pid = self.slapd.pid
+        os.kill(pid, 15)
+        if self.slapd is not None:
+            print "waiting for slapd to terminate...",
+            self.slapd.wait()
         print "done."
         print "Whiping ldap data directory %s: " % (self['dbdir'],),
         for file in os.listdir(self['dbdir']):
@@ -223,7 +227,6 @@ class Slapd(LDAPLayer):
         print "done."
 
 SLAPD = Slapd()
-
 
 class Ldif(LDAPLayer):
     """Adds/removes ldif data to/from a server
@@ -274,7 +277,6 @@ class Ldif(LDAPLayer):
             del self['ucfg']
         except KeyError:
             pass
-
 
 # old ones used by current bda.ldap tests - 2010-11-09
 LDIF_data = Ldif(
