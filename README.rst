@@ -412,15 +412,15 @@ Copyright
 
 Copyright (c) 2006-2009: BlueDynamics Alliance, Austria
 
-Credits
-=======
+Contributors
+============
+
+- Florian Friesdorf <flo@chaoflow.net>
 
 - Robert Niederreiter <rnix@squarewave.at>
 
 - Jens Klein <jens@bluedynamics.com>
 
 - Georg Bernhard <g.bernhard@akbild.ac.at>
-
-- Florian Friesdorf <flo@chaoflow.net>
 
 - Johannes Raggam <johannes@bluedynamics.com>
