@@ -1,6 +1,17 @@
 from zope.interface import implements
-from zodict.aliaser import DictAliaser
-from zodict.node import _Node, AliasedNodespace
+try:
+    from node.aliasing import (
+            DictAliaser,
+            AliasedNodespace,
+            )
+    from node.base import AbstractNode
+except ImportError:
+    node = __import__('node.aliasing', {})
+    node = __import__('node.base', {})
+    DictAliaser = node.aliasing.DictAliaser
+    AliasedNodespace = node.aliasing.AliasedNodespace
+    AbstractNode = node.base.AbstractNode
+
 from bda.ldap import LDAPProps, LDAPNode
 from bda.ldap import BASE, ONELEVEL, SUBTREE
 from bda.ldap.debug import debug
@@ -8,7 +19,7 @@ from bda.ldap.interfaces import ILDAPUsersConfig
 from bda.ldap.interfaces import ILDAPGroupsConfig
 
 
-class Principal(_Node):
+class Principal(AbstractNode):
     """Turns a node into a principal
     """
     def __init__(self, context, attraliaser=None):
@@ -34,6 +45,7 @@ class Principal(_Node):
     def __iter__(self):
         return iter([])
 
+
 class User(Principal):
     """Turns a node into a user
     """
@@ -53,7 +65,7 @@ class Group(Principal):
     """
 
 
-class Principals(_Node):
+class Principals(AbstractNode):
     """Turn a nodespace into a source of principals
 
     XXX: Should be based on a LazyNode to cache principal objects
