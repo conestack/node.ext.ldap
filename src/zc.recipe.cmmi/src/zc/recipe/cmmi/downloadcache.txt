@@ -1,0 +1,227 @@
+Using a download cache
+======================
+
+Normally, when distributions are installed, if any processing is
+needed, they are downloaded from the internet to a temporary directory
+and then installed from there.  A download cache can be used to avoid
+the download step.  This can be useful to reduce network access and to
+create source distributions of an entire buildout.
+
+The buildout download-cache option can be used to specify a directory
+to be used as a download cache.
+
+In this example, we'll create a directory to hold the cache:
+
+    >>> cache = tmpdir('cache')
+
+We have an archive with a demo foo tar ball and publish it by http in order
+to see offline effects:
+
+    >>> ls(distros)
+    -  bar.tgz
+    -  baz.tgz
+    -  foo.tgz
+
+    >>> distros = start_server(distros)
+
+Let's update a sample buildout to install it:
+
+    >>> write('buildout.cfg',
+    ... """
+    ... [buildout]
+    ... parts = foo
+    ... download-cache = %s
+    ... log-level = DEBUG
+    ...
+    ... [foo]
+    ... recipe = zc.recipe.cmmi
+    ... url = %s/foo.tgz
+    ... """ % (cache, distros))
+
+We used the url option to specify the location of the archive.
+
+It creates a make file which is also run:
+
+    >>> print system('bin/buildout')
+    In...
+    ...
+    Installing foo.
+    foo: Searching cache at /cache/cmmi
+    foo: Cache miss; will cache http://localhost//foo.tgz as /cache/cmmi/...
+    foo: Downloading http://localhost//foo.tgz
+    foo: Unpacking and configuring
+    configuring foo /sample-buildout/parts/foo
+    echo building foo
+    building foo
+    echo installing foo
+    installing foo
+    <BLANKLINE>
+
+We'll also get the download cache populated.  The buildout doesn't put
+files in the cache directly.  It creates an intermediate directory,
+cmmi:
+
+    >>> ls(cache)
+    d  cmmi
+    d  dist
+
+The cmmi directory contains the cache keys - these are hashes of the
+download url:
+
+    >>> import os
+    >>> cache_path = os.path.join(cache, 'cmmi')
+    >>> len(os.listdir(cache_path))
+    1
+
+If we remove the installed parts and then re-run, we'll see that the
+files are not downloaded afresh:
+
+    >>> import os
+    >>> for f in os.listdir('parts'):
+    ...     remove('parts', f)
+   
+    >>> print system(buildout)
+    In...
+    ...
+    Uninstalling foo.
+    Installing foo.
+    foo: Searching cache at /cache/cmmi
+    foo: Using cache file /cache/cmmi/...
+    foo: Unpacking and configuring
+    configuring foo /sample-buildout/parts/foo
+    echo building foo
+    building foo
+    echo installing foo
+    installing foo
+    <BLANKLINE>
+
+This is because the ones in the download cache are used.
+
+If a file directory is removed from the cache, and the installed parts
+are also removed, then it is downloaded afresh:
+
+    >>> for f in os.listdir( cache_path ):
+    ...   remove (cache_path, f)
+
+    >>> for f in os.listdir('parts'):
+    ...     remove('parts', f)
+
+    >>> print system('bin/buildout')
+    In...
+    ...
+    Installing foo.
+    foo: Searching cache at /cache/cmmi
+    foo: Cache miss; will cache http://localhost//foo.tgz as /cache/cmmi/...
+    foo: Unpacking and configuring
+    configuring foo /sample-buildout/parts/foo
+    echo building foo
+    building foo
+    echo installing foo
+    installing foo
+    <BLANKLINE>
+
+If the cache location is changed, and the installed parts are removed,
+the new cache is created and repopulated:
+
+    >>> for f in os.listdir('parts'):
+    ...     remove('parts', f)
+
+    >>> cache2 = tmpdir('cache2')
+    >>> write('buildout.cfg',
+    ... """
+    ... [buildout]
+    ... parts = foo
+    ... download-cache = %s
+    ... log-level = DEBUG
+    ...
+    ... [foo]
+    ... recipe = zc.recipe.cmmi
+    ... url = %s/foo.tgz
+    ... """ % (cache2, distros))
+
+    >>> print system('bin/buildout')
+    In...
+    ...
+    Installing foo.
+    foo: Searching cache at /cache2/cmmi
+    foo: Cache miss; will cache http://localhost//foo.tgz as /cache2/cmmi/...
+    foo: Unpacking and configuring
+    configuring foo /sample-buildout/parts/foo
+    echo building foo
+    building foo
+    echo installing foo
+    installing foo
+    <BLANKLINE>
+
+The old cache is left in place:
+
+    >>> ls(cache_path)
+    - ...
+
+Installing solely from a download cache
+---------------------------------------
+
+A download cache can be used as the basis of application source
+releases.  In an application source release, we want to distribute an
+application that can be built without making any network accesses.  In
+this case, we distribute a buildout with download cache and tell the
+buildout to install from the download cache only, without making
+network accesses.  The buildout install-from-cache option can be used
+to signal that packages should be installed only from the download
+cache.
+
+If the buildout is run in offline mode, once the installed parts have
+been removed, the files from the cache are used:
+
+    >>> write('buildout.cfg',
+    ... """
+    ... [buildout]
+    ... parts = foo
+    ... download-cache = %s
+    ... log-level = DEBUG
+    ... install-from-cache = true
+    ...
+    ... [foo]
+    ... recipe = zc.recipe.cmmi
+    ... url = %s/foo.tgz
+    ... """ % (cache, distros))
+
+    >>> for f in os.listdir('parts'):
+    ...     remove('parts', f)
+
+    >>> print system(buildout)
+    In...
+    ...
+    Uninstalling foo.
+    Installing foo.
+    foo: Searching cache at /cache/cmmi
+    foo: Using cache file /cache/cmmi/...
+    foo: Unpacking and configuring
+    configuring foo /sample-buildout/parts/foo
+    echo building foo
+    building foo
+    echo installing foo
+    installing foo
+    <BLANKLINE>
+
+However, in offline mode, if we remove the installed parts and clear
+the cache, an error is raised because the file is not in the cache:
+
+    >>> for f in os.listdir( cache_path ):
+    ...   remove (cache_path, f)
+
+    >>> for f in os.listdir('parts'):
+    ...     remove('parts', f)
+
+    >>> print system(buildout)
+    In...
+    ...
+    Uninstalling foo.
+    Installing foo.
+    foo: Searching cache at /cache/cmmi
+    foo: Cache miss; will cache http://localhost//foo.tgz as /cache/cmmi/...
+    While:
+      Installing foo.
+    Error: Couldn't download 'http://localhost//foo.tgz' in offline mode.
+    <BLANKLINE>
+

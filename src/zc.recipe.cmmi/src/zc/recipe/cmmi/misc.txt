@@ -1,0 +1,38 @@
+Various tests
+=============
+
+This doctest contains misc tests.
+
+Creating the location folder
+----------------------------
+
+When the recipe is subclassed, the `location` folder might be created
+before `zc.recipe.cmmi` has a chance to create it, so we need to make
+sure it checks that the folder does not exists before it is created.
+   
+In the test below, the `foo` folder is created before the recipe
+is launched::
+
+    >>> location = join(sample_buildout, 'parts', 'foo')
+    >>> mkdir(location)
+
+    >>> write('buildout.cfg',
+    ... """
+    ... [buildout]
+    ... parts = foo
+    ... log-level = DEBUG
+    ...
+    ... [foo]
+    ... recipe = zc.recipe.cmmi
+    ... url = file://%s/foo.tgz
+    ... """ % (distros))
+
+    >>> print system('bin/buildout') 
+    Installing...
+    ...
+    installing foo
+    <BLANKLINE>
+    
+    >>> ls(join(sample_buildout, 'parts'))
+    d  foo
+
