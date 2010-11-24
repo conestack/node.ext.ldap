@@ -558,18 +558,74 @@ We can change attributes.
     >>> p1.attrs['description']
     u'foo'
 
-We cannot add items.
+Addings items, iff _rdn_attr is set.
 ::
 
     >>> node['foo'] = LDAPNode()
     Traceback (most recent call last):
     ...
-    NotImplementedError: Adding with key != rdn not supported.
+    RuntimeError: Adding with key != rdn needs _rdn_attr to be set.
 
-But we can delete them.
+    >>> node._rdn_attr = 'cn'
+    >>> node['foo'] = LDAPNode()
+    Traceback (most recent call last):
+    ...
+    ValueError: 'cn' needed in node attributes for rdn.
+
+    >>> newnode = LDAPNode()
+    >>> newnode.attrs['cn'] = 'newnode'
+
+# XXX: shouldn't this be configured somewhere?
+
+    >>> newnode.attrs['objectClass'] = ['top', 'person']
+
+# XXX: these need to be the same as 'sn' is used as key
+
+    >>> newnode.attrs['sn'] = 'foo'
+    >>> node['foo'] = newnode
+
+    >>> node.keys()
+    [u'Mustermann', u'Mueller', u'foo']
+
+    >>> node['foo'] is newnode
+    True
+
+    >>> node is newnode.__parent__
+    True
+
+    >>> newnode.__name__ == 'foo'
+    True
+
+Commit the added node.
+::
+
+    >>> node.printtree()
+    <ou=customer3,ou=customers,dc=my-domain,dc=com - True>
+      <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:Mustermann - False>
+      <cn=newnode,ou=customer3,ou=customers,dc=my-domain,dc=com:foo - True>
+
+    >>> node()
+    >>> node.printtree()
+    <ou=customer3,ou=customers,dc=my-domain,dc=com - False>
+      <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:Mustermann - False>
+      <cn=newnode,ou=customer3,ou=customers,dc=my-domain,dc=com:foo - False>
+
+    >>> node._reload = True
+    >>> node.keys()
+    [u'Mustermann', u'Mueller', u'foo']
+
+    >>> node['foo'].attrs.items()
+    [(u'objectClass', [u'top', u'person']),
+     (u'cn', u'newnode'),
+     (u'sn', u'foo')]
+
+
+And deleting again.
 ::
 
     >>> del node['Mueller']
+    >>> del node['foo']
+    >>> node()
     >>> node.keys()
     [u'Mustermann']
     >>> node()

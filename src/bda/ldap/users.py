@@ -12,6 +12,8 @@ except ImportError:
     AliasedNodespace = node.aliasing.AliasedNodespace
     AbstractNode = node.base.AbstractNode
 
+from zodict import AttributedNode
+
 from bda.ldap import LDAPProps, LDAPNode
 from bda.ldap import BASE, ONELEVEL, SUBTREE
 from bda.ldap.debug import debug
@@ -74,6 +76,7 @@ class Principals(AbstractNode):
 
     def __init__(self, context, principal_attrmap=None):
         self.context = context
+        # XXX: it seems currently an aliaser is needed any way, is that good?
         self.principal_attrmap = principal_attrmap
         self.principal_attraliaser = DictAliaser(principal_attrmap)
 
@@ -103,8 +106,26 @@ class Principals(AbstractNode):
     def __iter__(self):
         return self.context.__iter__()
 
-    def __setitem__(self, key, val):
-        raise NotImplementedError
+    def __setitem__(self, name, vessel):
+        try:
+            attrs = vessel.nodespaces['__attrs__']
+        except KeyError:
+            raise ValueError(u"Attributes need to be set.")
+
+        nextvessel = AttributedNode()
+        nextvessel.__name__ = name
+        nextvessel.attribute_access_for_attrs = False
+        principal = self.principal_factory(
+                nextvessel,
+                attraliaser=self.principal_attraliaser
+                )
+        principal.__name__ = name
+        principal.__parent__ = self
+        # XXX: we could cache here, given that we are based on a LazyNode or
+        # similar
+        for key, val in attrs.iteritems():
+            principal.attrs[key] = val
+        self.context[name] = nextvessel
 
     def _alias_dict(self, dct):
         if dct is None:
@@ -153,11 +174,13 @@ class LDAPPrincipalsConfig(object):
             baseDN='',
             attrmap={},
             scope=ONELEVEL,
-            queryFilter=''):
+            queryFilter='',
+            objectClasses=[]):
         self.baseDN = baseDN
         self.attrmap = attrmap
         self.scope = scope
         self.queryFilter = queryFilter
+        self.objectClasses = objectClasses
 
 
 class LDAPUsersConfig(LDAPPrincipalsConfig):
@@ -183,7 +206,9 @@ class LDAPPrincipals(Principals):
         super(LDAPPrincipals, self).__init__(context, cfg.attrmap)
         self.context._child_filter = cfg.queryFilter
         self.context._child_scope = cfg.scope
+        self.context._child_objectClasses = cfg.objectClasses
         self.context._key_attr = cfg.attrmap['id']
+        self.context._rdn_attr = cfg.attrmap['rdn']
 
 
 class LDAPUsers(LDAPPrincipals):

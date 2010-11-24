@@ -150,9 +150,84 @@ id is returned if sucessful, otherwise None.
     ...
     ValueError: Either specify id or login, not both.
 
+
+Add a user.
+::
+
+    >>> from bda.ldap import ONELEVEL
+    >>> adducfg = LDAPUsersConfig(
+    ...         baseDN='ou=customers,dc=my-domain,dc=com',
+    ...         attrmap={
+    ...             'id': 'sn',
+    ...             'login': 'cn',
+    ...             'rdn': 'cn',
+    ...             'telephoneNumber': 'telephoneNumber',
+    ...             'sn': 'sn',
+    ...             },
+    ...         scope=ONELEVEL,
+    ...         queryFilter='(objectClass=person)',
+    ...         objectClasses=['top', 'person'],
+    ...         )
+    >>> users = LDAPUsers(props, adducfg)
+
+    >>> users.ids()
+    [u'M\xfcller', u'Schmidt', u'Umhauer']
+
+    >>> from zodict import AttributedNode
+    >>> user_vessel = AttributedNode()
+
+    >>> users['newuser'] = user_vessel
+    Traceback (most recent call last):
+    ...
+    ValueError: Attributes need to be set.
+
+    >>> user_vessel.attrs['login'] = 'newcn'
+    >>> user_vessel.attrs['id'] = 'newid'
+    >>> users['newid'] = user_vessel
+
+    >>> users.ids()
+    [u'M\xfcller', u'Schmidt', u'Umhauer', u'newid']
+
+    >>> newuser = users['newid']
+    >>> newuser is not user_vessel
+    True
+
+    >>> newuser
+    <User 'newid'>
+
+    >>> newuser.context
+    <cn=newcn,ou=customers,dc=my-domain,dc=com:newid - True>
+
+# XXX: there need more attrs to show up
+
+    >>> newuser.attrs.items()
+    [('login', u'newcn'), ('id', u'newid')]
+
+    >>> newuser.context.attrs.items()
+    [(u'cn', u'newcn'), (u'sn', u'newid'), (u'objectClass', ['top', 'person'])]
+
+# XXX: wrap __call__
+
+    >>> users.context()
+
+    >>> users.reload = True
+
+    >>> users.items()
+    [(u'M\xfcller', <User 'M?ller'>),
+     (u'Schmidt', <User 'Schmidt'>),
+     (u'Umhauer', <User 'Umhauer'>),
+     (u'newid', <User 'newid'>)]
+
+    >>> users['newid'].context
+    <cn=newcn,ou=customers,dc=my-domain,dc=com:newid - False>
+
+    >>> del users['newid']
+    >>> users.context()
+
 XXX - Review: Search users by criteria OR queryFilter. eg. person, top, foo.
 ::
 
+    >>> users = LDAPUsers(props, ucfg)
     >>> schmidt = users['Schmidt']
     >>> users.search(criteria=dict(sn=schmidt.attrs['sn']), exact_match=True)
     [u'Schmidt']

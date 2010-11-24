@@ -11,6 +11,7 @@ except ImportError, e:
     from zope.component.event import objectEventNotify
 from zodict.interfaces import ICallableNode
 from zodict import LifecycleNode
+from zodict import AttributedNode
 from zodict.node import NodeAttributes
 from bda.ldap import (
     BASE,
@@ -153,10 +154,12 @@ class LDAPNode(LifecycleNode):
         # XXX: do soemthing about attrmap
         super(LDAPNode, self).__init__(name, index=False)
         self._key_attr = 'rdn'
+        self._rdn_attr = None
         self._child_scope = ONELEVEL
         self._child_filter = None
         self._child_criteria = None
         self._child_relation = None
+        self._child_objectClasses = None
         self._ChildClass = LDAPNode
         self.attribute_access_for_attrs = False
 
@@ -382,21 +385,43 @@ class LDAPNode(LifecycleNode):
         self._keys[key] = val
         return val
 
+    def _create_suitable_node(self, vessel):
+        if isinstance(vessel, AttributedNode):
+            node = LDAPNode()
+            try:
+                attrs = vessel.nodespaces['__attrs__']
+            except KeyError:
+                raise ValueError(u"Attributes need to be set.")
+            for key, val in attrs.iteritems():
+                node.attrs[key] = val
+            return node
+        raise ValueError(u"Don't know what to do with '%s', cannot setitem")
+
     def __setitem__(self, key, val):
         if isinstance(key, str):
             key = decode(key)
         if self._child_scope is not ONELEVEL:
+            # XXX: this would require a default location for new entries
             raise NotImplementedError(
                     u"Adding with scope != ONELEVEL not supported.")
-        if self._key_attr != 'rdn':
-            raise NotImplementedError(u"Adding with key != rdn not supported.")
+        if self._key_attr != 'rdn' and self._rdn_attr is None:
+            raise RuntimeError(u"Adding with key != rdn needs _rdn_attr "
+                    u"to be set.")
+        if not isinstance(val, LDAPNode):
+            # create one from whatever we got
+            val = self._create_suitable_node(val)
+        # At this point we need to have an LDAPNode as val
+        if self._key_attr != 'rdn' and \
+                val.attrs.get(self._rdn_attr) is None:
+            raise ValueError(u"'%s' needed in node attributes for rdn." % \
+                    (self._rdn_attr,))
         val._session = self._session
         if self._keys is None:
             self._load_keys()
         try:
             # a value with key is already in the directory
             self._keys[key]
-        except KeyError, e:
+        except KeyError:
             # the value is not yet in the directory 
             val._action = ACTION_ADD
             val.changed = True
@@ -405,7 +430,17 @@ class LDAPNode(LifecycleNode):
         super(LDAPNode, self).__setitem__(key, val)
         self._notify_suppress = False
         self._keys[key] = val    
-        self._child_dns[key] = ','.join((key, self.DN))
+        if self._key_attr == 'rdn':
+            rdn = key
+        else:
+            rdn = '%s=%s' % (self._rdn_attr, val.attrs[self._rdn_attr])
+        self._child_dns[key] = ','.join((rdn, self.DN))
+        if self._child_objectClasses:
+            current_ocs = val.attrs.get('objectClass', [])
+            needed_ocs = self._child_objectClasses
+            val.attrs['objectClass'] = [
+                    x for x in current_ocs + needed_ocs if x not in current_ocs
+                    ]
         if val._action == ACTION_ADD:
             objectEventNotify(self.events['added'](val, newParent=self, 
                                                    newName=key))
