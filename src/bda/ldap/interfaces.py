@@ -1,12 +1,9 @@
-# Copyright 2008-2009, BlueDynamics Alliance, Austria - http://bluedynamics.com
+# Copyright 2008-2010, BlueDynamics Alliance, Austria - http://bluedynamics.com
 # GNU General Public Licence Version 2 or later
-
-from zope.interface import Interface
-from zope import schema
-from zope.schema.vocabulary import SimpleVocabulary
-
-from bda.ldap.scope import ONELEVEL, SUBTREE
-
+from zope.interface import (
+    Interface,
+    Attribute,
+)
 
 class ICacheProviderFactory(Interface):
     """Create some ICacheProvider implementing object on __call__.
@@ -17,113 +14,49 @@ class ICacheProviderFactory(Interface):
         """See above.
         """
 
-
 class ILDAPProps(Interface):
     """LDAP properties configuration interface.
     """
     
-    uri = schema.TextLine(
-            title=u"URI",
-            description=u"e.g. ldap://localhost:389/",
-            required=True,
-            )
+    uri = Attribute(u"LDAP URI")
     
-    user = schema.TextLine(
-            title=u"Bind DN",
-            description=u"DN used to bind to the ldap server.",
-            required=True,
-            )
+    user = Attribute(u"LDAP User")
     
-    password = schema.TextLine(
-            title=u"Bind password",
-            description=u"Password used to bind to the ldap server.",
-            required=True,
-            )
+    password = Attribute(u"Bind Password")
     
-    cache = schema.Bool(
-            title=u"Cache",
-            description=u"Enable caching",
-            required=True,
-            )
+    cache = Attribute(u"Flag wether to use cache or not")
     
-    timeout = schema.Int(
-            title=u"Cache timeout",
-            description=u"Cache timeout in seconds",
-            default=600,
-            required=True,
-            )
+    timeout = Attribute(u"Timeout in seconds")
 
-#    start_tls = schema.TextLine(
-#        title=u"start_tls",
-#        description=u"",
-#        required=True)
-#
-#    tls_cacertfile = schema.TextLine(
-#        title=u"tls_cacertfile",
-#        description=u"",
-#        required=True)
-#
-#    tls_cacertdir = schema.TextLine(
-#        title=u"tls_cacertdir",
-#        description=u"",
-#        required=True)
-#
-#    tls_clcertfile = schema.TextLine(
-#        title=u"tls_clcertfile",
-#        description=u"",
-#        required=True)
-#
-#    tls_clkeyfile = schema.TextLine(
-#        title=u"tls_clkeyfile",
-#        description=u"",
-#        required=True)
-#
-    retry_max = schema.Int(
-            title=u"Retry max",
-            description=u"Maximum number of reconnection attempts",
-            default=1,
-            required=True,
-            )
-    
-    retry_delay = schema.Int(
-            title=u"Retry delay",
-            description=u"Delay between reconnection attempts",
-            default=5,
-            required=True,
-            )
+    start_tls = Attribute(u"TLS enabled")
 
+    tls_cacertfile = Attribute(u"Name of CA Cert file")
+
+    tls_cacertdir = Attribute(u"Path to CA Cert directory")
+
+    tls_clcertfile = Attribute(u"Name of CL Cert file")
+
+    tls_clkeyfile = Attribute(u"Path to CL key file")
+
+    retry_max = Attribute(u"Retry count")
+    
+    retry_delay = Attribute(u"Retry delay in seconds")
 
 class ILDAPPrincipalsConfig(Interface):
+    """LDAP principals configuration interface.
     """
-    """
-    baseDN = schema.TextLine(
-            title=u"Base DN",
-            required=True,
-            )
+    
+    baseDN = Attribute(u"Principals base DN")
 
-#    attrmap = schema.Dict(
-#            title=u"Attribute mapping",
-#            description=u"The minimum required is 'id' and 'login'.",
-#            required=True,
-#            )
+    attrmap = Attribute(u"Principals Attribute map as ``odict.odict``")
 
-    scope = schema.Choice(
-            title=u"Search scope",
-            vocabulary=SimpleVocabulary.fromItems((
-                ('ONELEVEL', ONELEVEL),
-                ('SUBTREE', SUBTREE),
-                ))
-            )
+    scope = Attribute(u"Search scope for principals")
 
-    queryFilter = schema.TextLine(
-            title=u"Query filter"
-            )
-
+    queryFilter = Attribute(u"Query filter for principals")
 
 class ILDAPUsersConfig(ILDAPPrincipalsConfig):
     """LDAP users configuration interface.
     """
-
 
 class ILDAPGroupsConfig(ILDAPPrincipalsConfig):
     """LDAP groups configuration interface.
