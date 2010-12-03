@@ -130,11 +130,19 @@ class Principals(AbstractNode):
     def _alias_dict(self, dct):
         if dct is None:
             return None
-        alias = self.principal_attraliaser.alias
-        aliased_dct = dict(
-                [(alias(key), val) for key, val in dct.iteritems()]
-                )
-        return aliased_dct
+        # this code does not work if multiple keys map to same value
+        #alias = self.principal_attraliaser.alias
+        #aliased_dct = dict(
+        #        [(alias(key), val) for key, val in dct.iteritems()]
+        #        )
+        #return aliased_dct
+        # XXX: maybe some generalization in aliaser needed
+        ret = dict()
+        for key, val in self.principal_attraliaser.iteritems():
+            for k, v in dct.iteritems():
+                if val == k:
+                    ret[key] = v
+        return ret
 
     def _unalias_list(self, lst):
         if lst is None:
@@ -205,7 +213,7 @@ class LDAPPrincipals(Principals):
         context = LDAPNode(name=cfg.baseDN, props=props)
         super(LDAPPrincipals, self).__init__(context, cfg.attrmap)
         self.context._child_filter = cfg.queryFilter
-        self.context._child_scope = cfg.scope
+        self.context._child_scope = int(cfg.scope)
         self.context._child_objectClasses = cfg.objectClasses
         self.context._key_attr = cfg.attrmap['id']
         self.context._rdn_attr = cfg.attrmap['rdn']

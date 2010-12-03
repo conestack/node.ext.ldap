@@ -53,6 +53,8 @@ class ILDAPPrincipalsConfig(Interface):
     scope = Attribute(u"Search scope for principals")
 
     queryFilter = Attribute(u"Query filter for principals")
+    
+    objectClasses = Attribute(u"Default object classes for new principals.")
 
 class ILDAPUsersConfig(ILDAPPrincipalsConfig):
     """LDAP users configuration interface.

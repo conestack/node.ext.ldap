@@ -231,6 +231,7 @@ ucfg = LDAPUsersConfig(
             },
         scope=SUBTREE,
         queryFilter='(objectClass=person)',
+        objectClasses=['person'],
         )
 
 # users config for 300-users data.
@@ -246,6 +247,7 @@ ucfg300 = LDAPUsersConfig(
             },
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
+        objectClasses=['inetOrgPerson'],
         )
 
 # users config for 700-users data.
@@ -261,6 +263,7 @@ ucfg700 = LDAPUsersConfig(
             },
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
+        objectClasses=['inetOrgPerson'],
         )
 
 # users config for 1000-users data.
@@ -276,6 +279,7 @@ ucfg1000 = LDAPUsersConfig(
             },
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
+        objectClasses=['inetOrgPerson'],
         )
 
 # users config for 2000-users data.
@@ -291,6 +295,7 @@ ucfg2000 = LDAPUsersConfig(
             },
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
+        objectClasses=['inetOrgPerson'],
         )
 
 # base groups config
