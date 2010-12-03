@@ -44,7 +44,7 @@ def cleanup_env():
 def startslapd(layer, args):
     mk_ldif(args[0])
     os.environ['bda.ldap.testldap.env'] = mk_tmp()
-    for base in layer.defaultBases:
+    for base in layer.defaultBases + layer.__bases__:
         for subbase in base.defaultBases:
             subbase.setUp()
         base.setUp()
