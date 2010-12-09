@@ -162,6 +162,8 @@ class Principals(AbstractNode):
     def search(self, criteria=None, attrlist=None, exact_match=False,
             or_search=False):
         # XXX: stripped down for now, compare to LDAPNode.search
+        # XXX: are single values always lists in results?
+        #      is this what we want?
         results = self.context.search(
                 criteria=self._unalias_dict(criteria),
                 attrlist=self._unalias_list(attrlist),
