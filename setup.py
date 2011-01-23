@@ -1,12 +1,12 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '2.0'
-shortdesc = "LDAP convenience library"
+version = '2.0dev'
+shortdesc = "Extending the nodespace towards LDAP"
 longdesc = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 longdesc += open(os.path.join(os.path.dirname(__file__), 'LICENSE.rst')).read()
 
-setup(name='bda.ldap',
+setup(name='node.ext.ldap',
       version=version,
       description=shortdesc,
       long_description=longdesc,
@@ -22,11 +22,11 @@ setup(name='bda.ldap',
       keywords='',
       author='BlueDynamics Alliance',
       author_email='dev@bluedynamics.com',
-      url='https://svn.plone.org/svn/collective/bda.ldap',
+      url='https://github.com/bluedynamics/node.ext.ldap',
       license='General Public Licence',
       packages=find_packages('src'),
       package_dir = {'': 'src'},
-      namespace_packages=['bda'],
+      namespace_packages=['node', 'node.ext'],
       include_package_data=True,
       zip_safe=False,
       install_requires=[
@@ -46,6 +46,6 @@ setup(name='bda.ldap',
       },
       entry_points="""
       [console_scripts]
-      testldap = bda.ldap.main:slapd
+      testldap = node.ext.ldap.main:slapd
       """,
       )

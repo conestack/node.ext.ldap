@@ -221,6 +221,10 @@ Changes
 
 2.0 (unreleased)
 ----------------
+- renamed to node.ext.ldap
+  [chaoflow 2011-01-23]
+
+...
 
 - console support for starting/stopping a slapd using the test layers and data
   presets as desired in a temporary environment for application testing.

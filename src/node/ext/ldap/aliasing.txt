@@ -1,0 +1,85 @@
+Use cases for aliasing
+======================
+
+Two user folders where the users of one folder are prefixed.
+------------------------------------------------------------
+
+    >>> users1.keys()
+    ['foo', 'bar']
+    >>> users2.keys()
+    ['foo', 'bar']
+
+    >>> users = Combine((users1, None), (users2, PrefixAliaser('pre-')))
+    >>> users.keys()
+    ['foo', 'bar', 'pre-foo', 'pre-bar']
+    
+    >>> foo = users['foo']
+    >>> prefoo = users['pre-foo']
+
+The children have prefixed names
+
+    >>> foo.__name__
+    'foo'
+    >>> prefoo.__name__
+    'pre-foo'
+
+and the parent needs to be users, as users2 has no clue who 'pre-foo' is
+
+    >>> foo.__parent__ is users
+    True
+    >>> prefoo.__parent__ is users
+    True
+
+    >>> foo.context is users1['foo']
+    True
+    >>> prefoo.context is users2['foo']
+    True
+
+A group that has users and groups as members
+--------------------------------------------
+
+    >>> users.keys()
+    ['foo']
+
+    >>> groups = Groups(users)
+    >>> groups.keys()
+    ['foo', 'bar']
+
+    >>> groupbar = groups['bar']
+    >>> groupbar.keys()
+    ['foo', 'group-foo']
+
+    >>> foo = groupbar['foo']
+    >>> groupfoo = groupbar['group-foo']
+
+The members of the group are the original nodes with the name they are known as
+by their respective container
+
+    >>> foo.__name__
+    'foo'
+    >>> groupfoo.__name__
+    'foo'
+
+The group is not the parent of its children
+
+    >>> foo.__parent__ is not groupbar
+    True
+    >>> groupfoo.__parent__ is not groupbar
+    True
+    >>> foo.__parent__ is users
+    True
+    >>> groupfoo.__parent__ is groups
+    True
+
+Attributes we want to have under a different name
+-------------------------------------------------
+
+    >>> user.attrs.keys()
+    ['foo', 'bar']
+    >>> user.mattrs.keys()
+    ['fop', 'baz']
+
+mattrs is a container that knows
+
+
+Ein Aliasing-Wrapper definiert aliaser für jeden nodespace der children. 
