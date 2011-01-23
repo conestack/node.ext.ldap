@@ -9,13 +9,13 @@ OpenLDAP groupOfNames
 Get an LDAPGroups node and configure it.
 ::
 
-    >>> from bda.ldap.properties import LDAPProps
-    >>> from bda.ldap.groups import LDAPGroups, LDAPGroupsConfig
-    >>> from bda.ldap import SUBTREE
+    >>> from node.ext.ldap.properties import LDAPProps
+    >>> from node.ext.ldap.groups import LDAPGroups, LDAPGroupsConfig
+    >>> from node.ext.ldap import SUBTREE
 
-    >>> from bda.ldap.testing import props
+    >>> from node.ext.ldap.testing import props
 
-XXX: im port from bda.ldap.testing, and put there
+XXX: im port from node.ext.ldap.testing, and put there
 
     >>> gcfg = LDAPGroupsConfig(props,
     ...         baseDN='dc=my-domain,dc=com',

@@ -5,11 +5,11 @@ login attribute also needs to be unique, which will be checked upon calling
 ids() the first time.
 ::
 
-    >>> from bda.ldap.properties import LDAPProps
-    >>> from bda.ldap.users import LDAPUsers, LDAPUsersConfig
-    >>> from bda.ldap import SUBTREE
+    >>> from node.ext.ldap.properties import LDAPProps
+    >>> from node.ext.ldap.users import LDAPUsers, LDAPUsersConfig
+    >>> from node.ext.ldap import SUBTREE
 
-    >>> from bda.ldap.testing import props, ucfg
+    >>> from node.ext.ldap.testing import props, ucfg
     >>> users = LDAPUsers(props, ucfg)
 
 Query all user ids. ``description`` is missing on some.
@@ -154,7 +154,7 @@ id is returned if sucessful, otherwise None.
 Add a user.
 ::
 
-    >>> from bda.ldap import ONELEVEL
+    >>> from node.ext.ldap import ONELEVEL
     >>> adducfg = LDAPUsersConfig(
     ...         baseDN='ou=customers,dc=my-domain,dc=com',
     ...         attrmap={
@@ -265,7 +265,7 @@ XXX - Review: Search users by criteria OR queryFilter. eg. person, top, foo.
 #    >>> users.search(queryFilter=qFilter, criteria=cFilter, exact_match=False, or_search=True)
 #    [u'Meier', u'Schmidt']
 #
-#    >>> from bda.ldap.filter import *
+#    >>> from node.ext.ldap.filter import *
 #    >>> node = FooNode({'groupattr1': 'Member #1', 'groupattr2':'Member #2', 'groupattr3':'Member #3'})
 #    >>> rel_empty = LDAPRelationFilter(node, '')
 #    >>> rel_empty.__str__()
@@ -315,7 +315,7 @@ XXX: tests that need to be moved to good locations
 #      <cn=user1,dc=my-domain,dc=com:Meier - False>
 #      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
 #      <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>
-#    >>> from bda.ldap.node import queryNode
+#    >>> from node.ext.ldap.node import queryNode
 #    >>> queryNode(props, mueller.DN).attrs
 #    {u'objectClass': [u'top', u'person'],
 #     u'telephoneNumber': u'9876',

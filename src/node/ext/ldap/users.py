@@ -14,11 +14,11 @@ except ImportError:
 
 from zodict import AttributedNode
 
-from bda.ldap import LDAPProps, LDAPNode
-from bda.ldap import BASE, ONELEVEL, SUBTREE
-from bda.ldap.debug import debug
-from bda.ldap.interfaces import ILDAPUsersConfig
-from bda.ldap.interfaces import ILDAPGroupsConfig
+from node.ext.ldap import LDAPProps, LDAPNode
+from node.ext.ldap import BASE, ONELEVEL, SUBTREE
+from node.ext.ldap.debug import debug
+from node.ext.ldap.interfaces import ILDAPUsersConfig
+from node.ext.ldap.interfaces import ILDAPGroupsConfig
 
 
 class Principal(AbstractNode):

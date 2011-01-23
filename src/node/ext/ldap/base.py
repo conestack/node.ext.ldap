@@ -2,20 +2,20 @@
 # GNU General Public Licence Version 2 or later
 
 import logging
-logger = logging.getLogger('bda.ldap')
+logger = logging.getLogger('node.ext.ldap')
 
 try:
     import ldap
 except ImportError:
-    raise ImportError, u"bda.ldap requires a working python-ldap installation."
+    raise ImportError, u"node.ext.ldap requires a working python-ldap installation."
 
 from zope.component import queryUtility
 from bda.cache import ICacheManager
-from bda.ldap.interfaces import ICacheProviderFactory
-from bda.ldap.cache import nullcacheProviderFactory
+from node.ext.ldap.interfaces import ICacheProviderFactory
+from node.ext.ldap.cache import nullcacheProviderFactory
 
 # BBB: moved due to circular dependency 2010-10-27
-from bda.ldap.scope import BASE, ONELEVEL, SUBTREE, SCOPES
+from node.ext.ldap.scope import BASE, ONELEVEL, SUBTREE, SCOPES
 
 
 def testLDAPConnectivity(server=None, port=None, props=None):

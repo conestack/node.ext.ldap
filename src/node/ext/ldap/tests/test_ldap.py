@@ -8,14 +8,14 @@ import unittest2 as unittest
 
 from plone.testing import layered
 
-from bda.ldap.testing import LDIF_data
-from bda.ldap.testing import LDIF_principals
+from node.ext.ldap.testing import LDIF_data
+from node.ext.ldap.testing import LDIF_principals
 
 
 DOCFILES = [
     ('../base.txt', LDIF_data),
     ('../session.txt', LDIF_data),
-    ('../node.txt', LDIF_data),
+    ('../bbb.txt', LDIF_data),
     ('../schema.txt', LDIF_data),
     ('../users.txt', LDIF_principals),
 ]

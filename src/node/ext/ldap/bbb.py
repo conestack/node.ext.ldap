@@ -13,14 +13,14 @@ from zodict.interfaces import ICallableNode
 from zodict import LifecycleNode
 from zodict import AttributedNode
 from zodict.node import NodeAttributes
-from bda.ldap import (
+from node.ext.ldap import (
     BASE,
     ONELEVEL,
     LDAPSession,
 )
-from bda.ldap.filter import LDAPFilter, LDAPDictFilter
-from bda.ldap.debug import debug
-from bda.ldap.strcodec import encode, decode, LDAP_CHARACTER_ENCODING
+from node.ext.ldap.filter import LDAPFilter, LDAPDictFilter
+from node.ext.ldap.debug import debug
+from node.ext.ldap.strcodec import encode, decode, LDAP_CHARACTER_ENCODING
 from ldap.functions import explode_dn
 from ldap import (
     MOD_ADD,
@@ -128,7 +128,7 @@ class LDAPNode(LifecycleNode):
             Initial base DN for the root LDAP Node.
         
         ``props`` 
-            ``bda.ldap.LDAPProperties`` object.
+            ``node.ext.ldap.LDAPProperties`` object.
 
         ``attrmap``
             an optional map of attributes, mapped attributes will be available

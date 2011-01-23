@@ -2,7 +2,7 @@
 # GNU General Public Licence Version 2 or later
 
 from zope.interface import implements
-from bda.ldap.interfaces import ILDAPProps
+from node.ext.ldap.interfaces import ILDAPProps
 
 class LDAPServerProperties(object):
     """Wrapper Class for LDAP Server connection properties.

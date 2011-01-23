@@ -1,6 +1,6 @@
 
-    >>> from bda.ldap import LDAPProps, LDAPSchemaInfo
-    >>> from bda.ldap.testing import props
+    >>> from node.ext.ldap import LDAPProps, LDAPSchemaInfo
+    >>> from node.ext.ldap.testing import props
     
     >>> info = LDAPSchemaInfo(props)
     >>> info.baseDN = 'dc=my-domain,dc=com'

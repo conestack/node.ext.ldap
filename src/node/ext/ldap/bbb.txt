@@ -5,9 +5,9 @@ LDAP Nodes
 
 ::
 
-    >>> from bda.ldap import LDAPProps
-    >>> from bda.ldap import LDAPNode
-    >>> from bda.ldap.testing import props
+    >>> from node.ext.ldap import LDAPProps
+    >>> from node.ext.ldap import LDAPNode
+    >>> from node.ext.ldap.testing import props
 
 Create the root node. The Root node expects the initial base DN as name and
 the server properties.
@@ -32,7 +32,7 @@ the server properties.
     u'dc=my-domain,dc=com'
     
     >>> root.ldap_session
-    <bda.ldap.session.LDAPSession object at ...>
+    <node.ext.ldap.session.LDAPSession object at ...>
 
 Check child keys of root.
 ::
@@ -103,7 +103,7 @@ Create a new LDAPNode and add it to customers.
     >>> customer.DN
     u'ou=customer3,ou=customers,dc=my-domain,dc=com'
     >>> root.ldap_session
-    <bda.ldap.session.LDAPSession object at ...>
+    <node.ext.ldap.session.LDAPSession object at ...>
 
 New entry has no childs, but was added to the parent. There
 were an bug where iteration tried to load from ldap at this stage. Lets test
@@ -143,7 +143,7 @@ The added child has been marked as changed as well.
 But there's also the action set that it has to be added.
 ::
 
-    >>> from bda.ldap.node import ACTION_ADD, ACTION_MODIFY, ACTION_DELETE
+    >>> from node.ext.ldap.bbb import ACTION_ADD, ACTION_MODIFY, ACTION_DELETE
   
     >>> customer._action == ACTION_ADD
     True
@@ -253,7 +253,7 @@ But after __call__.
 Changing attributes on a node, where keys are not loaded, yet.
 ::
 
-    >>> from bda.ldap.node import queryNode
+    >>> from node.ext.ldap.bbb import queryNode
     >>> tmp = queryNode(props, 'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com')
     >>> tmp.attrs['description'] = 'Initial Description'
     >>> tmp()
@@ -643,7 +643,7 @@ Using filter and scope. Let's first create a collision.
     >>> root['ou=customer3'] = tmp
     >>> root()
 
-    >>> from bda.ldap import SUBTREE
+    >>> from node.ext.ldap import SUBTREE
     >>> node = LDAPNode(props=props, name=root.DN)
     >>> node._child_scope = SUBTREE
     >>> node.keys()

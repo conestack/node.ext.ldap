@@ -2,13 +2,13 @@
 # GNU General Public Licence Version 2 or later
 
 import ldap
-from bda.ldap import (
+from node.ext.ldap import (
     BASE,
     LDAPConnector,
     LDAPCommunicator,
 )
-from bda.ldap.base import testLDAPConnectivity
-from bda.ldap.strcodec import encode, decode
+from node.ext.ldap.base import testLDAPConnectivity
+from node.ext.ldap.strcodec import encode, decode
 
 class LDAPSession(object):
     
@@ -83,7 +83,7 @@ class LDAPSession(object):
         
         @param dn: Modification DN
         @param data: either list of 3 tuples (look at
-                     bda.ldap.base.LDAPCommunicator.modify for details), or
+                     node.ext.ldap.base.LDAPCommunicator.modify for details), or
                      a dictionary representing the entry or parts of the entry.
         @param replace: if set to True, replace entry at DN entirely with data.
         

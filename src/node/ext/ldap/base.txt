@@ -6,26 +6,26 @@ LDAP credentials.
     >>> binddn = "cn=Manager,dc=my-domain,dc=com"
     >>> bindpw = "secret"
 
-Test bda.ldap base objects.
+Test node.ext.ldap base objects.
 ::
 
-    >>> from bda.ldap import BASE, ONELEVEL, SUBTREE
-    >>> from bda.ldap import LDAPConnector
-    >>> from bda.ldap import LDAPCommunicator
+    >>> from node.ext.ldap import BASE, ONELEVEL, SUBTREE
+    >>> from node.ext.ldap import LDAPConnector
+    >>> from node.ext.ldap import LDAPCommunicator
 
 Create connector.
 ::
 
     >>> connector = LDAPConnector(host, port, binddn, bindpw, cache=False)
     >>> connector
-    <bda.ldap.base.LDAPConnector object at ...>
+    <node.ext.ldap.base.LDAPConnector object at ...>
 
 Create communicator.
 ::
 
     >>> communicator = LDAPCommunicator(connector)
     >>> communicator
-    <bda.ldap.base.LDAPCommunicator object at ...>
+    <node.ext.ldap.base.LDAPCommunicator object at ...>
 
 Bind to directory.
 ::

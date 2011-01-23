@@ -5,12 +5,12 @@ import tempfile
 import time
 from plone.testing import Layer
 from pkg_resources import resource_filename
-from bda.ldap import (
+from node.ext.ldap import (
     ONELEVEL,
     SUBTREE,
     LDAPProps,
 )
-from bda.ldap.users import (
+from node.ext.ldap.users import (
     LDAPUsersConfig,
     LDAPGroupsConfig,
 )
@@ -31,7 +31,7 @@ def resource(string):
 def read_env(layer):
     if layer.get('confdir', None) is not None:
         return
-    tmpdir = os.environ.get('bda.ldap.testldap.env', None)
+    tmpdir = os.environ.get('node.ext.ldap.testldap.env', None)
     if tmpdir is None:
         tmpdir = tempfile.mkdtemp()
         layer['externalpidfile'] = False
@@ -307,7 +307,7 @@ ucfg2000 = LDAPUsersConfig(
 #        member_relation='member:dn',
 #        )
 
-# old ones used by current bda.ldap tests - 2010-11-09
+# old ones used by current node.ext.ldap tests - 2010-11-09
 LDIF_data = Ldif(
         resource('ldifs/data.ldif'),
         name='LDIF_data',

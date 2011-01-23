@@ -1,23 +1,23 @@
-from bda.ldap.scope import (
+from node.ext.ldap.scope import (
     BASE,
     ONELEVEL,
     SUBTREE,
 )
-from bda.ldap.base import (
+from node.ext.ldap.base import (
     LDAPConnector,
     LDAPCommunicator,
 )
-from bda.ldap.strcodec import StrCodec
-from bda.ldap.properties import (
+from node.ext.ldap.strcodec import StrCodec
+from node.ext.ldap.properties import (
     LDAPServerProperties,
     LDAPProps,
 )
-from bda.ldap.session import LDAPSession
-from bda.ldap.node import (
+from node.ext.ldap.session import LDAPSession
+from node.ext.ldap.bbb import (
     LDAPNode,
     queryNode,
 )
-from bda.ldap.schema import LDAPSchemaInfo
+from node.ext.ldap.schema import LDAPSchemaInfo
 # legacy
 import base
 import properties

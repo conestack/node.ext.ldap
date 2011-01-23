@@ -1,17 +1,17 @@
 import os
 import sys
 import tempfile
-from bda.ldap import testing
+from node.ext.ldap import testing
 
 def user_home():
     # XXX: unix only ATM
     return os.getenv('HOME')
 
 def env_path():
-    return os.path.join(user_home(), '.bda.ldap.testldap.env')
+    return os.path.join(user_home(), '.node.ext.ldap.testldap.env')
 
 def ldif_path():
-    return os.path.join(user_home(), '.bda.ldap.testldap.ldif')
+    return os.path.join(user_home(), '.node.ext.ldap.testldap.ldif')
 
 def mk_tmp():
     tmpfolder = tempfile.mkdtemp()
@@ -43,7 +43,7 @@ def cleanup_env():
 
 def startslapd(layer, args):
     mk_ldif(args[0])
-    os.environ['bda.ldap.testldap.env'] = mk_tmp()
+    os.environ['node.ext.ldap.testldap.env'] = mk_tmp()
     for base in layer.defaultBases + layer.__bases__:
         for subbase in base.defaultBases:
             subbase.setUp()
@@ -51,7 +51,7 @@ def startslapd(layer, args):
     layer.setUp()
 
 def stopslapd(layer, args):
-    os.environ['bda.ldap.testldap.env'] = read_tmp()
+    os.environ['node.ext.ldap.testldap.env'] = read_tmp()
     layer.tearDown()
     for base in layer.defaultBases:
         base.tearDown()

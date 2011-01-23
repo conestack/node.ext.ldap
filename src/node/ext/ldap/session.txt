@@ -3,9 +3,9 @@ Test LDAP Session.
 Create ``LDAPServerProperties`` instance.
 ::
 
-    >>> from bda.ldap import BASE, ONELEVEL, SUBTREE
-    >>> from bda.ldap import LDAPProps, LDAPSession
-    >>> from bda.ldap.testing import props
+    >>> from node.ext.ldap import BASE, ONELEVEL, SUBTREE
+    >>> from node.ext.ldap import LDAPProps, LDAPSession
+    >>> from node.ext.ldap.testing import props
 
 Create the session with ``LDAPServerProperties`` as argument.
 
@@ -23,7 +23,7 @@ Set a baseDN and perform LDAP search.
 ::
   
     >>> session.baseDN = 'dc=my-domain,dc=com'
-    >>> from bda.ldap import SUBTREE
+    >>> from node.ext.ldap import SUBTREE
     >>> res = session.search('(objectClass=*)', SUBTREE)
     >>> len(res)
     5
