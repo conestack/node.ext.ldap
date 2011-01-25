@@ -34,9 +34,12 @@ class Principal(AbstractNode):
 
     @property
     def attrs(self):
+        # XXX: lookat
         if self.attraliaser is None:
             return self.context.attrs
-        return AliasedNodespace(self.context.attrs, self.attraliaser)
+        aliaser = AliasedNodespace(self.context.attrs, self.attraliaser)
+        aliaser.allow_non_node_childs = True
+        return aliaser
 
     def __repr__(self):
         return "<%s '%s'>" % (

@@ -175,6 +175,11 @@ Add a user.
 
     >>> from zodict import AttributedNode
     >>> user_vessel = AttributedNode()
+    >>> user_vessel.allow_non_node_childs = True
+    
+    >>> from node.interfaces import INode
+    >>> INode.providedBy(user_vessel)
+    True
 
     >>> users['newuser'] = user_vessel
     Traceback (most recent call last):
@@ -183,6 +188,9 @@ Add a user.
 
     >>> user_vessel.attrs['login'] = 'newcn'
     >>> user_vessel.attrs['id'] = 'newid'
+    
+    >>> users.allow_non_node_childs = True # ???
+    
     >>> users['newid'] = user_vessel
 
     >>> users.ids()
