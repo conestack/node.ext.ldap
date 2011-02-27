@@ -26,7 +26,7 @@ except KeyError:
                        " SLAPD_URIS, LDAP_ADD_BIN, LDAP_DELETE_BIN needed.")
 
 def resource(string):
-    return resource_filename(__name__, 'tests/'+string)
+    return resource_filename(__name__, string)
 
 def read_env(layer):
     if layer.get('confdir', None) is not None:
