@@ -9,11 +9,11 @@ from node.ext.ldap import (
     ONELEVEL,
     SUBTREE,
     LDAPProps,
-)
+    )
 from node.ext.ldap.users import (
     LDAPUsersConfig,
     LDAPGroupsConfig,
-)
+    )
 
 SCHEMA = os.environ.get('SCHEMA')
 try:
@@ -23,7 +23,7 @@ try:
     LDAPDELETEBIN = os.environ['LDAP_DELETE_BIN']
 except KeyError:
     raise RuntimeError("Environment variables SLAPD_BIN,"
-            " SLAPD_URIS, LDAP_ADD_BIN, LDAP_DELETE_BIN needed.")
+                       " SLAPD_URIS, LDAP_ADD_BIN, LDAP_DELETE_BIN needed.")
 
 def resource(string):
     return resource_filename(__name__, 'tests/'+string)
@@ -79,17 +79,17 @@ class SlapdConf(Layer):
         dbdir = self['dbdir']
         slapdconf = self['slapdconf']
         schema = '\n'.join(
-                ["include %s" % (schema,) for schema in self.schema]
-                )
+            ["include %s" % (schema,) for schema in self.schema]
+            )
         # generate config file
         with open(slapdconf, 'w') as slapdconf:
             slapdconf.write(slapdconf_template % dict(
-                binddn=binddn,
-                bindpw=bindpw,
-                confdir=confdir,
-                dbdir=dbdir,
-                schema=schema
-                ))
+                    binddn=binddn,
+                    bindpw=bindpw,
+                    confdir=confdir,
+                    dbdir=dbdir,
+                    schema=schema
+                    ))
         os.mkdir(dbdir)
         self['props'] = props
         print "SlapdConf set up."
@@ -102,10 +102,10 @@ class SlapdConf(Layer):
         print "SlapdConf torn down."
 
 schema = (
-        resource('schema/core.schema'),
-        resource('schema/cosine.schema'),
-        resource('schema/inetorgperson.schema'),
-        )
+    resource('schema/core.schema'),
+    resource('schema/cosine.schema'),
+    resource('schema/inetorgperson.schema'),
+    )
 SLAPD_CONF = SlapdConf(schema)
 
 class LDAPLayer(Layer):
@@ -131,7 +131,7 @@ class Slapd(LDAPLayer):
         print "\nStarting LDAP server: ",
         read_env(self)
         cmd = [self.slapdbin, '-f', self['slapdconf'], '-h', self['uris'],
-                '-d', '0']
+               '-d', '0']
         self.slapd = subprocess.Popen(cmd)
         time.sleep(1)
         print "done."
@@ -164,11 +164,11 @@ class Ldif(LDAPLayer):
     defaultBases = (SLAPD,)
 
     def __init__(self,
-            ldifs=tuple(),
-            ldapaddbin=LDAPADDBIN,
-            ldapdeletebin=LDAPDELETEBIN,
-            ucfg=None,
-            **kws):
+                 ldifs=tuple(),
+                 ldapaddbin=LDAPADDBIN,
+                 ldapdeletebin=LDAPDELETEBIN,
+                 ucfg=None,
+                 **kws):
         super(Ldif, self).__init__(**kws)
         self.ldapaddbin = ldapaddbin
         self.ldapdeletebin = ldapdeletebin
@@ -185,7 +185,7 @@ class Ldif(LDAPLayer):
         for ldif in self.ldifs:
             print "Adding ldif %s: " % (ldif,),
             cmd = [self.ldapaddbin, '-f', ldif, '-x', '-D', self['binddn'], '-w',
-                    self['bindpw'], '-c', '-a', '-H', self['uris']]
+                   self['bindpw'], '-c', '-a', '-H', self['uris']]
             retcode = subprocess.call(cmd)
             print "done."
 
@@ -198,9 +198,9 @@ class Ldif(LDAPLayer):
             print "Removing ldif %s recursively: " % (ldif,),
             with open(ldif) as ldif:
                 dns = [x.strip().split(' ',1)[1]  for x in ldif if
-                        x.startswith('dn: ')]
+                       x.startswith('dn: ')]
             cmd = [self.ldapdeletebin, '-x', '-D', self['binddn'], '-c', '-r',
-                    '-w', self['bindpw'], '-H', self['uris']] + dns
+                   '-w', self['bindpw'], '-H', self['uris']] + dns
             retcode = subprocess.call(cmd, stderr=subprocess.PIPE)
             print "done."
         try:
@@ -213,90 +213,90 @@ user = 'cn=Manager,dc=my-domain,dc=com'
 pwd = 'secret'
 # old: props = LDAPProps('127.0.0.1', 12345, user, pwd, cache=False)
 props = LDAPProps(
-        uri='ldap://127.0.0.1:12345/',
-        user=user,
-        password=pwd,
-        cache=False,
-        )
+    uri='ldap://127.0.0.1:12345/',
+    user=user,
+    password=pwd,
+    cache=False,
+    )
 
 # base users config
 ucfg = LDAPUsersConfig(
-        baseDN='dc=my-domain,dc=com',
-        attrmap={
-            'id': 'sn',
-            'login': 'description',
-            'telephoneNumber': 'telephoneNumber',
-            'rdn': 'ou',
-            'sn': 'sn',
-            },
-        scope=SUBTREE,
-        queryFilter='(objectClass=person)',
-        objectClasses=['person'],
-        )
+    baseDN='dc=my-domain,dc=com',
+    attrmap={
+        'id': 'sn',
+        'login': 'description',
+        'telephoneNumber': 'telephoneNumber',
+        'rdn': 'ou',
+        'sn': 'sn',
+        },
+    scope=SUBTREE,
+    queryFilter='(objectClass=person)',
+    objectClasses=['person'],
+    )
 
 # users config for 300-users data.
 ucfg300 = LDAPUsersConfig(
-        baseDN='ou=users300,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'uid',
-            'login': 'uid',
-            'cn': 'cn',
-            'rdn': 'uid',
-            'sn': 'sn',
-            'mail': 'mail',
-            },
-        scope=ONELEVEL,
-        queryFilter='(objectClass=inetOrgPerson)',
-        objectClasses=['inetOrgPerson'],
-        )
+    baseDN='ou=users300,dc=my-domain,dc=com',
+    attrmap={
+        'id': 'uid',
+        'login': 'uid',
+        'cn': 'cn',
+        'rdn': 'uid',
+        'sn': 'sn',
+        'mail': 'mail',
+        },
+    scope=ONELEVEL,
+    queryFilter='(objectClass=inetOrgPerson)',
+    objectClasses=['inetOrgPerson'],
+    )
 
 # users config for 700-users data.
 ucfg700 = LDAPUsersConfig(
-        baseDN='ou=users700,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'uid',
-            'login': 'uid',
-            'cn': 'cn',
-            'rdn': 'uid',
-            'sn': 'sn',
-            'mail': 'mail',
-            },
-        scope=ONELEVEL,
-        queryFilter='(objectClass=inetOrgPerson)',
-        objectClasses=['inetOrgPerson'],
-        )
+    baseDN='ou=users700,dc=my-domain,dc=com',
+    attrmap={
+        'id': 'uid',
+        'login': 'uid',
+        'cn': 'cn',
+        'rdn': 'uid',
+        'sn': 'sn',
+        'mail': 'mail',
+        },
+    scope=ONELEVEL,
+    queryFilter='(objectClass=inetOrgPerson)',
+    objectClasses=['inetOrgPerson'],
+    )
 
 # users config for 1000-users data.
 ucfg1000 = LDAPUsersConfig(
-        baseDN='ou=users1000,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'uid',
-            'login': 'uid',
-            'cn': 'cn',
-            'rdn': 'uid',
-            'sn': 'sn',
-            'mail': 'mail',
-            },
-        scope=ONELEVEL,
-        queryFilter='(objectClass=inetOrgPerson)',
-        objectClasses=['inetOrgPerson'],
-        )
+    baseDN='ou=users1000,dc=my-domain,dc=com',
+    attrmap={
+        'id': 'uid',
+        'login': 'uid',
+        'cn': 'cn',
+        'rdn': 'uid',
+        'sn': 'sn',
+        'mail': 'mail',
+        },
+    scope=ONELEVEL,
+    queryFilter='(objectClass=inetOrgPerson)',
+    objectClasses=['inetOrgPerson'],
+    )
 
 # users config for 2000-users data.
 ucfg2000 = LDAPUsersConfig(
-        baseDN='ou=users2000,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'uid',
-            'login': 'uid',
-            'cn': 'cn',
-            'rdn': 'uid',
-            'sn': 'sn',
-            'mail': 'mail',
-            },
-        scope=ONELEVEL,
-        queryFilter='(objectClass=inetOrgPerson)',
-        objectClasses=['inetOrgPerson'],
-        )
+    baseDN='ou=users2000,dc=my-domain,dc=com',
+    attrmap={
+        'id': 'uid',
+        'login': 'uid',
+        'cn': 'cn',
+        'rdn': 'uid',
+        'sn': 'sn',
+        'mail': 'mail',
+        },
+    scope=ONELEVEL,
+    queryFilter='(objectClass=inetOrgPerson)',
+    objectClasses=['inetOrgPerson'],
+    )
 
 # base groups config
 #gcfg_openldap = LDAPGroupsConfig(
@@ -309,52 +309,52 @@ ucfg2000 = LDAPUsersConfig(
 
 # old ones used by current node.ext.ldap tests - 2010-11-09
 LDIF_data = Ldif(
-        resource('ldifs/data.ldif'),
-        name='LDIF_data',
-        ucfg=ucfg,
-        )
+    resource('ldifs/data.ldif'),
+    name='LDIF_data',
+    ucfg=ucfg,
+    )
 LDIF_principals = Ldif(
-        resource('ldifs/principals.ldif'),
-        bases=(LDIF_data,),
-        name='LDIF_principals',
-        ucfg=ucfg,
-        )
+    resource('ldifs/principals.ldif'),
+    bases=(LDIF_data,),
+    name='LDIF_principals',
+    ucfg=ucfg,
+    )
 
 LDIF_data_old_props = Ldif(
-        resource('ldifs/data.ldif'),
-        name='LDIF_data',
-        ucfg=ucfg,
-        )
+    resource('ldifs/data.ldif'),
+    name='LDIF_data',
+    ucfg=ucfg,
+    )
 LDIF_principals_old_props = Ldif(
-        resource('ldifs/principals.ldif'),
-        bases=(LDIF_data,),
-        name='LDIF_principals',
-        ucfg=ucfg,
-        )
+    resource('ldifs/principals.ldif'),
+    bases=(LDIF_data,),
+    name='LDIF_principals',
+    ucfg=ucfg,
+    )
 
 # new ones
 LDIF_base = Ldif(resource('ldifs/base.ldif'))
 LDIF_users300 = Ldif(
-        resource('ldifs/users300.ldif'),
-        bases=(LDIF_base,),
-        name="LDIF_users300",
-        ucfg=ucfg300,
-        )
+    resource('ldifs/users300.ldif'),
+    bases=(LDIF_base,),
+    name="LDIF_users300",
+    ucfg=ucfg300,
+    )
 LDIF_users700 = Ldif(
-        resource('ldifs/users700.ldif'),
-        bases=(LDIF_base,),
-        name="LDIF_users700",
-        ucfg=ucfg700,
-        )
+    resource('ldifs/users700.ldif'),
+    bases=(LDIF_base,),
+    name="LDIF_users700",
+    ucfg=ucfg700,
+    )
 LDIF_users1000 = Ldif(
-        resource('ldifs/users1000.ldif'),
-        bases=(LDIF_base,),
-        name="LDIF_users1000",
-        ucfg=ucfg1000,
-        )
+    resource('ldifs/users1000.ldif'),
+    bases=(LDIF_base,),
+    name="LDIF_users1000",
+    ucfg=ucfg1000,
+    )
 LDIF_users2000 = Ldif(
-        resource('ldifs/users2000.ldif'),
-        bases=(LDIF_base,),
-        name="LDIF_users2000",
-        ucfg=ucfg2000,
-        )
+    resource('ldifs/users2000.ldif'),
+    bases=(LDIF_base,),
+    name="LDIF_users2000",
+    ucfg=ucfg2000,
+    )
