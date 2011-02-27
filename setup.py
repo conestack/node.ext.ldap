@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '2.0dev'
+version = '1.9dev'
 shortdesc = "Extending the nodespace towards LDAP"
 longdesc = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 longdesc += open(os.path.join(os.path.dirname(__file__), 'LICENSE.rst')).read()
@@ -17,7 +17,7 @@ setup(name='node.ext.ldap',
             'License :: OSI Approved :: GNU General Public License (GPL)',
             'Operating System :: OS Independent',
             'Programming Language :: Python',
-            'Topic :: Internet :: WWW/HTTP :: Dynamic Content',            
+            'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
       ], # Get strings from http://www.python.org/pypi?%3Aaction=list_classifiers
       keywords='',
       author='BlueDynamics Alliance',
@@ -41,7 +41,7 @@ setup(name='node.ext.ldap',
               'plone.testing',
               'unittest2',
               'zope.configuration',
-              'zope.testing',        
+              'zope.testing',
           ]
       },
       entry_points="""

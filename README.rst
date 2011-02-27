@@ -219,8 +219,9 @@ TODO
 Changes
 =======
 
-2.0 (unreleased)
+1.9 (unreleased)
 ----------------
+
 - renamed to node.ext.ldap
   [chaoflow 2011-01-23]
 
