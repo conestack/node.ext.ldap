@@ -1,17 +1,23 @@
-* Tasks                                                  :node:ext:ldap:osha:
-** NEXT group ldif: slim one for node.ext.ldap tests
+* Tasks                                        :node_ext_ldap:node:ldap:osha:
+** DONE group ldif: slim one for node.ext.ldap tests
+CLOSED: [2011-02-28 Mon 05:20]
 2 groups
 1 user member in both
 1 in one
-1 in other
 1 in none
-users with memberOf attributes
-** TODO group ldif: 100 groups for cone.ugm to have something to display
-need to think what kind of group concept
-probably groupOfNames with memberOf
-also users300 + memberOf attribute
-all together as one layer
-couple of groups with varying amount of members
-** TODO groups folder to list groups
-** TODO user.groups.keys()
+users with memberOf attributes --> handled by an ovelay exclusively
+memberOf does not work, now without
+** DONE check whether overlay collides with other tests
+CLOSED: [2011-02-28 Mon 06:58]
+if collision, define extra database and extra slapd layer
+** NEXT groups folder to list groups
 ** TODO group.keys()
+** TODO user.groups.keys()
+** TODO redundant_100_100.ldif for cone.ugm to have something to display
+redundant, 100 groups, 100 users
+** TODO figure out whats wrong with memberOf
+** TODO redundant_100000_100000.ldif for cone.ugm to chew on
+** TODO redundant_gig.ldif
+** TODO group in group support
+** TODO posix.ldif
+** TODO posix group support

@@ -42,6 +42,7 @@ def read_env(layer):
     layer['slapdconf'] = "%s/slapd.conf" % (layer['confdir'],)
     layer['binddn'] = "cn=Manager,dc=my-domain,dc=com"
     layer['bindpw'] = "secret"
+    print tmpdir
 
 slapdconf_template = """\
 %(schema)s
@@ -56,6 +57,7 @@ rootpw		%(bindpw)s
 directory	%(dbdir)s
 # Indices to maintain
 index	objectClass	eq
+overlay memberof
 """
 
 class SlapdConf(Layer):
@@ -168,19 +170,21 @@ class Ldif(LDAPLayer):
                  ldapaddbin=LDAPADDBIN,
                  ldapdeletebin=LDAPDELETEBIN,
                  ucfg=None,
+                 gcfg=None,
                  **kws):
         super(Ldif, self).__init__(**kws)
         self.ldapaddbin = ldapaddbin
         self.ldapdeletebin = ldapdeletebin
         self.ldifs = type(ldifs) is tuple and ldifs or (ldifs,)
-        #self['ucfg'] = ucfg
         self.ucfg = ucfg
+        self.gcfg = gcfg
 
     def setUp(self, args=None):
         """run ldapadd for list of ldifs
         """
         read_env(self)
         self['ucfg'] = self.ucfg
+        self['gcfg'] = self.gcfg
         print
         for ldif in self.ldifs:
             print "Adding ldif %s: " % (ldif,),
@@ -203,10 +207,9 @@ class Ldif(LDAPLayer):
                    '-w', self['bindpw'], '-H', self['uris']] + dns
             retcode = subprocess.call(cmd, stderr=subprocess.PIPE)
             print "done."
-        try:
-            del self['ucfg']
-        except KeyError:
-            pass
+        for key in ('ucfg', 'gcfg'):
+            if key in self:
+                del self[key]
 
 # testing ldap props
 user = 'cn=Manager,dc=my-domain,dc=com'
@@ -333,7 +336,10 @@ LDIF_principals_old_props = Ldif(
     )
 
 # new ones
-LDIF_base = Ldif(resource('ldifs/base.ldif'))
+LDIF_base = Ldif(
+    resource('ldifs/base.ldif'),
+    name="LDIF_base",
+    )
 LDIF_users300 = Ldif(
     resource('ldifs/users300.ldif'),
     bases=(LDIF_base,),
@@ -357,4 +363,34 @@ LDIF_users2000 = Ldif(
     bases=(LDIF_base,),
     name="LDIF_users2000",
     ucfg=ucfg2000,
+    )
+
+# users and groups
+LDIF_ug_groupOfNames = Ldif(
+    resource('ldifs/ug-groupOfNames.ldif'),
+    bases=(LDIF_base,),
+    name="LDIF_ug_groupOfNames",
+    ucfg=LDAPUsersConfig(
+        baseDN='ou=users,ou=groupOfNames,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'uid',
+            'login': 'cn',
+            'rdn': 'uid',
+            'cn': 'cn',
+            'sn': 'sn',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=inetOrgPerson)',
+        objectClasses=['inetOrgPerson'],
+        ),
+    gcfg=LDAPGroupsConfig(
+        baseDN='ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'cn',
+            'rdn': 'cn',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=groupOfNames)',
+        objectClasses=['groupOfNames'],
+        ),
     )

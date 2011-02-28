@@ -1,0 +1,62 @@
+# groups and users with redundant membership information
+# - member attribute on groups
+# - memberOf attribute on users
+#
+# cn=nobody is a member of every group, ignored and enables otherwise
+# empty groups (see cn=group0,...).
+# 
+# XXX:
+# - group in group
+# - how does openldap handle memberOf with group in group?
+# - do we need to list also supplemented objectClasses or would
+#   a filter for objectClass=top work atm?
+
+dn: ou=groupOfNames,dc=my-domain,dc=com
+ou: groupOfNames
+objectClass: organizationalUnit
+
+dn: ou=users,ou=groupOfNames,dc=my-domain,dc=com
+ou: users
+objectClass: organizationalUnit
+
+dn: uid=user0,ou=users,ou=groupOfNames,dc=my-domain,dc=com
+uid: user0
+objectClass: inetOrgPerson
+cn: cn0
+sn: sn0
+userPassword: password0
+
+dn: uid=user1,ou=users,ou=groupOfNames,dc=my-domain,dc=com
+uid: user1
+objectClass: inetOrgPerson
+cn: cn1
+sn: sn1
+userPassword: password1
+
+dn: uid=user2,ou=users,ou=groupOfNames,dc=my-domain,dc=com
+uid: user2
+objectClass: inetOrgPerson
+cn: cn2
+sn: sn2
+userPassword: password2
+
+dn: ou=groups,ou=groupOfNames,dc=my-domain,dc=com
+ou: groups
+objectClass: organizationalUnit
+
+dn: cn=group0,ou=groups,ou=groupOfNames,dc=my-domain,dc=com
+cn: group0
+objectClass: groupOfNames
+member: cn=nobody
+
+dn: cn=group1,ou=groups,ou=groupOfNames,dc=my-domain,dc=com
+cn: group1
+objectClass: groupOfNames
+member: cn=nobody
+member: uid=user1,ou=users,ou=groupOfNames,dc=my-domain,dc=com
+
+dn: cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com
+cn: group2
+objectClass: groupOfNames
+member: uid=user1,ou=users,ou=groupOfNames,dc=my-domain,dc=com
+member: uid=user2,ou=users,ou=groupOfNames,dc=my-domain,dc=com
