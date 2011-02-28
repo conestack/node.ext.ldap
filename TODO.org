@@ -12,11 +12,15 @@ CLOSED: [2011-02-28 Mon 06:58]
 if collision, define extra database and extra slapd layer
 ** DONE groups folder to list groups
 CLOSED: [2011-02-28 Mon 08:43]
-** NEXT group.keys()
-** TODO user.groups.keys()
-** TODO redundant_100_100.ldif for cone.ugm to have something to display
+** DONE group.keys()
+CLOSED: [2011-02-28 Mon 18:46]
+** DONE redundant_100_100.ldif for cone.ugm to have something to display
+CLOSED: [2011-02-28 Mon 18:46]
 redundant, 100 groups, 100 users
+** DONE user.groups.keys()
+CLOSED: [2011-02-28 Mon 19:32]
 ** TODO figure out whats wrong with memberOf
+disabled for now, as it takes very long to add groups with many members
 ** TODO redundant_100000_100000.ldif for cone.ugm to chew on
 ** TODO redundant_gig.ldif
 ** TODO group in group support
@@ -29,6 +33,7 @@ whatever feels better.
 ** TODO rework tests and ldifs to target isolated aspects
 switch to o=nodity
 isolate into plumbing parts
-** TODO potentially multi-valued attrs always as list?
+** TODO potentially multi-valued attrs always as list!
+DEPS: schema parsing
   [2011-02-28 Mon]
   [[file:~/.repos/node.ext.ldap/src/node/ext/ldap/outbox.py::def%20__iter__(self):][file:~/.repos/node.ext.ldap/src/node/ext/ldap/outbox.py::def __iter__(self):]]

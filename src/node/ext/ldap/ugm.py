@@ -1,3 +1,4 @@
+from node.base import AbstractNode
 from zope.interface import implements
 
 from node.ext.ldap.bbb import LDAPNode
@@ -62,12 +63,51 @@ class Principals(_Principals):
         return self.context._seckeys['dn'][dn]
 
 
+class _UserGroups(AbstractNode):
+    """did I mention dynamic plumbing?
+
+    return only groups the user is a member of
+    """
+    def __init__(self, context, user):
+        self.context = context
+        self.user = user
+
+    def __contains__(self, key):
+        for id, group in self.context.iteritems():
+            if key == id:
+                if self.user.id in group:
+                    return True
+        return False
+
+    def __delitem__(self, key):
+        del self.context[key][self.user.id]
+
+    def __getitem__(self, key):
+        if key not in self:
+            raise KeyError(key)
+        return self.context[key]
+
+    def __iter__(self):
+        for id, group in self.context.iteritems():
+            if self.user.id in group:
+                yield id
+
+    def add(self, group):
+        if group.id in self:
+            return
+        self.context[group.id].add(self.user)
+
 class User(_User):
     """User that knows to fetch group info from ldap
 
     XXX: feels like dynamic plumbing and no specific class here or
     maybe static plumbing
     """
+    @property
+    def groups(self):
+        """A filtered view of all groups
+        """
+        return _UserGroups(self.__parent__.groups, user=self)
 
 
 class Users(Principals):

@@ -11,18 +11,15 @@ Test for users and groups defined in ug-groupOfNames.ldif::
     >>> user1 = users['uid1']
     >>> user2 = users['uid2']
 
-The users themselves are generic users, not specific to LDAP::
-
     >>> user0
     <User 'uid0'>
     >>> user0.__class__
     <class 'node.ext.ldap.ugm.User'>
 
-    #     >>> user0.groups.keys()
-    #     >>> user1.groups.keys()
-    #     >>> user2.groups.keys()
-
     >>> groups = Groups(layer['props'], layer['gcfg'])
+
+Groups needs to know where to fetch users from::
+
     >>> groups.users = users
     >>> groups.keys()
     [u'group0', u'group1', u'group2']
@@ -30,8 +27,6 @@ The users themselves are generic users, not specific to LDAP::
     >>> group0 = groups['group0']
     >>> group1 = groups['group1']
     >>> group2 = groups['group2']
-
-The groups themselves are generic groups, not specific to LDAP::
 
     >>> group0
     <Group 'group0'>
@@ -87,4 +82,35 @@ Members are removed via ``delitem``::
     >>> groups_fresh = Groups(layer['props'], layer['gcfg'])
     >>> groups_fresh.users = users
     >>> groups_fresh['group1'].keys()
+    [u'uid1']
+
+Once users knows groups, a user knows its groups::
+
+    >>> users.groups = groups
+    >>> user0.groups.keys()
+    []
+    >>> user1.groups.keys()
+    [u'group1', u'group2']
+    >>> user2.groups.keys()
+    [u'group2']
+
+and is able to return them::
+
+    >>> user0.groups['group1']
+    Traceback (most recent call last):
+      ...
+    KeyError: 'group1'
+
+    >>> user1.groups['group1']
+    <Group 'group1'>
+
+and can remove and add itself to them::
+
+    >>> group1.keys()
+    [u'uid1']
+    >>> user2.groups.add(group1)
+    >>> group1.keys()
+    [u'uid1', u'uid2']
+    >>> del user2.groups[group1.id]
+    >>> group1.keys()
     [u'uid1']
