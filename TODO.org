@@ -10,8 +10,9 @@ memberOf does not work, now without
 ** DONE check whether overlay collides with other tests
 CLOSED: [2011-02-28 Mon 06:58]
 if collision, define extra database and extra slapd layer
-** NEXT groups folder to list groups
-** TODO group.keys()
+** DONE groups folder to list groups
+CLOSED: [2011-02-28 Mon 08:43]
+** NEXT group.keys()
 ** TODO user.groups.keys()
 ** TODO redundant_100_100.ldif for cone.ugm to have something to display
 redundant, 100 groups, 100 users

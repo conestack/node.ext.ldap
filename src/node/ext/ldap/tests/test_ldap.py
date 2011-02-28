@@ -10,6 +10,7 @@ from plone.testing import layered
 
 from node.ext.ldap.testing import LDIF_data
 from node.ext.ldap.testing import LDIF_principals
+from node.ext.ldap.testing import LDIF_ug_groupOfNames
 
 
 DOCFILES = [
@@ -18,6 +19,7 @@ DOCFILES = [
     ('../bbb.txt', LDIF_data),
     ('../schema.txt', LDIF_data),
     ('../users.txt', LDIF_principals),
+    ('ug-groupOfNames.txt', LDIF_ug_groupOfNames),
     ]
 
 optionflags = \

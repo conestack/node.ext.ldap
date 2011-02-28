@@ -58,5 +58,6 @@ member: uid=user1,ou=users,ou=groupOfNames,dc=my-domain,dc=com
 dn: cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com
 cn: group2
 objectClass: groupOfNames
+member: cn=nobody
 member: uid=user1,ou=users,ou=groupOfNames,dc=my-domain,dc=com
 member: uid=user2,ou=users,ou=groupOfNames,dc=my-domain,dc=com
