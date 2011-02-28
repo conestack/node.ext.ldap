@@ -77,12 +77,14 @@ member does noting::
 Let's take a fresh view on ldap whether this really happened::
 
     >>> groups_fresh = Groups(layer['props'], layer['gcfg'])
-    >>> groups['group1'].keys()
+    >>> groups_fresh.users = users
+    >>> groups_fresh['group1'].keys()
     [u'uid1', u'uid0']
 
 Members are removed via ``delitem``::
 
     >>> del group1['uid0']
     >>> groups_fresh = Groups(layer['props'], layer['gcfg'])
-    >>> groups['group1'].keys()
+    >>> groups_fresh.users = users
+    >>> groups_fresh['group1'].keys()
     [u'uid1']

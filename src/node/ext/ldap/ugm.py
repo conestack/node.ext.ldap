@@ -145,6 +145,7 @@ class Group(_Group):
         members = self._memberdns
         members.remove(dn)
         self.context.attrs['member'] = members
+        self.context()
 
     def __getitem__(self, key):
         # XXX: only users for now, we are not parent
