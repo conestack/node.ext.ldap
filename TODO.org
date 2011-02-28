@@ -1,0 +1,17 @@
+* Tasks                                                  :node:ext:ldap:osha:
+** NEXT group ldif: slim one for node.ext.ldap tests
+2 groups
+1 user member in both
+1 in one
+1 in other
+1 in none
+users with memberOf attributes
+** TODO group ldif: 100 groups for cone.ugm to have something to display
+need to think what kind of group concept
+probably groupOfNames with memberOf
+also users300 + memberOf attribute
+all together as one layer
+couple of groups with varying amount of members
+** TODO groups folder to list groups
+** TODO user.groups.keys()
+** TODO group.keys()

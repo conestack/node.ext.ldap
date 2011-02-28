@@ -1,9 +1,0 @@
-- support groups, no nodes, but just to make it work with plone (read members
-  as group attributes)
-
-- pasldap implementation for users readonly
-- pasldap for groups based on simple groups
-- pasldap for user rw
-
-- support groups as nodes (needs multiple child backends + attr backend)
-- pasldap for node-based groups
