@@ -34,7 +34,7 @@ ACTION_DELETE = 2
 
 def queryNode(props, dn):
     """Query an ldap entry and return as LDAPNode.
-    
+
     ``props``
         ``LDAPProps`` instance
     ``dn``
@@ -52,7 +52,7 @@ def queryNode(props, dn):
 
 # XXX: m(
 class LDAPNodeAttributes(NodeAttributes):
-    
+
     def __init__(self, node):
         super(LDAPNodeAttributes, self).__init__(node)
         self.load()
@@ -83,7 +83,7 @@ class LDAPNodeAttributes(NodeAttributes):
         if self._node._action not in [ACTION_ADD, ACTION_DELETE]:
             self._node._action = None
             self._node.changed = False
-                
+
     def __setitem__(self, key, val):
         if isinstance(key, str):
             key = decode(key)
@@ -91,21 +91,21 @@ class LDAPNodeAttributes(NodeAttributes):
             val = decode(val)
         super(LDAPNodeAttributes, self).__setitem__(key, val)
         self._set_attrs_modified()
-    
+
     def __delitem__(self, key):
         if isinstance(key, str):
             key = decode(key)
         super(LDAPNodeAttributes, self).__delitem__(key)
         self._set_attrs_modified()
-    
+
     def __getattribute__(self, name):
         # XXX: We don't support node.attrs.foo syntax (yet)
         return object.__getattribute__(self, name)
-    
+
     def __setattr__(self, name, value):
         # XXX: We don't support node.attrs.foo = 1 syntax (yet)
         object.__setattr__(self, name, value)
-    
+
     def _set_attrs_modified(self):
         self.changed = True
         if self._node._action not in [ACTION_ADD, ACTION_DELETE]:
@@ -118,16 +118,16 @@ class LDAPNode(LifecycleNode):
     """
     implements(ICallableNode)
     attributes_factory = LDAPNodeAttributes
-    
+
     def __init__(self, name=None, props=None, attrmap=None, child_attrmap=None):
         """LDAP Node expects ``name`` and ``props`` arguments for the root LDAP
         Node or nothing for children. ``attrmap`` is an optional rood node
         argument.
-        
-        ``name`` 
+
+        ``name``
             Initial base DN for the root LDAP Node.
-        
-        ``props`` 
+
+        ``props``
             ``node.ext.ldap.LDAPProperties`` object.
 
         ``attrmap``
@@ -142,7 +142,7 @@ class LDAPNode(LifecycleNode):
             name = name.decode(LDAP_CHARACTER_ENCODING)
         self.__name__ = name
         self.__parent__ = None
-        self._session = None        
+        self._session = None
         self._changed = False
         self._action = None
         self._seckey_attrs = None
@@ -170,7 +170,7 @@ class LDAPNode(LifecycleNode):
         self._keys = None
         self._seckeys = None
         self._child_dns = None
-            
+
     # This is really ldap
     @property
     def DN(self):
@@ -352,17 +352,17 @@ class LDAPNode(LifecycleNode):
         except TypeError:
             # no keys loaded
             pass
-    
+
     def sort(self, cmp=None, key=None, reverse=False):
         # XXX: a sort working only on the keys could work without wakeup -->
         # sortonkeys()
-        #  first wake up all entries 
+        #  first wake up all entries
         dummy = self.items()
         if not dummy:
             return
         # second sort them
         self._keys.sort(cmp=cmp, key=key, reverse=reverse)
-    
+
     def __getitem__(self, key):
         """Here nodes are created for keys, iff they do not exist already
         """
@@ -422,14 +422,14 @@ class LDAPNode(LifecycleNode):
             # a value with key is already in the directory
             self._keys[key]
         except KeyError:
-            # the value is not yet in the directory 
+            # the value is not yet in the directory
             val._action = ACTION_ADD
             val.changed = True
-            self.changed = True 
+            self.changed = True
         self._notify_suppress = True
         super(LDAPNode, self).__setitem__(key, val)
         self._notify_suppress = False
-        self._keys[key] = val    
+        self._keys[key] = val
         if self._key_attr == 'rdn':
             rdn = key
         else:
@@ -442,9 +442,9 @@ class LDAPNode(LifecycleNode):
                     x for x in current_ocs + needed_ocs if x not in current_ocs
                     ]
         if val._action == ACTION_ADD:
-            objectEventNotify(self.events['added'](val, newParent=self, 
+            objectEventNotify(self.events['added'](val, newParent=self,
                                                    newName=key))
-    
+
     def __delitem__(self, key):
         """Do not delete immediately. Just mark LDAPNode to be deleted and
         remove key from self._keys.
@@ -461,7 +461,7 @@ class LDAPNode(LifecycleNode):
         except AttributeError:
             self._deleted = list()
             self._deleted.append(val)
-    
+
     def __call__(self):
         if self.changed and self._action is not None:
             if self._action == ACTION_ADD:
@@ -475,13 +475,13 @@ class LDAPNode(LifecycleNode):
             except KeyError:
                 pass
             self.changed = False
-            self._action = None                    
+            self._action = None
         if self._keys is None:
             return
         for node in self._keys.values() + getattr(self, '_deleted', []):
             if node is not None and node.changed:
                 node()
-    
+
     def printtree(self, indent=0):
         print "%s%s" % (indent * ' ', self.noderepr)
         for node in self._node_impl().itervalues(self):
@@ -499,21 +499,21 @@ class LDAPNode(LifecycleNode):
         if self.__parent__ is None:
             return "<%s - %s>" % (dn, self.changed)
         return "<%s:%s - %s>" % (dn, name, self.changed)
-    
+
     __str__ = __repr__
-    
+
     @property
     def noderepr(self):
         return repr(self)
-    
+
     def _ldap_add(self):
         """adds self to the ldap directory.
         """
         self._session.add(self.DN, self.attributes)
-    
+
     def _ldap_modify(self):
         """modifies attributs of self on the ldap directory.
-        """ 
+        """
         modlist = list()
         orgin = self.attributes_factory(self)
         for key in orgin:
@@ -532,7 +532,7 @@ class LDAPNode(LifecycleNode):
                 modlist.append(moddef)
         if modlist:
             self._session.modify(self.DN, modlist)
-    
+
     def _ldap_delete(self):
         """delete self from the ldap-directory.
         """
@@ -541,7 +541,7 @@ class LDAPNode(LifecycleNode):
         # XXX: Shouldnt this raise a KeyError
         del self.__parent__._keys[self.__name__]
         self._session.delete(self.DN)
-    
+
     def _get_changed(self):
         return self._changed
 
@@ -582,9 +582,9 @@ class LDAPNode(LifecycleNode):
         # And propagate to parent
         if self._changed is not oldval and self.__parent__ is not None:
             self.__parent__.changed = self._changed
-            
-    changed = property(_get_changed, _set_changed) 
-    
+
+    changed = property(_get_changed, _set_changed)
+
     @property
     def ldap_session(self):
         return self._session
