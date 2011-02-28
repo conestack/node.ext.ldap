@@ -29,3 +29,6 @@ whatever feels better.
 ** TODO rework tests and ldifs to target isolated aspects
 switch to o=nodity
 isolate into plumbing parts
+** TODO potentially multi-valued attrs always as list?
+  [2011-02-28 Mon]
+  [[file:~/.repos/node.ext.ldap/src/node/ext/ldap/outbox.py::def%20__iter__(self):][file:~/.repos/node.ext.ldap/src/node/ext/ldap/outbox.py::def __iter__(self):]]

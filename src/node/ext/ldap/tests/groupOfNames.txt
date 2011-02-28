@@ -16,15 +16,14 @@ The users themselves are generic users, not specific to LDAP::
      >>> user0
      <User 'uid0'>
      >>> user0.__class__
-     <class 'node.ext.ldap.outbox.User'>
-
-     # XXX: ^^^ class will be: node.ext.ugm.User
+     <class 'node.ext.ldap.ugm.User'>
 
      #     >>> user0.groups.keys()
      #     >>> user1.groups.keys()
      #     >>> user2.groups.keys()
 
      >>> groups = Groups(layer['props'], layer['gcfg'])
+     >>> groups.users = users
      >>> groups.keys()
      [u'group0', u'group1', u'group2']
 
@@ -37,16 +36,23 @@ The groups themselves are generic groups, not specific to LDAP::
      >>> group0
      <Group 'group0'>
      >>> group0.__class__
-     <class 'node.ext.ldap.outbox.Group'>
-     
-XXX: Does not work yet::
+     <class 'node.ext.ldap.ugm.Group'>
+
+A group returns the members ids as keys::     
 
      >>> group0.keys()
      []
      >>> group1.keys()
-     []
+     [u'uid1']
      >>> group2.keys()
-     []
+     [u'uid1', u'uid2']
+
+The member users are fetched via ``getitem``::
+
+Members are added via XXX::
+
+Members are removed via ``delitem``::
+
 
 The raw member info is there::
 

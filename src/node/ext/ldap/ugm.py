@@ -6,9 +6,9 @@ from node.ext.ldap.interfaces import ILDAPGroupsConfig as IGroupsConfig
 from node.ext.ldap.interfaces import ILDAPUsersConfig as IUsersConfig
 from node.ext.ldap.properties import LDAPProps
 from node.ext.ldap.scope import ONELEVEL
-from node.ext.ldap.outbox import Group
+from node.ext.ldap.outbox import Group as _Group
 from node.ext.ldap.outbox import Principals as _Principals
-from node.ext.ldap.outbox import User
+from node.ext.ldap.outbox import User as _User
 
 
 class PrincipalsConfig(object):
@@ -52,6 +52,22 @@ class Principals(_Principals):
         self.context._child_objectClasses = cfg.objectClasses
         self.context._key_attr = cfg.attrmap['id']
         self.context._rdn_attr = cfg.attrmap['rdn']
+        self.context._seckey_attrs = ('dn',)
+
+    def idbydn(self, dn):
+        """return a principals id for a given dn
+
+        raise KeyError if not enlisted
+        """
+        return self.context._seckeys['dn'][dn]
+
+
+class User(_User):
+    """User that knows to fetch group info from ldap
+
+    XXX: feels like dynamic plumbing and no specific class here or
+    maybe static plumbing
+    """
 
 
 class Users(Principals):
@@ -62,7 +78,7 @@ class Users(Principals):
     def __init__(self, props, cfg):
         super(Users, self).__init__(props, cfg)
         if cfg.attrmap['login'] != cfg.attrmap['id']:
-            self.context._seckey_attrs = (cfg.attrmap['login'],)
+            self.context._seckey_attrs += (cfg.attrmap['login'],)
 
     # XXX: do we really need this?
     # XXX: login is a mapped attr, we could simply search on it
@@ -105,6 +121,20 @@ class Users(Principals):
         self.context._session.passwd(self.context.child_dn(id), oldpw, newpw)
 
 
+class Group(_Group):
+    """Some ldap specifics for groups
+    """
+    def __iter__(self):
+        # XXX: multi-valued attrs should always be lists
+        members = self.context.attrs['member']
+        if type(members) not in (list, tuple):
+            members = (members,)
+        for dn in members:
+            if dn == "cn=nobody":
+                continue
+            yield self.__parent__.idbydn(dn)
+
+
 class Groups(Principals):
     """Manage LDAP groups
 
@@ -120,3 +150,7 @@ class Groups(Principals):
         arbitrary: group_attr:user_attr  |   &    ()
     """
     principal_factory = Group
+
+    def idbydn(self, dn):
+        # XXX for now we only check in the users folder
+        return self.users.idbydn(dn)
