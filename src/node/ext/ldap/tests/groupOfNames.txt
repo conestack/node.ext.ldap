@@ -57,7 +57,32 @@ XXX: This is not yet true as users creates a new node on every getitem::
     >>> group1['uid1'] is user1
     False
 
-Members are added via XXX::
+Querying a group for a non-member results in a KeyError::
+
+    >>> group0['uid1']
+    Traceback (most recent call last):
+      ...
+    KeyError: 'uid1'
+
+Members are added via ``add``, adding a member that is already a
+member does noting::
+
+    >>> group1.add(user0)
+    >>> group1.add(user0)
+    >>> group1.keys()
+    [u'uid1', u'uid0']
+    >>> group1['uid0']
+    <User 'uid0'>
+
+Let's take a fresh view on ldap whether this really happened::
+
+    >>> groups_fresh = Groups(layer['props'], layer['gcfg'])
+    >>> groups['group1'].keys()
+    [u'uid1', u'uid0']
 
 Members are removed via ``delitem``::
 
+    >>> del group1['uid0']
+    >>> groups_fresh = Groups(layer['props'], layer['gcfg'])
+    >>> groups['group1'].keys()
+    [u'uid1']

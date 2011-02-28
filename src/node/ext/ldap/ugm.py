@@ -124,20 +124,52 @@ class Users(Principals):
 class Group(_Group):
     """Some ldap specifics for groups
     """
-    def __iter__(self):
+    @property
+    def _memberdns(self):
         # XXX: multi-valued attrs should always be lists
         members = self.context.attrs['member']
         if type(members) not in (list, tuple):
-            members = (members,)
-        for dn in members:
+            members = [members,]
+        return list(members)
+
+    def __contains__(self, key):
+        for id in self:
+            if key == id:
+                return True
+        return False
+
+    def __delitem__(self, key):
+        if key not in self:
+            raise KeyError(key)
+        dn = self.__parent__.users.context.child_dn(key)
+        members = self._memberdns
+        members.remove(dn)
+        self.context.attrs['member'] = members
+
+    def __getitem__(self, key):
+        # XXX: only users for now, we are not parent
+        if key not in self:
+            raise KeyError(key)
+        return self.__parent__.users[key]
+
+    def __iter__(self):
+        for dn in self._memberdns:
             if dn == "cn=nobody":
                 continue
             # XXX for now we only check in the users folder
             yield self.__parent__.users.idbydn(dn)
 
-    def __getitem__(self, key):
-        # XXX: only users for now, we are not parent
-        return self.__parent__.users[key]
+    def add(self, principal):
+        """modeled after set.add()
+
+        XXX: setitem felt wrong for adding a principal as the key
+        cannot be specified
+        """
+        if principal.id in self:
+            return
+        dn = self.__parent__.users.context.child_dn(principal.id)
+        self.context.attrs['member'] = self._memberdns + [dn]
+        self.context()
 
 class Groups(Principals):
     """Manage LDAP groups
