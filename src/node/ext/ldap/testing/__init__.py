@@ -57,7 +57,6 @@ rootpw		%(bindpw)s
 directory	%(dbdir)s
 # Indices to maintain
 index	objectClass	eq
-overlay memberof
 """
 
 class SlapdConf(Layer):
