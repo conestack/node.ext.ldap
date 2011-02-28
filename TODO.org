@@ -21,3 +21,10 @@ redundant, 100 groups, 100 users
 ** TODO group in group support
 ** TODO posix.ldif
 ** TODO posix group support
+** TODO rework ldap testsetup to allow for multiple servers
+in order to test with different overlays it would be nice to start
+different servers or have one server with multiple databases -
+whatever feels better.
+** TODO rework tests and ldifs to target isolated aspects
+switch to o=nodity
+isolate into plumbing parts
