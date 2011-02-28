@@ -1,0 +1,8 @@
+dn: ou=add,ou=users,ou=groupOfNames_300_300,dc=my-domain,dc=com
+ou: add
+objectClass: organizationalUnit
+
+dn: ou=add,ou=groups,ou=groupOfNames_300_300,dc=my-domain,dc=com
+ou: add
+objectClass: organizationalUnit
+

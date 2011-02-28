@@ -365,11 +365,11 @@ LDIF_users2000 = Ldif(
     ucfg=ucfg2000,
     )
 
-# users and groups
-LDIF_ug_groupOfNames = Ldif(
-    resource('ldifs/ug-groupOfNames.ldif'),
+# Users and groups
+LDIF_groupOfNames = Ldif(
+    resource('ldifs/groupOfNames.ldif'),
     bases=(LDIF_base,),
-    name="LDIF_ug_groupOfNames",
+    name="LDIF_groupOfNames",
     ucfg=LDAPUsersConfig(
         baseDN='ou=users,ou=groupOfNames,dc=my-domain,dc=com',
         attrmap={
@@ -394,13 +394,13 @@ LDIF_ug_groupOfNames = Ldif(
         objectClasses=['groupOfNames'],
         ),
     )
-LDIF_ug_groupOfNames_rw = Ldif(
-    resource('ldifs/ug-groupOfNames-rw.ldif'),
-    bases=(LDIF_ug_groupOfNames,),
-    name="LDIF_ug_groupOfNames_rw",
+LDIF_groupOfNames_add = Ldif(
+    resource('ldifs/groupOfNames_add.ldif'),
+    bases=(LDIF_groupOfNames,),
+    name="LDIF_groupOfNames_add",
     ucfg=LDAPUsersConfig(
         baseDN='ou=users,ou=groupOfNames,dc=my-domain,dc=com',
-        newDN='ou=new,ou=users,ou=groupOfNames,dc=my-domain,dc=com',
+        newDN='ou=add,ou=users,ou=groupOfNames,dc=my-domain,dc=com',
         attrmap={
             'id': 'uid',
             'login': 'cn',
@@ -414,7 +414,239 @@ LDIF_ug_groupOfNames_rw = Ldif(
         ),
     gcfg=LDAPGroupsConfig(
         baseDN='ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
-        newDN='ou=new,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
+        newDN='ou=add,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'cn',
+            'rdn': 'cn',
+            },
+        scope=SUBTREE,
+        queryFilter='(objectClass=groupOfNames)',
+        objectClasses=['groupOfNames'],
+        ),
+    )
+LDIF_groupOfNames_100_100 = Ldif(
+    resource('ldifs/groupOfNames_100_100.ldif'),
+    bases=(LDIF_base,),
+    name="LDIF_groupOfNames_100_100",
+    ucfg=LDAPUsersConfig(
+        baseDN='ou=users,ou=groupOfNames_100_100,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'uid',
+            'login': 'cn',
+            'rdn': 'uid',
+            'cn': 'cn',
+            'sn': 'sn',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=inetOrgPerson)',
+        objectClasses=['inetOrgPerson'],
+        ),
+    gcfg=LDAPGroupsConfig(
+        baseDN='ou=groups,ou=groupOfNames_100_100,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'cn',
+            'rdn': 'cn',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=groupOfNames)',
+        objectClasses=['groupOfNames'],
+        ),
+    )
+LDIF_groupOfNames_100_100_add = Ldif(
+    resource('ldifs/groupOfNames_100_100_add.ldif'),
+    bases=(LDIF_groupOfNames_100_100,),
+    name="LDIF_groupOfNames_100_100_add",
+    ucfg=LDAPUsersConfig(
+        baseDN='ou=users,ou=groupOfNames_100_100,dc=my-domain,dc=com',
+        newDN='ou=add,ou=users,ou=groupOfNames_100_100,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'uid',
+            'login': 'cn',
+            'rdn': 'uid',
+            'cn': 'cn',
+            'sn': 'sn',
+            },
+        scope=SUBTREE,
+        queryFilter='(objectClass=inetOrgPerson)',
+        objectClasses=['inetOrgPerson'],
+        ),
+    gcfg=LDAPGroupsConfig(
+        baseDN='ou=groups,ou=groupOfNames_100_100,dc=my-domain,dc=com',
+        newDN='ou=add,ou=groups,ou=groupOfNames_100_100,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'cn',
+            'rdn': 'cn',
+            },
+        scope=SUBTREE,
+        queryFilter='(objectClass=groupOfNames)',
+        objectClasses=['groupOfNames'],
+        ),
+    )
+LDIF_groupOfNames_300_300 = Ldif(
+    resource('ldifs/groupOfNames_300_300.ldif'),
+    bases=(LDIF_base,),
+    name="LDIF_groupOfNames_300_300",
+    ucfg=LDAPUsersConfig(
+        baseDN='ou=users,ou=groupOfNames_300_300,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'uid',
+            'login': 'cn',
+            'rdn': 'uid',
+            'cn': 'cn',
+            'sn': 'sn',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=inetOrgPerson)',
+        objectClasses=['inetOrgPerson'],
+        ),
+    gcfg=LDAPGroupsConfig(
+        baseDN='ou=groups,ou=groupOfNames_300_300,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'cn',
+            'rdn': 'cn',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=groupOfNames)',
+        objectClasses=['groupOfNames'],
+        ),
+    )
+LDIF_groupOfNames_300_300_add = Ldif(
+    resource('ldifs/groupOfNames_300_300_add.ldif'),
+    bases=(LDIF_groupOfNames_300_300,),
+    name="LDIF_groupOfNames_300_300_add",
+    ucfg=LDAPUsersConfig(
+        baseDN='ou=users,ou=groupOfNames_300_300,dc=my-domain,dc=com',
+        newDN='ou=add,ou=users,ou=groupOfNames_300_300,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'uid',
+            'login': 'cn',
+            'rdn': 'uid',
+            'cn': 'cn',
+            'sn': 'sn',
+            },
+        scope=SUBTREE,
+        queryFilter='(objectClass=inetOrgPerson)',
+        objectClasses=['inetOrgPerson'],
+        ),
+    gcfg=LDAPGroupsConfig(
+        baseDN='ou=groups,ou=groupOfNames_300_300,dc=my-domain,dc=com',
+        newDN='ou=add,ou=groups,ou=groupOfNames_300_300,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'cn',
+            'rdn': 'cn',
+            },
+        scope=SUBTREE,
+        queryFilter='(objectClass=groupOfNames)',
+        objectClasses=['groupOfNames'],
+        ),
+    )
+LDIF_groupOfNames_700_700 = Ldif(
+    resource('ldifs/groupOfNames_700_700.ldif'),
+    bases=(LDIF_base,),
+    name="LDIF_groupOfNames_700_700",
+    ucfg=LDAPUsersConfig(
+        baseDN='ou=users,ou=groupOfNames_700_700,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'uid',
+            'login': 'cn',
+            'rdn': 'uid',
+            'cn': 'cn',
+            'sn': 'sn',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=inetOrgPerson)',
+        objectClasses=['inetOrgPerson'],
+        ),
+    gcfg=LDAPGroupsConfig(
+        baseDN='ou=groups,ou=groupOfNames_700_700,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'cn',
+            'rdn': 'cn',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=groupOfNames)',
+        objectClasses=['groupOfNames'],
+        ),
+    )
+LDIF_groupOfNames_700_700_add = Ldif(
+    resource('ldifs/groupOfNames_700_700_add.ldif'),
+    bases=(LDIF_groupOfNames_700_700,),
+    name="LDIF_groupOfNames_700_700_add",
+    ucfg=LDAPUsersConfig(
+        baseDN='ou=users,ou=groupOfNames_700_700,dc=my-domain,dc=com',
+        newDN='ou=add,ou=users,ou=groupOfNames_700_700,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'uid',
+            'login': 'cn',
+            'rdn': 'uid',
+            'cn': 'cn',
+            'sn': 'sn',
+            },
+        scope=SUBTREE,
+        queryFilter='(objectClass=inetOrgPerson)',
+        objectClasses=['inetOrgPerson'],
+        ),
+    gcfg=LDAPGroupsConfig(
+        baseDN='ou=groups,ou=groupOfNames_700_700,dc=my-domain,dc=com',
+        newDN='ou=add,ou=groups,ou=groupOfNames_700_700,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'cn',
+            'rdn': 'cn',
+            },
+        scope=SUBTREE,
+        queryFilter='(objectClass=groupOfNames)',
+        objectClasses=['groupOfNames'],
+        ),
+    )
+LDIF_groupOfNames_1000_1000 = Ldif(
+    resource('ldifs/groupOfNames_1000_1000.ldif'),
+    bases=(LDIF_base,),
+    name="LDIF_groupOfNames_1000_1000",
+    ucfg=LDAPUsersConfig(
+        baseDN='ou=users,ou=groupOfNames_1000_1000,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'uid',
+            'login': 'cn',
+            'rdn': 'uid',
+            'cn': 'cn',
+            'sn': 'sn',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=inetOrgPerson)',
+        objectClasses=['inetOrgPerson'],
+        ),
+    gcfg=LDAPGroupsConfig(
+        baseDN='ou=groups,ou=groupOfNames_1000_1000,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'cn',
+            'rdn': 'cn',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=groupOfNames)',
+        objectClasses=['groupOfNames'],
+        ),
+    )
+LDIF_groupOfNames_1000_1000_add = Ldif(
+    resource('ldifs/groupOfNames_1000_1000_add.ldif'),
+    bases=(LDIF_groupOfNames_1000_1000,),
+    name="LDIF_groupOfNames_1000_1000_add",
+    ucfg=LDAPUsersConfig(
+        baseDN='ou=users,ou=groupOfNames_1000_1000,dc=my-domain,dc=com',
+        newDN='ou=add,ou=users,ou=groupOfNames_1000_1000,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'uid',
+            'login': 'cn',
+            'rdn': 'uid',
+            'cn': 'cn',
+            'sn': 'sn',
+            },
+        scope=SUBTREE,
+        queryFilter='(objectClass=inetOrgPerson)',
+        objectClasses=['inetOrgPerson'],
+        ),
+    gcfg=LDAPGroupsConfig(
+        baseDN='ou=groups,ou=groupOfNames_1000_1000,dc=my-domain,dc=com',
+        newDN='ou=add,ou=groups,ou=groupOfNames_1000_1000,dc=my-domain,dc=com',
         attrmap={
             'id': 'cn',
             'rdn': 'cn',

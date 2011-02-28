@@ -8,18 +8,16 @@ import unittest2 as unittest
 
 from plone.testing import layered
 
-from node.ext.ldap.testing import LDIF_data
-from node.ext.ldap.testing import LDIF_principals
-from node.ext.ldap.testing import LDIF_ug_groupOfNames
+from node.ext.ldap import testing
 
 
 DOCFILES = [
-    ('../base.txt', LDIF_data),
-    ('../session.txt', LDIF_data),
-    ('../bbb.txt', LDIF_data),
-    ('../schema.txt', LDIF_data),
-    ('../users.txt', LDIF_principals),
-    ('ug-groupOfNames.txt', LDIF_ug_groupOfNames),
+    ('../base.txt', testing.LDIF_data),
+    ('../session.txt', testing.LDIF_data),
+    ('../bbb.txt', testing.LDIF_data),
+    ('../schema.txt', testing.LDIF_data),
+    ('../users.txt', testing.LDIF_principals),
+    ('groupOfNames.txt', testing.LDIF_groupOfNames),
     ]
 
 optionflags = \

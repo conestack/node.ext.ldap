@@ -1,0 +1,54 @@
+dn: ou=groupOfNames,dc=my-domain,dc=com
+ou: groupOfNames
+objectClass: organizationalUnit
+
+dn: ou=users,ou=groupOfNames,dc=my-domain,dc=com
+ou: users
+objectClass: organizationalUnit
+
+dn: ou=groups,ou=groupOfNames,dc=my-domain,dc=com
+ou: groups
+objectClass: organizationalUnit
+
+dn: uid=uid0,ou=users,ou=groupOfNames,dc=my-domain,dc=com
+uid: uid0
+objectClass: inetOrgPerson
+cn: cn0
+mail: uid0@groupOfNames.com
+sn: sn0
+userPassword: secret0
+
+dn: uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com
+uid: uid1
+objectClass: inetOrgPerson
+cn: cn1
+mail: uid1@groupOfNames.com
+sn: sn1
+userPassword: secret1
+
+dn: uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com
+uid: uid2
+objectClass: inetOrgPerson
+cn: cn2
+mail: uid2@groupOfNames.com
+sn: sn2
+userPassword: secret2
+
+dn: cn=group0,ou=groups,ou=groupOfNames,dc=my-domain,dc=com
+cn: group0
+objectClass: groupOfNames
+member: cn=nobody
+
+dn: cn=group1,ou=groups,ou=groupOfNames,dc=my-domain,dc=com
+cn: group1
+objectClass: groupOfNames
+member: cn=nobody
+member: uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com
+
+dn: cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com
+cn: group2
+objectClass: groupOfNames
+member: cn=nobody
+member: uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com
+member: uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com
+

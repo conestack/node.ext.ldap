@@ -1,0 +1,56 @@
+Test for users and groups defined in ug-groupOfNames.ldif::
+
+     >>> from node.ext.ldap import Groups
+     >>> from node.ext.ldap import Users
+
+     >>> users = Users(layer['props'], layer['ucfg'])
+     >>> users.keys()
+     [u'uid0', u'uid1', u'uid2']
+
+     >>> user0 = users['uid0']
+     >>> user1 = users['uid1']
+     >>> user2 = users['uid2']
+
+The users themselves are generic users, not specific to LDAP::
+
+     >>> user0
+     <User 'uid0'>
+     >>> user0.__class__
+     <class 'node.ext.ldap.outbox.User'>
+
+     # XXX: ^^^ class will be: node.ext.ugm.User
+
+     #     >>> user0.groups.keys()
+     #     >>> user1.groups.keys()
+     #     >>> user2.groups.keys()
+
+     >>> groups = Groups(layer['props'], layer['gcfg'])
+     >>> groups.keys()
+     [u'group0', u'group1', u'group2']
+
+     >>> group0 = groups['group0']
+     >>> group1 = groups['group1']
+     >>> group2 = groups['group2']
+
+The groups themselves are generic groups, not specific to LDAP::
+
+     >>> group0
+     <Group 'group0'>
+     >>> group0.__class__
+     <class 'node.ext.ldap.outbox.Group'>
+     
+XXX: Does not work yet::
+
+     >>> group0.keys()
+     []
+     >>> group1.keys()
+     []
+     >>> group2.keys()
+     []
+
+The raw member info is there::
+
+     >>> group2.context.attrs['member']
+     [u'cn=nobody',
+      u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com',
+      u'uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com']
