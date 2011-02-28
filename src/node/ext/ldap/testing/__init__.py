@@ -68,7 +68,7 @@ class SlapdConf(Layer):
         super(SlapdConf, self).__init__()
         self.schema = schema
 
-    def setUp(self):
+    def setUp(self, args=None):
         """take a template, replace, write slapd.conf store path for others to
         knows
         """
@@ -125,13 +125,13 @@ class Slapd(LDAPLayer):
         self.slapdbin = slapdbin
         self.slapd = None
 
-    def setUp(self):
+    def setUp(self, args=['-d', '0']):
         """start slapd
         """
         print "\nStarting LDAP server: ",
         read_env(self)
-        cmd = [self.slapdbin, '-f', self['slapdconf'], '-h', self['uris'],
-               '-d', '0']
+        cmd = [self.slapdbin, '-f', self['slapdconf'], '-h', self['uris']]
+        cmd += args
         self.slapd = subprocess.Popen(cmd)
         time.sleep(1)
         print "done."
@@ -176,7 +176,7 @@ class Ldif(LDAPLayer):
         #self['ucfg'] = ucfg
         self.ucfg = ucfg
 
-    def setUp(self):
+    def setUp(self, args=None):
         """run ldapadd for list of ldifs
         """
         read_env(self)
