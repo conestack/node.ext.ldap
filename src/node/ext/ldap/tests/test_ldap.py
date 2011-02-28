@@ -18,11 +18,12 @@ DOCFILES = [
     ('../bbb.txt', LDIF_data),
     ('../schema.txt', LDIF_data),
     ('../users.txt', LDIF_principals),
-]
+    ]
 
-optionflags = doctest.NORMALIZE_WHITESPACE | \
-              doctest.ELLIPSIS | \
-              doctest.REPORT_ONLY_FIRST_FAILURE
+optionflags = \
+    doctest.NORMALIZE_WHITESPACE | \
+    doctest.ELLIPSIS | \
+    doctest.REPORT_ONLY_FIRST_FAILURE
 
 
 print """
@@ -35,19 +36,19 @@ stop it if running.
 def test_suite():
     suite = unittest.TestSuite()
     suite.addTests([
-        layered(
-            doctest.DocFileSuite(
-                docfile,
-                globs={'interact': interlude.interact,
+            layered(
+                doctest.DocFileSuite(
+                    docfile,
+                    globs={'interact': interlude.interact,
                            'pprint': pprint.pprint,
                            'pp': pprint.pprint,
                            },
-                optionflags=optionflags,
-                ),
-            layer=layer,
-            )
-        for docfile, layer in DOCFILES
-        ])
+                    optionflags=optionflags,
+                    ),
+                layer=layer,
+                )
+            for docfile, layer in DOCFILES
+            ])
     return suite
 
 if __name__ == '__main__':
