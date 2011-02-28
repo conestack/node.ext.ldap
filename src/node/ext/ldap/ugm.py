@@ -132,8 +132,12 @@ class Group(_Group):
         for dn in members:
             if dn == "cn=nobody":
                 continue
-            yield self.__parent__.idbydn(dn)
+            # XXX for now we only check in the users folder
+            yield self.__parent__.users.idbydn(dn)
 
+    def __getitem__(self, key):
+        # XXX: only users for now, we are not parent
+        return self.__parent__.users[key]
 
 class Groups(Principals):
     """Manage LDAP groups
@@ -150,7 +154,3 @@ class Groups(Principals):
         arbitrary: group_attr:user_attr  |   &    ()
     """
     principal_factory = Group
-
-    def idbydn(self, dn):
-        # XXX for now we only check in the users folder
-        return self.users.idbydn(dn)

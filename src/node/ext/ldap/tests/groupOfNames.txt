@@ -49,6 +49,14 @@ A group returns the members ids as keys::
 
 The member users are fetched via ``getitem``::
 
+    >>> group1['uid1']
+    <User 'uid1'>
+
+XXX: This is not yet true as users creates a new node on every getitem::
+
+    >>> group1['uid1'] is user1
+    False
+
 Members are added via XXX::
 
 Members are removed via ``delitem``::
