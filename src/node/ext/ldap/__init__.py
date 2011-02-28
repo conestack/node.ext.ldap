@@ -14,6 +14,10 @@ from node.ext.ldap.scope import (
     )
 from node.ext.ldap.session import LDAPSession
 from node.ext.ldap.strcodec import StrCodec
+from node.ext.ldap.ugm import (
+    Groups,
+    Users,
+    )
 
 # to be removed sooner or later
 from node.ext.ldap.bbb import (
