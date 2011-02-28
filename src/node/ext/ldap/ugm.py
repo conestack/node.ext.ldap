@@ -16,11 +16,13 @@ class PrincipalsConfig(object):
     """
     def __init__(self,
             baseDN='',
+            newDN='',
             attrmap={},
             scope=ONELEVEL,
             queryFilter='',
             objectClasses=[]):
         self.baseDN = baseDN
+        self.newDN = newDN or baseDN
         self.attrmap = attrmap
         self.scope = scope
         self.queryFilter = queryFilter
