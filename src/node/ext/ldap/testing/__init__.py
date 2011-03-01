@@ -431,10 +431,11 @@ LDIF_groupOfNames_10_10 = Ldif(
         baseDN='ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com',
         attrmap={
             'id': 'uid',
-            'login': 'cn',
+            'login': 'uid',
             'rdn': 'uid',
             'cn': 'cn',
             'sn': 'sn',
+            'mail': 'mail',
             },
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
