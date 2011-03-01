@@ -423,6 +423,34 @@ LDIF_groupOfNames_add = Ldif(
         objectClasses=['groupOfNames'],
         ),
     )
+LDIF_groupOfNames_10_10 = Ldif(
+    resource('ldifs/groupOfNames_10_10.ldif'),
+    bases=(LDIF_base,),
+    name="LDIF_groupOfNames_10_10",
+    ucfg=LDAPUsersConfig(
+        baseDN='ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'uid',
+            'login': 'cn',
+            'rdn': 'uid',
+            'cn': 'cn',
+            'sn': 'sn',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=inetOrgPerson)',
+        objectClasses=['inetOrgPerson'],
+        ),
+    gcfg=LDAPGroupsConfig(
+        baseDN='ou=groups,ou=groupOfNames_10_10,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'cn',
+            'rdn': 'cn',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=groupOfNames)',
+        objectClasses=['groupOfNames'],
+        ),
+    )
 LDIF_groupOfNames_100_100 = Ldif(
     resource('ldifs/groupOfNames_100_100.ldif'),
     bases=(LDIF_base,),

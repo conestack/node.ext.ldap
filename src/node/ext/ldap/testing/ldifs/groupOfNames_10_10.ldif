@@ -1,0 +1,187 @@
+dn: ou=groupOfNames_10_10,dc=my-domain,dc=com
+ou: groupOfNames_10_10
+objectClass: organizationalUnit
+
+dn: ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+ou: users
+objectClass: organizationalUnit
+
+dn: ou=groups,ou=groupOfNames_10_10,dc=my-domain,dc=com
+ou: groups
+objectClass: organizationalUnit
+
+dn: uid=uid0,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+uid: uid0
+objectClass: inetOrgPerson
+cn: cn0
+mail: uid0@groupOfNames_10_10.com
+sn: sn0
+userPassword: secret0
+
+dn: uid=uid1,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+uid: uid1
+objectClass: inetOrgPerson
+cn: cn1
+mail: uid1@groupOfNames_10_10.com
+sn: sn1
+userPassword: secret1
+
+dn: uid=uid2,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+uid: uid2
+objectClass: inetOrgPerson
+cn: cn2
+mail: uid2@groupOfNames_10_10.com
+sn: sn2
+userPassword: secret2
+
+dn: uid=uid3,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+uid: uid3
+objectClass: inetOrgPerson
+cn: cn3
+mail: uid3@groupOfNames_10_10.com
+sn: sn3
+userPassword: secret3
+
+dn: uid=uid4,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+uid: uid4
+objectClass: inetOrgPerson
+cn: cn4
+mail: uid4@groupOfNames_10_10.com
+sn: sn4
+userPassword: secret4
+
+dn: uid=uid5,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+uid: uid5
+objectClass: inetOrgPerson
+cn: cn5
+mail: uid5@groupOfNames_10_10.com
+sn: sn5
+userPassword: secret5
+
+dn: uid=uid6,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+uid: uid6
+objectClass: inetOrgPerson
+cn: cn6
+mail: uid6@groupOfNames_10_10.com
+sn: sn6
+userPassword: secret6
+
+dn: uid=uid7,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+uid: uid7
+objectClass: inetOrgPerson
+cn: cn7
+mail: uid7@groupOfNames_10_10.com
+sn: sn7
+userPassword: secret7
+
+dn: uid=uid8,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+uid: uid8
+objectClass: inetOrgPerson
+cn: cn8
+mail: uid8@groupOfNames_10_10.com
+sn: sn8
+userPassword: secret8
+
+dn: uid=uid9,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+uid: uid9
+objectClass: inetOrgPerson
+cn: cn9
+mail: uid9@groupOfNames_10_10.com
+sn: sn9
+userPassword: secret9
+
+dn: cn=group0,ou=groups,ou=groupOfNames_10_10,dc=my-domain,dc=com
+cn: group0
+objectClass: groupOfNames
+member: cn=nobody
+
+dn: cn=group1,ou=groups,ou=groupOfNames_10_10,dc=my-domain,dc=com
+cn: group1
+objectClass: groupOfNames
+member: cn=nobody
+member: uid=uid1,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+
+dn: cn=group2,ou=groups,ou=groupOfNames_10_10,dc=my-domain,dc=com
+cn: group2
+objectClass: groupOfNames
+member: cn=nobody
+member: uid=uid1,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid2,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+
+dn: cn=group3,ou=groups,ou=groupOfNames_10_10,dc=my-domain,dc=com
+cn: group3
+objectClass: groupOfNames
+member: cn=nobody
+member: uid=uid1,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid2,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid3,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+
+dn: cn=group4,ou=groups,ou=groupOfNames_10_10,dc=my-domain,dc=com
+cn: group4
+objectClass: groupOfNames
+member: cn=nobody
+member: uid=uid1,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid2,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid3,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid4,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+
+dn: cn=group5,ou=groups,ou=groupOfNames_10_10,dc=my-domain,dc=com
+cn: group5
+objectClass: groupOfNames
+member: cn=nobody
+member: uid=uid1,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid2,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid3,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid4,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid5,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+
+dn: cn=group6,ou=groups,ou=groupOfNames_10_10,dc=my-domain,dc=com
+cn: group6
+objectClass: groupOfNames
+member: cn=nobody
+member: uid=uid1,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid2,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid3,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid4,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid5,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid6,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+
+dn: cn=group7,ou=groups,ou=groupOfNames_10_10,dc=my-domain,dc=com
+cn: group7
+objectClass: groupOfNames
+member: cn=nobody
+member: uid=uid1,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid2,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid3,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid4,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid5,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid6,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid7,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+
+dn: cn=group8,ou=groups,ou=groupOfNames_10_10,dc=my-domain,dc=com
+cn: group8
+objectClass: groupOfNames
+member: cn=nobody
+member: uid=uid1,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid2,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid3,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid4,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid5,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid6,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid7,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid8,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+
+dn: cn=group9,ou=groups,ou=groupOfNames_10_10,dc=my-domain,dc=com
+cn: group9
+objectClass: groupOfNames
+member: cn=nobody
+member: uid=uid1,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid2,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid3,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid4,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid5,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid6,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid7,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid8,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+member: uid=uid9,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
+
