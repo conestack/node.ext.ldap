@@ -657,6 +657,8 @@ We need a different key. As a side-effect a filter will be used: '(cn=*)'
     >>> node = LDAPNode(props=props, name=root.DN)
     >>> node._child_scope = SUBTREE
     >>> node._key_attr = 'cn'
+    >>> node._rdn_attr = 'cn'
+    >>> node._child_objectClasses = ['top', 'person']
     >>> node.keys()
     [u'customer99', u'Max']
 
@@ -668,12 +670,24 @@ Again, we can query/change/delete these.
     >>> node()
     >>> max.attrs['description']
     u'bar'
-    >>> node['foo'] = LDAPNode()
-    Traceback (most recent call last):
-    ...
-    NotImplementedError: Adding with scope != ONELEVEL not supported.
+
+New entries in case of scope SUBTREE are added in the ONELEVEL scope::
+
+    >>> newnode = LDAPNode()
+    >>> newnode.attrs['sn'] = 'foosn'
+    >>> node['foo'] = newnode
+    >>> node['foo'] is newnode
+    True
+    >>> newnode.DN
+    u'cn=foo,dc=my-domain,dc=com'
+    >>> node.DN
+    u'dc=my-domain,dc=com'
 
     >>> del node['Max']
     >>> node()
     >>> node.keys()
-    [u'customer99']
+    [u'customer99', u'foo']
+
+    >>> node = LDAPNode(props=props, name=root.DN)
+    >>> node['cn=foo'].attrs['objectClass']
+    [u'top', u'person']
