@@ -18,6 +18,7 @@ DOCFILES = [
     ('../schema.txt', testing.LDIF_data),
     ('../users.txt', testing.LDIF_principals),
     ('groupOfNames.txt', testing.LDIF_groupOfNames),
+    ('groupOfNames_add.txt', testing.LDIF_groupOfNames_add),
     ]
 
 optionflags = \
