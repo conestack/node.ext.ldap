@@ -380,7 +380,7 @@ LDIF_groupOfNames = Ldif(
             },
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
-        objectClasses=['inetOrgPerson'],
+        objectClasses=['person', 'inetOrgPerson'],
         ),
     gcfg=LDAPGroupsConfig(
         baseDN='ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
@@ -409,7 +409,7 @@ LDIF_groupOfNames_add = Ldif(
             },
         scope=SUBTREE,
         queryFilter='(objectClass=inetOrgPerson)',
-        objectClasses=['inetOrgPerson'],
+        objectClasses=['person', 'inetOrgPerson'],
         ),
     gcfg=LDAPGroupsConfig(
         baseDN='ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
@@ -467,7 +467,7 @@ LDIF_groupOfNames_100_100 = Ldif(
             },
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
-        objectClasses=['inetOrgPerson'],
+        objectClasses=['person', 'inetOrgPerson'],
         ),
     gcfg=LDAPGroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_100_100,dc=my-domain,dc=com',
@@ -496,7 +496,7 @@ LDIF_groupOfNames_100_100_add = Ldif(
             },
         scope=SUBTREE,
         queryFilter='(objectClass=inetOrgPerson)',
-        objectClasses=['inetOrgPerson'],
+        objectClasses=['person', 'inetOrgPerson'],
         ),
     gcfg=LDAPGroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_100_100,dc=my-domain,dc=com',
@@ -525,7 +525,7 @@ LDIF_groupOfNames_300_300 = Ldif(
             },
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
-        objectClasses=['inetOrgPerson'],
+        objectClasses=['person', 'inetOrgPerson'],
         ),
     gcfg=LDAPGroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_300_300,dc=my-domain,dc=com',
@@ -554,7 +554,7 @@ LDIF_groupOfNames_300_300_add = Ldif(
             },
         scope=SUBTREE,
         queryFilter='(objectClass=inetOrgPerson)',
-        objectClasses=['inetOrgPerson'],
+        objectClasses=['person', 'inetOrgPerson'],
         ),
     gcfg=LDAPGroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_300_300,dc=my-domain,dc=com',
@@ -583,7 +583,7 @@ LDIF_groupOfNames_700_700 = Ldif(
             },
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
-        objectClasses=['inetOrgPerson'],
+        objectClasses=['person', 'inetOrgPerson'],
         ),
     gcfg=LDAPGroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_700_700,dc=my-domain,dc=com',
@@ -612,7 +612,7 @@ LDIF_groupOfNames_700_700_add = Ldif(
             },
         scope=SUBTREE,
         queryFilter='(objectClass=inetOrgPerson)',
-        objectClasses=['inetOrgPerson'],
+        objectClasses=['person', 'inetOrgPerson'],
         ),
     gcfg=LDAPGroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_700_700,dc=my-domain,dc=com',
@@ -641,7 +641,7 @@ LDIF_groupOfNames_1000_1000 = Ldif(
             },
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
-        objectClasses=['inetOrgPerson'],
+        objectClasses=['person', 'inetOrgPerson'],
         ),
     gcfg=LDAPGroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_1000_1000,dc=my-domain,dc=com',
@@ -670,7 +670,7 @@ LDIF_groupOfNames_1000_1000_add = Ldif(
             },
         scope=SUBTREE,
         queryFilter='(objectClass=inetOrgPerson)',
-        objectClasses=['inetOrgPerson'],
+        objectClasses=['person', 'inetOrgPerson'],
         ),
     gcfg=LDAPGroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_1000_1000,dc=my-domain,dc=com',
