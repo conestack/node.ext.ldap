@@ -400,21 +400,22 @@ class LDAPNode(LifecycleNode):
     def __setitem__(self, key, val):
         if isinstance(key, str):
             key = decode(key)
-        if self._child_scope is not ONELEVEL:
-            # XXX: this would require a default location for new entries
+        if self._child_scope is BASE:
             raise NotImplementedError(
-                    u"Adding with scope != ONELEVEL not supported.")
+                    u"Seriously? Adding with scope == BASE?")
         if self._key_attr != 'rdn' and self._rdn_attr is None:
             raise RuntimeError(u"Adding with key != rdn needs _rdn_attr "
                     u"to be set.")
         if not isinstance(val, LDAPNode):
             # create one from whatever we got
             val = self._create_suitable_node(val)
+
         # At this point we need to have an LDAPNode as val
-        if self._key_attr != 'rdn' and \
-                val.attrs.get(self._rdn_attr) is None:
-            raise ValueError(u"'%s' needed in node attributes for rdn." % \
-                    (self._rdn_attr,))
+        if self._key_attr != 'rdn':
+            val.attrs[self._key_attr] = key
+            if val.attrs.get(self._rdn_attr) is None:
+                raise ValueError(u"'%s' needed in node attributes for rdn." % \
+                                     (self._rdn_attr,))
         val._session = self._session
         if self._keys is None:
             self._load_keys()
