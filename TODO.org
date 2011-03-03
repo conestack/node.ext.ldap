@@ -19,7 +19,8 @@ CLOSED: [2011-02-28 Mon 18:46]
 redundant, 100 groups, 100 users
 ** DONE user.groups.keys()
 CLOSED: [2011-02-28 Mon 19:32]
-** NEXT check attrmaps used by cone.ugm
+** DONE check attrmaps used by cone.ugm
+CLOSED: [2011-03-03 Thu 01:49]
 ** TODO check search and aliased attrs (reverse with list)
 ** TODO figure out whats wrong with memberOf
 disabled for now, as it takes very long to add groups with many members
