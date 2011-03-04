@@ -164,10 +164,15 @@ class Users(Principals):
 class Group(_Group):
     """Some ldap specifics for groups
     """
+    # XXX: HACK
+    @property
+    def _member_attr(self):
+        return self.__parent__._member_attr
+
     @property
     def _memberdns(self):
         # XXX: multi-valued attrs should always be lists
-        members = self.context.attrs['member']
+        members = self.context.attrs[self._member_attr]
         if type(members) not in (list, tuple):
             members = [members,]
         return list(members)
@@ -184,7 +189,7 @@ class Group(_Group):
         dn = self.__parent__.users.context.child_dn(key)
         members = self._memberdns
         members.remove(dn)
-        self.context.attrs['member'] = members
+        self.context.attrs[self._member_attr] = members
         self.context()
 
     def __getitem__(self, key):
@@ -209,8 +214,9 @@ class Group(_Group):
         if principal.id in self:
             return
         dn = self.__parent__.users.context.child_dn(principal.id)
-        self.context.attrs['member'] = self._memberdns + [dn]
+        self.context.attrs[self._member_attr] = self._memberdns + [dn]
         self.context()
+
 
 class Groups(Principals):
     """Manage LDAP groups
@@ -227,3 +233,12 @@ class Groups(Principals):
         arbitrary: group_attr:user_attr  |   &    ()
     """
     principal_factory = Group
+
+    def __init__(self, props, cfg):
+        super(Groups, self).__init__(props, cfg)
+        if 'groupOfNames' in cfg.objectClasses:
+            self._member_attr = 'member'
+        elif 'groupOfUniqueNames' in cfg.objectClasses:
+            self._member_attr = 'uniqueMember'
+        else:
+            raise ValueError('Unsupported groups: %s' % (cfg.objectClasses,))
