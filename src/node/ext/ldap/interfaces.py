@@ -17,15 +17,15 @@ class ICacheProviderFactory(Interface):
 class ILDAPProps(Interface):
     """LDAP properties configuration interface.
     """
-    
+
     uri = Attribute(u"LDAP URI")
-    
+
     user = Attribute(u"LDAP User")
-    
+
     password = Attribute(u"Bind Password")
-    
+
     cache = Attribute(u"Flag wether to use cache or not")
-    
+
     timeout = Attribute(u"Timeout in seconds")
 
     start_tls = Attribute(u"TLS enabled")
@@ -39,13 +39,13 @@ class ILDAPProps(Interface):
     tls_clkeyfile = Attribute(u"Path to CL key file")
 
     retry_max = Attribute(u"Retry count")
-    
+
     retry_delay = Attribute(u"Retry delay in seconds")
 
 class ILDAPPrincipalsConfig(Interface):
     """LDAP principals configuration interface.
     """
-    
+
     baseDN = Attribute(u"Principals base DN")
 
     attrmap = Attribute(u"Principals Attribute map as ``odict.odict``")
@@ -53,7 +53,7 @@ class ILDAPPrincipalsConfig(Interface):
     scope = Attribute(u"Search scope for principals")
 
     queryFilter = Attribute(u"Query filter for principals")
-    
+
     objectClasses = Attribute(u"Default object classes for new principals.")
 
 class ILDAPUsersConfig(ILDAPPrincipalsConfig):
