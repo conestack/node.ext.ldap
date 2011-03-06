@@ -8,7 +8,7 @@ class LDAPServerProperties(object):
     """Wrapper Class for LDAP Server connection properties.
     """
     implements(ILDAPProps)
-    
+
     def __init__(self,
                  server=None,
                  port=None,
@@ -26,8 +26,8 @@ class LDAPServerProperties(object):
                  retry_delay=10.0,
                  ):
         """Take the connection properties as arguments.
-        
-	 SSL/TLS still unsupported
+
+         SSL/TLS still unsupported
 
         @param server: DEPRECATED use uri! servername, defaults to 'localhost'
         @param port: DEPRECATED uss uri! server port, defaults to 389
