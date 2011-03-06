@@ -222,10 +222,17 @@ Changes
 1.9 (unreleased)
 ----------------
 
+- member and uniqueMember attributes are lists, also if only one
+  element. This is probably going to be the behaviour for all
+  multi-valued attributes.
+  [chaoflow 2011-03-06]
+
+XXX: ...
+
 - renamed to node.ext.ldap
   [chaoflow 2011-01-23]
 
-...
+XXX: ...
 
 - console support for starting/stopping a slapd using the test layers and data
   presets as desired in a temporary environment for application testing.

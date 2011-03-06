@@ -73,7 +73,8 @@ class LDAPNodeAttributes(NodeAttributes):
                                 "more than one entry found")
         attrs = entry[0][1]
         for key, item in attrs.items():
-            if len(item) == 1:
+            # XXX: future: self[key] = item, always!
+            if len(item) == 1 and key not in ('member', 'uniqueMember'):
                 self[key] = item[0]
             else:
                 self[key] = item
