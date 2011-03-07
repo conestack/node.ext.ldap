@@ -254,7 +254,8 @@ class Group(_Group):
         """
         if not attrlist:
             return self.keys()
-        return [(id, dict([(x, self[id].context.attrs[x]) for x in attrlist])) for id in self]
+        # XXX: nasty, the flattened attrs are turned into lists again
+        return [(id, dict([(x, [self[id].context.attrs[x]]) for x in attrlist])) for id in self]
 
 
 class Groups(Principals):
