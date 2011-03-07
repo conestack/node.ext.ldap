@@ -111,6 +111,9 @@ class Principals(AbstractNode):
         except KeyError:
             raise ValueError(u"Attributes need to be set.")
 
+        if name in self:
+            raise KeyError(u"Key already exists: '%s'." % (name,))
+
         nextvessel = AttributedNode()
         nextvessel.__name__ = name
         nextvessel.attribute_access_for_attrs = False
