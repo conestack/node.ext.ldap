@@ -22,9 +22,9 @@ class Principal(AbstractNode):
         # XXX: lookat
         if self.attraliaser is None:
             return self.context.attrs
-        aliaser = AliasedNodespace(self.context.attrs, self.attraliaser)
-        aliaser.allow_non_node_childs = True
-        return aliaser
+        aliased_attrs = AliasedNodespace(self.context.attrs, self.attraliaser)
+        aliased_attrs.allow_non_node_childs = True
+        return aliased_attrs
 
     def __repr__(self):
         return "<%s '%s'>" % (
@@ -55,6 +55,14 @@ class User(Principal):
 class Group(Principal):
     """Turns a node into a group
     """
+    def search(self, attrlist=()):
+        """XXX: incomplete signature
+
+        XXX: provide this in a plumbing part
+        """
+        # unalias the attrlist
+        unaliased_attrlist = []
+        # XXX ...
 
 
 #XXX: move to node.ext.ugm
