@@ -55,14 +55,6 @@ class User(Principal):
 class Group(Principal):
     """Turns a node into a group
     """
-    def search(self, attrlist=()):
-        """XXX: incomplete signature
-
-        XXX: provide this in a plumbing part
-        """
-        # unalias the attrlist
-        unaliased_attrlist = []
-        # XXX ...
 
 
 #XXX: move to node.ext.ugm
