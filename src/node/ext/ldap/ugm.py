@@ -281,3 +281,7 @@ class Groups(Principals):
             self._member_attr = 'uniqueMember'
         else:
             raise ValueError('Unsupported groups: %s' % (cfg.objectClasses,))
+
+    def __setitem__(self, key, vessel):
+        vessel.attrs.setdefault(self._member_attr, []).insert(0, 'cn=nobody')
+        super(Groups, self).__setitem__(key, vessel)
