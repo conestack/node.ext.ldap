@@ -92,10 +92,15 @@ class _UserGroups(AbstractNode):
             if self.user.id in group:
                 yield id
 
-    def add(self, group):
-        if group.id in self:
+    def add(self, group_or_id):
+        try:
+            group_id = group_or_id.id
+        except AttributeError:
+            group_id = group_or_id
+        if group_id in self:
             return
         self.context[group.id].add(self.user)
+
 
 class User(_User):
     """User that knows to fetch group info from ldap
@@ -205,15 +210,19 @@ class Group(_Group):
             # XXX for now we only check in the users folder
             yield self.__parent__.users.idbydn(dn)
 
-    def add(self, principal):
+    def add(self, principal_or_id):
         """modeled after set.add()
 
         XXX: setitem felt wrong for adding a principal as the key
         cannot be specified
         """
-        if principal.id in self:
+        try:
+            principal_id = principal_or_id.id
+        except AttributeError:
+            principal_id = principal_or_id
+        if principal_id in self:
             return
-        dn = self.__parent__.users.context.child_dn(principal.id)
+        dn = self.__parent__.users.context.child_dn(principal_id)
         self.context.attrs[self._member_attr] = self._memberdns + [dn]
         self.context()
 
