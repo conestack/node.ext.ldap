@@ -134,6 +134,12 @@ class Users(Principals):
         if cfg.attrmap['login'] != cfg.attrmap['id']:
             self.context._seckey_attrs += (cfg.attrmap['login'],)
 
+    def __delitem__(self, id):
+        user = self[id]
+        for group_id in user.groups.keys():
+            del user.groups[group_id]
+        super(Users, self).__delitem__(id)
+
     # XXX: do we really need this?
     # XXX: login is a mapped attr, we could simply search on it
     def idbylogin(self, login):
