@@ -104,6 +104,12 @@ class _UserGroups(AbstractNode):
             group_id = group_or_id
         self.context[group_id].add(self.user)
 
+    def search(self, attrlist=None):
+        if not attrlist:
+            return self.keys()
+        # XXX: nasty, the flattened attrs are turned into lists again
+        return [(id, dict([(x, [self[id].context.attrs[x]]) for x in attrlist])) for id in self]
+
 
 class User(_User):
     """User that knows to fetch group info from ldap
@@ -211,21 +217,14 @@ class Group(_Group):
         return self.__parent__.users[key]
 
     def __iter__(self):
-        if self._keys:
-            for key in self._keys:
-                yield key
-        else:
-            self._keys = []
-            for dn in self._memberdns:
-                if dn == "cn=nobody":
-                    continue
-                # XXX for now we only check in the users folder
-                try:
-                    key = self.__parent__.users.idbydn(dn)
-                    self._keys.append(key)
-                    yield key
-                except KeyError:
-                    print "Ignoring '%s' as a member of '%s'" % (dn, self.id)
+        for dn in self._memberdns:
+            if dn == "cn=nobody":
+                continue
+            # XXX for now we only check in the users folder
+            try:
+                yield self.__parent__.users.idbydn(dn)
+            except KeyError:
+                print "Ignoring '%s' as a member of '%s'" % (dn, self.id)
 
     def add(self, principal_or_id, error_if_present=True):
         """modeled after set.add() + raise flag
