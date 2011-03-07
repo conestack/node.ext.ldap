@@ -3,6 +3,7 @@ from zope.interface import implements
 
 from node.ext.ldap.bbb import LDAPNode
 from node.ext.ldap.debug import debug
+from node.ext.ldap.filter import LDAPDictFilter
 from node.ext.ldap.interfaces import ILDAPGroupsConfig as IGroupsConfig
 from node.ext.ldap.interfaces import ILDAPUsersConfig as IUsersConfig
 from node.ext.ldap.properties import LDAPProps
@@ -78,24 +79,24 @@ class _UserGroups(AbstractNode):
         self.user = user
 
     def __contains__(self, key):
-        for id, group in self.context.iteritems():
-            if key == id:
-                if self.user.id in group:
-                    return True
+        for id in self:
+            if id == key:
+                return True
         return False
 
     def __delitem__(self, key):
         del self.context[key][self.user.id]
 
     def __getitem__(self, key):
-        if key not in self:
+        if not key in self:
             raise KeyError(key)
         return self.context[key]
 
     def __iter__(self):
-        for id, group in self.context.iteritems():
-            if self.user.id in group:
-                yield id
+        """Iterate over all groups the user is a member of
+        """
+        for id in self.search():
+            yield id
 
     def add(self, group_or_id):
         try:
@@ -105,10 +106,12 @@ class _UserGroups(AbstractNode):
         self.context[group_id].add(self.user)
 
     def search(self, attrlist=None):
-        if not attrlist:
-            return self.keys()
-        # XXX: nasty, the flattened attrs are turned into lists again
-        return [(id, dict([(x, [self[id].context.attrs[x]]) for x in attrlist])) for id in self]
+        """If no special attrs asked, return all keys
+
+        XXX: criteria not supported yet
+        """
+        criteria = {self.context._member_attr: self.user.context.DN}
+        return self.context.search(criteria=criteria, attrlist=attrlist)
 
 
 class User(_User):
@@ -118,7 +121,7 @@ class User(_User):
     maybe static plumbing
     """
     @property
-    def groups(self):
+    def member_groups(self):
         """A filtered view of all groups
         """
         return _UserGroups(self.__parent__.groups, user=self)
@@ -136,8 +139,8 @@ class Users(Principals):
 
     def __delitem__(self, id):
         user = self[id]
-        for group_id in user.groups.keys():
-            del user.groups[group_id]
+        for group_id in user.member_groups:
+            del user.member_groups[group_id]
         super(Users, self).__delitem__(id)
 
     # XXX: do we really need this?
@@ -195,15 +198,13 @@ class Group(_Group):
 
     @property
     def _memberdns(self):
-        # XXX: multi-valued attrs should always be lists
-        members = self.context.attrs[self._member_attr]
-        if type(members) not in (list, tuple):
-            members = [members,]
-        return list(members)
+        return self.context.attrs[self._member_attr]
 
     def __contains__(self, key):
+        """checks whether a key is in keys(), uses __iter__
+        """
         for id in self:
-            if key == id:
+            if id == key:
                 return True
         return False
 
@@ -251,16 +252,17 @@ class Group(_Group):
         self.context()
 
     def search(self, attrlist=None):
-        """XXX: incomplete signature
+        """Search in all users of the group
+
+        XXX: incomplete signature
 
         XXX: unalias attrs
 
         XXX: really implement it
         """
-        if not attrlist:
-            return self.keys()
-        # XXX: nasty, the flattened attrs are turned into lists again
-        return [(id, dict([(x, [self[id].context.attrs[x]]) for x in attrlist])) for id in self]
+        users = self.__parent__.users
+        criteria = dict(id=self.keys())
+        return users.search(criteria=criteria, attrlist=attrlist, or_search=True)
 
 
 class Groups(Principals):
