@@ -59,10 +59,8 @@ Querying a group for a non-member results in a KeyError::
       ...
     KeyError: 'uid1'
 
-Members are added via ``add``, adding a member that is already a
-member does noting::
+Members are added via ``add``::
 
-    >>> group1.add(user0)
     >>> group1.add(user0)
     >>> group1.keys()
     [u'uid1', u'uid0']
