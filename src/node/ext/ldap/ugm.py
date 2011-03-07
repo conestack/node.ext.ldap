@@ -21,13 +21,15 @@ class PrincipalsConfig(object):
             attrmap={},
             scope=ONELEVEL,
             queryFilter='',
-            objectClasses=[]):
+            objectClasses=[],
+            member_relation=''):
         self.baseDN = baseDN
         self.newDN = newDN or baseDN
         self.attrmap = attrmap
         self.scope = scope
         self.queryFilter = queryFilter
         self.objectClasses = objectClasses
+        self.member_relation = member_relation
 
 
 class UsersConfig(PrincipalsConfig):
@@ -54,12 +56,15 @@ class Principals(_Principals):
         self.context._key_attr = cfg.attrmap['id']
         self.context._rdn_attr = cfg.attrmap['rdn']
         self.context._seckey_attrs = ('dn',)
+        if cfg.member_relation:
+            self.context._child_relation = cfg.member_relation
 
     def idbydn(self, dn):
         """return a principals id for a given dn
 
         raise KeyError if not enlisted
         """
+        self.context.keys()
         return self.context._seckeys['dn'][dn]
 
 
@@ -97,9 +102,7 @@ class _UserGroups(AbstractNode):
             group_id = group_or_id.id
         except AttributeError:
             group_id = group_or_id
-        if group_id in self:
-            return
-        self.context[group.id].add(self.user)
+        self.context[group_id].add(self.user)
 
 
 class User(_User):
@@ -169,6 +172,10 @@ class Users(Principals):
 class Group(_Group):
     """Some ldap specifics for groups
     """
+    def __init__(self, *args, **kw):
+        super(Group, self).__init__(*args, **kw)
+        self._keys = None
+
     # XXX: HACK
     @property
     def _member_attr(self):
@@ -204,14 +211,24 @@ class Group(_Group):
         return self.__parent__.users[key]
 
     def __iter__(self):
-        for dn in self._memberdns:
-            if dn == "cn=nobody":
-                continue
-            # XXX for now we only check in the users folder
-            yield self.__parent__.users.idbydn(dn)
+        if self._keys:
+            for key in self._keys:
+                yield key
+        else:
+            self._keys = []
+            for dn in self._memberdns:
+                if dn == "cn=nobody":
+                    continue
+                # XXX for now we only check in the users folder
+                try:
+                    key = self.__parent__.users.idbydn(dn)
+                    self._keys.append(key)
+                    yield key
+                except KeyError:
+                    print "Ignoring '%s' as a member of '%s'" % (dn, self.id)
 
-    def add(self, principal_or_id):
-        """modeled after set.add()
+    def add(self, principal_or_id, error_if_present=True):
+        """modeled after set.add() + raise flag
 
         XXX: setitem felt wrong for adding a principal as the key
         cannot be specified
@@ -221,10 +238,23 @@ class Group(_Group):
         except AttributeError:
             principal_id = principal_or_id
         if principal_id in self:
+            if error_if_present:
+                raise ValueError("Already a member: '%s'." % (principal_id,))
             return
         dn = self.__parent__.users.context.child_dn(principal_id)
         self.context.attrs[self._member_attr] = self._memberdns + [dn]
         self.context()
+
+    def search(self, attrlist=None):
+        """XXX: incomplete signature
+
+        XXX: unalias attrs
+
+        XXX: really implement it
+        """
+        if not attrlist:
+            return self.keys()
+        return [(id, dict([(x, self[id].context.attrs[x]) for x in attrlist])) for id in self]
 
 
 class Groups(Principals):
