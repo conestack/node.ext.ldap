@@ -109,6 +109,6 @@ and can remove and add itself to them::
     >>> user2.membership.add(group1)
     >>> group1.keys()
     [u'uid1', u'uid2']
-    >>> del user2.groups[group1.id]
+    >>> del user2.membership[group1.id]
     >>> group1.keys()
     [u'uid1']

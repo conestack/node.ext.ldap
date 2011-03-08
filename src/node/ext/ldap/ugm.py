@@ -282,13 +282,14 @@ class Groups(Principals):
     principal_factory = Group
 
     def __init__(self, props, cfg):
-        super(Groups, self).__init__(props, cfg)
         if 'groupOfNames' in cfg.objectClasses:
             self._member_attr = 'member'
         elif 'groupOfUniqueNames' in cfg.objectClasses:
             self._member_attr = 'uniqueMember'
         else:
             raise ValueError('Unsupported groups: %s' % (cfg.objectClasses,))
+        cfg.attrmap[self._member_attr] = self._member_attr
+        super(Groups, self).__init__(props, cfg)
 
     def __setitem__(self, key, vessel):
         vessel.attrs.setdefault(self._member_attr, []).insert(0, 'cn=nobody')
