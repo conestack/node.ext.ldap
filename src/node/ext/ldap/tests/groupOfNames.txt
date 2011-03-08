@@ -85,28 +85,28 @@ Members are removed via ``delitem``::
 Once users knows groups, a user knows its groups::
 
     >>> users.groups = groups
-    >>> user0.groups.keys()
+    >>> user0.membership.keys()
     []
-    >>> user1.groups.keys()
+    >>> user1.membership.keys()
     [u'group1', u'group2']
-    >>> user2.groups.keys()
+    >>> user2.membership.keys()
     [u'group2']
 
 and is able to return them::
 
-    >>> user0.groups['group1']
+    >>> user0.membership['group1']
     Traceback (most recent call last):
       ...
     KeyError: 'group1'
 
-    >>> user1.groups['group1']
+    >>> user1.membership['group1']
     <Group 'group1'>
 
 and can remove and add itself to them::
 
     >>> group1.keys()
     [u'uid1']
-    >>> user2.groups.add(group1)
+    >>> user2.membership.add(group1)
     >>> group1.keys()
     [u'uid1', u'uid2']
     >>> del user2.groups[group1.id]

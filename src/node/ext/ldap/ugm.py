@@ -121,7 +121,7 @@ class User(_User):
     maybe static plumbing
     """
     @property
-    def member_groups(self):
+    def membership(self):
         """A filtered view of all groups
         """
         return _UserGroups(self.__parent__.groups, user=self)
@@ -139,8 +139,8 @@ class Users(Principals):
 
     def __delitem__(self, id):
         user = self[id]
-        for group_id in user.member_groups:
-            del user.member_groups[group_id]
+        for group_id in user.membership:
+            del user.membership[group_id]
         super(Users, self).__delitem__(id)
 
     # XXX: do we really need this?
