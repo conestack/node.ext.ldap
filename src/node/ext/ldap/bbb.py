@@ -175,6 +175,13 @@ class LDAPNode(LifecycleNode):
     # This is really ldap
     @property
     def DN(self):
+        """
+        ATTENTION: For one and the same entry, ldap will always return
+        the same DN. However, depending on the individual syntax
+        definition of the DN's components there might be a multitude
+        of strings that equal the same DN, e.g. for cn:
+           'cn=foo bar' == 'cn=foo   bar' -> True
+        """
         if self.__parent__ is not None:
             return self.__parent__.child_dn(self.__name__)
         elif self.__name__ is not None:

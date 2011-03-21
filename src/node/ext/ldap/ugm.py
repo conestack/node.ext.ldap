@@ -1,3 +1,5 @@
+import ldap
+
 from node.base import AbstractNode
 from zope.interface import implements
 
@@ -66,7 +68,33 @@ class Principals(_Principals):
         raise KeyError if not enlisted
         """
         self.context.keys()
-        return self.context._seckeys['dn'][dn]
+        idsbydn = self.context._seckeys['dn']
+        try:
+            return idsbydn[dn]
+        except KeyError:
+            # It's possible that we got a different string resulting
+            # in the same DN, as every components can have individual
+            # comparison rules (see also
+            # node.ext.ldap.bbb.LDAPNode.DN). We leave the job to ldap
+            # and try again with the resulting DN.
+            #
+            # XXX: this was introduced because a customer has group
+            # member attributes where the DN string differs.
+            #
+            # XXX: This would not be necessary, if an LDAP directory
+            # is consistent, i.e does not use different strings to
+            # talk about the same.
+            #
+            # XXX: normalization of DN in python would also be a
+            # solution, but requires implementation of all comparison
+            # rules defined in schemas. Maybe we can retrieve them
+            # from LDAP.
+            search = self.context.ldap_session.search
+            try:
+                dn = search(baseDN=dn)[0][0]
+            except ldap.NO_SUCH_OBJECT:
+                raise KeyError(dn)
+            return idsbydn[dn]
 
 
 class _UserGroups(AbstractNode):
@@ -231,7 +259,7 @@ class Group(_Group):
             try:
                 yield self.__parent__.users.idbydn(dn)
             except KeyError:
-                print "Ignoring '%s' as a member of '%s'" % (dn, self.id)
+                print "Unknown user: ignoring '%s' as a member of '%s'." % (dn, self.id)
 
     def add(self, principal_or_id, error_if_present=True):
         """modeled after set.add() + raise flag
