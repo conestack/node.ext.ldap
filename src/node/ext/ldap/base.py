@@ -54,7 +54,7 @@ class LDAPConnector(object):
     This Object knows about the LDAP Server to connect to, the authentication
     information and the protocol to use.
 
-    TODO: TLS/SSL Support.
+    TODO: tests for TLS/SSL Support - it should be functional. (see also properties.py)
 
     Normally you do not need to use this class directly.
 
@@ -86,6 +86,7 @@ class LDAPConnector(object):
             self._bindPW = bindPW
             self._cache = cache
             self._cachetimeout = cachetimeout
+            self._start_tls = 0
         else:
             # new
             self._uri = props.uri
@@ -93,6 +94,8 @@ class LDAPConnector(object):
             self._bindPW = props.password
             self._cache = props.cache
             self._cachetimeout = props.timeout
+            self._start_tls = props.start_tls
+
 
     def setProtocol(self, protocol):
         """Set the LDAP Protocol Version to use.
@@ -107,13 +110,15 @@ class LDAPConnector(object):
         """
         self._con = ldap.initialize(self._uri)
         self._con.protocol_version = self.protocol
-        self._con.simple_bind(self._bindDN, self._bindPW)
+        if self._start_tls:
+            self._con.start_tls_s()
+        self._con.simple_bind_s(self._bindDN, self._bindPW)
         return self._con
 
     def unbind(self):
         """Unbind from Server.
         """
-        self._con.unbind()
+        self._con.unbind_s()
         self._con = None
 
 

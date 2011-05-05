@@ -17,7 +17,7 @@ class LDAPServerProperties(object):
                  cache=True,
                  timeout=43200,
                  uri=None,
-                 #start_tls=1,
+                 start_tls=0,
                  #tls_cacertfile=None,
                  #tls_cacertdir=None,
                  #tls_clcertfile=None,
@@ -65,7 +65,7 @@ class LDAPServerProperties(object):
         self.password = password
         self.cache = cache
         self.timeout = timeout
-        #self.start_tls = start_tls
+        self.start_tls = start_tls
         #self.tls_cacertfile = tls_cacertfile
         #self.tls_cacertdir = tls_cacertdir
         #self.tls_clcertfile = tls_clcertfile
