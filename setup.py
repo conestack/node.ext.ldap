@@ -34,6 +34,7 @@ setup(name='node.ext.ldap',
           'python-ldap',
           'zodict',
           'bda.cache',
+          'node.ext.ugm',
       ],
       extras_require={
           'test': [

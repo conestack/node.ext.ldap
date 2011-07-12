@@ -6,8 +6,10 @@ logger = logging.getLogger('node.ext.ldap')
 
 try:
     import ldap
-except ImportError:
-    raise ImportError, u"node.ext.ldap requires a working python-ldap installation."
+except ImportError:                                         #pragma NO COVERAGE
+    e =  u"node.ext.ldap requires a working "               #pragma NO COVERAGE
+    e += u"python-ldap installation."                       #pragma NO COVERAGE
+    raise ImportError, e                                    #pragma NO COVERAGE
 
 from zope.component import queryUtility
 from bda.cache import ICacheManager
@@ -27,8 +29,8 @@ def testLDAPConnectivity(server=None, port=None, props=None):
         lc.bind()
         lc.unbind()
         return 'success'
-    except ldap.LDAPError, error:
-        return error
+    except ldap.LDAPError, error:                           #pragma NO COVERAGE
+        return error                                        #pragma NO COVERAGE
 
 def md5digest(key):
     """Needed to support both, python 2.4 and python >=2.5
@@ -40,10 +42,10 @@ def md5digest(key):
     try:
         # in python >=2.5
         import hashlib
-    except ImportError:
+    except ImportError:                                     #pragma NO COVERAGE
         # fallback if python 2.4
-        import md5
-        return md5.new(key).hexdigest()
+        import md5                                          #pragma NO COVERAGE
+        return md5.new(key).hexdigest()                     #pragma NO COVERAGE
     m = hashlib.md5()
     m.update(key)
     return m.hexdigest()
@@ -103,7 +105,7 @@ class LDAPConnector(object):
         Deprecated: This function will be removed in version 1.5. Use
                     ``protocol`` property directly instead.
         """
-        self.protocol = protocol
+        self.protocol = protocol                            #pragma NO COVERAGE
 
     def bind(self):
         """Bind to Server and return the Connection Object.
@@ -176,7 +178,7 @@ class LDAPCommunicator(object):
         Deprecated: This function will be removed in version 1.5. Use
                     ``baseDN`` property directly instead.
         """
-        self.baseDN = baseDN
+        self.baseDN = baseDN                                #pragma NO COVERAGE
 
     def getBaseDN(self):
         """Returns the current set base DN.
@@ -184,7 +186,7 @@ class LDAPCommunicator(object):
         Deprecated: This function will be removed in version 1.5. Use
                     ``baseDN`` property directly instead.
         """
-        return self.baseDN
+        return self.baseDN                                  #pragma NO COVERAGE
 
     def search(self, queryFilter, scope, baseDN=None,
                force_reload=False, attrlist=None, attrsonly=0):
@@ -205,6 +207,9 @@ class LDAPCommunicator(object):
         """
         if baseDN is None:
             baseDN = self.baseDN
+            if not baseDN:
+                raise ValueError(u"baseDN unset.")
+                
         if self._cache:
             # XXX: Consider attrlist and attrsonly in cachekey.
             key = '%s-%s-%s-%i' % (self._connector._bindDN,
@@ -267,12 +272,12 @@ def main():
 
     Expects server and port as arguments.
     """
-    import sys
-    if len(sys.argv) < 3:
-        print 'usage: python base.py [server] [port]'
-    else:
-        server, port = sys.argv[1:]
-        print testLDAPConnectivity(server, int(port))
+    import sys                                              #pragma NO COVERAGE
+    if len(sys.argv) < 3:                                   #pragma NO COVERAGE
+        print 'usage: python base.py [server] [port]'       #pragma NO COVERAGE
+    else:                                                   #pragma NO COVERAGE
+        server, port = sys.argv[1:]                         #pragma NO COVERAGE
+        print testLDAPConnectivity(server, int(port))       #pragma NO COVERAGE
 
 if __name__ == "__main__":
-    main()
+    main()                                                  #pragma NO COVERAGE
