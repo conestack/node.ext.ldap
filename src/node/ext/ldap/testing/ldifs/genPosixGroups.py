@@ -43,7 +43,6 @@ objectClass: account
 objectClass: posixAccount
 objectClass: top
 objectClass: shadowAccount
-structuralObjectClass: account
 loginShell: /bin/bash
 homeDirectory: /home/uid%(n)s
 shadowFlag: 0
@@ -54,6 +53,7 @@ shadowInactive: 99999
 shadowExpire: 99999
 userPassword: secret%(n)s
 uidNumber: %(uid_num)i
+gidNumber: %(gid_num)i
 """
 
 group_template = """\
@@ -62,12 +62,10 @@ cn: group%(n)s
 gidNumber: %(gid_num)i
 objectClass: posixGroup
 objectClass: top
-structuralObjectClass: posixGroup
 memberUid: nobody
 """
 
 member_template = "memberUid: uid%(n)s"
-gid_template = "gidNumber: %(n)i"
 
 nusers = int(sys.argv.pop(1))
 ngroups = int(sys.argv.pop(1))
@@ -90,9 +88,8 @@ for nu in range(nusers):
         domain=domain,
         n=nu,
         uid_num=nu,
+        gid_num=nu,
         ),
-    for ng in range(nu+1):
-        print gid_template % dict(n=ng)
     print
 
 for ng in range(ngroups):

@@ -1,0 +1,3 @@
+Test for users and groups defined in ug-posixGroups.ldif::
+
+    >> print "hello"

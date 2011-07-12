@@ -106,6 +106,8 @@ schema = (
     resource('schema/core.schema'),
     resource('schema/cosine.schema'),
     resource('schema/inetorgperson.schema'),
+    resource('schema/nis.schema'),
+    #resource('schema/samba.schema'),
     )
 SLAPD_CONF = SlapdConf(schema)
 
@@ -682,5 +684,34 @@ LDIF_groupOfNames_1000_1000_add = Ldif(
         scope=SUBTREE,
         queryFilter='(objectClass=groupOfNames)',
         objectClasses=['groupOfNames'],
+        ),
+    )
+
+# Users and groups (posix)
+LDIF_posixGroups = Ldif(
+    resource('ldifs/posixGroups.ldif'),
+    bases=(LDIF_base,),
+    name="LDIF_posixGroups",
+    ucfg=LDAPUsersConfig(
+        baseDN='ou=users,ou=posixGroups,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'uid',
+            'login': 'cn',
+            'rdn': 'uid',
+            'cn': 'cn',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=posixAccount)',
+        objectClasses=['posixAccount'],
+        ),
+    gcfg=LDAPGroupsConfig(
+        baseDN='ou=groups,ou=posixGroups,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'cn',
+            'rdn': 'cn',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=posixGroup)',
+        objectClasses=['posixGroup'],
         ),
     )

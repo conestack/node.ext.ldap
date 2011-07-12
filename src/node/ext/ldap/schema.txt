@@ -5,7 +5,8 @@
     >>> info = LDAPSchemaInfo(props)
     >>> info.baseDN = 'dc=my-domain,dc=com'
     >>> binary = info.binary()
-    >>> for attr in binary:
+    
+    >> for attr in binary:
     ...     print attr.names
     ...     print attr.desc
     ...     print attr.oid

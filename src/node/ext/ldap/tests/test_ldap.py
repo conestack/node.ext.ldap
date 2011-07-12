@@ -19,6 +19,7 @@ DOCFILES = [
     ('../users.txt', testing.LDIF_principals),
     ('groupOfNames.txt', testing.LDIF_groupOfNames),
     ('groupOfNames_add.txt', testing.LDIF_groupOfNames_add),
+    ('posixGroups.txt', testing.LDIF_posixGroups),
     ]
 
 optionflags = \
