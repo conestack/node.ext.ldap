@@ -314,6 +314,8 @@ class Groups(Principals):
             self._member_attr = 'member'
         elif 'groupOfUniqueNames' in cfg.objectClasses:
             self._member_attr = 'uniqueMember'
+        elif 'posixGroup' in cfg.objectClasses:
+            self._member_attr = 'memberUid'
         else:
             raise ValueError('Unsupported groups: %s' % (cfg.objectClasses,))
         cfg.attrmap[self._member_attr] = self._member_attr
