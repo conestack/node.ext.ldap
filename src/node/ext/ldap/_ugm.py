@@ -71,21 +71,11 @@ class GroupsConfig(PrincipalsConfig):
 
 
 class PrincipalPart(Part):
-    """Turns a node into a principal
-    """
     
-    @default
-    def __init__(self, props, cfg):
-        self.context = LDAPNode(name=cfg.baseDN, props=props)
-        self.attraliaser = cfg.attrmap
-        self.context._child_filter = cfg.queryFilter
-        self.context._child_scope = int(cfg.scope)
-        self.context._child_objectClasses = cfg.objectClasses
-        self.context._key_attr = cfg.attrmap['id']
-        self.context._rdn_attr = cfg.attrmap['rdn']
-        self.context._seckey_attrs = ('dn',)
-        if cfg.member_relation:
-            self.context._child_relation = cfg.member_relation
+    @extend
+    def __init__(self, context, attraliaser):
+        self.context = context
+        self.attraliaser = attraliaser
     
     @default
     def ldap_attributes_factory(self, name=None, parent=None):
@@ -96,12 +86,12 @@ class PrincipalPart(Part):
         return aliased_attrs
     
     attributes_factory = finalize(ldap_attributes_factory)
-
+    
     @default
     def idbydn(self, dn):
-        """return a principals id for a given dn
+        """Return a principals id for a given dn.
 
-        raise KeyError if not enlisted
+        Raise KeyError if not enlisted.
         """
         self.context.keys()
         idsbydn = self.context._seckeys['dn']
@@ -110,18 +100,17 @@ class PrincipalPart(Part):
         except KeyError:
             # It's possible that we got a different string resulting
             # in the same DN, as every components can have individual
-            # comparison rules (see also
-            # node.ext.ldap.bbb.LDAPNode.DN). We leave the job to ldap
-            # and try again with the resulting DN.
+            # comparison rules (see also node.ext.ldap.bbb.LDAPNode.DN).
+            # We leave the job to LDAP and try again with the resulting DN.
             #
-            # XXX: this was introduced because a customer has group
+            # This was introduced because a customer has group
             # member attributes where the DN string differs.
             #
-            # XXX: This would not be necessary, if an LDAP directory
+            # This would not be necessary, if an LDAP directory
             # is consistent, i.e does not use different strings to
             # talk about the same.
             #
-            # XXX: normalization of DN in python would also be a
+            # Normalization of DN in python would also be a
             # solution, but requires implementation of all comparison
             # rules defined in schemas. Maybe we can retrieve them
             # from LDAP.
@@ -131,35 +120,19 @@ class PrincipalPart(Part):
             except ldap.NO_SUCH_OBJECT:
                 raise KeyError(dn)
             return idsbydn[dn]
-
-    @extend
-    def __repr__(self):
-        return "<%s '%s'>" % (
-                self.__class__.__name__.split('.')[-1],
-                unicode(self.id).encode('ascii', 'replace'),
-                )
     
     @default
     def add_role(self, role):
-        """Add role.
-        """
-        raise NotImplementedError(u"``Principal`` does not implement "
-                                  u"``add_role``")
+        self.parent.parent.add_role(role, self)
     
     @default
     def remove_role(self, role):
-        """Remove role.
-        """
-        raise NotImplementedError(u"``Principal`` does not implement "
-                                  u"``remove_role``")
+        self.parent.parent.remove_role(role, self)
     
     @default
     @property
     def roles(self):
-        """Roles.
-        """
-        raise NotImplementedError(u"``Principal`` does not implement "
-                                  u"``roles``")
+        return self.parent.parent.roles(self)
 
 
 class UserPart(PrincipalPart, BaseUserPart):
@@ -192,15 +165,23 @@ class GroupPart(PrincipalPart, BaseGroupPart):
 class User(object):
     __metaclass__ = plumber
     __plumbing__ = (
-        NodeChildValidate,
         Nodespaces,
         Attributes,
         Nodify,
         UserPart,
     )
     
+    def __getitem__(self, key):
+        raise NotImplementedError(u"User object is a leaf.")
+    
     def __setitem__(self, key, value):
-        raise NotImplementedError(u"User object cannot contain children.")
+        raise NotImplementedError(u"User object is a leaf.")
+    
+    def __delitem__(self, key):
+        raise NotImplementedError(u"User object is a leaf.")
+    
+    def __iter__(self):
+        return iter([])
 
 
 class Group(object):
@@ -237,32 +218,29 @@ class PrincipalsPart(Part):
     @extend
     def __init__(self, props, cfg):
         self.context = LDAPNode(name=cfg.baseDN, props=props)
-        self.context._seckey_attrs = ('dn',)
-        
         self.context._child_filter = cfg.queryFilter
         self.context._child_scope = int(cfg.scope)
         self.context._child_objectClasses = cfg.objectClasses
         self.context._key_attr = cfg.attrmap['id']
         self.context._rdn_attr = cfg.attrmap['rdn']
-        self.context._seckey_attrs = ('dn',)
+        
+        # what's a member_relation?
         if cfg.member_relation:
             self.context._child_relation = cfg.member_relation
         
+        self.context._seckey_attrs = ('dn',)
+        if cfg.attrmap.get('login') \
+          and cfg.attrmap['login'] != cfg.attrmap['id']:
+            self.context._seckey_attrs += (cfg.attrmap['login'],)
+        
         self.principal_attrmap = cfg.attrmap
         self.principal_attraliaser = DictAliaser(cfg.attrmap)
-        if cfg.attrmap['login'] != cfg.attrmap['id']:
-            self.context._seckey_attrs += (cfg.attrmap['login'],)
 
-    @default
-    @property
-    def __name__(self):
-        return self.context.name
-
-    # principals have ids
     @default
     @property
     def ids(self):
-        return self.context.keys # XXX ??? keys()
+        # XXX: do we really need this?
+        return self.context.keys()
 
     @default
     def __delitem__(self, key):
@@ -273,10 +251,9 @@ class PrincipalsPart(Part):
         # XXX: should use lazynodes caching, for now:
         # users['foo'] is not users['foo']
         principal = self.principal_factory(
-                self.context[key],
-                attraliaser=self.principal_attraliaser
-                )
-        principal.__name__ = self.context[key].name
+            self.context[key],
+            attraliaser=self.principal_attraliaser)
+        principal.__name__ = self.context[key].__name__
         principal.__parent__ = self
         return principal
 
@@ -289,7 +266,9 @@ class PrincipalsPart(Part):
         try:
             # XXX: better use attrs here. attrs does not necessarily need to be
             #      in a nodespace
-            attrs = vessel.nodespaces['__attrs__']
+            
+            attrs = vessel.attrs
+            #attrs = vessel.nodespaces['__attrs__']
         except KeyError:
             raise ValueError(u"Attributes need to be set.")
 
@@ -300,9 +279,8 @@ class PrincipalsPart(Part):
         nextvessel.__name__ = name
         nextvessel.attribute_access_for_attrs = False
         principal = self.principal_factory(
-                nextvessel,
-                attraliaser=self.principal_attraliaser
-                )
+            nextvessel,
+            attraliaser=self.principal_attraliaser)
         principal.__name__ = name
         principal.__parent__ = self
         # XXX: cache
@@ -314,12 +292,13 @@ class PrincipalsPart(Part):
     def _alias_dict(self, dct):
         if dct is None:
             return None
+        
         # this code does not work if multiple keys map to same value
         #alias = self.principal_attraliaser.alias
         #aliased_dct = dict(
-        #        [(alias(key), val) for key, val in dct.iteritems()]
-        #        )
+        #    [(alias(key), val) for key, val in dct.iteritems()])
         #return aliased_dct
+        
         # XXX: maybe some generalization in aliaser needed
         ret = dict()
         for key, val in self.principal_attraliaser.iteritems():
@@ -352,15 +331,14 @@ class PrincipalsPart(Part):
         # XXX: are single values always lists in results?
         #      is this what we want -> yes!
         results = self.context.search(
-                criteria=self._unalias_dict(criteria),
-                attrlist=self._unalias_list(attrlist),
-                exact_match=exact_match,
-                or_search=or_search,
-                )
+            criteria=self._unalias_dict(criteria),
+            attrlist=self._unalias_list(attrlist),
+            exact_match=exact_match,
+            or_search=or_search)
         if attrlist is None:
             return results
         aliased_results = \
-                [(id, self._alias_dict(attrs)) for id, attrs in results]
+            [(id, self._alias_dict(attrs)) for id, attrs in results]
         return aliased_results
 
 
@@ -370,9 +348,9 @@ class Users(object):
         NodeChildValidate,
         Nodespaces,
         Adopt,
+        PrincipalsPart,
         Attributes,
         Nodify,
-        PrincipalsPart,
         UsersPart,
     )
     
@@ -427,25 +405,25 @@ class Groups(object):
         NodeChildValidate,
         Nodespaces,
         Adopt,
+        PrincipalsPart,
         Attributes,
         Nodify,
-        PrincipalsPart,
         GroupsPart,
     )
     
     principal_factory = Group
 
-    def __init__(self, props, cfg):
-        if 'groupOfNames' in cfg.objectClasses:
-            self._member_attr = 'member'
-        elif 'groupOfUniqueNames' in cfg.objectClasses:
-            self._member_attr = 'uniqueMember'
-        elif 'posixGroup' in cfg.objectClasses:
-            self._member_attr = 'memberUid'
-        else:
-            raise ValueError('Unsupported groups: %s' % (cfg.objectClasses,))
-        cfg.attrmap[self._member_attr] = self._member_attr
-        super(Groups, self).__init__(props, cfg)
+#    def __init__(self, props, cfg):
+#        if 'groupOfNames' in cfg.objectClasses:
+#            self._member_attr = 'member'
+#        elif 'groupOfUniqueNames' in cfg.objectClasses:
+#            self._member_attr = 'uniqueMember'
+#        elif 'posixGroup' in cfg.objectClasses:
+#            self._member_attr = 'memberUid'
+#        else:
+#            raise ValueError('Unsupported groups: %s' % (cfg.objectClasses,))
+#        cfg.attrmap[self._member_attr] = self._member_attr
+#        super(Groups, self).__init__(props, cfg)
 
     def __setitem__(self, key, vessel):
         vessel.attrs.setdefault(self._member_attr, []).insert(0, 'cn=nobody')
@@ -464,3 +442,75 @@ class Ugm(object):
         UgmPart,
         OdictStorage,
     )
+    
+    def __init__(self, name=None, parent=None, props=None,
+                 ucfg=None, gcfg=None, rcfg=None):
+        """
+        ``name``
+            node name
+            
+        ``parent``
+            node parent
+            
+        ``props``
+            LDAPProps
+        
+        ``ucfg``
+            UsersConfig
+        
+        ``gcfg``
+            GroupsConfig
+        
+        ``rcfg``
+            RolesConfig XXX: not yet
+        """
+        self.__name__ = name
+        self.__parent__ = parent
+        self.props = props
+        self.ucfg = ucfg
+        self.gcfg = gcfg
+        self.rcfg = rcfg
+    
+    def __getitem__(self, key):
+        if not key in self.storage:
+            if key == 'users':
+                self['users'] = Users(self.props, self.ucfg)
+            else:
+                self['groups'] = Groups(self.props, self.gcfg)
+        return self.storage[key]
+    
+    @locktree
+    def __setitem__(self, key, value):
+        self._chk_key(key)
+        self.storage[key] = value
+    
+    def __delitem__(self, key):
+        raise NotImplementedError(u"Operation forbidden on this node.")
+    
+    def __iter__(self):
+        for key in ['users', 'groups']:
+            yield key
+    
+    @property
+    def users(self):
+        return self['users']
+    
+    @property
+    def groups(self):
+        return self['groups']
+    
+    def add_role(self, role, principal):
+        # XXX
+        raise NotImplementedError(u"not yet")
+    
+    def remove_role(self, role, principal):
+        # XXX
+        raise NotImplementedError(u"not yet")
+        
+    def roles(self, principal):
+        # XXX
+        raise NotImplementedError(u"not yet")
+    
+    def _chk_key(self, key):
+        if not key in ['users', 'groups']:
+            raise KeyError(key)

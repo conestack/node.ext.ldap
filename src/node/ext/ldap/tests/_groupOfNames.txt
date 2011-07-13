@@ -1,44 +1,119 @@
-Test for users and groups defined in ug-groupOfNames.ldif::
+Tests refering to groupOfNames.ldif
+===================================
 
-    >>> from node.ext.ldap._ugm import Groups
-    >>> from node.ext.ldap._ugm import Users
-    
-    >>> layer['props']
-    <node.ext.ldap.properties.LDAPServerProperties object at ...>
-    
-    >>> layer['ucfg']
-    <node.ext.ldap.ugm.UsersConfig object at ...>
+Ugm root object::
 
-    >>> users = Users(layer['props'], layer['ucfg'])
+    >>> props = layer['props']
+    >>> ucfg = layer['ucfg']
+    >>> gcfg = layer['gcfg']
+    >>> rcfg = None # XXX: later
     
-    >> users.keys()
+    >>> from node.ext.ldap._ugm import Ugm
+    >>> ugm = Ugm(name='ugm', parent=None, props=props,
+    ...           ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
+    
+    >>> ugm
+    <Ugm object 'ugm' at ...>
+
+Users object::
+
+    >>> ugm.users
+    <Users object 'users' at ...>
+    
+    >>> ugm['users'] is ugm.users
+    True
+
+Groups object::
+
+    >>> ugm.groups
+    <Groups object 'groups' at ...>
+    
+    >>> ugm['groups'] is ugm.groups
+    True
+
+Try to delete from UGM, fails::
+
+    >>> del ugm['users']
+    Traceback (most recent call last):
+      ...
+    NotImplementedError: Operation forbidden on this node.
+
+Try to set item by invalid key, fails::
+
+    >>> ugm['inexistent'] = ugm.users
+    Traceback (most recent call last):
+      ...
+    KeyError: 'inexistent'
+
+User keys::
+
+    >>> users = ugm.users
+    >>> users.keys()
     [u'uid0', u'uid1', u'uid2']
 
-    >> user0 = users['uid0']
-    >> user1 = users['uid1']
-    >> user2 = users['uid2']
+Fetch some users::
 
-    >> user0
-    <User 'uid0'>
-    >> user0.__class__
-    <class 'node.ext.ldap.ugm.User'>
+    >>> user_0 = users['uid0']
+    >>> user_1 = users['uid1']
+    >>> user_2 = users['uid2']
 
-    >> groups = Groups(layer['props'], layer['gcfg'])
+    >>> user_0
+    <User object 'uid0' at ...>
+    
+    >>> user_0.__class__
+    <class 'node.ext.ldap._ugm.User'>
+    
+    >>> user_0.attrs
+    Aliased <LDAPNodeAttributes object '__attrs__' at ...>
 
-Groups needs to know where to fetch users from::
+    >>> user_0.attrs.items()
+    [('login', u'cn0'), ('sn', u'sn0'), ('rdn', u'uid0')]
+    
+User is a leaf::
 
-    >> groups.users = users
-    >> groups.keys()
+    >>> user_0['foo'] = object()
+    Traceback (most recent call last):
+      ...
+    NotImplementedError: User object is a leaf.
+    
+    >>> del user_0['foo']
+    Traceback (most recent call last):
+      ...
+    NotImplementedError: User object is a leaf.
+    
+    >>> user_0['foo']
+    Traceback (most recent call last):
+      ...
+    NotImplementedError: User object is a leaf.
+    
+    >>> user_0.keys()
+    []
+
+Groups object::
+
+    >>> groups = ugm.groups
+    >>> groups.keys()
     [u'group0', u'group1', u'group2']
 
-    >> group0 = groups['group0']
-    >> group1 = groups['group1']
-    >> group2 = groups['group2']
+    >>> group_0 = groups['group0']
+    >>> group_1 = groups['group1']
+    >>> group_2 = groups['group2']
 
-    >> group0
-    <Group 'group0'>
-    >> group0.__class__
-    <class 'node.ext.ldap.ugm.Group'>
+    >>> group_0
+    <Group object 'group0' at ...>
+    
+    >>> group_0.__class__
+    <class 'node.ext.ldap._ugm.Group'>
+    
+    >>> group_0.attrs
+    Aliased <LDAPNodeAttributes object '__attrs__' at ...>
+    
+    >>> group_0.attrs.items()
+    [('member', [u'cn=nobody']), ('rdn', u'group0')]
+    
+    >>> group_1.attrs.items()
+    [('member', [u'cn=nobody', u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com']), 
+    ('rdn', u'group1')]
 
 A group returns the members ids as keys::     
 
