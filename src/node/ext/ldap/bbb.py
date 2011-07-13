@@ -392,16 +392,14 @@ class LDAPNode(LifecycleNode):
         return val
 
     def _create_suitable_node(self, vessel):
-        if isinstance(vessel, AttributedNode):
-            node = LDAPNode()
-            try:
-                attrs = vessel.nodespaces['__attrs__']
-            except KeyError:
-                raise ValueError(u"Attributes need to be set.")
-            for key, val in attrs.iteritems():
-                node.attrs[key] = val
-            return node
-        raise ValueError(u"Don't know what to do with '%s', cannot setitem")
+        try:
+            attrs = vessel.attrs
+        except AttributeError:
+            raise ValueError(u"No attributes found on vessel, cannot convert")
+        node = LDAPNode()
+        for key, val in attrs.iteritems():
+            node.attrs[key] = val
+        return node
 
     def __setitem__(self, key, val):
         if isinstance(key, str):

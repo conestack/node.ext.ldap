@@ -67,7 +67,8 @@ Fetch some users::
     Aliased <LDAPNodeAttributes object '__attrs__' at ...>
 
     >>> user_0.attrs.items()
-    [('login', u'cn0'), ('sn', u'sn0'), ('rdn', u'uid0')]
+    [('cn', u'cn0'), ('sn', u'sn0'), 
+    ('mail', u'uid0@groupOfNames.com'), ('rdn', u'uid0')]
     
 User is a leaf::
 
@@ -121,6 +122,68 @@ Change password::
     >>> users.passwd('uid0', 'secret0', 'bar')
     >>> users.authenticate('uid0', 'bar')
     'uid0'
+
+Add user::
+
+    >>> users.printtree()
+    <class 'node.ext.ldap._ugm.Users'>: users
+      <class 'node.ext.ldap._ugm.User'>: uid0
+      <class 'node.ext.ldap._ugm.User'>: uid1
+      <class 'node.ext.ldap._ugm.User'>: uid2
+    
+    >>> user = users.create('sepp',
+    ...                     cn='Sepp',
+    ...                     sn='Bla',
+    ...                     mail='baz@bar.com')
+    >>> user
+    <User object 'sepp' at ...>
+
+The user is added to tree::
+
+    >>> ugm.printtree()
+    <class 'node.ext.ldap._ugm.Ugm'>: ugm
+      <class 'node.ext.ldap._ugm.Users'>: users
+        <class 'node.ext.ldap._ugm.User'>: uid0
+        <class 'node.ext.ldap._ugm.User'>: uid1
+        <class 'node.ext.ldap._ugm.User'>: uid2
+        <class 'node.ext.ldap._ugm.User'>: sepp
+      <class 'node.ext.ldap._ugm.Groups'>: groups
+        <class 'node.ext.ldap._ugm.Group'>: group0
+        <class 'node.ext.ldap._ugm.Group'>: group1
+        <class 'node.ext.ldap._ugm.Group'>: group2
+
+Though, no authentication or password setting possible yet, because tree is
+not persisted to LDAP yet::
+
+    >>> users.authenticate('sepp', 'secret')
+    False
+    
+    >>> ugm.users.passwd('sepp', None, 'secret')
+    Traceback (most recent call last):
+      ...
+    NO_SUCH_OBJECT: {'desc': 'No such object'}
+
+After calling, new user is available in LDAP::
+
+    >>> ugm()
+    >>> ugm.users.passwd('sepp', None, 'secret')
+    >>> users.authenticate('sepp', 'secret')
+    'sepp'
+    
+Delete User::
+
+    >>> del users['sepp']
+    >>> ugm()
+    >>> ugm.printtree()
+    <class 'node.ext.ldap._ugm.Ugm'>: ugm
+      <class 'node.ext.ldap._ugm.Users'>: users
+        <class 'node.ext.ldap._ugm.User'>: uid0
+        <class 'node.ext.ldap._ugm.User'>: uid1
+        <class 'node.ext.ldap._ugm.User'>: uid2
+      <class 'node.ext.ldap._ugm.Groups'>: groups
+        <class 'node.ext.ldap._ugm.Group'>: group0
+        <class 'node.ext.ldap._ugm.Group'>: group1
+        <class 'node.ext.ldap._ugm.Group'>: group2
 
 Groups object::
 

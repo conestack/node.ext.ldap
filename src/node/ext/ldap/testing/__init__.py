@@ -379,6 +379,7 @@ LDIF_groupOfNames = Ldif(
             'rdn': 'uid',
             'cn': 'cn',
             'sn': 'sn',
+            'mail': 'mail',
             },
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',

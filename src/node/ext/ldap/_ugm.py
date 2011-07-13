@@ -6,6 +6,7 @@ from plumber import (
     Part,
 )
 from zope.interface import implements
+from node.base import AttributedNode
 from node.locking import locktree
 from node.aliasing import (
     AliasedNodespace,
@@ -152,14 +153,14 @@ class GroupPart(PrincipalPart, BaseGroupPart):
     def users(self):
         """List of users contained in this group.
         """
-        pass #XXX
+        return []
     
     @default
     @property
     def member_ids(self):
         """List of member ids contained in this group.
         """
-        pass #XXX
+        return []
 
 
 class User(object):
@@ -264,17 +265,11 @@ class PrincipalsPart(Part):
     @default
     def __setitem__(self, name, vessel):
         try:
-            # XXX: better use attrs here. attrs does not necessarily need to be
-            #      in a nodespace
-            
             attrs = vessel.attrs
-            #attrs = vessel.nodespaces['__attrs__']
-        except KeyError:
-            raise ValueError(u"Attributes need to be set.")
-
+        except AttributeError:
+            raise ValueError(u"no attributes found, cannot convert.")
         if name in self:
             raise KeyError(u"Key already exists: '%s'." % (name,))
-
         nextvessel = AttributedNode()
         nextvessel.__name__ = name
         nextvessel.attribute_access_for_attrs = False
@@ -358,9 +353,12 @@ class Users(object):
 
     def __delitem__(self, id):
         user = self[id]
-        for group_id in user.membership:
-            del user.membership[group_id]
-        super(Users, self).__delitem__(id)
+        #for group_id in user.membership:
+        #    del user.membership[group_id]
+        del self.context[id]
+    
+    def __call__(self):
+        self.context()
 
     @debug(['authentication'])
     def authenticate(self, id=None, pw=None):
@@ -375,6 +373,13 @@ class Users(object):
     @debug(['authentication'])
     def passwd(self, id, oldpw, newpw):
         self.context._session.passwd(self.context.child_dn(id), oldpw, newpw)
+    
+    def create(self, id, **kw):
+        vessel = AttributedNode()
+        for k, v in kw.items():
+            vessel.attrs[k] = v
+        self[id] = vessel
+        return self[id]
 
 
 class Groups(object):
@@ -406,6 +411,9 @@ class Groups(object):
     def __setitem__(self, key, vessel):
         vessel.attrs.setdefault(self._member_attr, []).insert(0, 'cn=nobody')
         super(Groups, self).__setitem__(key, vessel)
+    
+    def __call__(self):
+        self.context()
 
 
 class Ugm(object):
@@ -468,6 +476,10 @@ class Ugm(object):
     def __iter__(self):
         for key in ['users', 'groups']:
             yield key
+    
+    def __call__(self):
+        self.users()
+        self.groups()
     
     @property
     def users(self):
