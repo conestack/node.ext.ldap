@@ -89,7 +89,7 @@ User is a leaf::
     >>> user_0.keys()
     []
 
-Authentication tests::
+Authenticate::
 
     >>> users.authenticate('uid0', 'secret0')
     'uid0'
@@ -105,6 +105,22 @@ Authentication tests::
     
     >>> users.authenticate('foo', 'secret0')
     False
+
+Change password::
+
+    >>> users.passwd('uid0', 'foo', 'bar')
+    Traceback (most recent call last):
+      ...
+    UNWILLING_TO_PERFORM: ...
+    
+    >>> users.passwd('foo', 'secret0', 'bar')
+    Traceback (most recent call last):
+      ...
+    KeyError: 'foo'
+    
+    >>> users.passwd('uid0', 'secret0', 'bar')
+    >>> users.authenticate('uid0', 'bar')
+    'uid0'
 
 Groups object::
 
