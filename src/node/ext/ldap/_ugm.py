@@ -362,40 +362,18 @@ class Users(object):
             del user.membership[group_id]
         super(Users, self).__delitem__(id)
 
-    # XXX: do we really need this?
-    # XXX: login is a mapped attr, we could simply search on it
-    def idbylogin(self, login):
-        """Return the users id or raise KeyError
-        """
-        self.context.keys()
-        if self.principal_attrmap['login'] == self.principal_attrmap['id']:
-            if login not in self:
-                raise KeyError(login)
-            # XXX: Is this sane, or should we tell that they are the same?
-            return login
-        return self.context._seckeys[self.principal_attrmap['login']][login]
-
     @debug(['authentication'])
     def authenticate(self, id=None, pw=None):
-        if id is not None and login is not None:
-            raise ValueError(u"Either specify id or login, not both.")
-        if pw is None:
-            raise ValueError(u"You need to specify a password")
-        if login:
-            try:
-                id = self.idbylogin(login)
-            except KeyError:
-                return None
+        id = self.context._seckeys.get(
+            self.principal_attrmap.get('login'), {}).get(id, id)
         try:
             userdn = self.context.child_dn(id)
         except KeyError:
-            return None
-        return self.context._session.authenticate(userdn, pw) and id or None
+            return False
+        return self.context._session.authenticate(userdn, pw) and id or False
 
     @debug(['authentication'])
     def passwd(self, id, oldpw, newpw):
-        """Change a users password
-        """
         self.context._session.passwd(self.context.child_dn(id), oldpw, newpw)
 
 

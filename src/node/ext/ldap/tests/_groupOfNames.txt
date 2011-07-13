@@ -89,6 +89,23 @@ User is a leaf::
     >>> user_0.keys()
     []
 
+Authentication tests::
+
+    >>> users.authenticate('uid0', 'secret0')
+    'uid0'
+    
+    >>> users.authenticate('cn0', 'secret0')
+    u'uid0'
+    
+    >>> users.authenticate('uid0', 'invalid')
+    False
+    
+    >>> users.authenticate('cn0', 'invalid')
+    False
+    
+    >>> users.authenticate('foo', 'secret0')
+    False
+
 Groups object::
 
     >>> groups = ugm.groups
