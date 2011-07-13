@@ -7,6 +7,7 @@ WHAT_TO_DEBUG = set([
         'searching',
         ])
 
+
 class debug:
     """ Decorator which helps to control what aspects of a program to debug
     on per-function basis. Aspects are provided as list of arguments.

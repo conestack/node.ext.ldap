@@ -1,5 +1,6 @@
 from ldap.filter import filter_format
 
+
 class LDAPFilter(object):
     def __init__(self, queryFilter=None):
         if queryFilter is not None \

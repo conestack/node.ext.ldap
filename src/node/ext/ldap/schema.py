@@ -1,11 +1,9 @@
-# Copyright 2008-2009, BlueDynamics Alliance, Austria - http://bluedynamics.com
-# GNU General Public Licence Version 2 or later
-
 import ldapurl
 from ldap.schema.subentry import urlfetch
 from ldap.schema.models import AttributeType
 from ldap.schema.models import ObjectClass
 from ldap.schema.models import LDAPSyntax
+
 
 class LDAPSchemaInfo(object):
     

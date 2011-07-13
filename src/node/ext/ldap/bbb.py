@@ -1,6 +1,3 @@
-# Copyright 2008-2009, BlueDynamics Alliance, Austria - http://bluedynamics.com
-# GNU General Public Licence Version 2 or later
-
 import types
 import copy
 from odict import odict
@@ -31,6 +28,7 @@ from ldap import (
 ACTION_ADD = 0
 ACTION_MODIFY = 1
 ACTION_DELETE = 2
+
 
 def queryNode(props, dn):
     """Query an ldap entry and return as LDAPNode.

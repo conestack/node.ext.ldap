@@ -1,11 +1,9 @@
-# Copyright 2008-2009, BlueDynamics Alliance, Austria - http://bluedynamics.com
-# GNU General Public Licence Version 2 or later
-
 from zope.interface import implements
 from zope.interface import implementer
 from bda.cache import Memcached
 from bda.cache import NullCache
 from node.ext.ldap.interfaces import ICacheProviderFactory
+
 
 @implementer(ICacheProviderFactory)
 def nullcacheProviderFactory():
@@ -14,6 +12,7 @@ def nullcacheProviderFactory():
     Does not cache anything.
     """
     return NullCache()    
+
 
 class MemcachedProviderFactory(object):
     """Memcached cache provider factory implementation for node.ext.ldap.

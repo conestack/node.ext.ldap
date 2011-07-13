@@ -4,16 +4,20 @@ import sys
 import tempfile
 from node.ext.ldap import testing
 
+
 # XXX: could these go into parts/testldap?
 def user_home():
     # XXX: unix only ATM
     return os.getenv('HOME')
 
+
 def env_path():
     return os.path.join(user_home(), '.node.ext.ldap.testldap.env')
 
+
 def ldif_path():
     return os.path.join(user_home(), '.node.ext.ldap.testldap.ldif')
+
 
 def mk_tmp():
     tmpfolder = tempfile.mkdtemp()
@@ -21,9 +25,11 @@ def mk_tmp():
         file.write(tmpfolder)
     return tmpfolder
 
+
 def mk_ldif(ldif):
     with open(ldif_path(), 'w') as file:
         file.write(ldif)
+
 
 def _read_file(path):
     try:
@@ -33,15 +39,19 @@ def _read_file(path):
     except IOError:
         return None
 
+
 def read_tmp():
     return _read_file(env_path())
+
 
 def read_ldif():
     return _read_file(ldif_path())
 
+
 def cleanup_env():
     os.remove(env_path())
     os.remove(ldif_path())
+
 
 def flatlayers(layer, layers=[]):
     layers.insert(0, layer)
@@ -49,17 +59,20 @@ def flatlayers(layer, layers=[]):
         flatlayers(base, layers)
     return layers
 
+
 def startslapd(layer, args):
     mk_ldif(args[1])
     os.environ['node.ext.ldap.testldap.env'] = mk_tmp()
     for layer in flatlayers(layer):
         layer.setUp(args[2:])
 
+
 def stopslapd(layer, args):
     os.environ['node.ext.ldap.testldap.env'] = read_tmp()
     for layer in reversed(flatlayers(layer)):
         layer.tearDown()
     cleanup_env()
+
 
 CMD = {
     'start': startslapd,

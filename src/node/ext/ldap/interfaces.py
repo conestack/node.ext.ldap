@@ -1,9 +1,8 @@
-# Copyright 2008-2010, BlueDynamics Alliance, Austria - http://bluedynamics.com
-# GNU General Public Licence Version 2 or later
 from zope.interface import (
     Interface,
     Attribute,
 )
+
 
 class ICacheProviderFactory(Interface):
     """Create some ICacheProvider implementing object on __call__.
@@ -13,6 +12,7 @@ class ICacheProviderFactory(Interface):
     def __call__():
         """See above.
         """
+
 
 class ILDAPProps(Interface):
     """LDAP properties configuration interface.
@@ -42,6 +42,7 @@ class ILDAPProps(Interface):
 
     retry_delay = Attribute(u"Retry delay in seconds")
 
+
 class ILDAPPrincipalsConfig(Interface):
     """LDAP principals configuration interface.
     """
@@ -56,9 +57,11 @@ class ILDAPPrincipalsConfig(Interface):
 
     objectClasses = Attribute(u"Default object classes for new principals.")
 
+
 class ILDAPUsersConfig(ILDAPPrincipalsConfig):
     """LDAP users configuration interface.
     """
+
 
 class ILDAPGroupsConfig(ILDAPPrincipalsConfig):
     """LDAP groups configuration interface.

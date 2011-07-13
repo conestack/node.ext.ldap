@@ -1,6 +1,3 @@
-# Copyright 2008-2009, BlueDynamics Alliance, Austria - http://bluedynamics.com
-# GNU General Public Licence Version 2 or later
-
 import ldap
 from node.ext.ldap import (
     BASE,
@@ -9,6 +6,7 @@ from node.ext.ldap import (
 )
 from node.ext.ldap.base import testLDAPConnectivity
 from node.ext.ldap.strcodec import encode, decode
+
 
 class LDAPSession(object):
 

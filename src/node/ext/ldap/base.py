@@ -1,6 +1,3 @@
-# Copyright 2008-2009, BlueDynamics Alliance, Austria - http://bluedynamics.com
-# GNU General Public Licence Version 2 or later
-
 import logging
 logger = logging.getLogger('node.ext.ldap')
 
@@ -32,6 +29,7 @@ def testLDAPConnectivity(server=None, port=None, props=None):
     except ldap.LDAPError, error:                           #pragma NO COVERAGE
         return error                                        #pragma NO COVERAGE
 
+
 def md5digest(key):
     """Needed to support both, python 2.4 and python >=2.5
 
@@ -49,6 +47,7 @@ def md5digest(key):
     m = hashlib.md5()
     m.update(key)
     return m.hexdigest()
+
 
 class LDAPConnector(object):
     """Object is responsible for the LDAP connection.
@@ -97,7 +96,6 @@ class LDAPConnector(object):
             self._cache = props.cache
             self._cachetimeout = props.timeout
             self._start_tls = props.start_tls
-
 
     def setProtocol(self, protocol):
         """Set the LDAP Protocol Version to use.
@@ -266,6 +264,7 @@ class LDAPCommunicator(object):
     def passwd(self, userdn, oldpw, newpw):
         self._con.passwd_s(userdn, oldpw, newpw)
 
+
 def main():
     """Use this module from command line for testing the connectivity to the
     LDAP Server.
@@ -278,6 +277,7 @@ def main():
     else:                                                   #pragma NO COVERAGE
         server, port = sys.argv[1:]                         #pragma NO COVERAGE
         print testLDAPConnectivity(server, int(port))       #pragma NO COVERAGE
+
 
 if __name__ == "__main__":
     main()                                                  #pragma NO COVERAGE
