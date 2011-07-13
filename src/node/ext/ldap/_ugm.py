@@ -335,6 +335,14 @@ class PrincipalsPart(Part):
         aliased_results = \
             [(id, self._alias_dict(attrs)) for id, attrs in results]
         return aliased_results
+    
+    @default
+    def create(self, id, **kw):
+        vessel = AttributedNode()
+        for k, v in kw.items():
+            vessel.attrs[k] = v
+        self[id] = vessel
+        return self[id]
 
 
 class Users(object):
@@ -373,13 +381,6 @@ class Users(object):
     @debug(['authentication'])
     def passwd(self, id, oldpw, newpw):
         self.context._session.passwd(self.context.child_dn(id), oldpw, newpw)
-    
-    def create(self, id, **kw):
-        vessel = AttributedNode()
-        for k, v in kw.items():
-            vessel.attrs[k] = v
-        self[id] = vessel
-        return self[id]
 
 
 class Groups(object):

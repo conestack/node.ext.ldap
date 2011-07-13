@@ -213,14 +213,16 @@ Groups object::
 
 A group returns the members ids as keys::     
 
-    >> group0.keys()
+    >>> group_0.member_ids
     []
-    >> group1.keys()
+    
+    >> group_1.member_ids
     [u'uid1']
-    >> group2.keys()
+    
+    >> group_2.member_ids
     [u'uid1', u'uid2']
 
-The member users are fetched via ``getitem``::
+The member users are fetched via ``__getitem__``::
 
     >> group1['uid1']
     <User 'uid1'>
