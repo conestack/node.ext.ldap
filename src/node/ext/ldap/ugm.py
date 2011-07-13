@@ -18,6 +18,7 @@ from node.ext.ldap.outbox import User as _User
 class PrincipalsConfig(object):
     """Superclass for UsersConfig and GroupsConfig
     """
+    
     def __init__(self,
             baseDN='',
             newDN='',

@@ -17,10 +17,17 @@ DOCFILES = [
     ('../bbb.txt', testing.LDIF_data),
     ('../schema.txt', testing.LDIF_data),
     ('../users.txt', testing.LDIF_principals),
+    
+    # old
     ('groupOfNames.txt', testing.LDIF_groupOfNames),
     ('groupOfNames_add.txt', testing.LDIF_groupOfNames_add),
+    
+    # new
+    ('_groupOfNames.txt', testing.LDIF_groupOfNames),
+    ('_groupOfNames_add.txt', testing.LDIF_groupOfNames_add),
+    
     ('posixGroups.txt', testing.LDIF_posixGroups),
-    ]
+]
 
 optionflags = \
     doctest.NORMALIZE_WHITESPACE | \
