@@ -150,7 +150,10 @@ The user is added to tree::
       <class 'node.ext.ldap._ugm.Groups'>: groups
         <class 'node.ext.ldap._ugm.Group'>: group0
         <class 'node.ext.ldap._ugm.Group'>: group1
+          <class 'node.ext.ldap._ugm.User'>: uid1
         <class 'node.ext.ldap._ugm.Group'>: group2
+          <class 'node.ext.ldap._ugm.User'>: uid1
+          <class 'node.ext.ldap._ugm.User'>: uid2
 
 Though, no authentication or password setting possible yet, because tree is
 not persisted to LDAP yet::
@@ -183,7 +186,10 @@ Delete User::
       <class 'node.ext.ldap._ugm.Groups'>: groups
         <class 'node.ext.ldap._ugm.Group'>: group0
         <class 'node.ext.ldap._ugm.Group'>: group1
+          <class 'node.ext.ldap._ugm.User'>: uid1
         <class 'node.ext.ldap._ugm.Group'>: group2
+          <class 'node.ext.ldap._ugm.User'>: uid1
+          <class 'node.ext.ldap._ugm.User'>: uid2
 
 Groups object::
 

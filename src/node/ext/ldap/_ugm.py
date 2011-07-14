@@ -1,3 +1,4 @@
+import ldap
 from plumber import (
     plumber,
     default,
@@ -89,40 +90,6 @@ class PrincipalPart(Part):
     attributes_factory = finalize(ldap_attributes_factory)
     
     @default
-    def idbydn(self, dn):
-        """Return a principals id for a given dn.
-
-        Raise KeyError if not enlisted.
-        """
-        self.context.keys()
-        idsbydn = self.context._seckeys['dn']
-        try:
-            return idsbydn[dn]
-        except KeyError:
-            # It's possible that we got a different string resulting
-            # in the same DN, as every components can have individual
-            # comparison rules (see also node.ext.ldap.bbb.LDAPNode.DN).
-            # We leave the job to LDAP and try again with the resulting DN.
-            #
-            # This was introduced because a customer has group
-            # member attributes where the DN string differs.
-            #
-            # This would not be necessary, if an LDAP directory
-            # is consistent, i.e does not use different strings to
-            # talk about the same.
-            #
-            # Normalization of DN in python would also be a
-            # solution, but requires implementation of all comparison
-            # rules defined in schemas. Maybe we can retrieve them
-            # from LDAP.
-            search = self.context.ldap_session.search
-            try:
-                dn = search(baseDN=dn)[0][0]
-            except ldap.NO_SUCH_OBJECT:
-                raise KeyError(dn)
-            return idsbydn[dn]
-    
-    @default
     def add_role(self, role):
         self.parent.parent.add_role(role, self)
     
@@ -145,22 +112,51 @@ class UserPart(PrincipalPart, BaseUserPart):
         """
         pass # XXX
 
+FORMAT_DN = 0
+FORMAT_UID = 1
     
 class GroupPart(PrincipalPart, BaseGroupPart):
     
     @default
     @property
+    def _member_format(self):
+        obj_cl = self.parent.context._child_objectClasses
+        if 'groupOfNames' in obj_cl:
+            return FORMAT_DN
+        if 'groupOfUniqueNames' in obj_cl:
+            return FORMAT_DN
+        if 'posixGroups' in obj_cl:
+            return FORMAT_UID
+    
+    @default
+    @property
+    def _member_attribute(self):
+        obj_cl = self.parent.context._child_objectClasses
+        if 'groupOfNames' in obj_cl:
+            return 'member'
+        if 'groupOfUniqueNames' in obj_cl:
+            return 'uniqueMember'
+        if 'posixGroups' in obj_cl:
+            return 'memberUid'
+    
+    @default
+    @property
     def users(self):
-        """List of users contained in this group.
-        """
-        return []
+        return [self.parent.parent.users[id] for id in self.member_ids]
     
     @default
     @property
     def member_ids(self):
-        """List of member ids contained in this group.
-        """
-        return []
+        members = list()
+        for member in self.context.attrs[self._member_attribute]:
+            if member in ['nobody', 'cn=nobody']:
+                continue
+            members.append(member)
+        if self._member_format == FORMAT_DN:
+            return [self.parent.parent.users.idbydn(dn) for dn in members]
+        if self._member_format == FORMAT_UID:
+            return members
+        raise Exception(u"Unknown member value format.")
 
 
 class User(object):
@@ -236,6 +232,40 @@ class PrincipalsPart(Part):
         
         self.principal_attrmap = cfg.attrmap
         self.principal_attraliaser = DictAliaser(cfg.attrmap)
+    
+    @default
+    def idbydn(self, dn):
+        """Return a principal's id for a given dn.
+
+        Raise KeyError if not enlisted.
+        """
+        self.context.keys()
+        idsbydn = self.context._seckeys['dn']
+        try:
+            return idsbydn[dn]
+        except KeyError:
+            # It's possible that we got a different string resulting
+            # in the same DN, as every components can have individual
+            # comparison rules (see also node.ext.ldap.bbb.LDAPNode.DN).
+            # We leave the job to LDAP and try again with the resulting DN.
+            #
+            # This was introduced because a customer has group
+            # member attributes where the DN string differs.
+            #
+            # This would not be necessary, if an LDAP directory
+            # is consistent, i.e does not use different strings to
+            # talk about the same.
+            #
+            # Normalization of DN in python would also be a
+            # solution, but requires implementation of all comparison
+            # rules defined in schemas. Maybe we can retrieve them
+            # from LDAP.
+            search = self.context.ldap_session.search
+            try:
+                dn = search(baseDN=dn)[0][0]
+            except ldap.NO_SUCH_OBJECT:
+                raise KeyError(dn)
+            return idsbydn[dn]
 
     @default
     @property
