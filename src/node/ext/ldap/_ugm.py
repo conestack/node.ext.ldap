@@ -1,6 +1,7 @@
 import ldap
 from plumber import (
     plumber,
+    plumb,
     default,
     extend,
     finalize,
@@ -27,7 +28,7 @@ from node.ext.ugm import (
     User as BaseUserPart,
     Group as BaseGroupPart,
     Users as UsersPart,
-    Groups as GroupsPart,
+    Groups as BaseGroupsPart,
     Ugm as UgmPart,
 )
 from node.ext.ldap.interfaces import (
@@ -296,7 +297,7 @@ class PrincipalsPart(Part):
                 raise KeyError(dn)
             return idsbydn[dn]
 
-    @default
+    @extend
     @property
     def ids(self):
         # XXX: do we really need this?
@@ -400,12 +401,12 @@ class PrincipalsPart(Part):
         return aliased_results
     
     @default
-    def create(self, id, **kw):
+    def create(self, _id, **kw):
         vessel = AttributedNode()
         for k, v in kw.items():
             vessel.attrs[k] = v
-        self[id] = vessel
-        return self[id]
+        self[_id] = vessel
+        return self[_id]
 
 
 class Users(object):
@@ -441,6 +442,15 @@ class Users(object):
     @debug(['authentication'])
     def passwd(self, id, oldpw, newpw):
         self.context._session.passwd(self.context.child_dn(id), oldpw, newpw)
+
+
+class GroupsPart(BaseGroupsPart):
+    
+    @plumb
+    def __setitem__(_next, self, key, vessel):
+        vessel.attrs.setdefault(
+            self._member_attribute, []).insert(0, 'cn=nobody')
+        _next(self, key, vessel)
 
 
 FORMAT_DN = 0
@@ -481,10 +491,6 @@ class Groups(object):
         if 'posixGroups' in obj_cl:
             return 'memberUid'
         raise Exception(u"Unknown member attribute")
-
-    def __setitem__(self, key, vessel):
-        vessel.attrs.setdefault(self._member_attr, []).insert(0, 'cn=nobody')
-        super(Groups, self).__setitem__(key, vessel)
 
 
 class Ugm(object):

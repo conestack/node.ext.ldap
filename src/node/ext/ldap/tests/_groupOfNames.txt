@@ -199,6 +199,32 @@ Groups object::
     [('member', [u'cn=nobody', u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com']), 
     ('rdn', u'group1')]
 
+Add a group::
+
+    >>> group = groups.create('group99', id='group99')
+    >>> group
+    <Group object 'group99' at ...>
+    
+    >>> ugm()
+    >>> ugm.printtree()
+    <class 'node.ext.ldap._ugm.Ugm'>: ugm
+      <class 'node.ext.ldap._ugm.Users'>: users
+        <class 'node.ext.ldap._ugm.User'>: uid0
+        <class 'node.ext.ldap._ugm.User'>: uid1
+        <class 'node.ext.ldap._ugm.User'>: uid2
+        <class 'node.ext.ldap._ugm.User'>: sepp
+      <class 'node.ext.ldap._ugm.Groups'>: groups
+        <class 'node.ext.ldap._ugm.Group'>: group0
+        <class 'node.ext.ldap._ugm.Group'>: group1
+          <class 'node.ext.ldap._ugm.User'>: uid1
+        <class 'node.ext.ldap._ugm.Group'>: group2
+          <class 'node.ext.ldap._ugm.User'>: uid1
+          <class 'node.ext.ldap._ugm.User'>: uid2
+        <class 'node.ext.ldap._ugm.Group'>: group99
+    
+    >>> ugm.groups['group99']
+    <Group object 'group99' at ...>
+
 A group returns the members ids as keys::     
 
     >>> group_0.member_ids
@@ -227,6 +253,13 @@ Querying a group for a non-member results in a KeyError::
       ...
     KeyError: 'uid1'
 
+Deleting inexistend member from group fails::
+
+    >>> del group_0['inexistent']
+    Traceback (most recent call last):
+      ...
+    KeyError: 'inexistent'
+
 Members are added via ``__setitem__``::
 
     >>> group_1['foo'] = users['uid0']
@@ -243,6 +276,9 @@ Members are added via ``__setitem__``::
 
     >>> group_1['uid0']
     <User object 'uid0' at ...>
+    
+    >>> group_1.users
+    [<User object 'uid1' at ...>, <User object 'uid0' at ...>]
 
 Let's take a fresh view on ldap whether this really happened::
 
@@ -269,6 +305,49 @@ A user knows its groups::
     
     >>> user_2.groups
     [<Group object 'group2' at ...>]
+
+Recreate UGM object::
+
+    >>> ugm = Ugm(name='ugm', parent=None, props=props,
+    ...           ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
+    >>> users = ugm.users
+    >>> groups = ugm.groups
+
+Role Management is not implemented yet::
+
+    >>> users['uid0'].add_role('foo')
+    Traceback (most recent call last):
+      ...
+    NotImplementedError: not yet
+    
+    >>> users['uid0'].remove_role('foo')
+    Traceback (most recent call last):
+      ...
+    NotImplementedError: not yet
+    
+    >>> users['uid0'].roles
+    Traceback (most recent call last):
+      ...
+    NotImplementedError: not yet
+
+Test search function
+XXX: propably we need other search result formatting::
+
+    >>> users.search(criteria={'login': 'cn0'})
+    [u'uid0']
+
+    >>> groups.search(criteria={'id': 'group2'})
+    [u'group2']
+
+There's an ids property on Proncipals object, which users and groups objects
+base on.
+XXX: do we want to keep?::
+
+    >>> users.ids
+    [u'uid0', u'uid1', u'uid2', u'sepp']
+    
+    >>> groups.ids
+    [u'group0', u'group1', u'group2', u'group99']
 
 Add now user to some groups and then delete user, check whether user is removed
 from all this groups.
@@ -302,8 +381,28 @@ from all this groups.
         <class 'node.ext.ldap._ugm.Group'>: group2
           <class 'node.ext.ldap._ugm.User'>: uid1
           <class 'node.ext.ldap._ugm.User'>: uid2
+        <class 'node.ext.ldap._ugm.Group'>: group99
     
     >>> del users['sepp']
+    >>> ugm()
+    >>> ugm.printtree()
+    <class 'node.ext.ldap._ugm.Ugm'>: ugm
+      <class 'node.ext.ldap._ugm.Users'>: users
+        <class 'node.ext.ldap._ugm.User'>: uid0
+        <class 'node.ext.ldap._ugm.User'>: uid1
+        <class 'node.ext.ldap._ugm.User'>: uid2
+      <class 'node.ext.ldap._ugm.Groups'>: groups
+        <class 'node.ext.ldap._ugm.Group'>: group0
+        <class 'node.ext.ldap._ugm.Group'>: group1
+          <class 'node.ext.ldap._ugm.User'>: uid1
+        <class 'node.ext.ldap._ugm.Group'>: group2
+          <class 'node.ext.ldap._ugm.User'>: uid1
+          <class 'node.ext.ldap._ugm.User'>: uid2
+        <class 'node.ext.ldap._ugm.Group'>: group99
+
+Delete Group::
+
+    >>> del groups['group99']
     >>> ugm()
     >>> ugm.printtree()
     <class 'node.ext.ldap._ugm.Ugm'>: ugm
