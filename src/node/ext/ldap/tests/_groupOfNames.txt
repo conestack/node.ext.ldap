@@ -230,28 +230,37 @@ A group returns the members ids as keys::
 
 The member users are fetched via ``__getitem__``::
 
-    >> group1['uid1']
-    <User 'uid1'>
+    >>> group_1['uid1']
+    <User object 'uid1' at ...>
 
 XXX: This is not yet true as users creates a new node on every getitem::
 
-    >> group1['uid1'] is user1
+    >>> group_1['uid1'] is user_1
     False
 
 Querying a group for a non-member results in a KeyError::
 
-    >> group0['uid1']
+    >>> group_0['uid1']
     Traceback (most recent call last):
       ...
     KeyError: 'uid1'
 
-Members are added via ``add``::
+Members are added via ``__setitem__``::
 
-    >> group1.add(user0)
-    >> group1.keys()
+    >>> group_1['foo'] = users['uid0']
+    Traceback (most recent call last):
+      ...
+    RuntimeError: Id mismatch at attempt to add group member.
+    
+    >>> group_1['uid0'] = users['uid0']
+    >>> group_1.keys()
     [u'uid1', u'uid0']
-    >> group1['uid0']
-    <User 'uid0'>
+    
+    >>> group_1.member_ids
+    [u'uid1', u'uid0']
+
+    >>> group_1['uid0']
+    <User object 'uid0' at ...>
 
 Let's take a fresh view on ldap whether this really happened::
 

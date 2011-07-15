@@ -127,6 +127,7 @@ class GroupPart(PrincipalPart, BaseGroupPart):
             return FORMAT_DN
         if 'posixGroups' in obj_cl:
             return FORMAT_UID
+        raise Exception(u"Unknown format")
     
     @default
     @property
@@ -138,6 +139,7 @@ class GroupPart(PrincipalPart, BaseGroupPart):
             return 'uniqueMember'
         if 'posixGroups' in obj_cl:
             return 'memberUid'
+        raise Exception(u"Unknown member attribute")
     
     @default
     @property
@@ -191,11 +193,28 @@ class Group(object):
         GroupPart,
     )
     
+    def __contains__(self, key):
+        for id in self:
+            if id == key:
+                return True
+        return False
+    
     @locktree
     def __setitem__(self, key, value):
-        pass
+        if key != value.name:
+            raise RuntimeError(u"Id mismatch at attempt to add group member.")
+        if not key in self.member_ids:
+            if self._member_format == FORMAT_DN:
+                val = self.parent.parent.users.context.child_dn(key)
+            elif self._member_format == FORMAT_UID:
+                val = key
+            self.context.attrs[self._member_attribute].append(val)
+            # XXX: call here immediately?
+            self.context()
     
     def __getitem__(self, key):
+        if key not in self:
+            raise KeyError(key)
         return self.parent.parent.users[key]
     
     @locktree
