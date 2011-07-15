@@ -40,7 +40,7 @@ from node.ext.ldap.bbb import LDAPNode
 
 
 class PrincipalsConfig(object):
-    """Superclass for UsersConfig and GroupsConfig
+    """Superclass for UsersConfig, GroupsConfig and RolesConfig (later)
     """
     
     def __init__(self,
@@ -57,17 +57,18 @@ class PrincipalsConfig(object):
         self.scope = scope
         self.queryFilter = queryFilter
         self.objectClasses = objectClasses
+        # XXX: never used. what was this supposed for?
         self.member_relation = member_relation
 
 
 class UsersConfig(PrincipalsConfig):
-    """Define how users look and where they are
+    """Define how users look and where they are.
     """
     implements(IUsersConfig)
 
 
 class GroupsConfig(PrincipalsConfig):
-    """Define how groups look and where they are
+    """Define how groups look and where they are.
     """
     implements(IGroupsConfig)
 
@@ -101,6 +102,10 @@ class PrincipalPart(Part):
     @property
     def roles(self):
         return self.parent.parent.roles(self)
+    
+    @default
+    def __call__(self):
+        self.context()
 
 
 class UserPart(PrincipalPart, BaseUserPart):
@@ -108,38 +113,28 @@ class UserPart(PrincipalPart, BaseUserPart):
     @default
     @property
     def groups(self):
-        """List of groups this user is member of.
-        """
-        pass # XXX
+        groups = self.parent.parent.groups
+        criteria = {
+            groups._member_attribute: self.context.DN,
+        }
+        res = groups.context.search(criteria=criteria)
+        ret = list()
+        for id in res:
+            ret.append(groups[id])
+        return ret
 
-FORMAT_DN = 0
-FORMAT_UID = 1
     
 class GroupPart(PrincipalPart, BaseGroupPart):
     
     @default
     @property
     def _member_format(self):
-        obj_cl = self.parent.context._child_objectClasses
-        if 'groupOfNames' in obj_cl:
-            return FORMAT_DN
-        if 'groupOfUniqueNames' in obj_cl:
-            return FORMAT_DN
-        if 'posixGroups' in obj_cl:
-            return FORMAT_UID
-        raise Exception(u"Unknown format")
+        return self.parent._member_format
     
     @default
     @property
     def _member_attribute(self):
-        obj_cl = self.parent.context._child_objectClasses
-        if 'groupOfNames' in obj_cl:
-            return 'member'
-        if 'groupOfUniqueNames' in obj_cl:
-            return 'uniqueMember'
-        if 'posixGroups' in obj_cl:
-            return 'memberUid'
-        raise Exception(u"Unknown member attribute")
+        return self.parent._member_attribute
     
     @default
     @property
@@ -208,7 +203,10 @@ class Group(object):
                 val = self.parent.parent.users.context.child_dn(key)
             elif self._member_format == FORMAT_UID:
                 val = key
-            self.context.attrs[self._member_attribute].append(val)
+            # self.context.attrs[self._member_attribute].append won't work here
+            # issue in LDAPNodeAttributes, does not recognize changed this way.
+            old = self.context.attrs[self._member_attribute]
+            self.context.attrs[self._member_attribute] = old + [val]
             # XXX: call here immediately?
             self.context()
     
@@ -219,7 +217,19 @@ class Group(object):
     
     @locktree
     def __delitem__(self, key):
-        pass
+        if key not in self:
+            raise KeyError(key)
+        if self._member_format == FORMAT_DN:
+            val = self.parent.parent.users.context.child_dn(key)
+        elif self._member_format == FORMAT_UID:
+            val = key
+        # self.context.attrs[self._member_attribute].remove won't work here
+        # issue in LDAPNodeAttributes, does not recognize changed this way.
+        members = self.context.attrs[self._member_attribute]
+        members.remove(val)
+        self.context.attrs[self._member_attribute] = members
+        # XXX: call here immediately?
+        self.context()
     
     def __iter__(self):
         for id in self.member_ids:
@@ -331,6 +341,10 @@ class PrincipalsPart(Part):
         for key, val in attrs.iteritems():
             principal.attrs[key] = val
         self.context[name] = nextvessel
+    
+    @default
+    def __call__(self):
+        self.context()
 
     @default
     def _alias_dict(self, dct):
@@ -410,13 +424,10 @@ class Users(object):
 
     def __delitem__(self, id):
         user = self[id]
-        #for group_id in user.membership:
-        #    del user.membership[group_id]
+        for group in user.groups:
+            del group[user.name]
         del self.context[id]
     
-    def __call__(self):
-        self.context()
-
     @debug(['authentication'])
     def authenticate(self, id=None, pw=None):
         id = self.context._seckeys.get(
@@ -432,6 +443,9 @@ class Users(object):
         self.context._session.passwd(self.context.child_dn(id), oldpw, newpw)
 
 
+FORMAT_DN = 0
+FORMAT_UID = 1
+
 class Groups(object):
     __metaclass__ = plumber
     __plumbing__ = (
@@ -445,25 +459,32 @@ class Groups(object):
     )
     
     principal_factory = Group
-
-#    def __init__(self, props, cfg):
-#        if 'groupOfNames' in cfg.objectClasses:
-#            self._member_attr = 'member'
-#        elif 'groupOfUniqueNames' in cfg.objectClasses:
-#            self._member_attr = 'uniqueMember'
-#        elif 'posixGroup' in cfg.objectClasses:
-#            self._member_attr = 'memberUid'
-#        else:
-#            raise ValueError('Unsupported groups: %s' % (cfg.objectClasses,))
-#        cfg.attrmap[self._member_attr] = self._member_attr
-#        super(Groups, self).__init__(props, cfg)
+    
+    @property
+    def _member_format(self):
+        obj_cl = self.context._child_objectClasses
+        if 'groupOfNames' in obj_cl:
+            return FORMAT_DN
+        if 'groupOfUniqueNames' in obj_cl:
+            return FORMAT_DN
+        if 'posixGroups' in obj_cl:
+            return FORMAT_UID
+        raise Exception(u"Unknown format")
+    
+    @property
+    def _member_attribute(self):
+        obj_cl = self.context._child_objectClasses
+        if 'groupOfNames' in obj_cl:
+            return 'member'
+        if 'groupOfUniqueNames' in obj_cl:
+            return 'uniqueMember'
+        if 'posixGroups' in obj_cl:
+            return 'memberUid'
+        raise Exception(u"Unknown member attribute")
 
     def __setitem__(self, key, vessel):
         vessel.attrs.setdefault(self._member_attr, []).insert(0, 'cn=nobody')
         super(Groups, self).__setitem__(key, vessel)
-    
-    def __call__(self):
-        self.context()
 
 
 class Ugm(object):
