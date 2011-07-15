@@ -1,16 +1,16 @@
-dn: ou=posixGroups_3_3,dc=my-domain,dc=com
-ou: posixGroups_3_3
+dn: ou=posixGroups,dc=my-domain,dc=com
+ou: posixGroups
 objectClass: organizationalUnit
 
-dn: ou=users,ou=posixGroups_3_3,dc=my-domain,dc=com
+dn: ou=users,ou=posixGroups,dc=my-domain,dc=com
 ou: users
 objectClass: organizationalUnit
 
-dn: ou=groups,ou=posixGroups_3_3,dc=my-domain,dc=com
+dn: ou=groups,ou=posixGroups,dc=my-domain,dc=com
 ou: groups
 objectClass: organizationalUnit
 
-dn: uid=uid0,ou=users,ou=posixGroups_3_3,dc=my-domain,dc=com
+dn: uid=uid0,ou=users,ou=posixGroups,dc=my-domain,dc=com
 uid: uid0
 cn: cn0
 objectClass: account
@@ -29,7 +29,7 @@ userPassword: secret0
 uidNumber: 0
 gidNumber: 0
 
-dn: uid=uid1,ou=users,ou=posixGroups_3_3,dc=my-domain,dc=com
+dn: uid=uid1,ou=users,ou=posixGroups,dc=my-domain,dc=com
 uid: uid1
 cn: cn1
 objectClass: account
@@ -48,7 +48,7 @@ userPassword: secret1
 uidNumber: 1
 gidNumber: 1
 
-dn: uid=uid2,ou=users,ou=posixGroups_3_3,dc=my-domain,dc=com
+dn: uid=uid2,ou=users,ou=posixGroups,dc=my-domain,dc=com
 uid: uid2
 cn: cn2
 objectClass: account
@@ -67,7 +67,7 @@ userPassword: secret2
 uidNumber: 2
 gidNumber: 2
 
-dn: cn=group0,ou=groups,ou=posixGroups_3_3,dc=my-domain,dc=com
+dn: cn=group0,ou=groups,ou=posixGroups,dc=my-domain,dc=com
 cn: group0
 gidNumber: 0
 objectClass: posixGroup
@@ -75,7 +75,7 @@ objectClass: top
 memberUid: nobody
 memberUid: uid0
 
-dn: cn=group1,ou=groups,ou=posixGroups_3_3,dc=my-domain,dc=com
+dn: cn=group1,ou=groups,ou=posixGroups,dc=my-domain,dc=com
 cn: group1
 gidNumber: 1
 objectClass: posixGroup
@@ -84,7 +84,7 @@ memberUid: nobody
 memberUid: uid0
 memberUid: uid1
 
-dn: cn=group2,ou=groups,ou=posixGroups_3_3,dc=my-domain,dc=com
+dn: cn=group2,ou=groups,ou=posixGroups,dc=my-domain,dc=com
 cn: group2
 gidNumber: 2
 objectClass: posixGroup

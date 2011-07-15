@@ -477,7 +477,7 @@ class Groups(object):
             return FORMAT_DN
         if 'groupOfUniqueNames' in obj_cl:
             return FORMAT_DN
-        if 'posixGroups' in obj_cl:
+        if 'posixGroup' in obj_cl:
             return FORMAT_UID
         raise Exception(u"Unknown format")
     
@@ -488,7 +488,7 @@ class Groups(object):
             return 'member'
         if 'groupOfUniqueNames' in obj_cl:
             return 'uniqueMember'
-        if 'posixGroups' in obj_cl:
+        if 'posixGroup' in obj_cl:
             return 'memberUid'
         raise Exception(u"Unknown member attribute")
 

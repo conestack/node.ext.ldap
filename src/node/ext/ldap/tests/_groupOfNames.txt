@@ -66,6 +66,15 @@ Fetch some users::
     >>> user_0.attrs
     Aliased <LDAPNodeAttributes object '__attrs__' at ...>
 
+    >>> user_0.attrs['cn']
+    u'cn0'
+    
+    >>> user_0.attrs['login']
+    u'cn0'
+
+XXX: LDAPNodeAttributes.items does not return consistent results if attrmap
+     points to same attribute twice ('login' missing here)
+
     >>> user_0.attrs.items()
     [('cn', u'cn0'), ('sn', u'sn0'), 
     ('mail', u'uid0@groupOfNames.com'), ('rdn', u'uid0')]
