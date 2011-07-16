@@ -1,11 +1,11 @@
 import ldap
+from node.utils import encode, decode
 from node.ext.ldap import (
     BASE,
     LDAPConnector,
     LDAPCommunicator,
 )
 from node.ext.ldap.base import testLDAPConnectivity
-from node.ext.ldap.strcodec import encode, decode
 
 
 class LDAPSession(object):
@@ -79,16 +79,16 @@ class LDAPSession(object):
     def modify(self, dn, data, replace=False):
         """Modify an existing entry in the directory.
 
-        ``dn``
+        dn
             Modification DN
         
-        ``data``
+        data
             either list of 3 tuples (look at
             node.ext.ldap.base.LDAPCommunicator.modify for details), or
             a dictionary representing the entry or parts of the entry.
             XXX: dicts not yet
         
-        ``replace``
+        replace
             if set to True, replace entry at DN entirely with data.
         """
         func = self._communicator.modify

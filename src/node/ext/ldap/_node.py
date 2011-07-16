@@ -23,6 +23,11 @@ from node.parts import (
     Nodify,
     OdictStorage,
 )
+from node.utils import (
+    encode,
+    decode,
+    CHARACTER_ENCODING,
+)
 from node.ext.ldap import (
     BASE,
     ONELEVEL,
@@ -33,11 +38,6 @@ from node.ext.ldap.filter import (
     LDAPDictFilter,
 )
 from node.ext.ldap.debug import debug
-from node.ext.ldap.strcodec import (
-    encode,
-    decode,
-    LDAP_CHARACTER_ENCODING,
-)
 from ldap.functions import explode_dn
 from ldap import (
     MOD_ADD,
@@ -175,7 +175,7 @@ class LDAPNode(object):
         if (name and not props) or (props and not name):
             raise ValueError(u"Wrong initialization.")
         if name and not isinstance(name, unicode):
-            name = name.decode(LDAP_CHARACTER_ENCODING)
+            name = name.decode(CHARACTER_ENCODING)
         self.__name__ = name
         self.__parent__ = None
         self._session = None

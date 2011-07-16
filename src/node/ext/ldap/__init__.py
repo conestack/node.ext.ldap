@@ -13,7 +13,6 @@ from node.ext.ldap.scope import (
     SUBTREE,
     )
 from node.ext.ldap.session import LDAPSession
-from node.ext.ldap.strcodec import StrCodec
 from node.ext.ldap.ugm import (
     Groups,
     Users,

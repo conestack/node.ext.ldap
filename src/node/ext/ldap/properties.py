@@ -27,25 +27,25 @@ class LDAPServerProperties(object):
 
         SSL/TLS still unsupported
 
-        ``server``
+        server
             DEPRECATED use uri! servername, defaults to 'localhost'
             
-        ``port``
+        port
             DEPRECATED uss uri! server port, defaults to 389
         
-        ``user``
+        user
             username to bind, defaults to ''
         
-        ``password``
+        password
             password to bind, defaults to ''
         
-        ``cache``
+        cache
             Bool wether to enable caching or not, defaults to True
         
-        ``timeout``
+        timeout
             Cache timeout in seconds. only takes affect if cache is enabled.
         
-        ``uri``
+        uri
             overrides server/port, forget about server and port, use
             this to specify how to access the ldap server, eg:
                 - ldapi:///path/to/socket
@@ -53,7 +53,7 @@ class LDAPServerProperties(object):
                   enforce, see start_tls)
                 - ldaps://<server>:<port>
         
-        ``start_tls``
+        start_tls
             Determines if StartTLS extended operation is tried on
             a LDAPv3 server, iff the LDAP URL scheme is ldap:. If LDAP URL 
             scheme is not 'ldap:' (e.g. 'ldaps:' or 'ldapi:') this parameter
@@ -62,22 +62,22 @@ class LDAPServerProperties(object):
                 1 - Try StartTLS ext op but proceed when unavailable
                 2 - Try StartTLS ext op and re-raise exception if it fails
         
-        ``tls_cacertfile``
+        tls_cacertfile
             Not yet
         
-        ``tls_cacertdir``
+        tls_cacertdir
             Not yet
             
-        ``tls_clcertfile``
+        tls_clcertfile
             Not yet
             
-        ``tls_clkeyfile``
+        tls_clkeyfile
             Not yet
             
-        ``retry_max``
+        retry_max
             Maximum count of reconnect trials
             
-        ``retry_delay``
+        retry_delay
             Time span to wait between two reconnect trials
         """
         if uri is None:
