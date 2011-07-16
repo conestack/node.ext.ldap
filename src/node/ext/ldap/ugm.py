@@ -444,7 +444,33 @@ class Users(object):
         self.context._session.passwd(self.context.child_dn(id), oldpw, newpw)
 
 
+def member_format(obj_cl):
+    if 'groupOfNames' in obj_cl:
+        return FORMAT_DN
+    if 'groupOfUniqueNames' in obj_cl:
+        return FORMAT_DN
+    if 'posixGroup' in obj_cl:
+        return FORMAT_UID
+    raise Exception(u"Unknown format")
+
+
+def member_attribute(obj_cl):
+    if 'groupOfNames' in obj_cl:
+        return 'member'
+    if 'groupOfUniqueNames' in obj_cl:
+        return 'uniqueMember'
+    if 'posixGroup' in obj_cl:
+        return 'memberUid'
+    raise Exception(u"Unknown member attribute")
+
+
 class GroupsPart(BaseGroupsPart):
+    
+    @plumb
+    def __init__(_next, self, props, cfg):
+        mem_attr = member_attribute(cfg.objectClasses)
+        cfg.attrmap[mem_attr] = mem_attr
+        _next(self, props, cfg)
     
     @plumb
     def __setitem__(_next, self, key, vessel):
@@ -472,25 +498,11 @@ class Groups(object):
     
     @property
     def _member_format(self):
-        obj_cl = self.context._child_objectClasses
-        if 'groupOfNames' in obj_cl:
-            return FORMAT_DN
-        if 'groupOfUniqueNames' in obj_cl:
-            return FORMAT_DN
-        if 'posixGroup' in obj_cl:
-            return FORMAT_UID
-        raise Exception(u"Unknown format")
+        return member_format(self.context._child_objectClasses)
     
     @property
     def _member_attribute(self):
-        obj_cl = self.context._child_objectClasses
-        if 'groupOfNames' in obj_cl:
-            return 'member'
-        if 'groupOfUniqueNames' in obj_cl:
-            return 'uniqueMember'
-        if 'posixGroup' in obj_cl:
-            return 'memberUid'
-        raise Exception(u"Unknown member attribute")
+        return member_attribute(self.context._child_objectClasses)
 
 
 class Ugm(object):
