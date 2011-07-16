@@ -18,12 +18,10 @@ from node.ext.ldap.ugm import (
     Groups,
     Users,
     )
-
 from node.ext.ldap._node import (
     LDAPNode,
     queryNode,
     )
-
 # legacy - can we get rid of this?
 import base
 import properties

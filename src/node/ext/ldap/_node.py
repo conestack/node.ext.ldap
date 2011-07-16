@@ -454,6 +454,8 @@ class LDAPNode(object):
                 raise ValueError(
                     u"'%s' needed in node attributes for rdn." % \
                         (self._rdn_attr,))
+        val.__name__ = key
+        val.__parent__ = self
         val._session = self._session
         if self._keys is None:
             self._load_keys()

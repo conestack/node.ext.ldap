@@ -14,8 +14,8 @@ DOCFILES = [
     ('../_node.txt', testing.LDIF_data),
     ('../schema.txt', testing.LDIF_data),
     #('../users.txt', testing.LDIF_principals),
-    #('../ugm_groupOfNames.txt', testing.LDIF_groupOfNames),
-    #('../ugm_posixGroups.txt', testing.LDIF_posixGroups),
+    ('../ugm_groupOfNames.txt', testing.LDIF_groupOfNames),
+    ('../ugm_posixGroups.txt', testing.LDIF_posixGroups),
 ]
 
 optionflags = \
