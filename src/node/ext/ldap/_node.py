@@ -77,11 +77,9 @@ class AttributesPart(Part):
     
     @default
     def load(self):
-        # XXX: we need a whitelist. For doing what? -rn
-        
-        # nothing to do if name not set on parent or parent is marked for
-        # adding.
-        if not self.parent.name or self.parent._action == ACTION_ADD:
+        if not self.parent.name \
+          or not self.parent._session \
+          or self.parent._action == ACTION_ADD:
             return
         
         self.clear()
@@ -219,8 +217,7 @@ class LDAPNode(object):
         if self.parent is not None:
             return self.parent.child_dn(self.__name__)
         elif self.name is not None:
-            # We should not have a name if we are not a root node
-            # ??
+            # We should not have a name if we are not a root node.
             return self.name
         else:
             return u''
@@ -239,8 +236,7 @@ class LDAPNode(object):
             if isinstance(key, list):
                 if len(key) != 1:
                     raise KeyError(u"Expected one value for '%s' "+
-                            u"not %s: '%s'." % \
-                                    (self._key_attr, len(key), key))
+                        u"not %s: '%s'." % (self._key_attr, len(key), key))
                 key = key[0]
         return key
 
@@ -421,18 +417,11 @@ class LDAPNode(object):
             raise KeyError(u"Entry not existent: %s" % key)
         if self._keys[key] is not None:
             return self.storage[key]
-        
         val = self._child_factory()
         val._session = self._session
-        # We are suppressing notification, as val is not really added to us,
-        # rather, it is activated.
-        self._notify_suppress = True
-        
-        # XXX: this looks like val is stored twice. Why?
-        self[key] = val
-        
-        self._notify_suppress = False
-        #self._keys[key] = val
+        val.__name__ = key
+        val.__parent__ = self
+        self.storage[key] = self._keys[key] = val
         return val
 
     def _create_suitable_node(self, vessel):
@@ -450,20 +439,20 @@ class LDAPNode(object):
             key = decode(key)
         if self._child_scope is BASE:
             raise NotImplementedError(
-                    u"Seriously? Adding with scope == BASE?")
+                u"Seriously? Adding with scope == BASE?")
         if self._key_attr != 'rdn' and self._rdn_attr is None:
-            raise RuntimeError(u"Adding with key != rdn needs _rdn_attr "
-                    u"to be set.")
+            raise RuntimeError(
+                u"Adding with key != rdn needs _rdn_attr to be set.")
         if not isinstance(val, LDAPNode):
             # create one from whatever we got
             val = self._create_suitable_node(val)
-
         # At this point we need to have an LDAPNode as val
         if self._key_attr != 'rdn':
             val.attrs[self._key_attr] = key
             if val.attrs.get(self._rdn_attr) is None:
-                raise ValueError(u"'%s' needed in node attributes for rdn." % \
-                                     (self._rdn_attr,))
+                raise ValueError(
+                    u"'%s' needed in node attributes for rdn." % \
+                        (self._rdn_attr,))
         val._session = self._session
         if self._keys is None:
             self._load_keys()
@@ -476,9 +465,7 @@ class LDAPNode(object):
             val.changed = True
             self.changed = True
         self._notify_suppress = True
-        
         self.storage[key] = val
-        
         self._notify_suppress = False
         self._keys[key] = val
         if self._key_attr == 'rdn':
