@@ -205,6 +205,10 @@ Groups object::
     >>> group_0.attrs
     Aliased <LDAPNodeAttributes object '__attrs__' at ...>
     
+    >>> group_0.attrs.context
+    
+    >>> group_0.attrs['memberUid']
+    
     >>> group_0.attrs.items()
     [('member', [u'cn=nobody']), ('rdn', u'group0')]
     

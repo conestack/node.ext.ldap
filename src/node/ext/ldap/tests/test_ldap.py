@@ -14,19 +14,20 @@ from node.ext.ldap import testing
 DOCFILES = [
     ('../base.txt', testing.LDIF_data),
     ('../session.txt', testing.LDIF_data),
-    ('../bbb.txt', testing.LDIF_data),
-    ('../schema.txt', testing.LDIF_data),
-    ('../users.txt', testing.LDIF_principals),
+    ('../_node.txt', testing.LDIF_data),
+    #('../bbb.txt', testing.LDIF_data),
+    #('../schema.txt', testing.LDIF_data),
+    #('../users.txt', testing.LDIF_principals),
     
     # old
-    ('groupOfNames.txt', testing.LDIF_groupOfNames),
-    ('groupOfNames_add.txt', testing.LDIF_groupOfNames_add),
+    #('groupOfNames.txt', testing.LDIF_groupOfNames),
+    #('groupOfNames_add.txt', testing.LDIF_groupOfNames_add),
     
     # new
-    ('_groupOfNames.txt', testing.LDIF_groupOfNames),
-    ('_groupOfNames_add.txt', testing.LDIF_groupOfNames_add),
+    #('_groupOfNames.txt', testing.LDIF_groupOfNames),
+    #('_groupOfNames_add.txt', testing.LDIF_groupOfNames_add),
     
-    ('posixGroups.txt', testing.LDIF_posixGroups),
+    #('posixGroups.txt', testing.LDIF_posixGroups),
 ]
 
 optionflags = \

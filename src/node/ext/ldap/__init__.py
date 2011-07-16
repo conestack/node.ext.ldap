@@ -19,8 +19,7 @@ from node.ext.ldap.ugm import (
     Users,
     )
 
-# to be removed sooner or later
-from node.ext.ldap.bbb import (
+from node.ext.ldap._node import (
     LDAPNode,
     queryNode,
     )
