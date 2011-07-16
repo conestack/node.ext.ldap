@@ -237,7 +237,8 @@ class LDAPNode(object):
             key = attrs[self._key_attr]
             if isinstance(key, list):
                 if len(key) != 1:
-                    raise KeyError(u"Expected one value for '%s' "+
+                    raise KeyError(
+                        u"Expected one value for '%s' " +
                         u"not %s: '%s'." % (self._key_attr, len(key), key))
                 key = key[0]
         return key
