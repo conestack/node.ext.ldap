@@ -713,6 +713,7 @@ LDIF_posixGroups = Ldif(
         attrmap={
             'id': 'cn',
             'rdn': 'cn',
+            'gidNumber': 'gidNumber',
             },
         scope=ONELEVEL,
         queryFilter='(objectClass=posixGroup)',

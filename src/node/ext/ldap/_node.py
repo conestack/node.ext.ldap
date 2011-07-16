@@ -99,7 +99,8 @@ class AttributesPart(Part):
         attrs = entry[0][1]
         for key, item in attrs.items():
             # XXX: future: self[key] = item, always!
-            # XXX: HACK!
+            # XXX: maybe we want to keep behaviour, but validate against
+            #      schema?
             if len(item) == 1 \
               and key not in ('member', 'uniqueMember', 'memberUid'):
                 self[key] = item[0]

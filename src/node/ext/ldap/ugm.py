@@ -115,9 +115,14 @@ class UserPart(PrincipalPart, BaseUserPart):
     @property
     def groups(self):
         groups = self.parent.parent.groups
-        criteria = {
-            groups._member_attribute: self.context.DN,
-        }
+        format = groups._member_format
+        attribute = groups._member_attribute
+        if format == FORMAT_DN:
+            criteria = { attribute: self.context.DN }
+        elif format == FORMAT_UID:
+            criteria = { attribute: self.context.attrs['uid'] }
+        else:
+            raise Exception(u"Unknow group format")
         res = groups.context.search(criteria=criteria)
         ret = list()
         for id in res:

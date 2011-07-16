@@ -206,14 +206,18 @@ Groups object::
     Aliased <LDAPNodeAttributes object 'group0' at ...>
     
     >>> group_0.attrs.items()
-    [('memberUid', [u'nobody', u'uid0']), ('rdn', u'group0')]
+    [('memberUid', [u'nobody', u'uid0']), 
+    ('gidNumber', u'0'), 
+    ('rdn', u'group0')]
     
     >>> group_1.attrs.items()
-    [('memberUid', [u'nobody', u'uid0', u'uid1']), ('rdn', u'group1')]
+    [('memberUid', [u'nobody', u'uid0', u'uid1']), 
+    ('gidNumber', u'1'), 
+    ('rdn', u'group1')]
 
 Add a group::
 
-    >>> group = groups.create('group99', id='group99')
+    >>> group = groups.create('group99', id='group99', gidNumber='99')
     >>> group
     <Group object 'group99' at ...>
     
@@ -227,9 +231,12 @@ Add a group::
         <class 'node.ext.ldap.ugm.User'>: sepp
       <class 'node.ext.ldap.ugm.Groups'>: groups
         <class 'node.ext.ldap.ugm.Group'>: group0
+          <class 'node.ext.ldap.ugm.User'>: uid0
         <class 'node.ext.ldap.ugm.Group'>: group1
+          <class 'node.ext.ldap.ugm.User'>: uid0
           <class 'node.ext.ldap.ugm.User'>: uid1
         <class 'node.ext.ldap.ugm.Group'>: group2
+          <class 'node.ext.ldap.ugm.User'>: uid0
           <class 'node.ext.ldap.ugm.User'>: uid1
           <class 'node.ext.ldap.ugm.User'>: uid2
         <class 'node.ext.ldap.ugm.Group'>: group99
@@ -240,7 +247,7 @@ Add a group::
 A group returns the members ids as keys::     
 
     >>> group_0.member_ids
-    []
+    [u'uid0']
     
     >> group_1.member_ids
     [u'uid1']
@@ -281,23 +288,23 @@ Members are added via ``__setitem__``::
     
     >>> group_1['uid0'] = users['uid0']
     >>> group_1.keys()
-    [u'uid1', u'uid0']
+    [u'uid0', u'uid1']
     
     >>> group_1.member_ids
-    [u'uid1', u'uid0']
+    [u'uid0', u'uid1']
 
     >>> group_1['uid0']
     <User object 'uid0' at ...>
     
     >>> group_1.users
-    [<User object 'uid1' at ...>, <User object 'uid0' at ...>]
+    [<User object 'uid0' at ...>, <User object 'uid1' at ...>]
 
 Let's take a fresh view on ldap whether this really happened::
 
     >>> ugm_fresh = Ugm(name='ugm', parent=None, props=props,
     ...                 ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
     >>> ugm_fresh.groups['group1'].keys()
-    [u'uid1', u'uid0']
+    [u'uid0', u'uid1']
 
 Members are removed via ``delitem``::
 
@@ -306,11 +313,29 @@ Members are removed via ``delitem``::
     ...                 ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
     >>> ugm_fresh.groups['group1'].keys()
     [u'uid1']
+    
+    >>> ugm.printtree()
+    <class 'node.ext.ldap.ugm.Ugm'>: ugm
+      <class 'node.ext.ldap.ugm.Users'>: users
+        <class 'node.ext.ldap.ugm.User'>: uid0
+        <class 'node.ext.ldap.ugm.User'>: uid1
+        <class 'node.ext.ldap.ugm.User'>: uid2
+        <class 'node.ext.ldap.ugm.User'>: sepp
+      <class 'node.ext.ldap.ugm.Groups'>: groups
+        <class 'node.ext.ldap.ugm.Group'>: group0
+          <class 'node.ext.ldap.ugm.User'>: uid0
+        <class 'node.ext.ldap.ugm.Group'>: group1
+          <class 'node.ext.ldap.ugm.User'>: uid1
+        <class 'node.ext.ldap.ugm.Group'>: group2
+          <class 'node.ext.ldap.ugm.User'>: uid0
+          <class 'node.ext.ldap.ugm.User'>: uid1
+          <class 'node.ext.ldap.ugm.User'>: uid2
+        <class 'node.ext.ldap.ugm.Group'>: group99
 
 A user knows its groups::
 
     >>> user_0.groups
-    []
+    [<Group object 'group0' at ...>, <Group object 'group2' at ...>]
     
     >>> user_1.groups
     [<Group object 'group1' at ...>, <Group object 'group2' at ...>]
@@ -386,11 +411,13 @@ from all this groups.
         <class 'node.ext.ldap.ugm.User'>: sepp
       <class 'node.ext.ldap.ugm.Groups'>: groups
         <class 'node.ext.ldap.ugm.Group'>: group0
+          <class 'node.ext.ldap.ugm.User'>: uid0
           <class 'node.ext.ldap.ugm.User'>: sepp
         <class 'node.ext.ldap.ugm.Group'>: group1
           <class 'node.ext.ldap.ugm.User'>: uid1
           <class 'node.ext.ldap.ugm.User'>: sepp
         <class 'node.ext.ldap.ugm.Group'>: group2
+          <class 'node.ext.ldap.ugm.User'>: uid0
           <class 'node.ext.ldap.ugm.User'>: uid1
           <class 'node.ext.ldap.ugm.User'>: uid2
         <class 'node.ext.ldap.ugm.Group'>: group99
@@ -405,9 +432,11 @@ from all this groups.
         <class 'node.ext.ldap.ugm.User'>: uid2
       <class 'node.ext.ldap.ugm.Groups'>: groups
         <class 'node.ext.ldap.ugm.Group'>: group0
+          <class 'node.ext.ldap.ugm.User'>: uid0
         <class 'node.ext.ldap.ugm.Group'>: group1
           <class 'node.ext.ldap.ugm.User'>: uid1
         <class 'node.ext.ldap.ugm.Group'>: group2
+          <class 'node.ext.ldap.ugm.User'>: uid0
           <class 'node.ext.ldap.ugm.User'>: uid1
           <class 'node.ext.ldap.ugm.User'>: uid2
         <class 'node.ext.ldap.ugm.Group'>: group99
@@ -424,8 +453,10 @@ Delete Group::
         <class 'node.ext.ldap.ugm.User'>: uid2
       <class 'node.ext.ldap.ugm.Groups'>: groups
         <class 'node.ext.ldap.ugm.Group'>: group0
+          <class 'node.ext.ldap.ugm.User'>: uid0
         <class 'node.ext.ldap.ugm.Group'>: group1
           <class 'node.ext.ldap.ugm.User'>: uid1
         <class 'node.ext.ldap.ugm.Group'>: group2
+          <class 'node.ext.ldap.ugm.User'>: uid0
           <class 'node.ext.ldap.ugm.User'>: uid1
           <class 'node.ext.ldap.ugm.User'>: uid2
