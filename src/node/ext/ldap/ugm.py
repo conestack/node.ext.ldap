@@ -430,7 +430,11 @@ class Users(object):
 
     def __delitem__(self, id):
         user = self[id]
-        for group in user.groups:
+        try:
+            groups = user.groups
+        except AttributeError:
+            groups = list()
+        for group in groups:
             del group[user.name]
         del self.context[id]
     

@@ -2,100 +2,98 @@
 
 Get an LDAPUsers node and configure it. In addition to the key attribute, the
 login attribute also needs to be unique, which will be checked upon calling
-ids() the first time.
-::
+ids() the first time::
 
     >>> from node.ext.ldap.properties import LDAPProps
-    >>> from node.ext.ldap.users import LDAPUsers, LDAPUsersConfig
+    >>> from node.ext.ldap.ugm import Users, UsersConfig
     >>> from node.ext.ldap import SUBTREE
 
     >>> from node.ext.ldap.testing import props, ucfg
-    >>> users = LDAPUsers(props, ucfg)
+    >>> users = Users(props, ucfg)
 
-Query all user ids. ``description`` is missing on some.
-::
+Query all user ids. ``description`` is missing on some::
 
-    >>> users.ids()
+    >>> users.ids
     Traceback (most recent call last):
     ...
     KeyError:
       u"Secondary key 'description' missing on: cn=user1,dc=my-domain,dc=com."
 
-Query all user ids. ``telephoneNumber`` is not uniqe.
-::
+Query all user ids. ``telephoneNumber`` is not unique::
 
     >>> ucfg.attrmap['login'] = 'telephoneNumber'
-    >>> users = LDAPUsers(props, ucfg)
-    >>> users.ids()
+    >>> users = Users(props, ucfg)
+    >>> users.ids
     Traceback (most recent call last):
     ...
     KeyError: u"Secondary key not unique: telephoneNumber='1234'."
 
 Query all user ids. ``cn`` finally in this case is unique and therefore
-suitable as login attr.
-::
+suitable as login attr::
+
     >>> ucfg.attrmap['login'] = 'cn'
-    >>> users = LDAPUsers(props, ucfg)
-    >>> users.ids()
+    >>> users = Users(props, ucfg)
+    >>> users.ids
     [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
 
-Query a user by id (utf-8 or unicode).
-::
+Query a user by id (utf-8 or unicode)::
 
     >>> mueller = users['Müller']
     >>> mueller
-    <User 'M?ller'>
+    <User object 'M?ller' at ...>
+    
     >>> mueller.context
     <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
 
-XXX: No caching of factored objects yet:
+XXX: No caching of factored objects yet::
 
     >>> mueller is users['Müller']
     False
 
-Find a user by login.
-::
 
-    >>> users.idbylogin(mueller.login) == mueller.id
+########
+XXX: maybe later
+
+Find a user by login::
+
+    >> users.idbylogin(mueller.login) == mueller.id
     True
 
-Using idbylogin before calling .ids() works - was a bug.
-::
+Using idbylogin before calling .ids() works - was a bug::
 
-    >>> users2 = LDAPUsers(props, ucfg)
-    >>> users2.idbylogin(mueller.login) == mueller.id
+    >> users2 = LDAPUsers(props, ucfg)
+    >> users2.idbylogin(mueller.login) == mueller.id
     True
+########
 
-The '?' is just __repr__ going to ascii, the id is in proper unicode.
-::
+The '?' is just __repr__ going to ascii, the id is in proper unicode::
 
     >>> mueller.id
     u'M\xfcller'
 
-A user has a login.
-::
+A user has a login::
 
     >>> mueller.login
     u'user2'
 
-And attributes.
-::
+And attributes::
 
     >>> mueller.attrs
-    Aliased <LDAPNodeAttributes object '__attrs__' at ...>
+    Aliased <LDAPNodeAttributes object 'M?ller' at ...>
+    
     >>> mueller.attrs.items()
     [('telephoneNumber', u'1234'),
      ('login', u'user2'),
      ('id', u'M\xfcller')]
 
-Query all user nodes.
-::
+Query all user nodes::
 
     >>> [users[id] for id in users]
-    [<User 'Meier'>,
-     <User 'M?ller'>,
-     <User 'Schmidt'>,
-     <User 'Umhauer'>]
+    [<User object 'Meier' at ...>, 
+    <User object 'M?ller' at ...>, 
+    <User object 'Schmidt' at ...>, 
+    <User object 'Umhauer' at ...>]
+    
     >>> [users[id].context for id in users]
     [<cn=user1,dc=my-domain,dc=com:Meier - False>,
     <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>,
@@ -104,58 +102,53 @@ Query all user nodes.
 
 Authenticate a user, via the user object. (also see 'via LDAPUsers' below,
 after passwd, this is to make sure, that LDAPUsers.authenticate does not work
-on a cached copy).
-::
+on a cached copy)::
 
     >>> mueller.authenticate('foo2')
     True
+    
     >>> mueller.authenticate('bar')
     False
 
-Change a users password, supplying the old password, via the user object.
-::
+Change a users password, supplying the old password, via the user object::
 
     >>> oldpw = 'foo2'
     >>> newpw = 'new'
     >>> mueller.passwd(oldpw, newpw)
     >>> mueller.authenticate('foo2')
     False
+    
     >>> mueller.authenticate('new')
     True
 
-And via LDAPUsers.
-::
+And via LDAPUsers::
+
     >>> oldpw = newpw
     >>> newpw = 'newer'
     >>> users.passwd(mueller.id, oldpw, newpw)
 
 Authenticate a user via LDAPUsers, either by id or by login, but not both. The
-id is returned if sucessful, otherwise None.
-::
+id is returned if sucessful, otherwise None::
 
     >>> users.authenticate('wrong', 'creds')
+    False
 
     >>> users.authenticate(mueller.login, 'newer')
     u'M\xfcller'
 
     >>> print users.authenticate(id='wrong', pw='cresd')
-    None
+    False
+    
     >>> print users.authenticate(id=mueller.id, pw='bar')
-    None
+    False
+    
     >>> users.authenticate(id=mueller.id, pw='newer')
     u'M\xfcller'
 
-    >>> users.authenticate(id=mueller.id, login=mueller.login, pw='new')
-    Traceback (most recent call last):
-    ...
-    ValueError: Either specify id or login, not both.
-
-
-Add a user.
-::
+Add a user::
 
     >>> from node.ext.ldap import ONELEVEL
-    >>> adducfg = LDAPUsersConfig(
+    >>> adducfg = UsersConfig(
     ...         baseDN='ou=customers,dc=my-domain,dc=com',
     ...         attrmap={
     ...             'id': 'sn',
@@ -168,12 +161,12 @@ Add a user.
     ...         queryFilter='(objectClass=person)',
     ...         objectClasses=['top', 'person'],
     ...         )
-    >>> users = LDAPUsers(props, adducfg)
+    >>> users = Users(props, adducfg)
 
-    >>> users.ids()
+    >>> users.ids
     [u'M\xfcller', u'Schmidt', u'Umhauer']
 
-    >>> from zodict import AttributedNode
+    >>> from node.base import AttributedNode
     >>> user_vessel = AttributedNode()
     >>> user_vessel.allow_non_node_childs = True
     
@@ -183,8 +176,8 @@ Add a user.
 
     >>> users['newuser'] = user_vessel
     Traceback (most recent call last):
-    ...
-    ValueError: Attributes need to be set.
+      ...
+    ValueError: 'cn' needed in node attributes for rdn.
 
     >>> user_vessel.attrs['login'] = 'newcn'
     >>> user_vessel.attrs['id'] = 'newid'
@@ -193,7 +186,7 @@ Add a user.
     
     >>> users['newid'] = user_vessel
 
-    >>> users.ids()
+    >>> users.ids
     [u'M\xfcller', u'Schmidt', u'Umhauer', u'newid']
 
     >>> newuser = users['newid']
@@ -201,12 +194,12 @@ Add a user.
     True
 
     >>> newuser
-    <User 'newid'>
+    <User object 'newid' at ...>
 
     >>> newuser.context
     <cn=newcn,ou=customers,dc=my-domain,dc=com:newid - True>
 
-# XXX: there need more attrs to show up
+# XXX: there need more attrs to show up::
 
     >>> newuser.attrs.items()
     [('login', u'newcn'), ('id', u'newid')]
@@ -214,39 +207,36 @@ Add a user.
     >>> newuser.context.attrs.items()
     [(u'cn', u'newcn'), (u'sn', u'newid'), (u'objectClass', ['top', 'person'])]
 
-# XXX: wrap __call__
-
-    >>> users.context()
-
+    >>> users()
     >>> users.reload = True
 
     >>> users.items()
-    [(u'M\xfcller', <User 'M?ller'>),
-     (u'Schmidt', <User 'Schmidt'>),
-     (u'Umhauer', <User 'Umhauer'>),
-     (u'newid', <User 'newid'>)]
+    [(u'M\xfcller', <User object 'M?ller' at ...>), 
+    (u'Schmidt', <User object 'Schmidt' at ...>), 
+    (u'Umhauer', <User object 'Umhauer' at ...>), 
+    (u'newid', <User object 'newid' at ...>)]
 
     >>> users['newid'].context
     <cn=newcn,ou=customers,dc=my-domain,dc=com:newid - False>
 
-# XXX: needs to work independent of groups
-#    >>> del users['newid']
-#    >>> users.context()
+Delete User::
 
-XXX - Review: Search users by criteria OR queryFilter. eg. person, top, foo.
-::
+    >>> del users['newid']
+    >>> users.context()
 
-    >>> users = LDAPUsers(props, ucfg)
+XXX: Review: Search users by criteria OR queryFilter. eg. person, top, foo::
+
+    >>> users = Users(props, ucfg)
     >>> schmidt = users['Schmidt']
     >>> users.search(criteria=dict(sn=schmidt.attrs['sn']), exact_match=True)
     [u'Schmidt']
 
-#XXX del not performed, see above
-#    >>> users.search()
-#    [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
+    >>> users.search()
+    [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
 
-#    >>> users.search(queryFilter='(objectClass=person)')
-#    [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
+XXX: maybe later
+    >> users.search(queryFilter='(objectClass=person)')
+    [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
 
     >>> users.search(criteria=dict(sn=schmidt.attrs['sn']), exact_match=False)
     [u'Schmidt']
@@ -300,14 +290,6 @@ XXX - Review: Search users by criteria OR queryFilter. eg. person, top, foo.
 #    >>> rel_double &= LDAPFilter('(objectClass=person)')
 #    >>> rel_double.__str__()
 #    '(&(|(member1=Member #1)(member2=Member #2))(objectClass=person))'
-
-Add a user.
-::
-
-
-Make sure it is in the right location.
-::
-
 
 XXX: tests that need to be moved to good locations
 
