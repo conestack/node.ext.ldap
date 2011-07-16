@@ -92,8 +92,9 @@ class AttributesPart(Part):
                 )
         
         if len(entry) != 1:
-            raise RuntimeError(u"Fatal. Expected entry does not exist or "
-                                "more than one entry found")
+            raise RuntimeError(                             #pragma NO COVERAGE
+                u"Fatal. Expected entry does not exist or " #pragma NO COVERAGE
+                u"more than one entry found")               #pragma NO COVERAGE
         
         attrs = entry[0][1]
         for key, item in attrs.items():

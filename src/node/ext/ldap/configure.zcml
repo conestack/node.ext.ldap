@@ -1,5 +1,6 @@
 <configure xmlns="http://namespaces.zope.org/zope">
 
+  <!-- XXX outdated, remove -->
   <include package="bda.cache" />
   
 </configure>

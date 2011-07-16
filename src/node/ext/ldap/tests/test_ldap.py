@@ -1,6 +1,3 @@
-# Copyright 2008-2010, BlueDynamics Alliance, Austria - http://bluedynamics.com
-# GNU General Public Licence Version 2 or later
-
 import doctest
 import interlude
 import pprint
@@ -15,19 +12,10 @@ DOCFILES = [
     ('../base.txt', testing.LDIF_data),
     ('../session.txt', testing.LDIF_data),
     ('../_node.txt', testing.LDIF_data),
-    #('../bbb.txt', testing.LDIF_data),
-    #('../schema.txt', testing.LDIF_data),
+    ('../schema.txt', testing.LDIF_data),
     #('../users.txt', testing.LDIF_principals),
-    
-    # old
-    #('groupOfNames.txt', testing.LDIF_groupOfNames),
-    #('groupOfNames_add.txt', testing.LDIF_groupOfNames_add),
-    
-    # new
-    #('_groupOfNames.txt', testing.LDIF_groupOfNames),
-    #('_groupOfNames_add.txt', testing.LDIF_groupOfNames_add),
-    
-    #('posixGroups.txt', testing.LDIF_posixGroups),
+    #('../ugm_groupOfNames.txt', testing.LDIF_groupOfNames),
+    #('../ugm_posixGroups.txt', testing.LDIF_posixGroups),
 ]
 
 optionflags = \

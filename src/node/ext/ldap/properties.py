@@ -25,33 +25,60 @@ class LDAPServerProperties(object):
                  ):
         """Take the connection properties as arguments.
 
-         SSL/TLS still unsupported
+        SSL/TLS still unsupported
 
-        @param server: DEPRECATED use uri! servername, defaults to 'localhost'
-        @param port: DEPRECATED uss uri! server port, defaults to 389
-        @param user: username to bind, defaults to ''
-        @param password: password to bind, defaults to ''
-        @param cache: Bool wether to enable caching or not, defaults to True
-        @param timeout: Cache timeout in seconds. only takes affect if cache
-                        is enabled.
-        @param uri: overrides server/port, forget about server and port, use
-        this to specify how to access the ldap server, eg:
-            - ldapi:///path/to/socket
-            - ldap://<server>:<port> (will try start_tls, which you can
-              enforce, see start_tls)
-            - ldaps://<server>:<port>
-        @param start_tls: Determines if StartTLS extended operation is tried on
-        a LDAPv3 server, iff the LDAP URL scheme is ldap:. If LDAP URL scheme
-        is not ldap: (e.g. ldaps: or ldapi:) this parameter is ignored.
-            0       Don't use StartTLS ext op
-            1       Try StartTLS ext op but proceed when unavailable
-            2       Try StartTLS ext op and re-raise exception if it fails
-        @param tls_cacertfile:
-        @param tls_cacertdir:
-        @param tls_clcertfile:
-        @param tls_clkeyfile:
-        @param retry_max: Maximum count of reconnect trials
-        @param retry_delay: Time span to wait between two reconnect trials
+        ``server``
+            DEPRECATED use uri! servername, defaults to 'localhost'
+            
+        ``port``
+            DEPRECATED uss uri! server port, defaults to 389
+        
+        ``user``
+            username to bind, defaults to ''
+        
+        ``password``
+            password to bind, defaults to ''
+        
+        ``cache``
+            Bool wether to enable caching or not, defaults to True
+        
+        ``timeout``
+            Cache timeout in seconds. only takes affect if cache is enabled.
+        
+        ``uri``
+            overrides server/port, forget about server and port, use
+            this to specify how to access the ldap server, eg:
+                - ldapi:///path/to/socket
+                - ldap://<server>:<port> (will try start_tls, which you can
+                  enforce, see start_tls)
+                - ldaps://<server>:<port>
+        
+        ``start_tls``
+            Determines if StartTLS extended operation is tried on
+            a LDAPv3 server, iff the LDAP URL scheme is ldap:. If LDAP URL 
+            scheme is not 'ldap:' (e.g. 'ldaps:' or 'ldapi:') this parameter
+            is ignored.
+                0 - Don't use StartTLS ext op
+                1 - Try StartTLS ext op but proceed when unavailable
+                2 - Try StartTLS ext op and re-raise exception if it fails
+        
+        ``tls_cacertfile``
+            Not yet
+        
+        ``tls_cacertdir``
+            Not yet
+            
+        ``tls_clcertfile``
+            Not yet
+            
+        ``tls_clkeyfile``
+            Not yet
+            
+        ``retry_max``
+            Maximum count of reconnect trials
+            
+        ``retry_delay``
+            Time span to wait between two reconnect trials
         """
         if uri is None:
             # old school

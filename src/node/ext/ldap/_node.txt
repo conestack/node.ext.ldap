@@ -27,8 +27,11 @@ the server properties::
     <dc=my-domain,dc=com - False>
 
     The non-unicode name got decoded
-    >>> root.__name__
+    >>> root.name
     u'dc=my-domain,dc=com'
+    
+    >>> root.attrs
+    <LDAPNodeAttributes object 'dc=my-domain,dc=com' at ...>
     
     >>> root.ldap_session
     <node.ext.ldap.session.LDAPSession object at ...>

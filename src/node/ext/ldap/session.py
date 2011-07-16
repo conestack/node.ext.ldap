@@ -79,13 +79,17 @@ class LDAPSession(object):
     def modify(self, dn, data, replace=False):
         """Modify an existing entry in the directory.
 
-        @param dn: Modification DN
-        @param data: either list of 3 tuples (look at
-                     node.ext.ldap.base.LDAPCommunicator.modify for details), or
-                     a dictionary representing the entry or parts of the entry.
-        @param replace: if set to True, replace entry at DN entirely with data.
-
-        XXX: implement described behaviour for data
+        ``dn``
+            Modification DN
+        
+        ``data``
+            either list of 3 tuples (look at
+            node.ext.ldap.base.LDAPCommunicator.modify for details), or
+            a dictionary representing the entry or parts of the entry.
+            XXX: dicts not yet
+        
+        ``replace``
+            if set to True, replace entry at DN entirely with data.
         """
         func = self._communicator.modify
         return self._perform(func, dn, data)
