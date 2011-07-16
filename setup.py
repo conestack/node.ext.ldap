@@ -32,7 +32,6 @@ setup(name='node.ext.ldap',
       install_requires=[
           'setuptools',
           'python-ldap',
-          'zodict',
           'bda.cache',
           'node.ext.ugm',
       ],
