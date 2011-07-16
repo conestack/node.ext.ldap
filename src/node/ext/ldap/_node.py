@@ -19,6 +19,7 @@ from node.parts import (
     AttributesLifecycle,
     NodeChildValidate,
     Adopt,
+    UnicodeAware,
     DefaultInit,
     Nodify,
     OdictStorage,
@@ -116,17 +117,11 @@ class AttributesPart(Part):
     
     @plumb
     def __setitem__(_next, self, key, val):
-        if isinstance(key, str):
-            key = decode(key)
-        if isinstance(val, str):
-            val = decode(val)
         _next(self, key, val)
         self._set_attrs_modified()
 
     @plumb
     def __delitem__(_next, self, key):
-        if isinstance(key, str):
-            key = decode(key)
         _next(self, key)
         self._set_attrs_modified()
     
@@ -140,7 +135,7 @@ class AttributesPart(Part):
 
 class LDAPNodeAttributes(NodeAttributes):
     __metaclass__ = plumber
-    __plumbing__ = AttributesLifecycle, AttributesPart
+    __plumbing__ = UnicodeAware, AttributesPart, AttributesLifecycle
 
 
 class LDAPNode(object):
