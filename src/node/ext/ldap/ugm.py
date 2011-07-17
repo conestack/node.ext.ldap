@@ -51,8 +51,10 @@ class PrincipalsConfig(object):
             scope=ONELEVEL,
             queryFilter='',
             objectClasses=[],
-            member_relation=''):
+            member_relation='',
+            defaults={}):
         self.baseDN = baseDN
+        # XXX: never used. what was this supposed for?
         self.newDN = newDN or baseDN
         self.attrmap = attrmap
         self.scope = scope
@@ -60,6 +62,7 @@ class PrincipalsConfig(object):
         self.objectClasses = objectClasses
         # XXX: never used. what was this supposed for?
         self.member_relation = member_relation
+        self.defaults = defaults
 
 
 class UsersConfig(PrincipalsConfig):
@@ -265,6 +268,7 @@ class PrincipalsPart(Part):
           and cfg.attrmap['login'] != cfg.attrmap['id']:
             self.context._seckey_attrs += (cfg.attrmap['login'],)
         
+        self.principal_defaults = cfg.defaults
         self.principal_attrmap = cfg.attrmap
         self.principal_attraliaser = DictAliaser(cfg.attrmap)
     
@@ -408,6 +412,16 @@ class PrincipalsPart(Part):
     @default
     def create(self, _id, **kw):
         vessel = AttributedNode()
+        # first set defaults
+        for k, v in self.principal_defaults:
+            # if default value is callable, call it with received _id and
+            # keyword arguments
+            if callable(v):
+                vessel.attrs[k] = v(_id, **kw)
+                continue
+            vessel.attrs[k] = v
+        # set attributes from received keyword arguments. this overwrites
+        # already set default values if existent for key.
         for k, v in kw.items():
             vessel.attrs[k] = v
         self[_id] = vessel

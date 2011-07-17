@@ -48,6 +48,8 @@ class ILDAPPrincipalsConfig(Interface):
     """
 
     baseDN = Attribute(u"Principals base DN")
+    
+    newDN = Attribute(u"??? never used. what was this supposed for?")
 
     attrmap = Attribute(u"Principals Attribute map as ``odict.odict``")
 
@@ -56,6 +58,12 @@ class ILDAPPrincipalsConfig(Interface):
     queryFilter = Attribute(u"Query filter for principals")
 
     objectClasses = Attribute(u"Default object classes for new principals.")
+    
+    member_relation = Attribute(u"??? never used. what was this supposed for?")
+    
+    defaults = Attribute(u"Dict like object containing default values for "
+                         u"principal creation. A value could either be static "
+                         u"or a callable.")
 
 
 class ILDAPUsersConfig(ILDAPPrincipalsConfig):
