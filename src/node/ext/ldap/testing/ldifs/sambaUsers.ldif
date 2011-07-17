@@ -1,0 +1,49 @@
+dn: ou=sambaUsers,dc=my-domain,dc=com
+objectClass: organizationalUnit
+ou: %(ou)s
+
+dn: uid=uid0,ou=sambaUsers,dc=my-domain,dc=com
+objectClass: account
+objectClass: posixAccount
+objectClass: shadowAccount
+objectClass: sambaSamAccount
+uid: uid0
+cn: cn0
+uidNumber: 0
+gidNumber: 0
+homeDirectory: /home/uid0
+sambaSID: 12345-0
+sambaNTPassword: 62CF067F093CD75BBAA5D49E04689ED7
+sambaLMPassword: FF3750BCC2B22412AAD3B435B51404EE
+userPassword: secret0
+
+dn: uid=uid1,ou=sambaUsers,dc=my-domain,dc=com
+objectClass: account
+objectClass: posixAccount
+objectClass: shadowAccount
+objectClass: sambaSamAccount
+uid: uid1
+cn: cn1
+uidNumber: 1
+gidNumber: 1
+homeDirectory: /home/uid1
+sambaSID: 12345-1
+sambaNTPassword: B39A61F16A4E11FA80580241F1D4AAE8
+sambaLMPassword: 8D16F4BADD1DA493AAD3B435B51404EE
+userPassword: secret1
+
+dn: uid=uid2,ou=sambaUsers,dc=my-domain,dc=com
+objectClass: account
+objectClass: posixAccount
+objectClass: shadowAccount
+objectClass: sambaSamAccount
+uid: uid2
+cn: cn2
+uidNumber: 2
+gidNumber: 2
+homeDirectory: /home/uid2
+sambaSID: 12345-2
+sambaNTPassword: C2CC78BA8B1DF908F563858B3095C7C7
+sambaLMPassword: 485B60ABDAF3DCBEAAD3B435B51404EE
+userPassword: secret2
+

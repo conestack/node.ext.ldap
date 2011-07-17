@@ -720,3 +720,24 @@ LDIF_posixGroups = Ldif(
         objectClasses=['posixGroup'],
         ),
     )
+
+# Samba Users
+LDIF_sambaUsers = Ldif(
+    resource('ldifs/sambaUsers.ldif'),
+    bases=(LDIF_base,),
+    name='LDIF_sambaUsers',
+    ucfg=UsersConfig(
+        baseDN='ou=sambaUsers,dc=my-domain,dc=com',
+        attrmap={
+            'id': 'uid',
+            'login': 'uid',
+            'rdn': 'uid',
+            'sambaSID': 'sambaSID',
+            'sambaNTPassword': 'sambaNTPassword',
+            'sambaLMPassword': 'sambaLMPassword',
+            },
+        scope=ONELEVEL,
+        queryFilter='(objectClass=sambaSamAccount)',
+        objectClasses=['sambaSamAccount'],
+        ),
+    )
