@@ -107,7 +107,7 @@ schema = (
     resource('schema/cosine.schema'),
     resource('schema/inetorgperson.schema'),
     resource('schema/nis.schema'),
-    #resource('schema/samba.schema'),
+    resource('schema/samba.schema'),
     )
 SLAPD_CONF = SlapdConf(schema)
 
