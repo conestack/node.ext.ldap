@@ -54,9 +54,9 @@ ACTION_DELETE = 2
 def queryNode(props, dn):
     """Query an ldap entry and return as LDAPNode.
 
-    ``props``
+    props
         ``LDAPProps`` instance
-    ``dn``
+    dn
         DN of the node to query
 
     The difference to just LDAPNode(props=props, name=dn) is, that the node
@@ -157,13 +157,13 @@ class LDAPNode(object):
         Node or nothing for children. ``attrmap`` is an optional rood node
         argument.
 
-        ``name``
+        name
             Initial base DN for the root LDAP Node.
 
-        ``props``
+        props
             ``node.ext.ldap.LDAPProperties`` object.
 
-        ``attrmap``
+        attrmap
             an optional map of attributes, mapped attributes will be available
             via node.mattrs.
         """
@@ -270,27 +270,27 @@ class LDAPNode(object):
         ``self._child_filter``, ``self._child_criteria`` and
         ``self._child_relation``.
 
-        ``queryFilter``
+        queryFilter
             ldap queryFilter, e.g. ``(objectClass=foo)``
             
-        ``criteria``
+        criteria
             dictionary of attribute value(s) (string or list of string)
             
-        ``relation``
+        relation
             the nodes we search has a relation to us.  A relation is defined as
             a string of attribute pairs:
             ``<relation> = '<our_attr>:<child_attr>'``.
             The value of these attributes must match for relation to match.
             Multiple pairs can be or-joined with
             
-        ``attrlist``
+        attrlist
             Normally a list of keys is returned. By defining attrlist the
             return format will be ``[(key, {attr1: [value1, ...]}), ...]``. To
             get this format without any attributs, i.e. empty dicts in the
             tuples, specify an empty attrlist. In addition to the normal ldap
             attributes you can also the request the dn to be included.
             
-        ``exact_match``
+        exact_match
             raise ValueError if not one match, return format is a single key or
             tuple, if attrlist is specified.
         """

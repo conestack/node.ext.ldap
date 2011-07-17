@@ -32,6 +32,7 @@ setup(name='node.ext.ldap',
       install_requires=[
           'setuptools',
           'python-ldap',
+          'smbpasswd',
           'bda.cache',
           'node.ext.ugm',
       ],
