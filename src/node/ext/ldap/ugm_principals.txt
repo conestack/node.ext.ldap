@@ -148,6 +148,10 @@ id is returned if sucessful, otherwise None::
 Add a user::
 
     >>> from node.ext.ldap import ONELEVEL
+    >>> def telephoneNumberDefault(_id, **kw):
+    ...     # default value callback function
+    ...     return '123'
+    
     >>> adducfg = UsersConfig(
     ...         baseDN='ou=customers,dc=my-domain,dc=com',
     ...         attrmap={
@@ -160,52 +164,41 @@ Add a user::
     ...         scope=ONELEVEL,
     ...         queryFilter='(objectClass=person)',
     ...         objectClasses=['top', 'person'],
+    ...         defaults={
+    ...             'sn': 'Surname',
+    ...             'telephoneNumber': telephoneNumberDefault,
+    ...             },
     ...         )
     >>> users = Users(props, adducfg)
 
     >>> users.ids
     [u'M\xfcller', u'Schmidt', u'Umhauer']
 
-    >>> from node.base import AttributedNode
-    >>> user_vessel = AttributedNode()
-    >>> user_vessel.allow_non_node_childs = True
-    
-    >>> from node.interfaces import INode
-    >>> INode.providedBy(user_vessel)
-    True
-
-    >>> users['newuser'] = user_vessel
+    >>> users.create('newid')
     Traceback (most recent call last):
       ...
     ValueError: 'cn' needed in node attributes for rdn.
 
-    >>> user_vessel.attrs['login'] = 'newcn'
-    >>> user_vessel.attrs['id'] = 'newid'
+    >>> users.create('newid', login='newcn', id='newid')
+    <User object 'newid' at ...>
     
-    >>> users.allow_non_node_childs = True # ???
-    
-    >>> users['newid'] = user_vessel
-
     >>> users.ids
     [u'M\xfcller', u'Schmidt', u'Umhauer', u'newid']
 
     >>> newuser = users['newid']
-    >>> newuser is not user_vessel
-    True
-
-    >>> newuser
-    <User object 'newid' at ...>
-
     >>> newuser.context
     <cn=newcn,ou=customers,dc=my-domain,dc=com:newid - True>
 
 # XXX: there need more attrs to show up::
 
     >>> newuser.attrs.items()
-    [('login', u'newcn'), ('id', u'newid')]
+    [('telephoneNumber', u'123'), ('id', u'newid'), ('login', u'newcn')]
 
     >>> newuser.context.attrs.items()
-    [(u'cn', u'newcn'), (u'sn', u'newid'), (u'objectClass', ['top', 'person'])]
+    [(u'telephoneNumber', u'123'), 
+    (u'sn', u'newid'), 
+    (u'cn', u'newcn'), 
+    (u'objectClass', ['top', 'person'])]
 
     >>> users()
     >>> users.reload = True

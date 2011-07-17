@@ -219,6 +219,20 @@ TODO
 Changes
 =======
 
+- add ``defaults`` attribute to ``PrincipalsConfig``, which gets considered in
+  ``Principals.create`` 
+  [rnix]
+
+- get rid of ``zodict`` dependency
+  [rnix]
+
+- sopport posix groups
+  [rnix]
+
+- refactor user and group management related code to fit the API described in
+  ``node.ext.ugm``
+  [rnix]
+
 1.9 (unreleased)
 ----------------
 

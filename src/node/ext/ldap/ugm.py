@@ -413,7 +413,7 @@ class PrincipalsPart(Part):
     def create(self, _id, **kw):
         vessel = AttributedNode()
         # first set defaults
-        for k, v in self.principal_defaults:
+        for k, v in self.principal_defaults.items():
             # if default value is callable, call it with received _id and
             # keyword arguments
             if callable(v):
@@ -544,22 +544,22 @@ class Ugm(object):
     def __init__(self, name=None, parent=None, props=None,
                  ucfg=None, gcfg=None, rcfg=None):
         """
-        ``name``
+        name
             node name
             
-        ``parent``
+        parent
             node parent
             
-        ``props``
+        props
             LDAPProps
         
-        ``ucfg``
+        ucfg
             UsersConfig
         
-        ``gcfg``
+        gcfg
             GroupsConfig
         
-        ``rcfg``
+        rcfg
             RolesConfig XXX: not yet
         """
         self.__name__ = name
