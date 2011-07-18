@@ -390,6 +390,7 @@ LDIF_groupOfNames = Ldif(
         attrmap={
             'id': 'cn',
             'rdn': 'cn',
+            'businessCategory': 'businessCategory',
             },
         scope=ONELEVEL,
         queryFilter='(objectClass=groupOfNames)',
@@ -420,6 +421,7 @@ LDIF_groupOfNames_add = Ldif(
         attrmap={
             'id': 'cn',
             'rdn': 'cn',
+            'businessCategory': 'businessCategory',
             },
         scope=SUBTREE,
         queryFilter='(objectClass=groupOfNames)',
@@ -449,6 +451,7 @@ LDIF_groupOfNames_10_10 = Ldif(
         attrmap={
             'id': 'cn',
             'rdn': 'cn',
+            'businessCategory': 'businessCategory',
             },
         scope=ONELEVEL,
         queryFilter='(objectClass=groupOfNames)',
@@ -477,6 +480,7 @@ LDIF_groupOfNames_100_100 = Ldif(
         attrmap={
             'id': 'cn',
             'rdn': 'cn',
+            'businessCategory': 'businessCategory',
             },
         scope=ONELEVEL,
         queryFilter='(objectClass=groupOfNames)',
@@ -507,6 +511,7 @@ LDIF_groupOfNames_100_100_add = Ldif(
         attrmap={
             'id': 'cn',
             'rdn': 'cn',
+            'businessCategory': 'businessCategory',
             },
         scope=SUBTREE,
         queryFilter='(objectClass=groupOfNames)',
@@ -535,6 +540,7 @@ LDIF_groupOfNames_300_300 = Ldif(
         attrmap={
             'id': 'cn',
             'rdn': 'cn',
+            'businessCategory': 'businessCategory',
             },
         scope=ONELEVEL,
         queryFilter='(objectClass=groupOfNames)',
@@ -565,6 +571,7 @@ LDIF_groupOfNames_300_300_add = Ldif(
         attrmap={
             'id': 'cn',
             'rdn': 'cn',
+            'businessCategory': 'businessCategory',
             },
         scope=SUBTREE,
         queryFilter='(objectClass=groupOfNames)',
@@ -593,6 +600,7 @@ LDIF_groupOfNames_700_700 = Ldif(
         attrmap={
             'id': 'cn',
             'rdn': 'cn',
+            'businessCategory': 'businessCategory',
             },
         scope=ONELEVEL,
         queryFilter='(objectClass=groupOfNames)',
@@ -623,6 +631,7 @@ LDIF_groupOfNames_700_700_add = Ldif(
         attrmap={
             'id': 'cn',
             'rdn': 'cn',
+            'businessCategory': 'businessCategory',
             },
         scope=SUBTREE,
         queryFilter='(objectClass=groupOfNames)',
@@ -651,6 +660,7 @@ LDIF_groupOfNames_1000_1000 = Ldif(
         attrmap={
             'id': 'cn',
             'rdn': 'cn',
+            'businessCategory': 'businessCategory',
             },
         scope=ONELEVEL,
         queryFilter='(objectClass=groupOfNames)',
@@ -681,6 +691,7 @@ LDIF_groupOfNames_1000_1000_add = Ldif(
         attrmap={
             'id': 'cn',
             'rdn': 'cn',
+            'businessCategory': 'businessCategory',
             },
         scope=SUBTREE,
         queryFilter='(objectClass=groupOfNames)',
