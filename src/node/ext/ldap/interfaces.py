@@ -64,6 +64,9 @@ class ILDAPPrincipalsConfig(Interface):
     defaults = Attribute(u"Dict like object containing default values for "
                          u"principal creation. A value could either be static "
                          u"or a callable.")
+    
+    strict = Attribute(u"Flag whether to initialize Aliaser for LDAP "
+                       u"attributes in strict mode. Defaults to True.")
 
 
 class ILDAPUsersConfig(ILDAPPrincipalsConfig):

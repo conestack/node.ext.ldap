@@ -724,3 +724,9 @@ New entries in case of scope SUBTREE are added in the ONELEVEL scope::
     >>> node = LDAPNode(props=props, name=root.DN)
     >>> node['cn=foo'].attrs['objectClass']
     [u'top', u'person']
+
+Cleanup for following tests::
+
+    >>> root = LDAPNode('dc=my-domain,dc=com', props)
+    >>> del root['cn=foo']
+    >>> root()

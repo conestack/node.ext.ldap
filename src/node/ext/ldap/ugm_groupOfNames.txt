@@ -79,6 +79,7 @@ XXX: LDAPNodeAttributes.items does not return consistent results if attrmap
     [('cn', u'cn0'), ('sn', u'sn0'), 
     ('mail', u'uid0@groupOfNames.com'), ('rdn', u'uid0')]
     
+    
 User is a leaf::
 
     >>> user_0['foo'] = object()

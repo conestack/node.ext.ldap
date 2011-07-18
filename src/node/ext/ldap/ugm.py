@@ -52,7 +52,8 @@ class PrincipalsConfig(object):
             queryFilter='',
             objectClasses=[],
             member_relation='',
-            defaults={}):
+            defaults={},
+            strict=True):
         self.baseDN = baseDN
         # XXX: never used. what was this supposed for?
         self.newDN = newDN or baseDN
@@ -63,6 +64,7 @@ class PrincipalsConfig(object):
         # XXX: never used. what was this supposed for?
         self.member_relation = member_relation
         self.defaults = defaults
+        self.strict = strict
 
 
 class UsersConfig(PrincipalsConfig):
@@ -77,6 +79,18 @@ class GroupsConfig(PrincipalsConfig):
     implements(IGroupsConfig)
 
 
+class PrincipalAliasedAttributes(AliasedNodespace):
+    
+    allow_non_node_childs = True
+    
+    @property
+    def changed(self):
+        return self.context.changed
+
+    def __call__(self):
+        self.context()
+
+
 class PrincipalPart(Part):
     
     @extend
@@ -88,8 +102,8 @@ class PrincipalPart(Part):
     def ldap_attributes_factory(self, name=None, parent=None):
         if self.attraliaser is None:
             return self.context.attrs
-        aliased_attrs = AliasedNodespace(self.context.attrs, self.attraliaser)
-        aliased_attrs.allow_non_node_childs = True
+        aliased_attrs = PrincipalAliasedAttributes(self.context.attrs,
+                                                   self.attraliaser)
         return aliased_attrs
     
     attributes_factory = finalize(ldap_attributes_factory)
@@ -270,7 +284,7 @@ class PrincipalsPart(Part):
         
         self.principal_defaults = cfg.defaults
         self.principal_attrmap = cfg.attrmap
-        self.principal_attraliaser = DictAliaser(cfg.attrmap)
+        self.principal_attraliaser = DictAliaser(cfg.attrmap, cfg.strict)
     
     @default
     def idbydn(self, dn):
