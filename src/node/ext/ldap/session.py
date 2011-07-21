@@ -30,7 +30,7 @@ class LDAPSession(object):
         Deprecated: This function will be removed in version 1.5. Use
                     ``baseDN`` property directly instead.
         """
-        self.baseDN = baseDN
+        self.baseDN = baseDN                                #pragma NO COVERAGE
 
     def _get_baseDN(self):
         baseDN = self._communicator.baseDN
@@ -120,6 +120,9 @@ class LDAPSession(object):
             self._communicator.bind()
         try:
             return decode(function(*args, **kwargs))
+        # XXX: it seems code below is never reached, call of
+        #      self._communicator.bind() above already raises error if
+        #      communication fails. And why server down?
         except ldap.SERVER_DOWN:
             self._communicator.bind()
             return decode(function(*args, **kwargs))

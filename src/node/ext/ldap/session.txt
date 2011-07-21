@@ -1,13 +1,12 @@
-Test LDAP Session.
-
-Create ``LDAPServerProperties`` instance::
+node.ext.ldap.session
+=====================
 
     >>> from node.ext.ldap import BASE, ONELEVEL, SUBTREE
     >>> from node.ext.ldap import LDAPProps, LDAPSession
     >>> from node.ext.ldap.testing import props
 
-Create the session with ``LDAPServerProperties`` as argument::
-
+Create the session with ``LDAPProps`` as argument::
+    
     >>> session = LDAPSession(props)
     >>> session.checkServerProperties()
     (True, 'OK')
@@ -73,3 +72,10 @@ Delete this entry and check the result::
 Unbind from Server::
 
     >>> session.unbind()
+
+Create the session with invalid ``LDAPProps``::
+    
+    >>> props = LDAPProps()
+    >>> session = LDAPSession(props)
+    >>> session.checkServerProperties()
+    (False, SERVER_DOWN({'desc': "Can't contact LDAP server"},))

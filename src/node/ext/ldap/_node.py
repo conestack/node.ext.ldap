@@ -10,6 +10,8 @@ from plumber import (
     Part,
     plumb,
     default,
+    extend,
+    finalize,
 )
 from node.parts import (
     Nodespaces,
@@ -138,20 +140,11 @@ class LDAPNodeAttributes(NodeAttributes):
     __plumbing__ = UnicodeAware, AttributesPart, AttributesLifecycle
 
 
-class LDAPNode(object):
-    __metaclass__ = plumber
-    __plumbing__ = (
-        Nodespaces,
-        Attributes,
-        Lifecycle,
-        NodeChildValidate,
-        Adopt,
-        Nodify,
-        OdictStorage,
-    )
+class LDAPStorage(OdictStorage):
     
-    attributes_factory = LDAPNodeAttributes
+    attributes_factory = finalize(LDAPNodeAttributes)
 
+    @finalize
     def __init__(self, name=None, props=None, attrmap=None, child_attrmap=None):
         """LDAP Node expects ``name`` and ``props`` arguments for the root LDAP
         Node or nothing for children. ``attrmap`` is an optional rood node
@@ -193,6 +186,7 @@ class LDAPNode(object):
         self._child_factory = LDAPNode
         self.attribute_access_for_attrs = False
 
+    @default
     def _init_keys(self):
         # the _keys is None or an odict.
         # if an odict, the value is either None or the value
@@ -202,6 +196,7 @@ class LDAPNode(object):
         self._child_dns = None
 
     # This is really ldap
+    @default
     @property
     def DN(self):
         """
@@ -220,10 +215,12 @@ class LDAPNode(object):
             return u''
 
     # This is really ldap
+    @default
     def child_dn(self, key):
         return self._child_dns[key]
 
     # a keymapper
+    @default
     def _calculate_key(self, dn, attrs):
         if self._key_attr == 'rdn':
             # explode_dn is ldap world
@@ -239,6 +236,7 @@ class LDAPNode(object):
         return key
 
     # secondary keys
+    @default
     def _calculate_seckeys(self, attrs):
         if not self._seckey_attrs:
             return {}
@@ -260,6 +258,7 @@ class LDAPNode(object):
                 seckeys[seckey_attr] = seckey
         return seckeys
 
+    @default
     @debug(['searching'])
     def search(self, queryFilter=None, criteria=None, relation=None,
             attrlist=None, exact_match=False, or_search=False):
@@ -347,6 +346,7 @@ class LDAPNode(object):
                 res.append(key)
         return res
 
+    @default
     def _load_keys(self):
         self._keys = odict()
         self._child_dns = {}
@@ -378,6 +378,7 @@ class LDAPNode(object):
                 raise RuntimeError(u"Key not unique: %s='%s'." % \
                         (self._key_attr, key))
 
+    @finalize
     def __iter__(self):
         """This is where keys are retrieved from ldap
         """
@@ -394,6 +395,7 @@ class LDAPNode(object):
             # no keys loaded
             pass
 
+    @finalize
     def sort(self, cmp=None, key=None, reverse=False):
         # XXX: a sort working only on the keys could work without wakeup -->
         # sortonkeys()
@@ -404,6 +406,7 @@ class LDAPNode(object):
         # second sort them
         self._keys.sort(cmp=cmp, key=key, reverse=reverse)
 
+    @finalize
     def __getitem__(self, key):
         """Here nodes are created for keys, if they do not exist already
         """
@@ -422,6 +425,7 @@ class LDAPNode(object):
         self.storage[key] = self._keys[key] = val
         return val
 
+    @default
     def _create_suitable_node(self, vessel):
         try:
             attrs = vessel.attrs
@@ -432,6 +436,7 @@ class LDAPNode(object):
             node.attrs[key] = val
         return node
 
+    @finalize
     def __setitem__(self, key, val):
         if isinstance(key, str):
             key = decode(key)
@@ -483,6 +488,7 @@ class LDAPNode(object):
             objectEventNotify(self.events['added'](val, newParent=self,
                                                    newName=key))
 
+    @finalize
     def __delitem__(self, key):
         """Do not delete immediately. Just mark LDAPNode to be deleted and
         remove key from self._keys.
@@ -500,6 +506,7 @@ class LDAPNode(object):
             self._deleted = list()
             self._deleted.append(val)
 
+    @finalize
     def __call__(self):
         if self.changed and self._action is not None:
             if self._action == ACTION_ADD:
@@ -520,6 +527,7 @@ class LDAPNode(object):
             if node is not None and node.changed:
                 node()
 
+    @finalize
     def __repr__(self):
         # Doctest fails if we output utf-8
         dn = self.DN.encode('ascii', 'replace')
@@ -528,17 +536,20 @@ class LDAPNode(object):
             return "<%s - %s>" % (dn, self.changed)
         return "<%s:%s - %s>" % (dn, name, self.changed)
 
-    __str__ = __repr__
-
+    __str__ = finalize(__repr__)
+    
+    @finalize
     @property
     def noderepr(self):
         return repr(self)
 
+    @default
     def _ldap_add(self):
         """adds self to the ldap directory.
         """
         self._session.add(self.DN, self.attrs)
 
+    @default
     def _ldap_modify(self):
         """modifies attributs of self on the ldap directory.
         """
@@ -562,6 +573,7 @@ class LDAPNode(object):
         if modlist:
             self._session.modify(self.DN, modlist)
 
+    @default
     def _ldap_delete(self):
         """delete self from the ldap-directory.
         """
@@ -613,8 +625,22 @@ class LDAPNode(object):
         if self._changed is not oldval and self.__parent__ is not None:
             self.__parent__.changed = self._changed
 
-    changed = property(_get_changed, _set_changed)
+    changed = default(property(_get_changed, _set_changed))
 
+    @default
     @property
     def ldap_session(self):
         return self._session
+
+
+class LDAPNode(object):
+    __metaclass__ = plumber
+    __plumbing__ = (
+        Nodespaces,
+        Attributes,
+        Lifecycle,
+        NodeChildValidate,
+        Adopt,
+        Nodify,
+        LDAPStorage,
+    )
