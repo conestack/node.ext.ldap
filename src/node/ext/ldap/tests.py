@@ -11,6 +11,7 @@ from node.ext.ldap import testing
 DOCFILES = [
     ('base.txt', testing.LDIF_data),
     ('session.txt', testing.LDIF_data),
+    ('filter.txt', testing.LDIF_data),
     ('_node.txt', testing.LDIF_data),
     ('schema.txt', testing.LDIF_data),
     ('ugm/ugm_principals.txt', testing.LDIF_principals),

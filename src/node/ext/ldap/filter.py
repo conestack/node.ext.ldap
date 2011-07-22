@@ -2,6 +2,7 @@ from ldap.filter import filter_format
 
 
 class LDAPFilter(object):
+    
     def __init__(self, queryFilter=None):
         if queryFilter is not None \
                 and not isinstance(queryFilter, basestring) \
@@ -53,6 +54,7 @@ class LDAPFilter(object):
 
 
 class LDAPDictFilter(LDAPFilter):
+    
     def __init__(self, criteria, or_search=False):
         self.criteria = criteria
         self.or_search = or_search
@@ -60,13 +62,15 @@ class LDAPDictFilter(LDAPFilter):
     def __str__(self):
         if not self.criteria:
             return ''
-        return unicode(dict_to_filter(criteria=self.criteria, or_search=self.or_search))
+        return unicode(dict_to_filter(
+            criteria=self.criteria, or_search=self.or_search))
 
     def __repr__(self):
-        return "LDAPDictFilter(criteria=%r)" (self.criteria,)
+        return "LDAPDictFilter(criteria=%r)" % (self.criteria,)
 
 
 class LDAPRelationFilter(LDAPFilter):
+    
     def __init__(self, node, relation):
         self.relation = relation
         self.gattrs = node.attrs
@@ -77,8 +81,9 @@ class LDAPRelationFilter(LDAPFilter):
         _filter = LDAPFilter()
         dictionary = dict()
 
-        parsedRelation = dict((k,v) for (k,_,v) in (pair.partition(':') for
-                                                    pair in self.relation.split('|')))
+        parsedRelation = dict(
+            (k,v) for (k,_,v) in (
+                pair.partition(':') for pair in self.relation.split('|')))
 
         for k,v in parsedRelation.items():
             if str(v) == '' or str(k) == '' or str(k) not in self.gattrs:
@@ -93,8 +98,8 @@ class LDAPRelationFilter(LDAPFilter):
         else:
             _filter = dict_to_filter(parsedRelation, True)
 
-        return self.dictionary and dict_to_filter(criteria=self.dictionary,
-                                                  or_search=True ).__str__() or ''
+        return self.dictionary and dict_to_filter(
+            criteria=self.dictionary, or_search=True ).__str__() or ''
 
 
 def dict_to_filter(criteria, or_search):

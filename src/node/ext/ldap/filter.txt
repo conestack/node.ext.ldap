@@ -1,0 +1,112 @@
+node.ext.ldap.filter
+====================
+
+``LDAPFilter``::
+
+    >>> from node.ext.ldap.filter import LDAPFilter
+    >>> filter = LDAPFilter('(objectClass=person)')
+    >>> filter |= LDAPFilter('(objectClass=some)')
+    >>> filter
+    LDAPFilter('(|(objectClass=person)(objectClass=some))')
+    
+    >>> str(filter)
+    '(|(objectClass=person)(objectClass=some))'
+    
+    >>> filter &= LDAPFilter('(objectClass=other)')
+    >>> str(filter)
+    '(&(|(objectClass=person)(objectClass=some))(objectClass=other))'
+
+``LDAPDictFilter``::
+
+    >>> from node.ext.ldap.filter import LDAPDictFilter
+    >>> criteria = dict(sn='meier', cn='sepp')
+    >>> filter = LDAPDictFilter(criteria, or_search=True)
+    >>> filter
+    LDAPDictFilter(criteria={'cn': 'sepp', 'sn': 'meier'})
+    
+    >>> str(filter)
+    '(|(cn=sepp)(sn=meier))'
+    
+    >>> criteria = dict(mail='*@example.com', homeDirectory='/home/*')
+    >>> other_filter = LDAPDictFilter(criteria)
+    >>> str(other_filter)
+    '(&(mail=*@example.com)(homeDirectory=/home/*))'
+    
+    >>> str(filter & other_filter)
+    '(&(|(cn=sepp)(sn=meier))(&(mail=*@example.com)(homeDirectory=/home/*)))'
+    
+    >>> str(filter | other_filter)
+    '(|(|(cn=sepp)(sn=meier))(&(mail=*@example.com)(homeDirectory=/home/*)))'
+    
+    >>> str(filter & LDAPFilter('(objectClass=person)'))
+    '(&(|(cn=sepp)(sn=meier))(objectClass=person))'
+
+
+#
+#    >>> from node.ext.ldap.filter import *
+#    >>> node = FooNode({'groupattr1': 'Member #1', 'groupattr2':'Member #2', 'groupattr3':'Member #3'})
+#    >>> rel_empty = LDAPRelationFilter(node, '')
+#    >>> rel_empty.__str__()
+#    ''
+#
+#    >>> rel_empty |= LDAPRelationFilter(node, 'groupattr1:member1')
+#    >>> rel_empty.__str__()
+#    ''
+#
+#    >>> rel_empty &= LDAPRelationFilter(node, 'groupattr1:member1')
+#    >>> rel_empty.__str__()
+#    '(member1=Member #1)'
+#
+#    >>> rel_single = LDAPRelationFilter(node, 'groupattr1:member1')
+#    >>> rel_single.__str__()
+#    '(member1=Member #1)'
+#
+#    >>> rel_double = LDAPRelationFilter(node, 'groupattr1:member1|groupattr2:member2')
+#    >>> rel_double.__str__()
+#    '(|(member1=Member #1)(member2=Member #2))'
+#
+#    >>> rel_double &= LDAPFilter('(objectClass=person)')
+#    >>> rel_double.__str__()
+#    '(&(|(member1=Member #1)(member2=Member #2))(objectClass=person))'
+
+XXX: tests that need to be moved to good locations
+
+#    >>> mueller.attrs['telephoneNumber'] = '9876'
+#    >>> users.printtree()
+#    <dc=my-domain,dc=com - True>
+#      <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - True>
+#      <cn=user1,dc=my-domain,dc=com:Meier - False>
+#      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
+#      <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>
+#    >>> mueller()
+#    >>> users.printtree()
+#    <dc=my-domain,dc=com - False>
+#      <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
+#      <cn=user1,dc=my-domain,dc=com:Meier - False>
+#      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
+#      <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>
+#    >>> from node.ext.ldap.node import queryNode
+#    >>> queryNode(props, mueller.DN).attrs
+#    {u'objectClass': [u'top', u'person'],
+#     u'telephoneNumber': u'9876',
+#     u'userPassword': u'foo2',
+#     u'cn': u'user2',
+#     u'sn': u'M\xfcller'}
+#    >>> del users['Müller']
+#    >>> users.printtree()
+#    <dc=my-domain,dc=com - True>
+#      <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - True>
+#      <cn=user1,dc=my-domain,dc=com:Meier - False>
+#      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
+#      <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>
+#    >>> mueller()
+#    >>> users.printtree()
+#    <dc=my-domain,dc=com - False>
+#      <cn=user1,dc=my-domain,dc=com:Meier - False>
+#      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
+#      <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>
+
+XXX: How does mueller know he is not in ldap anymore?
+
+#    >>> queryNode(props, mueller.DN) is None
+#    True
