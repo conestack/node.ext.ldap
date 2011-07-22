@@ -1,7 +1,10 @@
 node.ext.ldap.filter
 ====================
 
-``LDAPFilter``::
+LDAPFilter
+----------
+
+LDAPFilter expects string, other LDAPFilter or None at initialization.:: 
 
     >>> from node.ext.ldap.filter import LDAPFilter
     >>> str(LDAPFilter(None))
@@ -10,7 +13,20 @@ node.ext.ldap.filter
     >>> str(LDAPFilter(LDAPFilter(None)))
     ''
     
+    >>> str(LDAPFilter(object()))
+    Traceback (most recent call last):
+      ...
+    TypeError: Query filter must be LDAPFilter or string
+
+LDAPFilter can be combined with & and | operators. An operand must be either
+another LDAPFilter, a string or a None type.::
+
     >>> LDAPFilter('(a=*)') & object()
+    Traceback (most recent call last):
+      ...
+    TypeError: unsupported operand type
+    
+    >>> LDAPFilter('(a=*)') | object()
     Traceback (most recent call last):
       ...
     TypeError: unsupported operand type
@@ -19,19 +35,9 @@ node.ext.ldap.filter
     >>> foo
     LDAPFilter('(a=*)')
     
-    >>> LDAPFilter('(a=*)') | object()
-    Traceback (most recent call last):
-      ...
-    TypeError: unsupported operand type
-    
     >>> foo = LDAPFilter('(a=*)') | None
     >>> foo
     LDAPFilter('(a=*)')
-    
-    >>> str(LDAPFilter(object()))
-    Traceback (most recent call last):
-      ...
-    TypeError: Query filter must be LDAPFilter or string
     
     >>> filter = LDAPFilter('(objectClass=person)')
     >>> filter |= LDAPFilter('(objectClass=some)')
@@ -45,7 +51,12 @@ node.ext.ldap.filter
     >>> str(filter)
     '(&(|(objectClass=person)(objectClass=some))(objectClass=other))'
 
-``LDAPDictFilter``::
+
+LDAPDictFilter
+--------------
+
+LDAPDictFilter inherits from LDAPFilter and provides converting dict like
+objects to LDAP filters.::
 
     >>> from node.ext.ldap.filter import dict_to_filter
     >>> str(dict_to_filter(dict(), False))
@@ -74,7 +85,12 @@ node.ext.ldap.filter
     >>> str(filter & LDAPFilter('(objectClass=person)'))
     '(&(|(cn=sepp)(sn=meier))(objectClass=person))'
 
-``LDAPRelationFilter``::
+
+LDAPRelationFilter
+------------------
+
+LDAPRelationFilter inherits from LDAPFilter and provides creating LDAP filters
+from relations.::
 
     >>> from node.base import AttributedNode
     >>> node = AttributedNode()

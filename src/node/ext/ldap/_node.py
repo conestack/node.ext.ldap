@@ -145,7 +145,7 @@ class LDAPStorage(OdictStorage):
     attributes_factory = finalize(LDAPNodeAttributes)
 
     @finalize
-    def __init__(self, name=None, props=None, attrmap=None, child_attrmap=None):
+    def __init__(self, name=None, props=None, attrmap=None):
         """LDAP Node expects ``name`` and ``props`` arguments for the root LDAP
         Node or nothing for children. ``attrmap`` is an optional rood node
         argument.
