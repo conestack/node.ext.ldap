@@ -85,17 +85,17 @@ User is a leaf::
     >>> user_0['foo'] = object()
     Traceback (most recent call last):
       ...
-    NotImplementedError: User object is a leaf.
+    NotImplementedError: User does not implement ``__setitem__``
     
     >>> del user_0['foo']
     Traceback (most recent call last):
       ...
-    NotImplementedError: User object is a leaf.
+    NotImplementedError: User does not implement ``__delitem__``
     
     >>> user_0['foo']
     Traceback (most recent call last):
       ...
-    NotImplementedError: User object is a leaf.
+    NotImplementedError: User does not implement ``__getitem__``
     
     >>> user_0.keys()
     []
@@ -271,14 +271,16 @@ Deleting inexistend member from group fails::
       ...
     KeyError: 'inexistent'
 
-Members are added via ``__setitem__``::
+``__setitem__`` is prohibited::
 
-    >>> group_1['foo'] = users['uid0']
+    >>> group_1['uid0'] = users['uid0']
     Traceback (most recent call last):
       ...
-    RuntimeError: Id mismatch at attempt to add group member.
+    NotImplementedError: Group does not implement ``__setitem__``
+
+Members are added via ``add``::
     
-    >>> group_1['uid0'] = users['uid0']
+    >>> group_1.add('uid0')
     >>> group_1.keys()
     [u'uid1', u'uid0']
     
@@ -290,6 +292,8 @@ Members are added via ``__setitem__``::
     
     >>> group_1.users
     [<User object 'uid1' at ...>, <User object 'uid0' at ...>]
+    
+    >>> group_1()
 
 Let's take a fresh view on ldap whether this really happened::
 
@@ -368,9 +372,8 @@ from all this groups.
     >>> users = ugm.users
     >>> groups = ugm.groups
     
-    >>> user = users['sepp']
-    >>> groups['group0']['sepp'] = user
-    >>> groups['group1']['sepp'] = user
+    >>> groups['group0'].add('sepp')
+    >>> groups['group1'].add('sepp')
     >>> ugm()
     
     >>> user.groups

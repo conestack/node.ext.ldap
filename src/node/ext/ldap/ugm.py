@@ -27,9 +27,9 @@ from node.parts import (
 from node.ext.ugm import (
     User as BaseUserPart,
     Group as BaseGroupPart,
-    Users as UsersPart,
+    Users as BaseUsersPart,
     Groups as BaseGroupsPart,
-    Ugm as UgmPart,
+    Ugm as BaseUgmPart,
 )
 from node.ext.ldap.interfaces import (
     ILDAPGroupsConfig as IGroupsConfig,
@@ -38,6 +38,10 @@ from node.ext.ldap.interfaces import (
 from node.ext.ldap.scope import ONELEVEL
 from node.ext.ldap.debug import debug
 from node.ext.ldap._node import LDAPNode
+
+
+FORMAT_DN = 0
+FORMAT_UID = 1
 
 
 class PrincipalsConfig(object):
@@ -146,18 +150,71 @@ class UserPart(PrincipalPart, BaseUserPart):
             ret.append(groups[id])
         return ret
 
-    
+
+class User(object):
+    __metaclass__ = plumber
+    __plumbing__ = (
+        UserPart,
+        Nodespaces,
+        Attributes,
+        Nodify,
+    )
+
+
 class GroupPart(PrincipalPart, BaseGroupPart):
     
-    @default
-    @property
-    def _member_format(self):
-        return self.parent._member_format
+    @extend
+    def __getitem__(self, key):
+        if key not in self:
+            raise KeyError(key)
+        return self.parent.parent.users[key]
+    
+    @extend
+    @locktree
+    def __delitem__(self, key):
+        if key not in self:
+            raise KeyError(key)
+        if self._member_format == FORMAT_DN:
+            val = self.parent.parent.users.context.child_dn(key)
+        elif self._member_format == FORMAT_UID:
+            val = key
+        # self.context.attrs[self._member_attribute].remove won't work here
+        # issue in LDAPNodeAttributes, does not recognize changed this way.
+        members = self.context.attrs[self._member_attribute]
+        members.remove(val)
+        self.context.attrs[self._member_attribute] = members
+        # XXX: call here immediately?
+        self.context()
+    
+    @extend
+    def __iter__(self):
+        for id in self.member_ids:
+            yield id
+    
+    @extend
+    def __contains__(self, key):
+        for id in self:
+            if id == key:
+                return True
+        return False
     
     @default
-    @property
-    def _member_attribute(self):
-        return self.parent._member_attribute
+    @locktree
+    def add(self, key):
+        if not key in self.member_ids:
+            if self._member_format == FORMAT_DN:
+                users = self.parent.parent.users
+                # make sure user is loaded
+                users[key]
+                val = users.context.child_dn(key)
+            elif self._member_format == FORMAT_UID:
+                val = key
+            # self.context.attrs[self._member_attribute].append won't work here
+            # issue in LDAPNodeAttributes, does not recognize changed this way.
+            old = self.context.attrs[self._member_attribute]
+            self.context.attrs[self._member_attribute] = old + [val]
+            # XXX: call here immediately?
+            #self.context()
     
     @default
     @property
@@ -177,86 +234,27 @@ class GroupPart(PrincipalPart, BaseGroupPart):
         if self._member_format == FORMAT_UID:
             return members
         raise Exception(u"Unknown member value format.")
-
-
-class User(object):
-    __metaclass__ = plumber
-    __plumbing__ = (
-        Nodespaces,
-        Attributes,
-        Nodify,
-        UserPart,
-    )
     
-    def __getitem__(self, key):
-        raise NotImplementedError(u"User object is a leaf.")
+    @default
+    @property
+    def _member_format(self):
+        return self.parent._member_format
     
-    def __setitem__(self, key, value):
-        raise NotImplementedError(u"User object is a leaf.")
-    
-    def __delitem__(self, key):
-        raise NotImplementedError(u"User object is a leaf.")
-    
-    def __iter__(self):
-        return iter([])
+    @default
+    @property
+    def _member_attribute(self):
+        return self.parent._member_attribute
 
 
 class Group(object):
     __metaclass__ = plumber
     __plumbing__ = (
+        GroupPart,
         NodeChildValidate,
         Nodespaces,
         Attributes,
         Nodify,
-        GroupPart,
     )
-    
-    def __contains__(self, key):
-        for id in self:
-            if id == key:
-                return True
-        return False
-    
-    @locktree
-    def __setitem__(self, key, value):
-        if key != value.name:
-            raise RuntimeError(u"Id mismatch at attempt to add group member.")
-        if not key in self.member_ids:
-            if self._member_format == FORMAT_DN:
-                val = self.parent.parent.users.context.child_dn(key)
-            elif self._member_format == FORMAT_UID:
-                val = key
-            # self.context.attrs[self._member_attribute].append won't work here
-            # issue in LDAPNodeAttributes, does not recognize changed this way.
-            old = self.context.attrs[self._member_attribute]
-            self.context.attrs[self._member_attribute] = old + [val]
-            # XXX: call here immediately?
-            self.context()
-    
-    def __getitem__(self, key):
-        if key not in self:
-            raise KeyError(key)
-        return self.parent.parent.users[key]
-    
-    @locktree
-    def __delitem__(self, key):
-        if key not in self:
-            raise KeyError(key)
-        if self._member_format == FORMAT_DN:
-            val = self.parent.parent.users.context.child_dn(key)
-        elif self._member_format == FORMAT_UID:
-            val = key
-        # self.context.attrs[self._member_attribute].remove won't work here
-        # issue in LDAPNodeAttributes, does not recognize changed this way.
-        members = self.context.attrs[self._member_attribute]
-        members.remove(val)
-        self.context.attrs[self._member_attribute] = members
-        # XXX: call here immediately?
-        self.context()
-    
-    def __iter__(self):
-        for id in self.member_ids:
-            yield id
 
 
 class PrincipalsPart(Part):
@@ -442,20 +440,11 @@ class PrincipalsPart(Part):
         return self[_id]
 
 
-class Users(object):
-    __metaclass__ = plumber
-    __plumbing__ = (
-        NodeChildValidate,
-        Nodespaces,
-        Adopt,
-        PrincipalsPart,
-        Attributes,
-        Nodify,
-        UsersPart,
-    )
+class UsersPart(PrincipalsPart, BaseUsersPart):
     
-    principal_factory = User
+    principal_factory = default(User)
 
+    @extend
     def __delitem__(self, id):
         user = self[id]
         try:
@@ -466,6 +455,7 @@ class Users(object):
             del group[user.name]
         del self.context[id]
     
+    @default
     @debug(['authentication'])
     def authenticate(self, id=None, pw=None):
         id = self.context._seckeys.get(
@@ -476,9 +466,22 @@ class Users(object):
             return False
         return self.context._session.authenticate(userdn, pw) and id or False
 
+    @default
     @debug(['authentication'])
     def passwd(self, id, oldpw, newpw):
         self.context._session.passwd(self.context.child_dn(id), oldpw, newpw)
+
+
+class Users(object):
+    __metaclass__ = plumber
+    __plumbing__ = (
+        UsersPart,         
+        NodeChildValidate,
+        Nodespaces,
+        Adopt,
+        Attributes,
+        Nodify,
+    )
 
 
 def member_format(obj_cl):
@@ -501,7 +504,19 @@ def member_attribute(obj_cl):
     raise Exception(u"Unknown member attribute")
 
 
-class GroupsPart(BaseGroupsPart):
+class GroupsPart(PrincipalsPart, BaseGroupsPart):
+    
+    principal_factory = default(Group)
+    
+    @default
+    @property
+    def _member_format(self):
+        return member_format(self.context._child_objectClasses)
+    
+    @default
+    @property
+    def _member_attribute(self):
+        return member_attribute(self.context._child_objectClasses)
     
     @plumb
     def __init__(_next, self, props, cfg):
@@ -516,45 +531,21 @@ class GroupsPart(BaseGroupsPart):
         _next(self, key, vessel)
 
 
-FORMAT_DN = 0
-FORMAT_UID = 1
-
 class Groups(object):
     __metaclass__ = plumber
     __plumbing__ = (
-        NodeChildValidate,
-        Nodespaces,
-        Adopt,
-        PrincipalsPart,
-        Attributes,
-        Nodify,
-        GroupsPart,
-    )
-    
-    principal_factory = Group
-    
-    @property
-    def _member_format(self):
-        return member_format(self.context._child_objectClasses)
-    
-    @property
-    def _member_attribute(self):
-        return member_attribute(self.context._child_objectClasses)
-
-
-class Ugm(object):
-    __metaclass__ = plumber
-    __plumbing__ = (
+        GroupsPart,         
         NodeChildValidate,
         Nodespaces,
         Adopt,
         Attributes,
-        DefaultInit,
         Nodify,
-        UgmPart,
-        OdictStorage,
     )
+
+
+class UgmPart(BaseUgmPart):
     
+    @extend
     def __init__(self, name=None, parent=None, props=None,
                  ucfg=None, gcfg=None, rcfg=None):
         """
@@ -583,6 +574,7 @@ class Ugm(object):
         self.gcfg = gcfg
         self.rcfg = rcfg
     
+    @extend
     def __getitem__(self, key):
         if not key in self.storage:
             if key == 'users':
@@ -591,42 +583,61 @@ class Ugm(object):
                 self['groups'] = Groups(self.props, self.gcfg)
         return self.storage[key]
     
+    @extend
     @locktree
     def __setitem__(self, key, value):
         self._chk_key(key)
         self.storage[key] = value
     
+    @extend
     def __delitem__(self, key):
         raise NotImplementedError(u"Operation forbidden on this node.")
     
+    @extend
     def __iter__(self):
         for key in ['users', 'groups']:
             yield key
     
-    def __call__(self):
-        self.users()
-        self.groups()
-    
+    @default
     @property
     def users(self):
         return self['users']
     
+    @default
     @property
     def groups(self):
         return self['groups']
     
+    @default
     def add_role(self, role, principal):
         # XXX
         raise NotImplementedError(u"not yet")
     
+    @default
     def remove_role(self, role, principal):
         # XXX
         raise NotImplementedError(u"not yet")
         
+    @default
     def roles(self, principal):
         # XXX
         raise NotImplementedError(u"not yet")
     
+    @default
     def _chk_key(self, key):
         if not key in ['users', 'groups']:
             raise KeyError(key)
+
+
+class Ugm(object):
+    __metaclass__ = plumber
+    __plumbing__ = (
+        UgmPart,
+        NodeChildValidate,
+        Nodespaces,
+        Adopt,
+        Attributes,
+        DefaultInit,
+        Nodify,
+        OdictStorage,
+    )
