@@ -115,14 +115,16 @@ class LDAPSession(object):
         """
         args = encode(args)
         kwargs = encode(kwargs)
-
         if self._communicator._con is None:
             self._communicator.bind()
-        try:
-            return decode(function(*args, **kwargs))
-        # XXX: it seems code below is never reached, call of
+        
+        # XXX: it seems except block is never reached, call of
         #      self._communicator.bind() above already raises error if
         #      communication fails. And why server down?
-        except ldap.SERVER_DOWN:
-            self._communicator.bind()
-            return decode(function(*args, **kwargs))
+        #try:
+        #    return decode(function(*args, **kwargs))
+        #except ldap.SERVER_DOWN:
+        #    self._communicator.bind()
+        #    return decode(function(*args, **kwargs))
+        
+        return decode(function(*args, **kwargs))

@@ -6,7 +6,8 @@ from node.ext.ldap.properties import (
     LDAPProps,
     LDAPServerProperties,
     )
-from node.ext.ldap.schema import LDAPSchemaInfo
+# XXX: later
+#from node.ext.ldap.schema import LDAPSchemaInfo
 from node.ext.ldap.scope import (
     BASE,
     ONELEVEL,

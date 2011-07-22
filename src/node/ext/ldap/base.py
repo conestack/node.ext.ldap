@@ -26,8 +26,8 @@ def testLDAPConnectivity(server=None, port=None, props=None):
         lc.bind()
         lc.unbind()
         return 'success'
-    except ldap.LDAPError, error:                           #pragma NO COVERAGE
-        return error                                        #pragma NO COVERAGE
+    except ldap.LDAPError, error:
+        return error
 
 
 def md5digest(key):
@@ -55,7 +55,8 @@ class LDAPConnector(object):
     This Object knows about the LDAP Server to connect to, the authentication
     information and the protocol to use.
 
-    TODO: tests for TLS/SSL Support - it should be functional. (see also properties.py)
+    TODO: tests for TLS/SSL Support - it should be functional. 
+    (see also properties.py)
 
     Normally you do not need to use this class directly.
 
@@ -75,9 +76,9 @@ class LDAPConnector(object):
                  props=None):
         """Initialize LDAPConnector.
 
-        Signature Deprecated: Signature will take ``LDAPServerProperties``
+        Signature Deprecated: Signature will take ``LDAPProps``
                               object instead of current kwargs in future.
-                              This will be changed in Version 1.5.
+                              This will be changed in Version 1.0.
         """
         self.protocol = ldap.VERSION3
         if props is None:
@@ -111,7 +112,9 @@ class LDAPConnector(object):
         self._con = ldap.initialize(self._uri)
         self._con.protocol_version = self.protocol
         if self._start_tls:
-            self._con.start_tls_s()
+            # ignore in tests for now. nevertheless provide a test environment
+            # for TLS and SSL later
+            self._con.start_tls_s()                         #pragma NO COVERAGE
         self._con.simple_bind_s(self._bindDN, self._bindPW)
         return self._con
 
@@ -271,12 +274,12 @@ def main():
 
     Expects server and port as arguments.
     """
-    import sys                                              #pragma NO COVERAGE
-    if len(sys.argv) < 3:                                   #pragma NO COVERAGE
-        print 'usage: python base.py [server] [port]'       #pragma NO COVERAGE
-    else:                                                   #pragma NO COVERAGE
-        server, port = sys.argv[1:]                         #pragma NO COVERAGE
-        print testLDAPConnectivity(server, int(port))       #pragma NO COVERAGE
+    import sys
+    if len(sys.argv) < 3:
+        print 'usage: python base.py [server] [port]'
+    else:
+        server, port = sys.argv[1:]
+        print testLDAPConnectivity(server, int(port))
 
 
 if __name__ == "__main__":

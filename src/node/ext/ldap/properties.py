@@ -55,7 +55,7 @@ class LDAPServerProperties(object):
         
         start_tls
             Determines if StartTLS extended operation is tried on
-            a LDAPv3 server, iff the LDAP URL scheme is ldap:. If LDAP URL 
+            a LDAPv3 server, if the LDAP URL scheme is ldap:. If LDAP URL 
             scheme is not 'ldap:' (e.g. 'ldaps:' or 'ldapi:') this parameter
             is ignored.
                 0 - Don't use StartTLS ext op
@@ -76,9 +76,11 @@ class LDAPServerProperties(object):
             
         retry_max
             Maximum count of reconnect trials
+            Not yet
             
         retry_delay
             Time span to wait between two reconnect trials
+            Not yet
         """
         if uri is None:
             # old school

@@ -4,6 +4,34 @@ LDAP credentials.::
     >>> port = 12345
     >>> binddn = "cn=Manager,dc=my-domain,dc=com"
     >>> bindpw = "secret"
+    
+    >>> from node.ext.ldap import LDAPProps
+    >>> props = LDAPProps(
+    ...     server=host,
+    ...     port=port,
+    ...     user=binddn,
+    ...     password=bindpw,
+    ... )
+
+Test main script, could be used by command line with
+'python base.py server port'::
+
+    >>> from node.ext.ldap.base import main
+    >>> import sys
+    >>> old_argv = sys.argv
+    >>> sys.argv = ['base.py', '127.0.0.1', '12345']
+    >>> main()
+    success
+    
+    >>> sys.argv[-1] = '12346'
+    >>> main()
+    {'desc': "Can't contact LDAP server"}
+    
+    >>> sys.argv = []
+    >>> main()
+    usage: python base.py [server] [port]
+    
+    >>> sys.argv = old_argv
 
 Test node.ext.ldap base objects.::
 
@@ -11,9 +39,26 @@ Test node.ext.ldap base objects.::
     >>> from node.ext.ldap import LDAPConnector
     >>> from node.ext.ldap import LDAPCommunicator
 
-Create connector.::
+Test LDAP connectivity::
+
+    >>> from node.ext.ldap.base import testLDAPConnectivity
+    >>> testLDAPConnectivity('127.0.0.1', 12345)
+    'success'
+    
+    >>> testLDAPConnectivity('127.0.0.1', 12346)
+    SERVER_DOWN({'desc': "Can't contact LDAP server"},)
+
+Create connector.
+
+Old signature. To be remove in 1.0::
 
     >>> connector = LDAPConnector(host, port, binddn, bindpw, cache=False)
+    >>> connector
+    <node.ext.ldap.base.LDAPConnector object at ...>
+
+New signature, use this one::
+
+    >>> connector = LDAPConnector(props=props)
     >>> connector
     <node.ext.ldap.base.LDAPConnector object at ...>
 

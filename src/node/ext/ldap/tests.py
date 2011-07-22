@@ -13,7 +13,8 @@ DOCFILES = [
     ('session.txt', testing.LDIF_data),
     ('filter.txt', testing.LDIF_data),
     ('_node.txt', testing.LDIF_data),
-    ('schema.txt', testing.LDIF_data),
+    # XXX: schema later
+    #('schema.txt', testing.LDIF_data),
     ('ugm/ugm_principals.txt', testing.LDIF_principals),
     ('ugm/ugm_groupOfNames.txt', testing.LDIF_groupOfNames),
     ('ugm/ugm_posixGroups.txt', testing.LDIF_posixGroups),
