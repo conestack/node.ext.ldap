@@ -1,5 +1,5 @@
-Tests refering to posixGroups.ldif
-==================================
+Tests refering to groupOfNames.ldif
+===================================
 
 Ugm root object::
 
@@ -61,7 +61,7 @@ Fetch some users::
     <User object 'uid0' at ...>
     
     >>> user_0.__class__
-    <class 'node.ext.ldap.ugm.User'>
+    <class 'node.ext.ldap.ugm._api.User'>
     
     >>> user_0.attrs
     Aliased <LDAPNodeAttributes object 'uid0' at ...>
@@ -73,11 +73,12 @@ Fetch some users::
     u'cn0'
 
 XXX: LDAPNodeAttributes.items does not return consistent results if attrmap
-     points to same attribute twice ('cn' missing here)
+     points to same attribute twice ('login' missing here)
 
     >>> user_0.attrs.items()
-    [('cn', u'cn0'), ('rdn', u'uid0'), ('uidNumber', u'0'), 
-    ('gidNumber', u'0'), ('homeDirectory', u'/home/uid0')]
+    [('cn', u'cn0'), ('sn', u'sn0'), 
+    ('mail', u'uid0@groupOfNames.com'), ('rdn', u'uid0')]
+    
     
 User is a leaf::
 
@@ -135,38 +136,35 @@ Change password::
 Add user::
 
     >>> users.printtree()
-    <class 'node.ext.ldap.ugm.Users'>: users
-      <class 'node.ext.ldap.ugm.User'>: uid0
-      <class 'node.ext.ldap.ugm.User'>: uid1
-      <class 'node.ext.ldap.ugm.User'>: uid2
+    <class 'node.ext.ldap.ugm._api.Users'>: users
+      <class 'node.ext.ldap.ugm._api.User'>: uid0
+      <class 'node.ext.ldap.ugm._api.User'>: uid1
+      <class 'node.ext.ldap.ugm._api.User'>: uid2
     
     >>> user = users.create('sepp',
     ...                     cn='Sepp',
-    ...                     uidNumber='99',
-    ...                     gidNumber='99',
-    ...                     homeDirectory='home/sepp')
+    ...                     sn='Bla',
+    ...                     mail='baz@bar.com')
+    
     >>> user
     <User object 'sepp' at ...>
 
 The user is added to tree::
 
     >>> ugm.printtree()
-    <class 'node.ext.ldap.ugm.Ugm'>: ugm
-      <class 'node.ext.ldap.ugm.Users'>: users
-        <class 'node.ext.ldap.ugm.User'>: uid0
-        <class 'node.ext.ldap.ugm.User'>: uid1
-        <class 'node.ext.ldap.ugm.User'>: uid2
-        <class 'node.ext.ldap.ugm.User'>: sepp
-      <class 'node.ext.ldap.ugm.Groups'>: groups
-        <class 'node.ext.ldap.ugm.Group'>: group0
-          <class 'node.ext.ldap.ugm.User'>: uid0
-        <class 'node.ext.ldap.ugm.Group'>: group1
-          <class 'node.ext.ldap.ugm.User'>: uid0
-          <class 'node.ext.ldap.ugm.User'>: uid1
-        <class 'node.ext.ldap.ugm.Group'>: group2
-          <class 'node.ext.ldap.ugm.User'>: uid0
-          <class 'node.ext.ldap.ugm.User'>: uid1
-          <class 'node.ext.ldap.ugm.User'>: uid2
+    <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
+      <class 'node.ext.ldap.ugm._api.Users'>: users
+        <class 'node.ext.ldap.ugm._api.User'>: uid0
+        <class 'node.ext.ldap.ugm._api.User'>: uid1
+        <class 'node.ext.ldap.ugm._api.User'>: uid2
+        <class 'node.ext.ldap.ugm._api.User'>: sepp
+      <class 'node.ext.ldap.ugm._api.Groups'>: groups
+        <class 'node.ext.ldap.ugm._api.Group'>: group0
+        <class 'node.ext.ldap.ugm._api.Group'>: group1
+          <class 'node.ext.ldap.ugm._api.User'>: uid1
+        <class 'node.ext.ldap.ugm._api.Group'>: group2
+          <class 'node.ext.ldap.ugm._api.User'>: uid1
+          <class 'node.ext.ldap.ugm._api.User'>: uid2
 
 Though, no authentication or password setting possible yet, because tree is
 not persisted to LDAP yet::
@@ -200,46 +198,40 @@ Groups object::
     <Group object 'group0' at ...>
     
     >>> group_0.__class__
-    <class 'node.ext.ldap.ugm.Group'>
+    <class 'node.ext.ldap.ugm._api.Group'>
     
     >>> group_0.attrs
     Aliased <LDAPNodeAttributes object 'group0' at ...>
     
     >>> group_0.attrs.items()
-    [('memberUid', [u'nobody', u'uid0']), 
-    ('gidNumber', u'0'), 
-    ('rdn', u'group0')]
+    [('member', [u'cn=nobody']), ('rdn', u'group0')]
     
     >>> group_1.attrs.items()
-    [('memberUid', [u'nobody', u'uid0', u'uid1']), 
-    ('gidNumber', u'1'), 
+    [('member', [u'cn=nobody', u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com']), 
     ('rdn', u'group1')]
 
 Add a group::
 
-    >>> group = groups.create('group99', id='group99', gidNumber='99')
+    >>> group = groups.create('group99', id='group99')
     >>> group
     <Group object 'group99' at ...>
     
     >>> ugm()
     >>> ugm.printtree()
-    <class 'node.ext.ldap.ugm.Ugm'>: ugm
-      <class 'node.ext.ldap.ugm.Users'>: users
-        <class 'node.ext.ldap.ugm.User'>: uid0
-        <class 'node.ext.ldap.ugm.User'>: uid1
-        <class 'node.ext.ldap.ugm.User'>: uid2
-        <class 'node.ext.ldap.ugm.User'>: sepp
-      <class 'node.ext.ldap.ugm.Groups'>: groups
-        <class 'node.ext.ldap.ugm.Group'>: group0
-          <class 'node.ext.ldap.ugm.User'>: uid0
-        <class 'node.ext.ldap.ugm.Group'>: group1
-          <class 'node.ext.ldap.ugm.User'>: uid0
-          <class 'node.ext.ldap.ugm.User'>: uid1
-        <class 'node.ext.ldap.ugm.Group'>: group2
-          <class 'node.ext.ldap.ugm.User'>: uid0
-          <class 'node.ext.ldap.ugm.User'>: uid1
-          <class 'node.ext.ldap.ugm.User'>: uid2
-        <class 'node.ext.ldap.ugm.Group'>: group99
+    <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
+      <class 'node.ext.ldap.ugm._api.Users'>: users
+        <class 'node.ext.ldap.ugm._api.User'>: uid0
+        <class 'node.ext.ldap.ugm._api.User'>: uid1
+        <class 'node.ext.ldap.ugm._api.User'>: uid2
+        <class 'node.ext.ldap.ugm._api.User'>: sepp
+      <class 'node.ext.ldap.ugm._api.Groups'>: groups
+        <class 'node.ext.ldap.ugm._api.Group'>: group0
+        <class 'node.ext.ldap.ugm._api.Group'>: group1
+          <class 'node.ext.ldap.ugm._api.User'>: uid1
+        <class 'node.ext.ldap.ugm._api.Group'>: group2
+          <class 'node.ext.ldap.ugm._api.User'>: uid1
+          <class 'node.ext.ldap.ugm._api.User'>: uid2
+        <class 'node.ext.ldap.ugm._api.Group'>: group99
     
     >>> ugm.groups['group99']
     <Group object 'group99' at ...>
@@ -247,7 +239,7 @@ Add a group::
 A group returns the members ids as keys::     
 
     >>> group_0.member_ids
-    [u'uid0']
+    []
     
     >> group_1.member_ids
     [u'uid1']
@@ -290,16 +282,16 @@ Members are added via ``add``::
     
     >>> group_1.add('uid0')
     >>> group_1.keys()
-    [u'uid0', u'uid1']
+    [u'uid1', u'uid0']
     
     >>> group_1.member_ids
-    [u'uid0', u'uid1']
+    [u'uid1', u'uid0']
 
     >>> group_1['uid0']
     <User object 'uid0' at ...>
     
     >>> group_1.users
-    [<User object 'uid0' at ...>, <User object 'uid1' at ...>]
+    [<User object 'uid1' at ...>, <User object 'uid0' at ...>]
     
     >>> group_1()
 
@@ -308,7 +300,7 @@ Let's take a fresh view on ldap whether this really happened::
     >>> ugm_fresh = Ugm(name='ugm', parent=None, props=props,
     ...                 ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
     >>> ugm_fresh.groups['group1'].keys()
-    [u'uid0', u'uid1']
+    [u'uid1', u'uid0']
 
 Members are removed via ``delitem``::
 
@@ -317,29 +309,11 @@ Members are removed via ``delitem``::
     ...                 ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
     >>> ugm_fresh.groups['group1'].keys()
     [u'uid1']
-    
-    >>> ugm.printtree()
-    <class 'node.ext.ldap.ugm.Ugm'>: ugm
-      <class 'node.ext.ldap.ugm.Users'>: users
-        <class 'node.ext.ldap.ugm.User'>: uid0
-        <class 'node.ext.ldap.ugm.User'>: uid1
-        <class 'node.ext.ldap.ugm.User'>: uid2
-        <class 'node.ext.ldap.ugm.User'>: sepp
-      <class 'node.ext.ldap.ugm.Groups'>: groups
-        <class 'node.ext.ldap.ugm.Group'>: group0
-          <class 'node.ext.ldap.ugm.User'>: uid0
-        <class 'node.ext.ldap.ugm.Group'>: group1
-          <class 'node.ext.ldap.ugm.User'>: uid1
-        <class 'node.ext.ldap.ugm.Group'>: group2
-          <class 'node.ext.ldap.ugm.User'>: uid0
-          <class 'node.ext.ldap.ugm.User'>: uid1
-          <class 'node.ext.ldap.ugm.User'>: uid2
-        <class 'node.ext.ldap.ugm.Group'>: group99
 
 A user knows its groups::
 
     >>> user_0.groups
-    [<Group object 'group0' at ...>, <Group object 'group2' at ...>]
+    []
     
     >>> user_1.groups
     [<Group object 'group1' at ...>, <Group object 'group2' at ...>]
@@ -406,60 +380,54 @@ from all this groups.
     [<Group object 'group0' at ...>, <Group object 'group1' at ...>]
 
     >>> ugm.printtree()
-    <class 'node.ext.ldap.ugm.Ugm'>: ugm
-      <class 'node.ext.ldap.ugm.Users'>: users
-        <class 'node.ext.ldap.ugm.User'>: uid0
-        <class 'node.ext.ldap.ugm.User'>: uid1
-        <class 'node.ext.ldap.ugm.User'>: uid2
-        <class 'node.ext.ldap.ugm.User'>: sepp
-      <class 'node.ext.ldap.ugm.Groups'>: groups
-        <class 'node.ext.ldap.ugm.Group'>: group0
-          <class 'node.ext.ldap.ugm.User'>: uid0
-          <class 'node.ext.ldap.ugm.User'>: sepp
-        <class 'node.ext.ldap.ugm.Group'>: group1
-          <class 'node.ext.ldap.ugm.User'>: uid1
-          <class 'node.ext.ldap.ugm.User'>: sepp
-        <class 'node.ext.ldap.ugm.Group'>: group2
-          <class 'node.ext.ldap.ugm.User'>: uid0
-          <class 'node.ext.ldap.ugm.User'>: uid1
-          <class 'node.ext.ldap.ugm.User'>: uid2
-        <class 'node.ext.ldap.ugm.Group'>: group99
+    <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
+      <class 'node.ext.ldap.ugm._api.Users'>: users
+        <class 'node.ext.ldap.ugm._api.User'>: uid0
+        <class 'node.ext.ldap.ugm._api.User'>: uid1
+        <class 'node.ext.ldap.ugm._api.User'>: uid2
+        <class 'node.ext.ldap.ugm._api.User'>: sepp
+      <class 'node.ext.ldap.ugm._api.Groups'>: groups
+        <class 'node.ext.ldap.ugm._api.Group'>: group0
+          <class 'node.ext.ldap.ugm._api.User'>: sepp
+        <class 'node.ext.ldap.ugm._api.Group'>: group1
+          <class 'node.ext.ldap.ugm._api.User'>: uid1
+          <class 'node.ext.ldap.ugm._api.User'>: sepp
+        <class 'node.ext.ldap.ugm._api.Group'>: group2
+          <class 'node.ext.ldap.ugm._api.User'>: uid1
+          <class 'node.ext.ldap.ugm._api.User'>: uid2
+        <class 'node.ext.ldap.ugm._api.Group'>: group99
     
     >>> del users['sepp']
     >>> ugm()
     >>> ugm.printtree()
-    <class 'node.ext.ldap.ugm.Ugm'>: ugm
-      <class 'node.ext.ldap.ugm.Users'>: users
-        <class 'node.ext.ldap.ugm.User'>: uid0
-        <class 'node.ext.ldap.ugm.User'>: uid1
-        <class 'node.ext.ldap.ugm.User'>: uid2
-      <class 'node.ext.ldap.ugm.Groups'>: groups
-        <class 'node.ext.ldap.ugm.Group'>: group0
-          <class 'node.ext.ldap.ugm.User'>: uid0
-        <class 'node.ext.ldap.ugm.Group'>: group1
-          <class 'node.ext.ldap.ugm.User'>: uid1
-        <class 'node.ext.ldap.ugm.Group'>: group2
-          <class 'node.ext.ldap.ugm.User'>: uid0
-          <class 'node.ext.ldap.ugm.User'>: uid1
-          <class 'node.ext.ldap.ugm.User'>: uid2
-        <class 'node.ext.ldap.ugm.Group'>: group99
+    <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
+      <class 'node.ext.ldap.ugm._api.Users'>: users
+        <class 'node.ext.ldap.ugm._api.User'>: uid0
+        <class 'node.ext.ldap.ugm._api.User'>: uid1
+        <class 'node.ext.ldap.ugm._api.User'>: uid2
+      <class 'node.ext.ldap.ugm._api.Groups'>: groups
+        <class 'node.ext.ldap.ugm._api.Group'>: group0
+        <class 'node.ext.ldap.ugm._api.Group'>: group1
+          <class 'node.ext.ldap.ugm._api.User'>: uid1
+        <class 'node.ext.ldap.ugm._api.Group'>: group2
+          <class 'node.ext.ldap.ugm._api.User'>: uid1
+          <class 'node.ext.ldap.ugm._api.User'>: uid2
+        <class 'node.ext.ldap.ugm._api.Group'>: group99
 
 Delete Group::
 
     >>> del groups['group99']
     >>> ugm()
     >>> ugm.printtree()
-    <class 'node.ext.ldap.ugm.Ugm'>: ugm
-      <class 'node.ext.ldap.ugm.Users'>: users
-        <class 'node.ext.ldap.ugm.User'>: uid0
-        <class 'node.ext.ldap.ugm.User'>: uid1
-        <class 'node.ext.ldap.ugm.User'>: uid2
-      <class 'node.ext.ldap.ugm.Groups'>: groups
-        <class 'node.ext.ldap.ugm.Group'>: group0
-          <class 'node.ext.ldap.ugm.User'>: uid0
-        <class 'node.ext.ldap.ugm.Group'>: group1
-          <class 'node.ext.ldap.ugm.User'>: uid1
-        <class 'node.ext.ldap.ugm.Group'>: group2
-          <class 'node.ext.ldap.ugm.User'>: uid0
-          <class 'node.ext.ldap.ugm.User'>: uid1
-          <class 'node.ext.ldap.ugm.User'>: uid2
+    <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
+      <class 'node.ext.ldap.ugm._api.Users'>: users
+        <class 'node.ext.ldap.ugm._api.User'>: uid0
+        <class 'node.ext.ldap.ugm._api.User'>: uid1
+        <class 'node.ext.ldap.ugm._api.User'>: uid2
+      <class 'node.ext.ldap.ugm._api.Groups'>: groups
+        <class 'node.ext.ldap.ugm._api.Group'>: group0
+        <class 'node.ext.ldap.ugm._api.Group'>: group1
+          <class 'node.ext.ldap.ugm._api.User'>: uid1
+        <class 'node.ext.ldap.ugm._api.Group'>: group2
+          <class 'node.ext.ldap.ugm._api.User'>: uid1
+          <class 'node.ext.ldap.ugm._api.User'>: uid2

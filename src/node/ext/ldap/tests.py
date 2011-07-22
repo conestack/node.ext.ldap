@@ -9,14 +9,14 @@ from node.ext.ldap import testing
 
 
 DOCFILES = [
-    ('../base.txt', testing.LDIF_data),
-    ('../session.txt', testing.LDIF_data),
-    ('../_node.txt', testing.LDIF_data),
-    ('../schema.txt', testing.LDIF_data),
-    ('../ugm_principals.txt', testing.LDIF_principals),
-    ('../ugm_groupOfNames.txt', testing.LDIF_groupOfNames),
-    ('../ugm_posixGroups.txt', testing.LDIF_posixGroups),
-    ('../ugm_sambaUsers.txt', testing.LDIF_sambaUsers),
+    ('base.txt', testing.LDIF_data),
+    ('session.txt', testing.LDIF_data),
+    ('_node.txt', testing.LDIF_data),
+    ('schema.txt', testing.LDIF_data),
+    ('ugm/ugm_principals.txt', testing.LDIF_principals),
+    ('ugm/ugm_groupOfNames.txt', testing.LDIF_groupOfNames),
+    ('ugm/ugm_posixGroups.txt', testing.LDIF_posixGroups),
+    ('ugm/ugm_sambaUsers.txt', testing.LDIF_sambaUsers),
 ]
 
 optionflags = \
