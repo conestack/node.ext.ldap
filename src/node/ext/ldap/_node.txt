@@ -26,7 +26,8 @@ the server properties::
     >>> root
     <dc=my-domain,dc=com - False>
 
-    The non-unicode name got decoded
+The non-unicode name got decoded::
+
     >>> root.name
     u'dc=my-domain,dc=com'
     
