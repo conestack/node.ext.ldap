@@ -21,9 +21,10 @@ try:
     SLAPDURIS = os.environ['SLAPD_URIS']
     LDAPADDBIN = os.environ['LDAP_ADD_BIN']
     LDAPDELETEBIN = os.environ['LDAP_DELETE_BIN']
-except KeyError:
-    raise RuntimeError("Environment variables SLAPD_BIN,"
-                       " SLAPD_URIS, LDAP_ADD_BIN, LDAP_DELETE_BIN needed.")
+except KeyError:                                            #pragma NO COVERAGE
+    raise RuntimeError(                                     #pragma NO COVERAGE
+        u"Environment variables SLAPD_BIN, SLAPD_URIS, "    #pragma NO COVERAGE
+        u"LDAP_ADD_BIN, LDAP_DELETE_BIN needed.")           #pragma NO COVERAGE
 
 def resource(string):
     return resource_filename(__name__, string)
@@ -36,7 +37,8 @@ def read_env(layer):
         tmpdir = tempfile.mkdtemp()
         layer['externalpidfile'] = False
     else:
-        layer['externalpidfile'] = True
+        # case testldap server started via node.ext.ldap.main.slapd
+        layer['externalpidfile'] = True                     #pragma NO COVERAGE
     layer['confdir'] = tmpdir
     layer['dbdir'] = "%s/openldap-data" % (layer['confdir'],)
     layer['slapdconf'] = "%s/slapd.conf" % (layer['confdir'],)
@@ -145,8 +147,11 @@ class Slapd(LDAPLayer):
         print "\nStopping LDAP Server: ",
         read_env(self)
         if self['externalpidfile']:
-            with open(os.path.join(self['confdir'], 'slapd.pid')) as pidfile:
-                pid = int(pidfile.read())
+            # case testldap server started via node.ext.ldap.main.slapd
+            path = os.path.join(                           #pragma NO COVERAGE
+                self['confdir'], 'slapd.pid')              #pragma NO COVERAGE
+            with open(path) as pidfile:                    #pragma NO COVERAGE
+                pid = int(pidfile.read())                  #pragma NO COVERAGE
         else:
             pid = self.slapd.pid
         os.kill(pid, 15)
