@@ -3,7 +3,7 @@
 LDAP Nodes
 ==========
 
-Imports::
+::
 
     >>> from node.ext.ldap import LDAPProps
     >>> from node.ext.ldap import LDAPNode

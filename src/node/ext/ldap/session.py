@@ -24,14 +24,6 @@ class LDAPSession(object):
         else:
             return (False, res)
 
-    def setBaseDN(self, baseDN):
-        """Set the base DN you want to work on.
-
-        Deprecated: This function will be removed in version 1.5. Use
-                    ``baseDN`` property directly instead.
-        """
-        self.baseDN = baseDN                                #pragma NO COVERAGE
-
     def _get_baseDN(self):
         baseDN = self._communicator.baseDN
         baseDN = decode(baseDN)
@@ -48,10 +40,10 @@ class LDAPSession(object):
 
     def search(self, queryFilter='(objectClass=*)', scope=BASE, baseDN=None,
                force_reload=False, attrlist=None, attrsonly=0):
-        # It makes no sense to really pass these to LDAP, therefore, we
-        # interpret them as "don't filter" which in LDAP terms is
-        # '(objectClass=*)'
         if queryFilter in ('', u'', None):
+            # It makes no sense to really pass these to LDAP, therefore, we
+            # interpret them as "don't filter" which in LDAP terms is
+            # '(objectClass=*)'
             queryFilter='(objectClass=*)'
         func = self._communicator.search
         res = self._perform(func, queryFilter, scope, baseDN,
@@ -82,11 +74,11 @@ class LDAPSession(object):
         dn
             Modification DN
         
-        data
-            either list of 3 tuples (look at
-            node.ext.ldap.base.LDAPCommunicator.modify for details), or
-            a dictionary representing the entry or parts of the entry.
-            XXX: dicts not yet
+        #data
+        #    either list of 3 tuples (look at
+        #    node.ext.ldap.base.LDAPCommunicator.modify for details), or
+        #    a dictionary representing the entry or parts of the entry.
+        #    XXX: dicts not yet
         
         replace
             if set to True, replace entry at DN entirely with data.

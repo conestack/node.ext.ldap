@@ -59,7 +59,8 @@ class ILDAPPrincipalsConfig(Interface):
 
     objectClasses = Attribute(u"Default object classes for new principals.")
     
-    member_relation = Attribute(u"??? never used. what was this supposed for?")
+    member_relation = Attribute(u"Optional member relation to be used to speed "
+                                u"up groups search")
     
     defaults = Attribute(u"Dict like object containing default values for "
                          u"principal creation. A value could either be static "

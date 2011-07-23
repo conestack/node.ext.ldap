@@ -145,20 +145,15 @@ class LDAPStorage(OdictStorage):
     attributes_factory = finalize(LDAPNodeAttributes)
 
     @finalize
-    def __init__(self, name=None, props=None, attrmap=None):
+    def __init__(self, name=None, props=None):
         """LDAP Node expects ``name`` and ``props`` arguments for the root LDAP
-        Node or nothing for children. ``attrmap`` is an optional rood node
-        argument.
+        Node or nothing for children.
 
         name
             Initial base DN for the root LDAP Node.
 
         props
-            ``node.ext.ldap.LDAPProperties`` object.
-
-        attrmap
-            an optional map of attributes, mapped attributes will be available
-            via node.mattrs.
+            ``node.ext.ldap.LDAPProps`` object.
         """
         if (name and not props) or (props and not name):
             raise ValueError(u"Wrong initialization.")
@@ -175,7 +170,6 @@ class LDAPStorage(OdictStorage):
         if props:
             self._session = LDAPSession(props)
             self._session.baseDN = self.DN
-        # XXX: do soemthing about attrmap
         self._key_attr = 'rdn'
         self._rdn_attr = None
         self._child_scope = ONELEVEL
@@ -298,11 +292,6 @@ class LDAPStorage(OdictStorage):
         # fetch also the key attribute
         if not self._key_attr == 'rdn':
             attrset.add(self._key_attr)
-
-#        for attr in attrset:
-#            if attr in self._cfg.attrmap:
-#                attrset.discard(attr)
-#                attrset.add(self._cfg.attrmap[attr])
 
         # create queryFilter from all filter things - needs only to happen just
         # before ldap, could be in the backedn
