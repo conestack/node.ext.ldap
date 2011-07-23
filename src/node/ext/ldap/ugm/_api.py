@@ -427,21 +427,8 @@ class PrincipalsPart(Part):
     @default
     def create(self, _id, **kw):
         vessel = AttributedNode()
-        
-#        # first set defaults
-#        for k, v in self.principal_defaults.items():
-#            # if default value is callable, call it with received _id and
-#            # keyword arguments
-#            if callable(v):
-#                vessel.attrs[k] = v(_id, **kw)
-#                continue
-#            vessel.attrs[k] = v
-#        # set attributes from received keyword arguments. this overwrites
-#        # already set default values if existent for key.
-#        for k, v in kw.items():
-#            vessel.attrs[k] = v
-        
-        
+        for k, v in kw.items():
+            vessel.attrs[k] = v
         self[_id] = vessel
         return self[_id]
 
@@ -470,12 +457,14 @@ class UsersPart(PrincipalsPart, BaseUsersPart):
             userdn = self.context.child_dn(id)
         except KeyError:
             return False
-        return self.context._session.authenticate(userdn, pw) and id or False
+        return self.context.ldap_session.authenticate(userdn, pw) \
+            and id or False
 
     @default
     @debug
     def passwd(self, id, oldpw, newpw):
-        self.context._session.passwd(self.context.child_dn(id), oldpw, newpw)
+        self.context.ldap_session.passwd(
+            self.context.child_dn(id), oldpw, newpw)
 
 
 class Users(object):

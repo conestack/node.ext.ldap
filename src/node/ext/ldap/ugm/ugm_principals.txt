@@ -146,7 +146,7 @@ id is returned if sucessful, otherwise None::
 Add a user::
 
     >>> from node.ext.ldap import ONELEVEL
-    >>> def telephoneNumberDefault(_id, **kw):
+    >>> def telephoneNumberDefault(container, key):
     ...     # default value callback function
     ...     return '123'
     
@@ -190,13 +190,13 @@ Add a user::
 # XXX: there need more attrs to show up::
 
     >>> newuser.attrs.items()
-    [('telephoneNumber', u'123'), ('id', u'newid'), ('login', u'newcn')]
+    [('login', u'newcn'), ('id', u'newid'), ('telephoneNumber', u'123')]
     
     >>> newuser.context.attrs.items()
-    [(u'telephoneNumber', u'123'), 
+    [(u'cn', u'newcn'), 
     (u'sn', u'newid'), 
-    (u'cn', u'newcn'), 
-    (u'objectClass', ['top', 'person'])]    
+    (u'objectClass', ['top', 'person']), 
+    (u'telephoneNumber', u'123')]
     
     >>> users()
     >>> users.reload = True
