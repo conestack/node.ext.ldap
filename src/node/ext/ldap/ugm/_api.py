@@ -335,7 +335,7 @@ class PrincipalsPart(Part):
         principal = self.principal_factory(
             self.context[key],
             attraliaser=self.principal_attraliaser)
-        principal.__name__ = self.context[key].__name__
+        principal.__name__ = self.context[key].name
         principal.__parent__ = self
         return principal
 

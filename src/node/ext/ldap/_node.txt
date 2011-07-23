@@ -30,10 +30,14 @@ The non-unicode name got decoded::
 
     >>> root.name
     u'dc=my-domain,dc=com'
-    
+
+LDAP attributes for DN are stored on ``attrs``::
+
     >>> root.attrs
     <LDAPNodeAttributes object 'dc=my-domain,dc=com' at ...>
-    
+
+The node has session::
+
     >>> root.ldap_session
     <node.ext.ldap.session.LDAPSession object at ...>
 
@@ -50,15 +54,16 @@ Check/modify attributes of root::
      (u'o', u'my-organization')]
 
     >>> root.attrs['o'] = 'foo'
+
+On ``__call__`` data gets persisted::
+
     >>> root()
     >>> root.attrs.items()
     [(u'objectClass', [u'top', u'dcObject', u'organization']),
      (u'dc', u'my-domain'),
      (u'o', u'foo')]
-    
-    >>> root()
 
-Recreate root and check change attributes::
+Recreate root and check changed attributes::
 
     >>> root = LDAPNode('dc=my-domain,dc=com', props)
     >>> root.attrs.items()
@@ -87,20 +92,28 @@ Access existent child and it's attributes::
     >>> customers.attrs.items()
     [(u'objectClass', [u'top', u'organizationalUnit']),
      (u'ou', u'customers')]
-  
+
+The node has a DN...::
+
     >>> customers.DN
     u'ou=customers,dc=my-domain,dc=com'
-  
-    >>> customers.__name__
+
+...which is not the same as the name::
+
+    >>> customers.name
     u'ou=customers'
-  
+
+Customers child keys::
+
     >>> customers.keys()
     [u'ou=customer1', u'ou=customer2', u'ou=n\xe4sty\\, customer']
-  
+
+Customer has not been changed::
+
     >>> customers.changed
     False
 
-Create a new LDAPNode and add it to customers::
+Create new LDAPNode and add it to customers::
 
     >>> customer = LDAPNode()
     >>> customer.attrs['ou'] = 'customer3'
@@ -113,21 +126,38 @@ Create a new LDAPNode and add it to customers::
     
     >>> customer.attrs['objectClass']
     ['top', 'organizationalUnit']
-    
+
+There is not LDAP session set. Customer not part of tree yet::
+
     >>> customer.ldap_session is None
     True
-    
+
+Tree has not changed yet::
+
     >>> root.printtree()
     <dc=my-domain,dc=com - False>
       <ou=customers,dc=my-domain,dc=com:ou=customers - False>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
         <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
-    
+
+Set already created customer::
+
     >>> customers['ou=customer3'] = customer
     >>> customer.DN
     u'ou=customer3,ou=customers,dc=my-domain,dc=com'
+
+Now it got the LDAP session which is used by the whole tree::
+
+    >>> customer.ldap_session
+    <node.ext.ldap.session.LDAPSession object at ...>
     
+    >>> root.ldap_session is customer.ldap_session
+    True
+
+Now tree nodes from customer up to root are flagged changed after adding the
+new node::
+
     >>> root.printtree()
     <dc=my-domain,dc=com - True>
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
@@ -135,9 +165,6 @@ Create a new LDAPNode and add it to customers::
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
         <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
-    
-    >>> root.ldap_session
-    <node.ext.ldap.session.LDAPSession object at ...>
 
 New entry has no childs, but was added to the parent. There
 was a bug where iteration tried to load from ldap at this stage. Lets test
@@ -146,34 +173,38 @@ if this works::
     >>> customer.keys()
     []
 
-Structure in memory changed, but not persisted yet to LDAP::
+Data has changed in memory, but not persisted yet to LDAP::
 
     >>> customers.keys()
     [u'ou=customer1', u'ou=customer2', u'ou=n\xe4sty\\, customer', u'ou=customer3']
 
-The Container has changed::
+The Container has changed...::
  
     >>> customers.changed
     True
 
-But there's no action on the container since a child was added and the
+...but there's no action on the container since a child was added and the
 attributes of the contained has not been changed::
 
     >>> print customers._action
     None
 
-The added child has been marked changed as well::
+The added child has been flagged changed as well...::
 
     >>> customer.changed
     True
 
-But there's also the action set that it has to be added::
+...and now there's also the action set that it has to be added::
 
-    >>> from node.ext.ldap._node import ACTION_ADD, ACTION_MODIFY, ACTION_DELETE
-    >>> customer._action == ACTION_ADD
+    >>> from node.ext.ldap._node import (
+    ...     ACTION_ADD,
+    ...     ACTION_MODIFY,
+    ...     ACTION_DELETE,
+    ... )
+    >>> customer._action is ACTION_ADD
     True
 
-Check the directory state, not added yet::
+Check the backend state, not added yet::
 
     >>> res = customers._session.search('(objectClass=*)',
     ...                                 1,
@@ -192,6 +223,16 @@ On call the new entry is written to the directory::
     >>> len(res)
     4
 
+All nodes are flagged unchanged again::
+
+    >>> root.printtree()
+    <dc=my-domain,dc=com - False>
+      <ou=customers,dc=my-domain,dc=com:ou=customers - False>
+        <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
+        <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
+        <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
+        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
+
 Add a person to test modification stuff::
 
     >>> person = LDAPNode()
@@ -202,6 +243,7 @@ Add a person to test modification stuff::
     >>> customer['cn=max'] = person
     >>> customer.keys()
     [u'cn=max']
+    
     >>> person.DN
     u'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com'
   
@@ -214,23 +256,12 @@ Again, not in directory yet::
     >>> len(res)
     0
 
-Every node from person above is now in changed state::
-
-    >>> root.printtree()
-    <dc=my-domain,dc=com - True>
-      <ou=customers,dc=my-domain,dc=com:ou=customers - True>
-        <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
-        <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
-        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
-          <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - True>
-
 Let's also change the container of the person::
 
     >>> customer.attrs['street'] = 'foo'
 
 And tell the person to commit its changes. The container (customer3) is still
-changed because of its attributes::
+changed because of its changed attributes::
 
     >>> person()
     >>> root.printtree()
@@ -242,10 +273,23 @@ changed because of its attributes::
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
 
-Now we change the person again and discard the attribute change of the
-container. It must not delete the changed state of the whole tree, as the
+Call the customer now, whole tree unchanged again::
+
+    >>> customer()
+    >>> root.printtree()
+    <dc=my-domain,dc=com - False>
+      <ou=customers,dc=my-domain,dc=com:ou=customers - False>
+        <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
+        <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
+        <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
+        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
+          <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
+
+Now we change the person and customer again, and discard the attribute change 
+of the customer. It must not delete the changed state of the whole tree, as the
 person is still changed::
 
+    >>> customer.attrs['street'] = 'foo'
     >>> person.attrs['description'] = 'foo'
     >>> root.printtree()
     <dc=my-domain,dc=com - True>
@@ -266,9 +310,9 @@ person is still changed::
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - True>
 
-But after __call__::
+After calling person, the whole tree is unchanged again::
 
-    >>> customer()
+    >>> person()
     >>> root.printtree()
     <dc=my-domain,dc=com - False>
       <ou=customers,dc=my-domain,dc=com:ou=customers - False>
@@ -278,11 +322,11 @@ But after __call__::
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
 
-Changing attributes on a node, where keys are not loaded, yet::
+Changing attributes of a node, where keys are not loaded, yet::
 
-    >>> from node.ext.ldap._node import queryNode
-    >>> tmp = queryNode(props,
-    ...                 'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com')
+    >>> from node.ext.ldap import queryNode
+    >>> dn = 'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com'
+    >>> tmp = queryNode(props, dn)
     >>> tmp.attrs['description'] = 'Initial Description'
     >>> tmp()
 
@@ -373,7 +417,9 @@ We can call a node in the middle::
     >>> customer()
     >>> pprint(queryPersonDirectly())
     [(u'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com',
-      {u'cn': [u'Max'], u'objectClass': [u'top', u'person'], u'sn': [u'Mustermann']})]
+      {u'cn': [u'Max'], 
+      u'objectClass': [u'top', u'person'], 
+      u'sn': [u'Mustermann']})]
 
     >>> root.changed, customer.changed, person.changed, \
     ... person.attrs.changed
@@ -431,7 +477,7 @@ Check queryNode with nästy dn. (see node.__repr__)::
     >>> node
     <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
     
-    >>> node.__parent__
+    >>> node.parent
     <ou=customers,dc=my-domain,dc=com - False>
 
 Check access to attributes on a fresh but added-to-parent node. There was a bug
@@ -480,13 +526,9 @@ Check deleting of entries::
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
         <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
     
-XXX: check LDAP state here...
-    
     >>> customer()
     >>> queryPersonDirectly()
     []
-
-XXX ...and here
 
     >>> root.printtree()
     <dc=my-domain,dc=com - True>
@@ -509,7 +551,6 @@ XXX ...and here
         <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
         <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
-
 
 ###############################################################################
 Experimental features below

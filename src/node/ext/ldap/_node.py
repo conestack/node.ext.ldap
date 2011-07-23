@@ -137,7 +137,11 @@ class AttributesPart(Part):
 
 class LDAPNodeAttributes(NodeAttributes):
     __metaclass__ = plumber
-    __plumbing__ = UnicodeAware, AttributesPart, AttributesLifecycle
+    __plumbing__ = (
+        UnicodeAware,
+        AttributesPart,
+        AttributesLifecycle,
+    )
 
 
 class LDAPStorage(OdictStorage):
@@ -201,7 +205,7 @@ class LDAPStorage(OdictStorage):
            'cn=foo bar' == 'cn=foo   bar' -> True
         """
         if self.parent is not None:
-            return self.parent.child_dn(self.__name__)
+            return self.parent.child_dn(self.name)
         elif self.name is not None:
             # We should not have a name if we are not a root node.
             return self.name
@@ -520,8 +524,8 @@ class LDAPStorage(OdictStorage):
     def __repr__(self):
         # Doctest fails if we output utf-8
         dn = self.DN.encode('ascii', 'replace')
-        name = self.__name__.encode('ascii', 'replace')
-        if self.__parent__ is None:
+        name = self.name.encode('ascii', 'replace')
+        if self.parent is None:
             return "<%s - %s>" % (dn, self.changed)
         return "<%s:%s - %s>" % (dn, name, self.changed)
 
@@ -611,8 +615,8 @@ class LDAPStorage(OdictStorage):
                     return
             self._changed = False
         # And propagate to parent
-        if self._changed is not oldval and self.__parent__ is not None:
-            self.__parent__.changed = self._changed
+        if self._changed is not oldval and self.parent is not None:
+            self.parent.changed = self._changed
 
     changed = default(property(_get_changed, _set_changed))
 
