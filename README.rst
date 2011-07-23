@@ -166,9 +166,9 @@ TODO
   = Binary(stream)``, 2. parse ldap schema to identify binary attributes, also
   further types like BOOL
 
-- node.ext.ldap.filter unicode/utf-8 and tests
+- node.ext.ldap.filter unicode/utf-8
 
-- auto-detection of rdn attribute
+- auto-detection of rdn attribute (semi closed)
 
 - interactive configuration showing life how many users/groups are found with
   the current config and how a selected user/group would look like

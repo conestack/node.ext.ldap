@@ -1,10 +1,11 @@
 import types
 import copy
-from odict import odict
 try:
     from zope.app.event.objectevent import objectEventNotify # BBB
 except ImportError, e:
     from zope.component.event import objectEventNotify
+from odict import odict
+from zope.interface import implements
 from plumber import (
     plumber,
     Part,
@@ -37,6 +38,7 @@ from node.ext.ldap import (
     ONELEVEL,
     LDAPSession,
 )
+from node.ext.ldap.interfaces import ILDAPStorage
 from node.ext.ldap.filter import (
     LDAPFilter,
     LDAPDictFilter,
@@ -147,6 +149,7 @@ class LDAPNodeAttributes(NodeAttributes):
 
 class LDAPStorage(OdictStorage):
     
+    implements(ILDAPStorage)
     attributes_factory = finalize(LDAPNodeAttributes)
 
     @finalize
@@ -221,6 +224,8 @@ class LDAPStorage(OdictStorage):
     @default
     @property
     def rdn_attr(self):
+        """XXX: only tested on LDAPNode, might not work in UGM
+        """
         return self.name and self.name.split('=')[0] or None
 
     # This is really ldap

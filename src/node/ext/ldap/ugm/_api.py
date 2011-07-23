@@ -382,7 +382,7 @@ class PrincipalsPart(Part):
         #    [(alias(key), val) for key, val in dct.iteritems()])
         #return aliased_dct
         
-        # XXX: maybe some generalization in aliaser needed
+        # XXX: generalization in aliaser needed
         ret = dict()
         for key, val in self.principal_attraliaser.iteritems():
             for k, v in dct.iteritems():
@@ -403,8 +403,7 @@ class PrincipalsPart(Part):
             return None
         unalias = self.principal_attraliaser.unalias
         unaliased_dct = dict(
-                [(unalias(key), val) for key, val in dct.iteritems()]
-                )
+            [(unalias(key), val) for key, val in dct.iteritems()])
         return unaliased_dct
 
     @default

@@ -2,6 +2,7 @@ from zope.interface import (
     Interface,
     Attribute,
 )
+from node.interfaces import IStorage
 
 
 class ICacheProviderFactory(Interface):
@@ -78,3 +79,20 @@ class ILDAPUsersConfig(ILDAPPrincipalsConfig):
 class ILDAPGroupsConfig(ILDAPPrincipalsConfig):
     """LDAP groups configuration interface.
     """
+
+
+class ILDAPStorage(IStorage):
+    """A LDAP Node.
+    """
+    
+    search_scope = Attribute(u"Default child search scope")
+    
+    search_filter = Attribute(u"Default child search filter")
+    
+    search_criteria = Attribute(u"Default child search criteria")
+     
+    search_relation = Attribute(u"Default child search relation")
+    
+    child_defaults = Attribute(u"Default child attributes. Will be set to "
+                               u"all children attributes on __setitem__ "
+                               u"if not present yet.")
