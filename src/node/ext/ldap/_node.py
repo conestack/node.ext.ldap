@@ -76,23 +76,20 @@ class AttributesPart(Part):
     @plumb
     def __init__(_next, self, name=None, parent=None):
         _next(self, name=name, parent=parent)
-        self._loading = False
         self.load()
         
     
     @default
     def load(self):
         if not self.parent.name \
-          or not self.parent._session \
+          or not self.parent.ldap_session \
           or self.parent._action == ACTION_ADD:
             return
-        
-        self._loading = True
         
         self.clear()
         
         # fetch our node with all attributes
-        entry = self.parent._session.search(
+        entry = self.parent.ldap_session.search(
                 scope=BASE,
                 baseDN=self.parent.DN,
                 force_reload=self.parent._reload
@@ -120,12 +117,9 @@ class AttributesPart(Part):
         if self.parent._action not in [ACTION_ADD, ACTION_DELETE]:
             self.parent._action = None
             self.parent.changed = False
-        self._loading = False
     
     @plumb
     def __setitem__(_next, self, key, val):
-        if key == self.parent.rdn_attr and self._loading is False:
-            raise KeyError(u"Naming violation: '%s' is RDN Attribute." % key)
         _next(self, key, val)
         self._set_attrs_modified()
 
@@ -172,24 +166,29 @@ class LDAPStorage(OdictStorage):
             name = name.decode(CHARACTER_ENCODING)
         self.__name__ = name
         self.__parent__ = None
-        self._session = None
+        self._ldap_session = None
         self._changed = False
         self._action = None
         self._seckey_attrs = None
         self._reload = False
         self._init_keys()
         if props:
-            self._session = LDAPSession(props)
-            self._session.baseDN = self.DN
+            self._ldap_session = LDAPSession(props)
+            self._ldap_session.baseDN = self.DN
+        
+        # XXX: make them public
         self._key_attr = 'rdn'
         self._rdn_attr = None
-        self._child_scope = ONELEVEL
-        self._child_filter = None
-        self._child_criteria = None
-        self._child_relation = None
-        self._child_objectClasses = None
-        self._child_factory = LDAPNode
-        self.attribute_access_for_attrs = False
+        
+        # search related defaults
+        self.search_scope = ONELEVEL
+        self.search_filter = None
+        self.search_criteria = None
+        self.search_relation = None
+        
+        # creation related default
+        self.child_factory = LDAPNode
+        self.child_defaults = None
 
     @default
     def _init_keys(self):
@@ -239,9 +238,9 @@ class LDAPStorage(OdictStorage):
             key = attrs[self._key_attr]
             if isinstance(key, list):
                 if len(key) != 1:
-                    raise KeyError(
-                        u"Expected one value for '%s' " +
-                        u"not %s: '%s'." % (self._key_attr, len(key), key))
+                    msg = u"Expected one value for '%s' " % (self._key_attr,)
+                    msg += u"not %s: '%s'." % (len(key), key)
+                    raise KeyError(msg)
                 key = key[0]
         return key
 
@@ -256,14 +255,14 @@ class LDAPStorage(OdictStorage):
                 seckey = attrs[seckey_attr]
             except KeyError:
                 raise KeyError(
-                        u"Secondary key '%s' missing on: %s." % \
-                                (seckey_attr, attrs['dn']))
+                    u"Secondary key '%s' missing on: %s." % \
+                        (seckey_attr, attrs['dn']))
             else:
                 if isinstance(seckey, list):
                     if len(seckey) != 1:
-                        raise KeyError(u"Expected one value for '%s' "+
-                                u"not %s: '%s'." % \
-                                        (seckey_attr, len(seckey), seckey))
+                        msg = u"Expected one value for '%s' " % (seckey_attr,)
+                        msg += "not %s: '%s'." %(len(seckey), seckey)
+                        raise KeyError(msg)
                     seckey = seckey[0]
                 seckeys[seckey_attr] = seckey
         return seckeys
@@ -276,8 +275,8 @@ class LDAPStorage(OdictStorage):
 
         All search criteria are additive and will be ``&``ed. ``queryFilter``
         and ``criteria`` further narrow down the search space defined by
-        ``self._child_filter``, ``self._child_criteria`` and
-        ``self._child_relation``.
+        ``self.search_filter``, ``self.search_criteria`` and
+        ``self.search_relation``.
 
         queryFilter
             ldap queryFilter, e.g. ``(objectClass=foo)``
@@ -315,8 +314,8 @@ class LDAPStorage(OdictStorage):
         # effective
         search_filter = LDAPFilter(queryFilter)
         search_filter &= LDAPDictFilter(criteria, or_search=or_search)
-        _filter = LDAPFilter(self._child_filter)
-        _filter &= LDAPDictFilter(self._child_criteria)
+        _filter = LDAPFilter(self.search_filter)
+        _filter &= LDAPDictFilter(self.search_criteria)
         _filter &= search_filter
 
         # XXX: Is it really good to filter out entries without the key attr or
@@ -326,11 +325,13 @@ class LDAPStorage(OdictStorage):
             _filter &= '(%s=*)' % (self._key_attr,)
 
         # perform the backend search
-        matches = self._session.search(_filter.__str__(),
-                                       self._child_scope,
-                                       baseDN=self.DN,
-                                       force_reload=self._reload,
-                                       attrlist=list(attrset))
+        matches = self.ldap_session.search(
+            _filter.__str__(),
+            self.search_scope,
+            baseDN=self.DN,
+            force_reload=self._reload,
+            attrlist=list(attrset)
+        )
         if exact_match and len(matches) > 1:
             # XXX: Is ValueError appropriate?
             # XXX: why do we need to fail at all? shouldn't this be about
@@ -376,6 +377,7 @@ class LDAPStorage(OdictStorage):
                     except KeyError:
                         self._seckeys[seckey_attr][seckey] = key
                     else:
+                        # XXX: ever reached?
                         raise KeyError(
                             u"Secondary key not unique: %s='%s'." % \
                                     (seckey_attr, seckey))
@@ -400,16 +402,17 @@ class LDAPStorage(OdictStorage):
             # no keys loaded
             pass
 
-    @finalize
-    def sort(self, cmp=None, key=None, reverse=False):
-        # XXX: a sort working only on the keys could work without wakeup -->
-        # sortonkeys()
-        #  first wake up all entries
-        dummy = self.items()
-        if not dummy:
-            return
-        # second sort them
-        self._keys.sort(cmp=cmp, key=key, reverse=reverse)
+    #@finalize
+    #def sort(self, cmp=None, key=None, reverse=False):
+    #    # XXX: a sort working only on the keys could work without wakeup -->
+    #    # sortonkeys()
+    #    #  first wake up all entries
+    #    dummy = self.items()
+    #    if not dummy:
+    #        return
+    #    # second sort them
+    #    import pdb;pdb.set_trace()
+    #    self._keys.sort(cmp=cmp, key=key, reverse=reverse)
 
     @finalize
     def __getitem__(self, key):
@@ -423,8 +426,8 @@ class LDAPStorage(OdictStorage):
             raise KeyError(u"Entry not existent: %s" % key)
         if self._keys[key] is not None:
             return self.storage[key]
-        val = self._child_factory()
-        val._session = self._session
+        val = self.child_factory()
+        val._ldap_session = self.ldap_session
         val.__name__ = key
         val.__parent__ = self
         self.storage[key] = self._keys[key] = val
@@ -445,15 +448,20 @@ class LDAPStorage(OdictStorage):
     def __setitem__(self, key, val):
         if isinstance(key, str):
             key = decode(key)
-        if self._child_scope is BASE:
-            raise NotImplementedError(
-                u"Seriously? Adding with scope == BASE?")
+        
+        # XXX: scope is search scope, why not add children?
+        #      feels like trying to add security the wrong place
+        #if self.search_scope is BASE:
+        #    raise NotImplementedError(
+        #        u"Seriously? Adding with scope == BASE?")
+        
         if self._key_attr != 'rdn' and self._rdn_attr is None:
             raise RuntimeError(
                 u"Adding with key != rdn needs _rdn_attr to be set.")
         if not isinstance(val, LDAPNode):
             # create one from whatever we got
             val = self._create_suitable_node(val)
+        
         # At this point we need to have an LDAPNode as val
         if self._key_attr != 'rdn':
             val.attrs[self._key_attr] = key
@@ -461,9 +469,18 @@ class LDAPStorage(OdictStorage):
                 raise ValueError(
                     u"'%s' needed in node attributes for rdn." % \
                         (self._rdn_attr,))
+        else:
+            # set rdn attr if not present
+            rdn, rdn_val = key.split('=')
+            if not rdn in val.attrs:
+                val.attrs._loading = True
+                val.attrs[rdn] = rdn_val
+                val.attrs._loading = False
+        
         val.__name__ = key
         val.__parent__ = self
-        val._session = self._session
+        val._ldap_session = self.ldap_session
+        
         if self._keys is None:
             self._load_keys()
         try:
@@ -474,21 +491,27 @@ class LDAPStorage(OdictStorage):
             val._action = ACTION_ADD
             val.changed = True
             self.changed = True
+        
         self._notify_suppress = True
         self.storage[key] = val
         self._notify_suppress = False
         self._keys[key] = val
+        
         if self._key_attr == 'rdn':
             rdn = key
         else:
             rdn = '%s=%s' % (self._rdn_attr, val.attrs[self._rdn_attr])
         self._child_dns[key] = ','.join((rdn, self.DN))
-        if self._child_objectClasses:
-            current_ocs = val.attrs.get('objectClass', [])
-            needed_ocs = self._child_objectClasses
-            val.attrs['objectClass'] = [
-                    x for x in current_ocs + needed_ocs if x not in current_ocs
-                    ]
+        
+        if self.child_defaults:
+            for k, v in self.child_defaults.items():
+                if k in val.attrs:
+                    # skip default if attribute already exists
+                    continue
+                if callable(v):
+                    v = v(self, key)
+                val.attrs[k] = v
+        
         if val._action == ACTION_ADD:
             objectEventNotify(self.events['added'](val, newParent=self,
                                                    newName=key))
@@ -552,7 +575,7 @@ class LDAPStorage(OdictStorage):
     def _ldap_add(self):
         """adds self to the ldap directory.
         """
-        self._session.add(self.DN, self.attrs)
+        self.ldap_session.add(self.DN, self.attrs)
 
     @default
     def _ldap_modify(self):
@@ -576,7 +599,7 @@ class LDAPStorage(OdictStorage):
                 moddef = (MOD_REPLACE, key, self.attrs[key])
                 modlist.append(moddef)
         if modlist:
-            self._session.modify(self.DN, modlist)
+            self.ldap_session.modify(self.DN, modlist)
 
     @default
     def _ldap_delete(self):
@@ -587,7 +610,7 @@ class LDAPStorage(OdictStorage):
         
         # XXX: shouldn't this raise a KeyError? No, gets set to None above -rn
         del self.parent._keys[self.name]
-        self._session.delete(self.DN)
+        self.ldap_session.delete(self.DN)
 
     def _get_changed(self):
         return self._changed
@@ -635,7 +658,7 @@ class LDAPStorage(OdictStorage):
     @default
     @property
     def ldap_session(self):
-        return self._session
+        return self._ldap_session
 
 
 class LDAPNode(object):

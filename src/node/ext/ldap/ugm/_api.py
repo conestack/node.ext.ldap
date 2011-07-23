@@ -103,14 +103,14 @@ class PrincipalPart(Part):
         self.attraliaser = attraliaser
     
     @default
-    def ldap_attributes_factory(self, name=None, parent=None):
+    def principal_attributes_factory(self, name=None, parent=None):
         if self.attraliaser is None:
             return self.context.attrs
         aliased_attrs = PrincipalAliasedAttributes(self.context.attrs,
                                                    self.attraliaser)
         return aliased_attrs
     
-    attributes_factory = finalize(ldap_attributes_factory)
+    attributes_factory = finalize(principal_attributes_factory)
     
     @default
     def add_role(self, role):
@@ -258,29 +258,32 @@ class Group(object):
 
 
 class PrincipalsPart(Part):
-    principals_factory = default(None)
     principal_attrmap = default(None)
     principal_attraliaser = default(None)
     
     @extend
     def __init__(self, props, cfg):
         self.context = LDAPNode(name=cfg.baseDN, props=props)
-        self.context._child_filter = cfg.queryFilter
-        self.context._child_scope = int(cfg.scope)
-        self.context._child_objectClasses = cfg.objectClasses
+        self.context.search_filter = cfg.queryFilter
+        self.context.search_scope = int(cfg.scope)
+        
+        # XXX: should this object classes be used for search and creation?
+        self.context.child_defaults = dict()
+        self.context.child_defaults['objectClass'] = cfg.objectClasses
+        self.context.child_defaults.update(cfg.defaults)
+        
+        # XXX: make these attrs public
         self.context._key_attr = cfg.attrmap['id']
         self.context._rdn_attr = cfg.attrmap['rdn']
         
-        # what's a member_relation?
         if cfg.member_relation:
-            self.context._child_relation = cfg.member_relation
+            self.context.search_relation = cfg.member_relation
         
         self.context._seckey_attrs = ('dn',)
         if cfg.attrmap.get('login') \
           and cfg.attrmap['login'] != cfg.attrmap['id']:
             self.context._seckey_attrs += (cfg.attrmap['login'],)
         
-        self.principal_defaults = cfg.defaults
         self.principal_attrmap = cfg.attrmap
         self.principal_attraliaser = DictAliaser(cfg.attrmap, cfg.strict)
     
@@ -424,18 +427,21 @@ class PrincipalsPart(Part):
     @default
     def create(self, _id, **kw):
         vessel = AttributedNode()
-        # first set defaults
-        for k, v in self.principal_defaults.items():
-            # if default value is callable, call it with received _id and
-            # keyword arguments
-            if callable(v):
-                vessel.attrs[k] = v(_id, **kw)
-                continue
-            vessel.attrs[k] = v
-        # set attributes from received keyword arguments. this overwrites
-        # already set default values if existent for key.
-        for k, v in kw.items():
-            vessel.attrs[k] = v
+        
+#        # first set defaults
+#        for k, v in self.principal_defaults.items():
+#            # if default value is callable, call it with received _id and
+#            # keyword arguments
+#            if callable(v):
+#                vessel.attrs[k] = v(_id, **kw)
+#                continue
+#            vessel.attrs[k] = v
+#        # set attributes from received keyword arguments. this overwrites
+#        # already set default values if existent for key.
+#        for k, v in kw.items():
+#            vessel.attrs[k] = v
+        
+        
         self[_id] = vessel
         return self[_id]
 
@@ -511,12 +517,12 @@ class GroupsPart(PrincipalsPart, BaseGroupsPart):
     @default
     @property
     def _member_format(self):
-        return member_format(self.context._child_objectClasses)
+        return member_format(self.context.child_defaults['objectClass'])
     
     @default
     @property
     def _member_attribute(self):
-        return member_attribute(self.context._child_objectClasses)
+        return member_attribute(self.context.child_defaults['objectClass'])
     
     @plumb
     def __init__(_next, self, props, cfg):

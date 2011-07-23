@@ -93,8 +93,10 @@ Access existent child and it's attributes::
     <ou=customers,dc=my-domain,dc=com:ou=customers - False>
   
     >>> customers.attrs.items()
-    [(u'objectClass', [u'top', u'organizationalUnit']),
-     (u'ou', u'customers')]
+    [(u'objectClass', [u'top', u'organizationalUnit']), 
+    (u'ou', u'customers'), 
+    (u'description', u'customers'), 
+    (u'businessCategory', u'customers')]
 
     >>> customers.DN
     u'ou=customers,dc=my-domain,dc=com'
@@ -110,6 +112,12 @@ Customers child keys::
     >>> customers.keys()
     [u'ou=customer1', u'ou=customer2', u'ou=n\xe4sty\\, customer']
 
+XXX: why is this a list???
+     maybe python-ldap bug or even openldap bug
+     also behaves this way when queried with LDAPCommunicator.search
+    >>> customers[u'ou=n\xe4sty\\, customer'].attrs['ou']
+    [u'n\xe4sty\\, customer', u'n\xe4sty, customer']
+
 Customer has not been changed::
 
     >>> customers.changed
@@ -119,6 +127,7 @@ Create new LDAPNode and add it to customers::
 
     >>> customer = LDAPNode()
     >>> customer.attrs['ou'] = 'customer3'
+    >>> customer.attrs['description'] = 'customer3'
     >>> customer.attrs['objectClass'] = ['top', 'organizationalUnit']
     >>> customer.DN
     u''
@@ -131,6 +140,9 @@ Create new LDAPNode and add it to customers::
     
     >>> customer.attrs['objectClass']
     ['top', 'organizationalUnit']
+    
+    >>> customer.keys()
+    []
 
 There is not LDAP session set. Customer not part of tree yet::
 
@@ -211,20 +223,20 @@ The added child has been flagged changed as well...::
 
 Check the backend state, not added yet::
 
-    >>> res = customers._session.search('(objectClass=*)',
-    ...                                 1,
-    ...                                 baseDN=customers.DN,
-    ...                                 force_reload=True)
+    >>> res = customers.ldap_session.search('(objectClass=*)',
+    ...                                     1,
+    ...                                     baseDN=customers.DN,
+    ...                                     force_reload=True)
     >>> len(res)
     3
 
 On call the new entry is written to the directory::
     
     >>> root()
-    >>> res = customers._session.search('(objectClass=*)',
-    ...                                 1,
-    ...                                 baseDN=customers.DN,
-    ...                                 force_reload=True)
+    >>> res = customers.ldap_session.search('(objectClass=*)',
+    ...                                     1,
+    ...                                     baseDN=customers.DN,
+    ...                                     force_reload=True)
     >>> len(res)
     4
 
@@ -254,10 +266,10 @@ Add a person to test modification stuff::
   
 Again, not in directory yet::
 
-    >>> res = customer._session.search('(objectClass=person)',
-    ...                                1,
-    ...                                baseDN=customer.DN,
-    ...                                force_reload=True)
+    >>> res = customer.ldap_session.search('(objectClass=person)',
+    ...                                    1,
+    ...                                    baseDN=customer.DN,
+    ...                                    force_reload=True)
     >>> len(res)
     0
 
@@ -335,23 +347,120 @@ Changing attributes of a node, where keys are not loaded, yet::
     >>> tmp.attrs['description'] = 'Initial Description'
     >>> tmp()
 
+Check set child immediately after init time::
+
+    >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
+    >>> tmp['cn=child'] = LDAPNode()
+    >>> tmp.keys()
+    [u'ou=customer1', u'ou=customer2', 
+    u'ou=n\xe4sty\\, customer', u'ou=customer3', u'cn=child']
+
+Secondary keys and _child_dns.
+
+Setting the DN as seckey only seem to work because it is returned by LDAP
+search result and considered. Child DN's are always available at _child_dns
+
+XXX: discuss::
+    
+    >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
+    >>> tmp._seckey_attrs = ('cn',)
+    >>> tmp.keys()
+    Traceback (most recent call last):
+      ...
+    KeyError: u"Secondary key 'cn' missing on: ou=customer1,ou=customers,dc=my-domain,dc=com."
+
+    >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
+    >>> tmp._seckey_attrs = ('dn',)
+    >>> tmp.keys()
+    [u'ou=customer1', 
+    u'ou=customer2', 
+    u'ou=n\xe4sty\\, customer', 
+    u'ou=customer3']
+    
+    >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
+    >>> tmp._seckey_attrs = ('description', 'businessCategory')
+    >>> tmp.keys()
+    Traceback (most recent call last):
+      ...
+    KeyError: u"Secondary key not unique: businessCategory='customers'."
+    
+    >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
+    >>> tmp._seckey_attrs = ('dn', 'objectClass')
+    >>> tmp.keys()
+    Traceback (most recent call last):
+      ...
+    KeyError: u"Expected one value for 
+    'objectClass' not 2: '[u'top', u'organizationalUnit']'."
+
+    >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
+    >>> tmp._seckey_attrs = ('dn', 'description')
+    >>> tmp.keys()
+    [u'ou=customer1', 
+    u'ou=customer2', 
+    u'ou=n\xe4sty\\, customer', 
+    u'ou=customer3']
+    
+    >>> tmp._child_dns
+    {u'ou=n\xe4sty\\, customer': 
+    u'ou=n\xe4sty\\2C customer,ou=Customers,dc=My-Domain,dc=com', 
+    u'ou=customer3': 
+    u'ou=customer3,ou=customers,dc=my-domain,dc=com', 
+    u'ou=customer2': 
+    u'ou=customer2,ou=customers,dc=my-domain,dc=com', 
+    u'ou=customer1': 
+    u'ou=customer1,ou=customers,dc=my-domain,dc=com'}
+
+    >>> tmp._seckeys
+    {'dn': 
+    {u'ou=customer2,ou=customers,dc=my-domain,dc=com': u'ou=customer2', 
+    u'ou=customer1,ou=customers,dc=my-domain,dc=com': u'ou=customer1', 
+    u'ou=customer3,ou=customers,dc=my-domain,dc=com': u'ou=customer3', 
+    u'ou=n\xe4sty\\2C customer,ou=Customers,dc=My-Domain,dc=com': u'ou=n\xe4sty\\, customer'}, 
+    'description': 
+    {u'customer1': u'ou=customer1', 
+    u'n\xe4sty': u'ou=n\xe4sty\\, customer', 
+    u'customer3': u'ou=customer3', 
+    u'customer2': u'ou=customer2'}}
+    
+    >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
+    >>> tmp.keys()
+    [u'ou=customer1', 
+    u'ou=customer2', 
+    u'ou=n\xe4sty\\, customer', 
+    u'ou=customer3']
+    
+    >>> tmp._child_dns
+    {u'ou=n\xe4sty\\, customer': 
+    u'ou=n\xe4sty\\2C customer,ou=Customers,dc=My-Domain,dc=com', 
+    u'ou=customer3': 
+    u'ou=customer3,ou=customers,dc=my-domain,dc=com', 
+    u'ou=customer2': 
+    u'ou=customer2,ou=customers,dc=my-domain,dc=com', 
+    u'ou=customer1': 
+    u'ou=customer1,ou=customers,dc=my-domain,dc=com'}
+    
+    >>> print tmp._seckeys
+    None
+
 Changing the rdn attribute on loaded nodes fails.::
 
     >>> person.attrs['cn'] = 'foo'
+    >>> person()
     Traceback (most recent call last):
       ...
-    KeyError: u"Naming violation: 'cn' is RDN Attribute."
-
+    NAMING_VIOLATION: {'info': "value of naming attribute 'cn' is not present in entry", 'desc': 'Naming violation'}
+    
+    >>> person.attrs.load()
     >>> person.attrs['cn']
     u'Max'
 
 Create Customer convenience query function. Need this more than once::
 
     >>> def queryPersonDirectly():
-    ...     res = customer._session.search('(objectClass=person)',
-    ...                                    1,
-    ...                                    baseDN=customer.DN,
-    ...                                    force_reload=True)
+    ...     res = customer.ldap_session.search('(objectClass=person)',
+    ...                                        1,
+    ...                                        baseDN=customer.DN,
+    ...                                        force_reload=True)
     ...     return res
   
     >>> pprint(queryPersonDirectly())
@@ -481,12 +590,12 @@ Check queryNode with nästy dn. (see node.__repr__)::
     <ou=customers,dc=my-domain,dc=com - False>
 
 Check access to attributes on a fresh but added-to-parent node. There was a bug
-so we test it::
+so we test it. Note that rdn attribute is computed from key if not set yet::
 
     >>> customerattrempty = LDAPNode()
     >>> customers['cn=customer99'] = customerattrempty
     >>> customerattrempty.attrs.keys()
-    []
+    [u'cn']
 
 Add some attributes to make call work::
     
@@ -552,6 +661,72 @@ Check deleting of entries::
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
         <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
 
+Test LDAPNode.child_defaults. A default value can either be a string or a
+callback accepting the container node and the child key with which the new
+child gets added.::
+
+    >>> defaults = {
+    ...     'objectClass': ['top', 'person'],
+    ...     'sn': lambda x, y: 'sn for %s' % y,
+    ...     'description': lambda x, y: 'Description for %s' % y,
+    ... }
+
+Define child defaults for customer. It's possible to set an LDAPNodeDefaults
+instance if a custom callback context is desired::
+
+    >>> customer.child_defaults = defaults
+    >>> person = LDAPNode()
+    >>> customer['cn=person_with_default1'] = person
+    >>> person.attrs.items()
+    [(u'cn', u'person_with_default1'), 
+    (u'objectClass', ['top', 'person']), 
+    (u'sn', u'sn for cn=person_with_default1'), 
+    (u'description', u'Description for cn=person_with_default1')]
+    
+    >>> person()
+    >>> del customer['cn=person_with_default1']
+    >>> customer()
+
+It's possible to add other INode implementing objects than LDAPNode. An ldap
+node gets created then and attrs are set from original node.
+
+    >>> from node.base import BaseNode
+    >>> new = BaseNode()
+    >>> customer['cn=from_other'] = new
+    Traceback (most recent call last):
+      ...
+    ValueError: No attributes found on vessel, cannot convert
+    
+    >>> from node.base import AttributedNode
+    >>> new = AttributedNode()
+    >>> new.attrs['description'] = 'Not from defaults'
+    >>> customer['cn=from_other'] = new
+    >>> customer()
+    >>> customer['cn=from_other']
+    <cn=from_other,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=from_other - False>
+    
+    >>> customer['cn=from_other'].attrs.items()
+    [(u'description', u'Not from defaults'), 
+    (u'cn', u'from_other'), 
+    (u'objectClass', ['top', 'person']), 
+    (u'sn', u'sn for cn=from_other')]
+    
+    >>> del customer['cn=from_other']
+    >>> customer()
+
+Test search function::
+
+    >>> root.search()
+    [u'ou=customers']
+    
+    >>> from node.ext.ldap.filter import LDAPFilter
+    >>> filter = LDAPFilter('(objectClass=person)')
+    >>> root.search(queryFilter=filter)
+    []
+    
+    >>> root.search(attrlist=['ou'])
+    [(u'ou=customers', {u'ou': [u'customers']})]
+
 ###############################################################################
 Experimental features below
 ###############################################################################
@@ -576,8 +751,8 @@ person's the way we know it::
     [u'cn=max', u'cn=Moritz']
 
 Now choose some attribute as key, its value needs to be unique - XXX This is an
-experimental feature, there must not be any childs listing this node as a
-__parent__!::
+experimental feature, there must not be any children listing this node as a
+parent!::
 
     >>> node = LDAPNode(props=props, name=customer.DN)
     >>> node._key_attr = 'description'
@@ -586,6 +761,13 @@ __parent__!::
     ...
     RuntimeError: Key not unique: description='Initial Description'.
 
+    >>> node = LDAPNode(props=props, name=customer.DN)
+    >>> node._key_attr = 'objectClass'
+    >>> node.keys()
+    Traceback (most recent call last):
+      ...
+    KeyError: u"Expected one value for 'objectClass' not 2: '[u'top', u'person']'."
+    
     >>> node = LDAPNode(props=props, name=customer.DN)
     >>> node._key_attr = 'sn'
     >>> node.keys()
@@ -599,7 +781,7 @@ Childs can be retrieved normally::
 
 The node is the real parent::
 
-    >>> our_p1.__parent__ is node
+    >>> our_p1.parent is node
     True
 
 The child knows its correct DN::
@@ -636,7 +818,7 @@ We can change attributes::
     >>> p1.attrs['description']
     u'foo'
 
-Addings items, iff _rdn_attr is set::
+Addings items, if _rdn_attr is set::
 
     >>> node['foo'] = LDAPNode()
     Traceback (most recent call last):
@@ -651,12 +833,9 @@ Addings items, iff _rdn_attr is set::
 
     >>> newnode = LDAPNode()
     >>> newnode.attrs['cn'] = 'newnode'
-
-XXX: shouldn't this be configured somewhere?
-
     >>> newnode.attrs['objectClass'] = ['top', 'person']
 
-XXX: these need to be the same as 'sn' is used as key
+XXX: these need to be the same as 'sn' if used as key
 
     >>> newnode.attrs['sn'] = 'foo'
     >>> node['foo'] = newnode
@@ -667,10 +846,10 @@ XXX: these need to be the same as 'sn' is used as key
     >>> node['foo'] is newnode
     True
 
-    >>> node is newnode.__parent__
+    >>> node is newnode.parent
     True
 
-    >>> newnode.__name__ == 'foo'
+    >>> newnode.name == 'foo'
     True
 
 Commit the added node::
@@ -720,7 +899,7 @@ Using filter and scope. Let's first create a collision::
 
     >>> from node.ext.ldap import SUBTREE
     >>> node = LDAPNode(props=props, name=root.DN)
-    >>> node._child_scope = SUBTREE
+    >>> node.search_scope = SUBTREE
     >>> node.keys()
     Traceback (most recent call last):
     ...
@@ -729,10 +908,10 @@ Using filter and scope. Let's first create a collision::
 We need a different key. As a side-effect a filter will be used: '(cn=*)'::
 
     >>> node = LDAPNode(props=props, name=root.DN)
-    >>> node._child_scope = SUBTREE
+    >>> node.search_scope = SUBTREE
     >>> node._key_attr = 'cn'
     >>> node._rdn_attr = 'cn'
-    >>> node._child_objectClasses = ['top', 'person']
+    >>> node.child_defaults = {'objectClass': ['top', 'person']}
     >>> node.keys()
     [u'customer99', u'Max']
 
