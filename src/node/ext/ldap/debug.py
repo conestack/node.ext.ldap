@@ -1,15 +1,21 @@
 import logging
 import sys
-logger = logging.getLogger('bda.plone.ldap')
+logger = logging.getLogger('node.ext.ldap')
+
+
+#XXX: why is the debug decorator restricted?
+#     normally ``@debug`` should be enough. Once this decorator is more generic,
+#     move to ``node.utils``
+
 
 WHAT_TO_DEBUG = set([
-        'authentication',
-        'searching',
-        ])
+    'authentication',
+    'searching',
+])
 
 
 class debug:
-    """ Decorator which helps to control what aspects of a program to debug
+    """Decorator which helps to control what aspects of a program to debug
     on per-function basis. Aspects are provided as list of arguments.
     It DOESN'T slowdown functions which aren't supposed to be debugged.
     """
