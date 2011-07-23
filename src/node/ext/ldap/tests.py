@@ -10,6 +10,7 @@ from node.ext.ldap import testing
 
 DOCFILES = [
     ('debug.txt', testing.LDIF_data),
+    ('cache.txt', testing.LDIF_data),
     ('base.txt', testing.LDIF_data),
     ('session.txt', testing.LDIF_data),
     ('filter.txt', testing.LDIF_data),
