@@ -76,7 +76,9 @@ class AttributesPart(Part):
     @plumb
     def __init__(_next, self, name=None, parent=None):
         _next(self, name=name, parent=parent)
+        self._loading = False
         self.load()
+        
     
     @default
     def load(self):
@@ -84,6 +86,8 @@ class AttributesPart(Part):
           or not self.parent._session \
           or self.parent._action == ACTION_ADD:
             return
+        
+        self._loading = True
         
         self.clear()
         
@@ -116,9 +120,12 @@ class AttributesPart(Part):
         if self.parent._action not in [ACTION_ADD, ACTION_DELETE]:
             self.parent._action = None
             self.parent.changed = False
+        self._loading = False
     
     @plumb
     def __setitem__(_next, self, key, val):
+        if key == self.parent.rdn_attr and self._loading is False:
+            raise KeyError(u"Naming violation: '%s' is RDN Attribute." % key)
         _next(self, key, val)
         self._set_attrs_modified()
 
@@ -211,6 +218,11 @@ class LDAPStorage(OdictStorage):
             return self.name
         else:
             return u''
+    
+    @default
+    @property
+    def rdn_attr(self):
+        return self.name and self.name.split('=')[0] or None
 
     # This is really ldap
     @default

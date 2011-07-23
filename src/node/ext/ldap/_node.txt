@@ -30,6 +30,9 @@ The non-unicode name got decoded::
 
     >>> root.name
     u'dc=my-domain,dc=com'
+    
+    >>> root.rdn_attr
+    u'dc'
 
 LDAP attributes for DN are stored on ``attrs``::
 
@@ -93,15 +96,14 @@ Access existent child and it's attributes::
     [(u'objectClass', [u'top', u'organizationalUnit']),
      (u'ou', u'customers')]
 
-The node has a DN...::
-
     >>> customers.DN
     u'ou=customers,dc=my-domain,dc=com'
 
-...which is not the same as the name::
-
     >>> customers.name
     u'ou=customers'
+    
+    >>> customers.rdn_attr
+    u'ou'
 
 Customers child keys::
 
@@ -120,6 +122,9 @@ Create new LDAPNode and add it to customers::
     >>> customer.attrs['objectClass'] = ['top', 'organizationalUnit']
     >>> customer.DN
     u''
+    
+    >>> print customer.rdn_attr
+    None
     
     >>> customer.attrs['ou']
     u'customer3'
@@ -330,18 +335,13 @@ Changing attributes of a node, where keys are not loaded, yet::
     >>> tmp.attrs['description'] = 'Initial Description'
     >>> tmp()
 
-Changing the rdn attribute fails, when committing
-XXX: could be on assignment::
+Changing the rdn attribute on loaded nodes fails.::
 
     >>> person.attrs['cn'] = 'foo'
-    >>> person()
     Traceback (most recent call last):
-    ...
-    NAMING_VIOLATION:...
+      ...
+    KeyError: u"Naming violation: 'cn' is RDN Attribute."
 
-Recover from failure::
-
-    >>> person.attrs.load()
     >>> person.attrs['cn']
     u'Max'
 
