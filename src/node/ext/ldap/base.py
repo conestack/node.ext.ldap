@@ -1,27 +1,37 @@
-import logging
-logger = logging.getLogger('node.ext.ldap')
-
 try:
     import ldap
 except ImportError:                                         #pragma NO COVERAGE
     e =  u"node.ext.ldap requires a working "               #pragma NO COVERAGE
     e += u"python-ldap installation."                       #pragma NO COVERAGE
     raise ImportError, e                                    #pragma NO COVERAGE
-
+import logging
 from zope.component import queryUtility
 from bda.cache import ICacheManager
 from node.ext.ldap.interfaces import ICacheProviderFactory
+from node.ext.ldap.properties import LDAPProps
 from node.ext.ldap.cache import nullcacheProviderFactory
-
-# BBB: moved due to circular dependency 2010-10-27
 from node.ext.ldap.scope import BASE, ONELEVEL, SUBTREE, SCOPES
+
+
+logger = logging.getLogger('node.ext.ldap')
 
 
 def testLDAPConnectivity(server=None, port=None, props=None):
     """Function to test the availability of the LDAP Server.
+    
+    server
+        Server IP or name
+    
+    port
+        LDAP port
+    
+    props
+        LDAPProps object. If given, server and port are ignored.
     """
+    if props is None:
+        props = LDAPProps(server=server, port=port)
     try:
-        c = LDAPConnector(server, port, '', '', props=props)
+        c = LDAPConnector(props=props)
         lc = LDAPCommunicator(c)
         lc.bind()
         lc.unbind()
@@ -34,8 +44,6 @@ def md5digest(key):
     """Needed to support both, python 2.4 and python >=2.5
 
     Will be remove when python 2.4 support is dropped.
-
-    XXX: This is maybe expensive. Optimize code eventually.
     """
     try:
         # in python >=2.5
@@ -57,13 +65,6 @@ class LDAPConnector(object):
 
     TODO: tests for TLS/SSL Support - it should be functional. 
     (see also properties.py)
-
-    Normally you do not need to use this class directly.
-
-    >>> c = LDAPConnector('localhost', 389, 'cn=admin,dc=foo,dc=bar', 'secret')
-    >>> connection = c.bind()
-    >>> # do something with connection
-    >>> c.unbind()
     """
 
     def __init__(self,
@@ -77,12 +78,15 @@ class LDAPConnector(object):
         """Initialize LDAPConnector.
 
         Signature Deprecated: Signature will take ``LDAPProps``
-                              object instead of current kwargs in future.
+                              object only instead of current kwargs in future.
                               This will be changed in Version 1.0.
         """
         self.protocol = ldap.VERSION3
         if props is None:
             # old
+            logging.warn(u"Deprecated usage of ``LDAPConnector.__init__``. "
+                         u"please pass ``LDAPProps`` object instead of "
+                         u"separate settings.")
             self._uri = "ldap://%s:%d/" % (server, port)
             self._bindDN = bindDN
             self._bindPW = bindPW
@@ -97,14 +101,6 @@ class LDAPConnector(object):
             self._cache = props.cache
             self._cachetimeout = props.timeout
             self._start_tls = props.start_tls
-
-    def setProtocol(self, protocol):
-        """Set the LDAP Protocol Version to use.
-
-        Deprecated: This function will be removed in version 1.5. Use
-                    ``protocol`` property directly instead.
-        """
-        self.protocol = protocol                            #pragma NO COVERAGE
 
     def bind(self):
         """Bind to Server and return the Connection Object.
@@ -131,21 +127,12 @@ class LDAPCommunicator(object):
 
     It provides methods to search, add, modify and delete entries in the
     directory.
-
-    Usage:
-
-    c = LDAPConnector('localhost', 389, 'cn=admin,dc=foo,dc=bar', 'secret')
-    lc = LDAPCommunicator(c)
-    lc.setBaseDN('ou=customers,dc=foo,dc=bar')
-    lc.bind()
-    result = lc.search('uid=user@foo.bar', lc.SUBTREE)
-    # do soething with result
-    ...
-    lc.unbind()
     """
 
     def __init__(self, connector):
-        """Takes LDAPConnector object as argument.
+        """
+        connector
+            LDAPConnector instance.
         """
         self.baseDN = ''
         self._connector = connector
@@ -173,38 +160,27 @@ class LDAPCommunicator(object):
         self._connector.unbind()
         self._con = None
 
-    def setBaseDN(self, baseDN):
-        """Set the base DN you want to work on.
-
-        Deprecated: This function will be removed in version 1.5. Use
-                    ``baseDN`` property directly instead.
-        """
-        self.baseDN = baseDN                                #pragma NO COVERAGE
-
-    def getBaseDN(self):
-        """Returns the current set base DN.
-
-        Deprecated: This function will be removed in version 1.5. Use
-                    ``baseDN`` property directly instead.
-        """
-        return self.baseDN                                  #pragma NO COVERAGE
-
     def search(self, queryFilter, scope, baseDN=None,
                force_reload=False, attrlist=None, attrsonly=0):
         """Search the directory.
 
-        ``queryFilter``
+        queryFilter
             LDAP query filter
-        ``scope``
+        
+        scope
             LDAP search scope
-        ``baseDN``
+        
+        baseDN
             Search base. Defaults to ``self.baseDN``
-        ``force_reload``
-            Force cache to be ignored if enabled.
-        ``attrlist``
+        
+        force_reload
+            Force reload of result if cache enabled.
+        
+        attrlist
             LDAP attrlist to query.
-        ``attrsonly``
-            Flag wether to load DN's (?) only.
+        
+        attrsonly
+            Flag whether to load DN's (?) only.
         """
         if baseDN is None:
             baseDN = self.baseDN
@@ -226,22 +202,12 @@ class LDAPCommunicator(object):
 
     def add(self, dn, data):
         """Insert an entry into directory.
-
-        Takes the DN of the entry and the data this object contains. data is a
-        dict and looks like this:
-
-        >>> data = {
-        ...     'uid':'foo',
-        ...     'givenname':'foo',
-        ...     'cn':'foo 0815',
-        ...     'sn':'bar',
-        ...     'telephonenumber':'123-4567',
-        ...     'facsimiletelephonenumber':'987-6543',
-        ...     'objectclass':('Remote-Address','person', 'Top'),
-        ...     'physicaldeliveryofficename':'Development',
-        ...     'mail':'foo@bar.org',
-        ...     'title':'programmer',
-        ... }
+        
+        dn
+            adding DN
+        
+        data
+            dict containing key/value pairs of entry attributes
         """
         attributes = [ (k,v) for k,v in data.items() ]
         self._con.add_s(dn, attributes)
