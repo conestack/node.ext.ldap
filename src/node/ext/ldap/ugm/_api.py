@@ -24,6 +24,7 @@ from node.parts import (
     Storage,
     OdictStorage,
 )
+from node.utils import debug
 from node.ext.ugm import (
     User as BaseUserPart,
     Group as BaseGroupPart,
@@ -36,7 +37,6 @@ from node.ext.ldap.interfaces import (
     ILDAPUsersConfig as IUsersConfig,
 )
 from node.ext.ldap.scope import ONELEVEL
-from node.ext.ldap.debug import debug
 from node.ext.ldap._node import LDAPNode
 
 
@@ -456,7 +456,7 @@ class UsersPart(PrincipalsPart, BaseUsersPart):
         del self.context[id]
     
     @default
-    @debug(['authentication'])
+    @debug
     def authenticate(self, id=None, pw=None):
         id = self.context._seckeys.get(
             self.principal_attrmap.get('login'), {}).get(id, id)
@@ -467,7 +467,7 @@ class UsersPart(PrincipalsPart, BaseUsersPart):
         return self.context._session.authenticate(userdn, pw) and id or False
 
     @default
-    @debug(['authentication'])
+    @debug
     def passwd(self, id, oldpw, newpw):
         self.context._session.passwd(self.context.child_dn(id), oldpw, newpw)
 

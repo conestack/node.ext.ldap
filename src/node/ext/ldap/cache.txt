@@ -1,15 +1,17 @@
 node.ext.ldap.cache
 ===================
 
-Default cache provider factory if caching is enabled and no
+Default cache provider factory, userd if caching is enabled and no
 ``ICacheProviderFactory`` utility is registered.::
 
     >>> from node.ext.ldap.cache import nullcacheProviderFactory
     >>> nullcacheProviderFactory()
     <bda.cache.nullcache.NullCache object at ...>
 
-Convenience cache provider factory for Memcached backend. Instanciate class
-and register as ``ICacheProviderFactory`` utility.::
+Cache provider factory for Memcached backend. Instanciate class
+and register as ``ICacheProviderFactory`` utility if Memcached is the desired
+caching backend. For providing other backends, read documentation of
+``bda.cache``::
 
     >>> from node.ext.ldap.cache import MemcachedProviderFactory
     >>> cache_factory = MemcachedProviderFactory()

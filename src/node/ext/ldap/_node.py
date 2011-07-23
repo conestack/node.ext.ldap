@@ -30,6 +30,7 @@ from node.utils import (
     encode,
     decode,
     CHARACTER_ENCODING,
+    debug,
 )
 from node.ext.ldap import (
     BASE,
@@ -40,7 +41,6 @@ from node.ext.ldap.filter import (
     LDAPFilter,
     LDAPDictFilter,
 )
-from node.ext.ldap.debug import debug
 from ldap.functions import explode_dn
 from ldap import (
     MOD_ADD,
@@ -259,7 +259,7 @@ class LDAPStorage(OdictStorage):
         return seckeys
 
     @default
-    @debug(['searching'])
+    @debug
     def search(self, queryFilter=None, criteria=None, relation=None,
             attrlist=None, exact_match=False, or_search=False):
         """Returns a list of matching keys.
