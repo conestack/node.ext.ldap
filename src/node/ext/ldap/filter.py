@@ -78,18 +78,22 @@ class LDAPRelationFilter(LDAPFilter):
         """
         _filter = LDAPFilter()
         dictionary = dict()
-
-        parsedRelation = dict(
-            (k, v) for (k, _, v) in (
-                pair.partition(':') for pair in self.relation.split('|')))
+        
+        parsedRelation = dict()
+        for pair in self.relation.split('|'):
+            k, _, v = pair.partition(':')
+            if not k in parsedRelation:
+                parsedRelation[k] = list()
+            parsedRelation[k].append(v)
 
         existing = [k for k in self.gattrs]
-        for k, v in parsedRelation.items():
-            if str(v) == '' \
-              or str(k) == '' \
-              or str(k) not in existing:
-                continue
-            dictionary[str(v)] = self.gattrs[str(k)]
+        for k, vals in parsedRelation.items():
+            for v in vals:
+                if str(v) == '' \
+                  or str(k) == '' \
+                  or str(k) not in existing:
+                    continue
+                dictionary[str(v)] = self.gattrs[str(k)]
 
         self.dictionary = dictionary
 
@@ -101,6 +105,9 @@ class LDAPRelationFilter(LDAPFilter):
         return self.dictionary and \
             str(dict_to_filter(
                 criteria=self.dictionary, or_search=self.or_search)) or ''
+    
+    def __repr__(self):
+        return "LDAPRelationFilter('%s')" % (str(self),)
 
 
 def dict_to_filter(criteria, or_search):

@@ -43,6 +43,7 @@ from node.ext.ldap.interfaces import ILDAPStorage
 from node.ext.ldap.filter import (
     LDAPFilter,
     LDAPDictFilter,
+    LDAPRelationFilter,
 )
 from ldap.functions import explode_dn
 from ldap import (
@@ -442,43 +443,56 @@ class LDAPStorage(OdictStorage):
 
     @default
     @debug
-    def search(self, queryFilter=None, criteria=None, relation=None,
-            attrlist=None, exact_match=False, or_search=False):
+    def search(self, queryFilter=None, criteria=None, attrlist=None, 
+               relation=None, relation_node=None, exact_match=False, 
+               or_search=False):
         attrset = set(attrlist or [])
         attrset.discard('dn')
         # fetch also the key attribute
         if not self._key_attr == 'rdn':
             attrset.add(self._key_attr)
 
-        # create queryFilter from all filter things - needs only to happen just
-        # before ldap, could be in the backedn
-        # filter for this search ANDed with the basic filter which is always
-        # effective
+        # Create queryFilter from all filter definitions
+        # filter for this search ANDed with the default filters defined on self
         search_filter = LDAPFilter(queryFilter)
         search_filter &= LDAPDictFilter(criteria, or_search=or_search)
         _filter = LDAPFilter(self.search_filter)
         _filter &= LDAPDictFilter(self.search_criteria)
         _filter &= search_filter
+        
+        # relation filters
+        if relation_node is None:
+            relation_node = self
+        relations = [relation, self.search_relation]
+        for relation in relations:
+            if not relation:
+                continue
+            if isinstance(relation, LDAPRelationFilter):
+                _filter &= relation
+            else:
+                _filter &= LDAPRelationFilter(relation_node, relation)
 
         # XXX: Is it really good to filter out entries without the key attr or
         # would it be better to fail? (see also __iter__ secondary key)
-        # configurable?
         if self._key_attr != 'rdn' and self._key_attr not in _filter:
             _filter &= '(%s=*)' % (self._key_attr,)
 
         # perform the backend search
         matches = self.ldap_session.search(
-            _filter.__str__(),
+            str(_filter),
             self.search_scope,
             baseDN=self.DN,
             force_reload=self._reload,
             attrlist=list(attrset)
         )
+        
+        # XXX: Is ValueError appropriate?
+        # XXX: why do we need to fail at all? shouldn't this be about
+        # substring vs equality match?
         if exact_match and len(matches) > 1:
-            # XXX: Is ValueError appropriate?
-            # XXX: why do we need to fail at all? shouldn't this be about
-            # substring vs equality match?
-            raise ValueError(u"Exact match asked but search not exact")
+            raise ValueError(u"Exact match asked but result not unique")
+        if exact_match and len(matches) == 0:
+            raise ValueError(u"Exact match asked but result length is zero")
 
         # extract key and desired attributes
         res = []
@@ -670,8 +684,6 @@ class LDAPStorage(OdictStorage):
         """
         self.parent._keys[self.name] = None
         del self.parent.storage[self.name]
-        
-        # XXX: shouldn't this raise a KeyError? No, gets set to None above -rn
         del self.parent._keys[self.name]
         self.ldap_session.delete(self.DN)
 

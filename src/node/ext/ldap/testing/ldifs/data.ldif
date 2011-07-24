@@ -8,7 +8,7 @@ dc: my-domain
 dn: ou=customers,dc=my-domain,dc=com
 ou: customers
 description: customers
-businessCategory: customers
+businessCategory: customers_container
 objectClass: top
 objectClass: organizationalUnit
 

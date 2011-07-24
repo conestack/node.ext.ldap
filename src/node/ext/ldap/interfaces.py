@@ -113,10 +113,10 @@ class ILDAPStorage(IStorage):
                attrlist=None, exact_match=False, or_search=False):
         """Search the directors.
 
-        #All search criteria are additive and will be ``&``ed. ``queryFilter``
-        #and ``criteria`` further narrow down the search space defined by
-        #``self.search_filter``, ``self.search_criteria`` and
-        #``self.search_relation``.
+        All search criteria are additive and will be ``&``ed. ``queryFilter``
+        and ``criteria`` further narrow down the search space defined by
+        ``self.search_filter``, ``self.search_criteria`` and
+        ``self.search_relation``.
         
         Returns a list of matching keys if ``attrlist`` is None, otherwise a
         list of 2-tuples containing (key, attrdict).
@@ -133,14 +133,16 @@ class ILDAPStorage(IStorage):
             a string of attribute pairs:
             ``<relation> = '<our_attr>:<child_attr>'``.
             The value of these attributes must match for relation to match.
-            Multiple pairs can be or-joined with
+            Multiple pairs can be or-joined with. ``self.search_relation`` is
+            considered as well if set. Multiple relation filters are ORed.
             
         attrlist
             Normally a list of keys is returned. By defining attrlist the
             return format will be ``[(key, {attr1: [value1, ...]}), ...]``. To
             get this format without any attributs, i.e. empty dicts in the
             tuples, specify an empty attrlist. In addition to the normal ldap
-            attributes you can also the request the DN to be included.
+            attributes you can also the request the DN to be included. DN is
+            also the only value in result set as string instead of list. 
             
         exact_match
             raise ValueError if not one match, return format is a single key or

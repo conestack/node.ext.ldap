@@ -96,7 +96,7 @@ Access existent child and it's attributes::
     [(u'objectClass', [u'top', u'organizationalUnit']), 
     (u'ou', u'customers'), 
     (u'description', u'customers'), 
-    (u'businessCategory', u'customers')]
+    (u'businessCategory', u'customers_container')]
 
     >>> customers.DN
     u'ou=customers,dc=my-domain,dc=com'
@@ -754,20 +754,178 @@ Invalidate changed child fails::
 
 Test search function::
 
-##### XXX
+    >>> from node.ext.ldap.scope import ONELEVEL, SUBTREE
+    >>> node = LDAPNode('dc=my-domain,dc=com', props)
 
-    >>> root.search()
+Default search scope is ONELEVEL::
+
+    >>> node.search_scope is ONELEVEL
+    True
+
+No other default search criteria set::
+    
+    >>> print node.search_filter
+    None
+    
+    >>> print node.search_criteria
+    None
+    
+    >>> print node.search_relation
+    None
+
+Search with no arguments given return childs keys::
+
+    >>> node.search()
+    [u'ou=customers']
+
+Set default search scope to SUBTREE. Be aware that this might not make much
+sense, because of possible duplicate keys, since search with no other defaults
+or passed arguments still returns only the keys. Though someone might use this
+for counting entries::
+
+    >>> node.search_scope = SUBTREE
+    >>> node.search()
+    [u'dc=my-domain', 
+    u'ou=customers', 
+    u'ou=customer1', 
+    u'ou=customer2', 
+    u'ou=n\xe4sty\\, customer', 
+    u'ou=customer3', 
+    u'cn=customer99']
+
+Lets add a default search filter.::
+
+    >>> from node.ext.ldap.filter import LDAPFilter
+    >>> filter = LDAPFilter('(objectClass=organizationalUnit)')
+    >>> node.search_filter = filter
+    >>> node.search()
+    [u'ou=customers', 
+    u'ou=customer1', 
+    u'ou=customer2', 
+    u'ou=n\xe4sty\\, customer', 
+    u'ou=customer3']
+
+The default search filter could also be a string::
+
+    >>> node.search_filter = '(objectClass=organizationalUnit)'
+    >>> node.search()
+    [u'ou=customers', 
+    u'ou=customer1', 
+    u'ou=customer2', 
+    u'ou=n\xe4sty\\, customer', 
+    u'ou=customer3']
+
+Its also possible to define default search criteria as dict::
+    
+    >>> node.search_criteria = {
+    ...     'businessCategory': 'customers',
+    ... }
+    >>> node.search()
+    [u'ou=customer1', 
+    u'ou=customer2', 
+    u'ou=n\xe4sty\\, 
+    customer']
+    
+    >>> node.search_criteria = {
+    ...     'businessCategory': 'customers_container',
+    ... }
+    >>> node.search()
+    [u'ou=customers']
+
+To get more information by search result, pass an attrlist to search function::
+
+    >>> node.search(attrlist=['dn', 'description'])
+    [(u'ou=customers', 
+    {'dn': u'ou=customers,dc=my-domain,dc=com', 
+    u'description': [u'customers']})]
+    
+    >>> node.search(attrlist=['dn', 'description', 'businessCategory'])
+    [(u'ou=customers', 
+    {'dn': u'ou=customers,dc=my-domain,dc=com', 
+    u'description': [u'customers'], 
+    u'businessCategory': [u'customers_container']})]
+
+Test withour defaults, defining search with keyword arguments::
+
+    >>> node.searcg_filter = None
+    >>> node.search_criteria = None
+    >>> node.search(
+    ...     queryFilter='(objectClass=organizationalUnit)',
+    ...     criteria={'businessCategory': 'customers_container'})
+    [u'ou=customers']
+
+Restrict with exact match wotks on 1-length results::
+
+    >>> node.search(
+    ...     queryFilter='(objectClass=organizationalUnit)',
+    ...     criteria={'businessCategory': 'customers_container'},
+    ...     exact_match=True)
     [u'ou=customers']
     
-    >>> from node.ext.ldap.filter import LDAPFilter
-    >>> filter = LDAPFilter('(objectClass=person)')
-    >>> root.search(queryFilter=filter)
+Exact match fails on multi search results::
+
+    >>> node.search(
+    ...     queryFilter='(objectClass=organizationalUnit)',
+    ...     exact_match=True)
+    Traceback (most recent call last):
+      ...
+    ValueError: Exact match asked but result not unique
+
+Exact match also fails on zero length result::
+
+    >>> node.search(
+    ...     queryFilter='(objectClass=inexistent)',
+    ...     exact_match=True)
+    Traceback (most recent call last):
+      ...
+    ValueError: Exact match asked but result length is zero
+
+Test relation filter::
+
+    >>> node['ou=customers']['cn=customer99'].attrs['description'] = 'customers'
+    >>> node()
+    >>> node.searcg_filter = None
+    >>> node.search_criteria = None
+    >>> node.search_relation = 'description:businessCategory'
+    >>> rel_node = node['ou=customers']['cn=customer99']
+    >>> node.search(relation_node=rel_node)
+    [u'ou=customer1', 
+    u'ou=customer2', 
+    u'ou=n\xe4sty\\, customer']
+    
+    >>> node.search(relation='description:description', relation_node=rel_node)
     []
     
-    >>> root.search(attrlist=['ou'])
-    [(u'ou=customers', {u'ou': [u'customers']})]
-
-##### / XXX
+    >>> node.search_relation = None
+    
+    >>> from node.ext.ldap.filter import LDAPRelationFilter
+    >>> relation = LDAPRelationFilter(rel_node, 'description:description')
+    >>> relation
+    LDAPRelationFilter('(description=customers)')
+    
+    >>> str(relation)
+    '(description=customers)'
+    
+    >>> node.search(relation=relation)
+    [u'ou=customers']
+    
+    >>> relation = LDAPRelationFilter(
+    ...     rel_node, 'description:description|description:businessCategory')
+    >>> str(relation)
+    '(|(description=customers)(businessCategory=customers))'
+    
+    >>> node.search(relation=relation)
+    [u'ou=customers', 
+    u'ou=customer1', 
+    u'ou=customer2', 
+    u'ou=n\xe4sty\\, customer']
+    
+    >>> node.search_relation = relation
+    >>> node.search()
+    [u'ou=customers', 
+    u'ou=customer1', 
+    u'ou=customer2', 
+    u'ou=n\xe4sty\\, customer']
 
 Secondary keys and child DN's.
 

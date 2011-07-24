@@ -99,6 +99,9 @@ from relations.::
     
     >>> from node.ext.ldap.filter import LDAPRelationFilter
     >>> rel_filter = LDAPRelationFilter(node, 'someUid:otherUid')
+    >>> rel_filter
+    LDAPRelationFilter('(otherUid=123)')
+    
     >>> str(rel_filter)
     '(otherUid=123)'
     
@@ -115,6 +118,11 @@ from relations.::
     ...     node, 'someUid:otherUid|someName:otherName', False)
     >>> str(rel_filter)
     '(&(otherUid=123)(otherName=Name))'
+    
+    >>> rel_filter = LDAPRelationFilter(
+    ...     node, 'someUid:otherUid|someUid:otherName', False)
+    >>> str(rel_filter)
+    '(&(otherUid=123)(otherName=123))'
     
     >>> rel_filter = LDAPRelationFilter(
     ...     node, 'someUid:otherUid|inexistent:inexistent')
