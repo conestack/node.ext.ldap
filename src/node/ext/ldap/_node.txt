@@ -356,100 +356,6 @@ Check set child immediately after init time::
     [u'ou=customer1', u'ou=customer2', 
     u'ou=n\xe4sty\\, customer', u'ou=customer3', u'cn=child']
 
-Secondary keys and child DN's.
-
-Note: Setting the DN as seckey only seem to work because it is returned by LDAP
-search result and considered (XXX: discuss). Child DN's are always available 
-at _child_dns::
-    
-    >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
-    >>> tmp._seckey_attrs = ('cn',)
-    >>> tmp.keys()
-    Traceback (most recent call last):
-      ...
-    KeyError: u"Secondary key 'cn' missing on: 
-    ou=customer1,ou=customers,dc=my-domain,dc=com."
-
-    >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
-    >>> tmp._seckey_attrs = ('dn',)
-    >>> tmp.keys()
-    [u'ou=customer1', 
-    u'ou=customer2', 
-    u'ou=n\xe4sty\\, customer', 
-    u'ou=customer3']
-    
-    >>> tmp._seckeys
-    {'dn': 
-    {u'ou=customer2,ou=customers,dc=my-domain,dc=com': u'ou=customer2', 
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com': u'ou=customer1', 
-    u'ou=customer3,ou=customers,dc=my-domain,dc=com': u'ou=customer3', 
-    u'ou=n\xe4sty\\2C customer,ou=Customers,dc=My-Domain,dc=com': u'ou=n\xe4sty\\, customer'}}
-    
-    >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
-    >>> tmp._seckey_attrs = ('description', 'businessCategory')
-    >>> tmp.keys()
-    Traceback (most recent call last):
-      ...
-    KeyError: u"Secondary key not unique: businessCategory='customers'."
-    
-    >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
-    >>> tmp._seckey_attrs = ('dn', 'objectClass')
-    >>> tmp.keys()
-    Traceback (most recent call last):
-      ...
-    KeyError: u"Expected one value for 
-    'objectClass' not 2: '[u'top', u'organizationalUnit']'."
-
-    >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
-    >>> tmp._seckey_attrs = ('dn', 'description')
-    >>> tmp.keys()
-    [u'ou=customer1', 
-    u'ou=customer2', 
-    u'ou=n\xe4sty\\, customer', 
-    u'ou=customer3']
-    
-    >>> tmp._child_dns
-    {u'ou=n\xe4sty\\, customer': 
-    u'ou=n\xe4sty\\2C customer,ou=Customers,dc=My-Domain,dc=com', 
-    u'ou=customer3': 
-    u'ou=customer3,ou=customers,dc=my-domain,dc=com', 
-    u'ou=customer2': 
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com', 
-    u'ou=customer1': 
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com'}
-
-    >>> tmp._seckeys
-    {'dn': 
-    {u'ou=customer2,ou=customers,dc=my-domain,dc=com': u'ou=customer2', 
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com': u'ou=customer1', 
-    u'ou=customer3,ou=customers,dc=my-domain,dc=com': u'ou=customer3', 
-    u'ou=n\xe4sty\\2C customer,ou=Customers,dc=My-Domain,dc=com': u'ou=n\xe4sty\\, customer'}, 
-    'description': 
-    {u'customer1': u'ou=customer1', 
-    u'n\xe4sty': u'ou=n\xe4sty\\, customer', 
-    u'customer3': u'ou=customer3', 
-    u'customer2': u'ou=customer2'}}
-    
-    >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
-    >>> tmp.keys()
-    [u'ou=customer1', 
-    u'ou=customer2', 
-    u'ou=n\xe4sty\\, customer', 
-    u'ou=customer3']
-    
-    >>> tmp._child_dns
-    {u'ou=n\xe4sty\\, customer': 
-    u'ou=n\xe4sty\\2C customer,ou=Customers,dc=My-Domain,dc=com', 
-    u'ou=customer3': 
-    u'ou=customer3,ou=customers,dc=my-domain,dc=com', 
-    u'ou=customer2': 
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com', 
-    u'ou=customer1': 
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com'}
-    
-    >>> print tmp._seckeys
-    None
-
 Changing the rdn attribute on loaded nodes fails.::
 
     >>> person.attrs['cn'] = 'foo'
@@ -732,12 +638,123 @@ node gets created then and attrs are set from original node.
     >>> del customer['cn=from_other']
     >>> customer()
 
-Test invaliation::
+Test invalidation. Initialize node::
 
-############
-    XXX
+    >>> node = LDAPNode('ou=customers,dc=my-domain,dc=com', props)
+    >>> node.printtree()
+    <ou=customers,dc=my-domain,dc=com - False>
+      <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
+      <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
+      <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
+      <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
+      <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
+
+Invalidate node, children are invalidated and attrs are loaded::
+
+    >>> node.invalidate()
+    >>> node.storage
+    odict()
+    
+    >>> print node._keys
+    None
+
+Reload entries::
+
+    >>> node.printtree()
+    <ou=customers,dc=my-domain,dc=com - False>
+      <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
+      <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
+      <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
+      <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
+      <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
+
+Change descripton and try to invalidate, fails::
+
+    >>> node.attrs['description'] = 'changed description'
+    >>> node.invalidate()
+    Traceback (most recent call last):
+      ...
+    RuntimeError: Invalid tree state. Try to invalidate changed node.
+
+Reload attrs, change child and try to invalidate again, also fails::
+
+    >>> node.attrs.load()
+    >>> node.changed
+    False
+    
+    >>> node.invalidate()
+    >>> node['ou=customer1'].attrs['description'] = 'changed description'
+    >>> node.invalidate()
+    Traceback (most recent call last):
+      ...
+    RuntimeError: Invalid tree state. Try to invalidate changed node.
+
+Reload child attrs and check internal node statem only customer one loaded::
+
+    >>> node['ou=customer1'].attrs.load()
+    >>> node.changed
+    False
+    
+    >>> node.storage.values()
+    [<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>]
+    
+    >>> node._keys.values()
+    [<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>, 
+    None, 
+    None, 
+    None, 
+    None]
+
+Reload all children and check node state::
+
+    >>> node.values()
+    [<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>, 
+    <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>, 
+    <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>, 
+    <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>, 
+    <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
+    
+    >>> node.storage.values()
+    [<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>, 
+    <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>, 
+    <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>, 
+    <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>, 
+    <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
+    
+    >>> node._keys.values()
+    [<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>, 
+    <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>, 
+    <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>, 
+    <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>, 
+    <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
+
+Invalidate with given key invalidates only child::
+
+    >>> node.invalidate('ou=customer1')
+    >>> node.storage.values()
+    [<ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>, 
+    <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>, 
+    <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>, 
+    <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
+    
+    >>> node._keys.values()
+    [None, 
+    <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>, 
+    <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>, 
+    <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>, 
+    <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
+
+Invalidate changed child fails::
+
+    >>> node['ou=customer2'].attrs['description'] = 'changed description'
+    >>> node.invalidate('ou=customer2')
+    Traceback (most recent call last):
+      ...
+    RuntimeError: Invalid tree state. Try to invalidate changed child node 'ou=customer2'.
 
 Test search function::
+
+##### XXX
 
     >>> root.search()
     [u'ou=customers']
@@ -749,6 +766,106 @@ Test search function::
     
     >>> root.search(attrlist=['ou'])
     [(u'ou=customers', {u'ou': [u'customers']})]
+
+##### / XXX
+
+Secondary keys and child DN's.
+
+Note: Setting the DN as seckey only seem to work because it is returned by LDAP
+search result and considered (XXX: discuss). Child DN's are always available 
+at _child_dns::
+    
+    >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
+    >>> del tmp['cn=customer99']
+    >>> tmp()
+    
+    >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
+    >>> tmp._seckey_attrs = ('cn',)
+    >>> tmp.keys()
+    Traceback (most recent call last):
+      ...
+    KeyError: u"Secondary key 'cn' missing on: 
+    ou=customer1,ou=customers,dc=my-domain,dc=com."
+
+    >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
+    >>> tmp._seckey_attrs = ('dn',)
+    >>> tmp.keys()
+    [u'ou=customer1', 
+    u'ou=customer2', 
+    u'ou=n\xe4sty\\, customer', 
+    u'ou=customer3']
+    
+    >>> tmp._seckeys
+    {'dn': 
+    {u'ou=customer2,ou=customers,dc=my-domain,dc=com': u'ou=customer2', 
+    u'ou=customer1,ou=customers,dc=my-domain,dc=com': u'ou=customer1', 
+    u'ou=customer3,ou=customers,dc=my-domain,dc=com': u'ou=customer3', 
+    u'ou=n\xe4sty\\2C customer,ou=Customers,dc=My-Domain,dc=com': u'ou=n\xe4sty\\, customer'}}
+    
+    >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
+    >>> tmp._seckey_attrs = ('description', 'businessCategory')
+    >>> tmp.keys()
+    Traceback (most recent call last):
+      ...
+    KeyError: u"Secondary key not unique: businessCategory='customers'."
+    
+    >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
+    >>> tmp._seckey_attrs = ('dn', 'objectClass')
+    >>> tmp.keys()
+    Traceback (most recent call last):
+      ...
+    KeyError: u"Expected one value for 
+    'objectClass' not 2: '[u'top', u'organizationalUnit']'."
+
+    >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
+    >>> tmp._seckey_attrs = ('dn', 'description')
+    >>> tmp.keys()
+    [u'ou=customer1', 
+    u'ou=customer2', 
+    u'ou=n\xe4sty\\, customer', 
+    u'ou=customer3']
+    
+    >>> tmp._child_dns
+    {u'ou=n\xe4sty\\, customer': 
+    u'ou=n\xe4sty\\2C customer,ou=Customers,dc=My-Domain,dc=com', 
+    u'ou=customer3': 
+    u'ou=customer3,ou=customers,dc=my-domain,dc=com', 
+    u'ou=customer2': 
+    u'ou=customer2,ou=customers,dc=my-domain,dc=com', 
+    u'ou=customer1': 
+    u'ou=customer1,ou=customers,dc=my-domain,dc=com'}
+
+    >>> tmp._seckeys
+    {'dn': 
+    {u'ou=customer2,ou=customers,dc=my-domain,dc=com': u'ou=customer2', 
+    u'ou=customer1,ou=customers,dc=my-domain,dc=com': u'ou=customer1', 
+    u'ou=customer3,ou=customers,dc=my-domain,dc=com': u'ou=customer3', 
+    u'ou=n\xe4sty\\2C customer,ou=Customers,dc=My-Domain,dc=com': u'ou=n\xe4sty\\, customer'}, 
+    'description': 
+    {u'customer1': u'ou=customer1', 
+    u'n\xe4sty': u'ou=n\xe4sty\\, customer', 
+    u'customer3': u'ou=customer3', 
+    u'customer2': u'ou=customer2'}}
+    
+    >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
+    >>> tmp.keys()
+    [u'ou=customer1', 
+    u'ou=customer2', 
+    u'ou=n\xe4sty\\, customer', 
+    u'ou=customer3']
+    
+    >>> tmp._child_dns
+    {u'ou=n\xe4sty\\, customer': 
+    u'ou=n\xe4sty\\2C customer,ou=Customers,dc=My-Domain,dc=com', 
+    u'ou=customer3': 
+    u'ou=customer3,ou=customers,dc=my-domain,dc=com', 
+    u'ou=customer2': 
+    u'ou=customer2,ou=customers,dc=my-domain,dc=com', 
+    u'ou=customer1': 
+    u'ou=customer1,ou=customers,dc=my-domain,dc=com'}
+    
+    >>> print tmp._seckeys
+    None
 
 ###############################################################################
 Experimental features below
@@ -936,7 +1053,7 @@ We need a different key. As a side-effect a filter will be used: '(cn=*)'::
     >>> node._rdn_attr = 'cn'
     >>> node.child_defaults = {'objectClass': ['top', 'person']}
     >>> node.keys()
-    [u'customer99', u'Max']
+    [u'Max']
 
 Again, we can query/change/delete these::
 
@@ -963,7 +1080,7 @@ New entries in case of scope SUBTREE are added in the ONELEVEL scope::
     >>> del node['Max']
     >>> node()
     >>> node.keys()
-    [u'customer99', u'foo']
+    [u'foo']
 
     >>> node = LDAPNode(props=props, name=root.DN)
     >>> node['cn=foo'].attrs['objectClass']

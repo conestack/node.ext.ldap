@@ -150,9 +150,8 @@ class LDAPNodeAttributes(NodeAttributes):
 
 class LDAPStorage(OdictStorage):
     """
-    XXX: check if ``self.storage`` and ``self._keys` can be one object.
-            the problem here is that ``self._keys`` has a special semantic
-            meaning, where ``None`` value means "not loaded yet".
+    XXX: only use ``self.storage`` to store real values, ``self._keys` should
+         only contain ``True`` or ``False``
     """
     
     implements(ILDAPStorage, IInvalidate)
@@ -266,9 +265,9 @@ class LDAPStorage(OdictStorage):
             val.changed = True
             self.changed = True
         
-        self._notify_suppress = True
+        #self._notify_suppress = True
         self.storage[key] = val
-        self._notify_suppress = False
+        #self._notify_suppress = False
         self._keys[key] = val
         
         if self._key_attr == 'rdn':
@@ -503,7 +502,8 @@ class LDAPStorage(OdictStorage):
             - check if self is changed
             - if changed, raise RuntimeError
             - reload self.attrs
-            - set self._reload to True. This reloads the keys bypassing cache.
+            - set self._reload to True. This reloads the keys forcing cache
+              reload as well.
         
         If key is given:
             - if child in self._keys, check if child has changed
@@ -511,7 +511,24 @@ class LDAPStorage(OdictStorage):
             - if not changed, remove item from self.storage and set
               self._keys[key] to None, which forces it to be reloaded.
         """
-        pass
+        if key is None:
+            if self.changed:
+                raise RuntimeError(u"Invalid tree state. Try to invalidate "
+                                   u"changed node.")
+            self.storage.clear()
+            self.attrs.load()
+            self._init_keys()
+            self._reload = True
+            return
+        if key in self._keys:
+            child = self._keys[key]
+            if child is not None:
+                if child.changed:
+                    raise RuntimeError(
+                        u"Invalid tree state. Try to invalidate "
+                        u"changed child node '%s'." % (key,))
+                del self.storage[key]
+                self._keys[key] = None
     
     #@finalize
     #def sort(self, cmp=None, key=None, reverse=False):
