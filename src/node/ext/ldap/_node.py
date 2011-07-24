@@ -149,6 +149,11 @@ class LDAPNodeAttributes(NodeAttributes):
 
 
 class LDAPStorage(OdictStorage):
+    """
+    XXX: check if ``self.storage`` and ``self._keys` can be one object.
+            the problem here is that ``self._keys`` has a special semantic
+            meaning, where ``None`` value means "not loaded yet".
+    """
     
     implements(ILDAPStorage, IInvalidate)
     attributes_factory = finalize(LDAPNodeAttributes)
@@ -492,6 +497,20 @@ class LDAPStorage(OdictStorage):
     
     @default
     def invalidate(self, key=None):
+        """Invalidate LDAP node.
+        
+        If key is None:
+            - check if self is changed
+            - if changed, raise RuntimeError
+            - reload self.attrs
+            - set self._reload to True. This reloads the keys bypassing cache.
+        
+        If key is given:
+            - if child in self._keys, check if child has changed
+            - if changed, raise RuntimeError
+            - if not changed, remove item from self.storage and set
+              self._keys[key] to None, which forces it to be reloaded.
+        """
         pass
     
     #@finalize
