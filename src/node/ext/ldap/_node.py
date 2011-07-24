@@ -33,6 +33,7 @@ from node.utils import (
     CHARACTER_ENCODING,
     debug,
 )
+from node.interfaces import IInvalidate
 from node.ext.ldap import (
     BASE,
     ONELEVEL,
@@ -149,7 +150,7 @@ class LDAPNodeAttributes(NodeAttributes):
 
 class LDAPStorage(OdictStorage):
     
-    implements(ILDAPStorage)
+    implements(ILDAPStorage, IInvalidate)
     attributes_factory = finalize(LDAPNodeAttributes)
 
     @finalize
@@ -192,233 +193,7 @@ class LDAPStorage(OdictStorage):
         # creation related default
         self.child_factory = LDAPNode
         self.child_defaults = None
-
-    @default
-    def _init_keys(self):
-        # the _keys is None or an odict.
-        # if an odict, the value is either None or the value
-        # None means, the value wasnt loaded
-        self._keys = None
-        self._seckeys = None
-        self._child_dns = None
-
-    # This is really ldap
-    @default
-    @property
-    def DN(self):
-        """
-        ATTENTION: For one and the same entry, ldap will always return
-        the same DN. However, depending on the individual syntax
-        definition of the DN's components there might be a multitude
-        of strings that equal the same DN, e.g. for cn:
-           'cn=foo bar' == 'cn=foo   bar' -> True
-        """
-        if self.parent is not None:
-            return self.parent.child_dn(self.name)
-        elif self.name is not None:
-            # We should not have a name if we are not a root node.
-            return self.name
-        else:
-            return u''
     
-    @default
-    @property
-    def rdn_attr(self):
-        """XXX: only tested on LDAPNode, might not work in UGM
-        """
-        return self.name and self.name.split('=')[0] or None
-
-    # This is really ldap
-    @default
-    def child_dn(self, key):
-        return self._child_dns[key]
-
-    # a keymapper
-    @default
-    def _calculate_key(self, dn, attrs):
-        if self._key_attr == 'rdn':
-            # explode_dn is ldap world
-            key = decode(explode_dn(encode(dn))[0])
-        else:
-            key = attrs[self._key_attr]
-            if isinstance(key, list):
-                if len(key) != 1:
-                    msg = u"Expected one value for '%s' " % (self._key_attr,)
-                    msg += u"not %s: '%s'." % (len(key), key)
-                    raise KeyError(msg)
-                key = key[0]
-        return key
-
-    # secondary keys
-    @default
-    def _calculate_seckeys(self, attrs):
-        if not self._seckey_attrs:
-            return {}
-        seckeys = {}
-        for seckey_attr in self._seckey_attrs:
-            try:
-                seckey = attrs[seckey_attr]
-            except KeyError:
-                raise KeyError(
-                    u"Secondary key '%s' missing on: %s." % \
-                        (seckey_attr, attrs['dn']))
-            else:
-                if isinstance(seckey, list):
-                    if len(seckey) != 1:
-                        msg = u"Expected one value for '%s' " % (seckey_attr,)
-                        msg += "not %s: '%s'." %(len(seckey), seckey)
-                        raise KeyError(msg)
-                    seckey = seckey[0]
-                seckeys[seckey_attr] = seckey
-        return seckeys
-
-    @default
-    @debug
-    def search(self, queryFilter=None, criteria=None, relation=None,
-            attrlist=None, exact_match=False, or_search=False):
-        """Returns a list of matching keys.
-
-        All search criteria are additive and will be ``&``ed. ``queryFilter``
-        and ``criteria`` further narrow down the search space defined by
-        ``self.search_filter``, ``self.search_criteria`` and
-        ``self.search_relation``.
-
-        queryFilter
-            ldap queryFilter, e.g. ``(objectClass=foo)``
-            
-        criteria
-            dictionary of attribute value(s) (string or list of string)
-            
-        relation
-            the nodes we search has a relation to us.  A relation is defined as
-            a string of attribute pairs:
-            ``<relation> = '<our_attr>:<child_attr>'``.
-            The value of these attributes must match for relation to match.
-            Multiple pairs can be or-joined with
-            
-        attrlist
-            Normally a list of keys is returned. By defining attrlist the
-            return format will be ``[(key, {attr1: [value1, ...]}), ...]``. To
-            get this format without any attributs, i.e. empty dicts in the
-            tuples, specify an empty attrlist. In addition to the normal ldap
-            attributes you can also the request the dn to be included.
-            
-        exact_match
-            raise ValueError if not one match, return format is a single key or
-            tuple, if attrlist is specified.
-        """
-        attrset = set(attrlist or [])
-        attrset.discard('dn')
-        # fetch also the key attribute
-        if not self._key_attr == 'rdn':
-            attrset.add(self._key_attr)
-
-        # create queryFilter from all filter things - needs only to happen just
-        # before ldap, could be in the backedn
-        # filter for this search ANDed with the basic filter which is always
-        # effective
-        search_filter = LDAPFilter(queryFilter)
-        search_filter &= LDAPDictFilter(criteria, or_search=or_search)
-        _filter = LDAPFilter(self.search_filter)
-        _filter &= LDAPDictFilter(self.search_criteria)
-        _filter &= search_filter
-
-        # XXX: Is it really good to filter out entries without the key attr or
-        # would it be better to fail? (see also __iter__ secondary key)
-        # configurable?
-        if self._key_attr != 'rdn' and self._key_attr not in _filter:
-            _filter &= '(%s=*)' % (self._key_attr,)
-
-        # perform the backend search
-        matches = self.ldap_session.search(
-            _filter.__str__(),
-            self.search_scope,
-            baseDN=self.DN,
-            force_reload=self._reload,
-            attrlist=list(attrset)
-        )
-        if exact_match and len(matches) > 1:
-            # XXX: Is ValueError appropriate?
-            # XXX: why do we need to fail at all? shouldn't this be about
-            # substring vs equality match?
-            raise ValueError(u"Exact match asked but search not exact")
-
-        # extract key and desired attributes
-        res = []
-        for dn, attrs in matches:
-            key = self._calculate_key(dn, attrs)
-            if attrlist is not None:
-                resattr = dict([(k,v) for k,v in attrs.iteritems()
-                        if k in attrlist])
-                if 'dn' in attrlist:
-                    resattr['dn'] = dn
-                res.append((key, resattr))
-            else:
-                res.append(key)
-        return res
-
-    @default
-    def _load_keys(self):
-        self._keys = odict()
-        self._child_dns = {}
-        attrlist = ['dn']
-        if self._seckey_attrs:
-            self._seckeys = dict()
-            attrlist.extend(self._seckey_attrs)
-        for key, attrs in self.search(attrlist=attrlist):
-            try:
-                self._keys[key]
-            except KeyError:
-                self._keys[key] = None
-                self._child_dns[key] = attrs['dn']
-                for seckey_attr, seckey in \
-                        self._calculate_seckeys(attrs).items():
-                    try:
-                        self._seckeys[seckey_attr]
-                    except KeyError:
-                        self._seckeys[seckey_attr] = {}
-                    try:
-                        self._seckeys[seckey_attr][seckey]
-                    except KeyError:
-                        self._seckeys[seckey_attr][seckey] = key
-                    else:
-                        # XXX: ever reached?
-                        raise KeyError(
-                            u"Secondary key not unique: %s='%s'." % \
-                                    (seckey_attr, seckey))
-            else:
-                raise RuntimeError(u"Key not unique: %s='%s'." % \
-                        (self._key_attr, key))
-
-    @finalize
-    def __iter__(self):
-        """This is where keys are retrieved from ldap
-        """
-        if self.name is None:
-            return
-        if self._reload:
-            self._init_keys()
-        if self._keys is None and self._action != ACTION_ADD:
-            self._load_keys()
-        try:
-            for key in self._keys:
-                yield key
-        except TypeError:
-            # no keys loaded
-            pass
-
-    #@finalize
-    #def sort(self, cmp=None, key=None, reverse=False):
-    #    # XXX: a sort working only on the keys could work without wakeup -->
-    #    # sortonkeys()
-    #    #  first wake up all entries
-    #    dummy = self.items()
-    #    if not dummy:
-    #        return
-    #    # second sort them
-    #    import pdb;pdb.set_trace()
-    #    self._keys.sort(cmp=cmp, key=key, reverse=reverse)
-
     @finalize
     def __getitem__(self, key):
         """Here nodes are created for keys, if they do not exist already
@@ -437,17 +212,6 @@ class LDAPStorage(OdictStorage):
         val.__parent__ = self
         self.storage[key] = self._keys[key] = val
         return val
-
-    @default
-    def _create_suitable_node(self, vessel):
-        try:
-            attrs = vessel.attrs
-        except AttributeError:
-            raise ValueError(u"No attributes found on vessel, cannot convert")
-        node = LDAPNode()
-        for key, val in attrs.iteritems():
-            node.attrs[key] = val
-        return node
 
     @finalize
     def __setitem__(self, key, val):
@@ -538,6 +302,23 @@ class LDAPStorage(OdictStorage):
         except AttributeError:
             self._deleted = list()
             self._deleted.append(val)
+    
+    @finalize
+    def __iter__(self):
+        """This is where keys are retrieved from ldap
+        """
+        if self.name is None:
+            return
+        if self._reload:
+            self._init_keys()
+        if self._keys is None and self._action != ACTION_ADD:
+            self._load_keys()
+        try:
+            for key in self._keys:
+                yield key
+        except TypeError:
+            # no keys loaded
+            pass
 
     @finalize
     def __call__(self):
@@ -577,46 +358,36 @@ class LDAPStorage(OdictStorage):
         return repr(self)
 
     @default
-    def _ldap_add(self):
-        """adds self to the ldap directory.
-        """
-        self.ldap_session.add(self.DN, self.attrs)
-
+    @property
+    def ldap_session(self):
+        return self._ldap_session
+    
+    # This is really ldap
     @default
-    def _ldap_modify(self):
-        """modifies attributs of self on the ldap directory.
+    @property
+    def DN(self):
         """
-        modlist = list()
-        orgin = self.attributes_factory(name='__attrs__', parent=self)
-        
-        for key in orgin:
-            # MOD_DELETE
-            if not key in self.attrs:
-                moddef = (MOD_DELETE, key, None)
-                modlist.append(moddef)
-        for key in self.attrs:
-            # MOD_ADD
-            if key not in orgin:
-                moddef = (MOD_ADD, key, self.attrs[key])
-                modlist.append(moddef)
-            # MOD_REPLACE
-            elif self.attrs[key] != orgin[key]:
-                moddef = (MOD_REPLACE, key, self.attrs[key])
-                modlist.append(moddef)
-        if modlist:
-            self.ldap_session.modify(self.DN, modlist)
-
+        ATTENTION: For one and the same entry, ldap will always return
+        the same DN. However, depending on the individual syntax
+        definition of the DN's components there might be a multitude
+        of strings that equal the same DN, e.g. for cn:
+           'cn=foo bar' == 'cn=foo   bar' -> True
+        """
+        if self.parent is not None:
+            return self.parent.child_dn(self.name)
+        elif self.name is not None:
+            # We should not have a name if we are not a root node.
+            return self.name
+        else:
+            return u''
+    
     @default
-    def _ldap_delete(self):
-        """delete self from the ldap-directory.
+    @property
+    def rdn_attr(self):
+        """XXX: only tested on LDAPNode, might not work in UGM
         """
-        self.parent._keys[self.name] = None
-        del self.parent.storage[self.name]
-        
-        # XXX: shouldn't this raise a KeyError? No, gets set to None above -rn
-        del self.parent._keys[self.name]
-        self.ldap_session.delete(self.DN)
-
+        return self.name and self.name.split('=')[0] or None
+    
     def _get_changed(self):
         return self._changed
 
@@ -660,10 +431,209 @@ class LDAPStorage(OdictStorage):
 
     changed = default(property(_get_changed, _set_changed))
 
+    # This is really ldap
     @default
-    @property
-    def ldap_session(self):
-        return self._ldap_session
+    def child_dn(self, key):
+        return self._child_dns[key]
+
+    @default
+    @debug
+    def search(self, queryFilter=None, criteria=None, relation=None,
+            attrlist=None, exact_match=False, or_search=False):
+        attrset = set(attrlist or [])
+        attrset.discard('dn')
+        # fetch also the key attribute
+        if not self._key_attr == 'rdn':
+            attrset.add(self._key_attr)
+
+        # create queryFilter from all filter things - needs only to happen just
+        # before ldap, could be in the backedn
+        # filter for this search ANDed with the basic filter which is always
+        # effective
+        search_filter = LDAPFilter(queryFilter)
+        search_filter &= LDAPDictFilter(criteria, or_search=or_search)
+        _filter = LDAPFilter(self.search_filter)
+        _filter &= LDAPDictFilter(self.search_criteria)
+        _filter &= search_filter
+
+        # XXX: Is it really good to filter out entries without the key attr or
+        # would it be better to fail? (see also __iter__ secondary key)
+        # configurable?
+        if self._key_attr != 'rdn' and self._key_attr not in _filter:
+            _filter &= '(%s=*)' % (self._key_attr,)
+
+        # perform the backend search
+        matches = self.ldap_session.search(
+            _filter.__str__(),
+            self.search_scope,
+            baseDN=self.DN,
+            force_reload=self._reload,
+            attrlist=list(attrset)
+        )
+        if exact_match and len(matches) > 1:
+            # XXX: Is ValueError appropriate?
+            # XXX: why do we need to fail at all? shouldn't this be about
+            # substring vs equality match?
+            raise ValueError(u"Exact match asked but search not exact")
+
+        # extract key and desired attributes
+        res = []
+        for dn, attrs in matches:
+            key = self._calculate_key(dn, attrs)
+            if attrlist is not None:
+                resattr = dict([(k,v) for k,v in attrs.iteritems()
+                        if k in attrlist])
+                if 'dn' in attrlist:
+                    resattr['dn'] = dn
+                res.append((key, resattr))
+            else:
+                res.append(key)
+        return res
+    
+    #@finalize
+    #def sort(self, cmp=None, key=None, reverse=False):
+    #    # XXX: a sort working only on the keys could work without wakeup -->
+    #    # sortonkeys()
+    #    #  first wake up all entries
+    #    dummy = self.items()
+    #    if not dummy:
+    #        return
+    #    # second sort them
+    #    import pdb;pdb.set_trace()
+    #    self._keys.sort(cmp=cmp, key=key, reverse=reverse)
+    
+    @default
+    def _init_keys(self):
+        # the _keys is None or an odict.
+        # if an odict, the value is either None or the value
+        # None means, the value wasnt loaded
+        self._keys = None
+        self._seckeys = None
+        self._child_dns = None
+
+    @default
+    def _load_keys(self):
+        self._keys = odict()
+        self._child_dns = {}
+        attrlist = ['dn']
+        if self._seckey_attrs:
+            self._seckeys = dict()
+            attrlist.extend(self._seckey_attrs)
+        for key, attrs in self.search(attrlist=attrlist):
+            try:
+                self._keys[key]
+            except KeyError:
+                self._keys[key] = None
+                self._child_dns[key] = attrs['dn']
+                for seckey_attr, seckey in \
+                        self._calculate_seckeys(attrs).items():
+                    try:
+                        self._seckeys[seckey_attr]
+                    except KeyError:
+                        self._seckeys[seckey_attr] = {}
+                    try:
+                        self._seckeys[seckey_attr][seckey]
+                    except KeyError:
+                        self._seckeys[seckey_attr][seckey] = key
+                    else:
+                        # XXX: ever reached?
+                        raise KeyError(
+                            u"Secondary key not unique: %s='%s'." % \
+                                    (seckey_attr, seckey))
+            else:
+                raise RuntimeError(u"Key not unique: %s='%s'." % \
+                        (self._key_attr, key))
+    
+    # a keymapper
+    @default
+    def _calculate_key(self, dn, attrs):
+        if self._key_attr == 'rdn':
+            # explode_dn is ldap world
+            key = decode(explode_dn(encode(dn))[0])
+        else:
+            key = attrs[self._key_attr]
+            if isinstance(key, list):
+                if len(key) != 1:
+                    msg = u"Expected one value for '%s' " % (self._key_attr,)
+                    msg += u"not %s: '%s'." % (len(key), key)
+                    raise KeyError(msg)
+                key = key[0]
+        return key
+
+    # secondary keys
+    @default
+    def _calculate_seckeys(self, attrs):
+        if not self._seckey_attrs:
+            return {}
+        seckeys = {}
+        for seckey_attr in self._seckey_attrs:
+            try:
+                seckey = attrs[seckey_attr]
+            except KeyError:
+                raise KeyError(
+                    u"Secondary key '%s' missing on: %s." % \
+                        (seckey_attr, attrs['dn']))
+            else:
+                if isinstance(seckey, list):
+                    if len(seckey) != 1:
+                        msg = u"Expected one value for '%s' " % (seckey_attr,)
+                        msg += "not %s: '%s'." %(len(seckey), seckey)
+                        raise KeyError(msg)
+                    seckey = seckey[0]
+                seckeys[seckey_attr] = seckey
+        return seckeys
+    
+    @default
+    def _create_suitable_node(self, vessel):
+        try:
+            attrs = vessel.attrs
+        except AttributeError:
+            raise ValueError(u"No attributes found on vessel, cannot convert")
+        node = LDAPNode()
+        for key, val in attrs.iteritems():
+            node.attrs[key] = val
+        return node
+
+    @default
+    def _ldap_add(self):
+        """adds self to the ldap directory.
+        """
+        self.ldap_session.add(self.DN, self.attrs)
+
+    @default
+    def _ldap_modify(self):
+        """modifies attributs of self on the ldap directory.
+        """
+        modlist = list()
+        orgin = self.attributes_factory(name='__attrs__', parent=self)
+        
+        for key in orgin:
+            # MOD_DELETE
+            if not key in self.attrs:
+                moddef = (MOD_DELETE, key, None)
+                modlist.append(moddef)
+        for key in self.attrs:
+            # MOD_ADD
+            if key not in orgin:
+                moddef = (MOD_ADD, key, self.attrs[key])
+                modlist.append(moddef)
+            # MOD_REPLACE
+            elif self.attrs[key] != orgin[key]:
+                moddef = (MOD_REPLACE, key, self.attrs[key])
+                modlist.append(moddef)
+        if modlist:
+            self.ldap_session.modify(self.DN, modlist)
+
+    @default
+    def _ldap_delete(self):
+        """delete self from the ldap-directory.
+        """
+        self.parent._keys[self.name] = None
+        del self.parent.storage[self.name]
+        
+        # XXX: shouldn't this raise a KeyError? No, gets set to None above -rn
+        del self.parent._keys[self.name]
+        self.ldap_session.delete(self.DN)
 
 
 class LDAPNode(object):

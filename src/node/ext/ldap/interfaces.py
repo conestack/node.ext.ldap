@@ -85,6 +85,14 @@ class ILDAPStorage(IStorage):
     """A LDAP Node.
     """
     
+    ldap_session = Attribute(u"``node.ext.ldap.session.LDAPSession`` instance.")
+    
+    DN = Attribute(u"LDAP object DN.")
+    
+    rdn_attr = Attribute(u"RDN attribute name.")
+    
+    changed = Attribute(u"Flag whether node has been modified.")
+    
     search_scope = Attribute(u"Default child search scope")
     
     search_filter = Attribute(u"Default child search filter")
@@ -96,3 +104,45 @@ class ILDAPStorage(IStorage):
     child_defaults = Attribute(u"Default child attributes. Will be set to "
                                u"all children attributes on __setitem__ "
                                u"if not present yet.")
+    
+    def child_dn(key):
+        """Return child DN for ``key``.
+        """
+    
+    def search(queryFilter=None, criteria=None, relation=None,
+               attrlist=None, exact_match=False, or_search=False):
+        """Search the directors.
+
+        #All search criteria are additive and will be ``&``ed. ``queryFilter``
+        #and ``criteria`` further narrow down the search space defined by
+        #``self.search_filter``, ``self.search_criteria`` and
+        #``self.search_relation``.
+        
+        Returns a list of matching keys if ``attrlist`` is None, otherwise a
+        list of 2-tuples containing (key, attrdict).
+
+        queryFilter
+            ldap queryFilter, e.g. ``(objectClass=foo)``, as string or 
+            LDAPFilter instance.
+            
+        criteria
+            dictionary of attribute value(s) (string or list of string)
+            
+        relation
+            the nodes we search has a relation to us.  A relation is defined as
+            a string of attribute pairs:
+            ``<relation> = '<our_attr>:<child_attr>'``.
+            The value of these attributes must match for relation to match.
+            Multiple pairs can be or-joined with
+            
+        attrlist
+            Normally a list of keys is returned. By defining attrlist the
+            return format will be ``[(key, {attr1: [value1, ...]}), ...]``. To
+            get this format without any attributs, i.e. empty dicts in the
+            tuples, specify an empty attrlist. In addition to the normal ldap
+            attributes you can also the request the DN to be included.
+            
+        exact_match
+            raise ValueError if not one match, return format is a single key or
+            tuple, if attrlist is specified.
+        """
