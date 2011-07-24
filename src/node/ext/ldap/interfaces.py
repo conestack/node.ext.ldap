@@ -49,8 +49,6 @@ class ILDAPPrincipalsConfig(Interface):
     """
 
     baseDN = Attribute(u"Principals base DN")
-    
-    newDN = Attribute(u"??? never used. what was this supposed for?")
 
     attrmap = Attribute(u"Principals Attribute map as ``odict.odict``")
 
@@ -146,4 +144,7 @@ class ILDAPStorage(IStorage):
         exact_match
             raise ValueError if not one match, return format is a single key or
             tuple, if attrlist is specified.
+        
+        or_search
+            flag whether criteria should be ORer or ANDed. defaults to False.
         """

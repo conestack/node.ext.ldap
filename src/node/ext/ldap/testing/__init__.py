@@ -15,6 +15,7 @@ from node.ext.ldap.ugm import (
     GroupsConfig,
     )
 
+
 SCHEMA = os.environ.get('SCHEMA')
 try:
     SLAPDBIN = os.environ['SLAPD_BIN']
@@ -26,8 +27,10 @@ except KeyError:                                            #pragma NO COVERAGE
         u"Environment variables SLAPD_BIN, SLAPD_URIS, "    #pragma NO COVERAGE
         u"LDAP_ADD_BIN, LDAP_DELETE_BIN needed.")           #pragma NO COVERAGE
 
+
 def resource(string):
     return resource_filename(__name__, string)
+
 
 def read_env(layer):
     if layer.get('confdir', None) is not None:
@@ -46,6 +49,7 @@ def read_env(layer):
     layer['bindpw'] = "secret"
     print tmpdir
 
+
 slapdconf_template = """\
 %(schema)s
 
@@ -61,9 +65,11 @@ directory	%(dbdir)s
 index	objectClass	eq
 """
 
+
 class SlapdConf(Layer):
     """generate slapd.conf
     """
+    
     def __init__(self, schema):
         """
         ``schema``: List of paths to our schema files
@@ -104,6 +110,7 @@ class SlapdConf(Layer):
         shutil.rmtree(self['confdir'])
         print "SlapdConf torn down."
 
+
 schema = (
     resource('schema/core.schema'),
     resource('schema/cosine.schema'),
@@ -111,10 +118,12 @@ schema = (
     resource('schema/nis.schema'),
     resource('schema/samba.schema'),
     )
+
 SLAPD_CONF = SlapdConf(schema)
 
+
 class LDAPLayer(Layer):
-    """Base class for ldap layers to _subclass_ from
+    """Base class for ldap layers to _subclass_ from.
     """
     defaultBases = (SLAPD_CONF,)
 
@@ -122,9 +131,11 @@ class LDAPLayer(Layer):
         super(LDAPLayer, self).__init__(**kws)
         self['uris'] = uris
 
+
 class Slapd(LDAPLayer):
-    """Start/Stop an LDAP Server
+    """Start/Stop an LDAP Server.
     """
+    
     def __init__(self, slapdbin=SLAPDBIN, **kws):
         super(Slapd, self).__init__(**kws)
         self.slapdbin = slapdbin
@@ -164,7 +175,9 @@ class Slapd(LDAPLayer):
             os.remove('%s/%s' % (self['dbdir'], file))
         print "done."
 
+
 SLAPD = Slapd()
+
 
 class Ldif(LDAPLayer):
     """Adds/removes ldif data to/from a server
@@ -217,16 +230,18 @@ class Ldif(LDAPLayer):
             if key in self:
                 del self[key]
 
+
 # testing ldap props
 user = 'cn=Manager,dc=my-domain,dc=com'
 pwd = 'secret'
-# old: props = LDAPProps('127.0.0.1', 12345, user, pwd, cache=False)
+
+
 props = LDAPProps(
     uri='ldap://127.0.0.1:12345/',
     user=user,
     password=pwd,
-    cache=False,
-    )
+    cache=False)
+
 
 # base users config
 ucfg = UsersConfig(
@@ -240,72 +255,55 @@ ucfg = UsersConfig(
         },
     scope=SUBTREE,
     queryFilter='(objectClass=person)',
-    objectClasses=['person'],
-    )
+    objectClasses=['person'])
+
+
+# inetOrgPerson r/w attrs
+inetOrgPerson_attrmap = {
+    'id': 'uid',
+    'login': 'uid',
+    'cn': 'cn',
+    'rdn': 'uid',
+    'sn': 'sn',
+    'mail': 'mail',
+},
+
 
 # users config for 300-users data.
 ucfg300 = UsersConfig(
     baseDN='ou=users300,dc=my-domain,dc=com',
-    attrmap={
-        'id': 'uid',
-        'login': 'uid',
-        'cn': 'cn',
-        'rdn': 'uid',
-        'sn': 'sn',
-        'mail': 'mail',
-        },
+    attrmap=inetOrgPerson_attrmap,
     scope=ONELEVEL,
     queryFilter='(objectClass=inetOrgPerson)',
-    objectClasses=['inetOrgPerson'],
-    )
+    objectClasses=['inetOrgPerson'])
+
 
 # users config for 700-users data.
 ucfg700 = UsersConfig(
     baseDN='ou=users700,dc=my-domain,dc=com',
-    attrmap={
-        'id': 'uid',
-        'login': 'uid',
-        'cn': 'cn',
-        'rdn': 'uid',
-        'sn': 'sn',
-        'mail': 'mail',
-        },
+    attrmap=inetOrgPerson_attrmap,
     scope=ONELEVEL,
     queryFilter='(objectClass=inetOrgPerson)',
-    objectClasses=['inetOrgPerson'],
-    )
+    objectClasses=['inetOrgPerson'])
+
 
 # users config for 1000-users data.
 ucfg1000 = UsersConfig(
     baseDN='ou=users1000,dc=my-domain,dc=com',
-    attrmap={
-        'id': 'uid',
-        'login': 'uid',
-        'cn': 'cn',
-        'rdn': 'uid',
-        'sn': 'sn',
-        'mail': 'mail',
-        },
+    attrmap=inetOrgPerson_attrmap,
     scope=ONELEVEL,
     queryFilter='(objectClass=inetOrgPerson)',
-    objectClasses=['inetOrgPerson'],
-    )
+    objectClasses=['inetOrgPerson'])
+
 
 # users config for 2000-users data.
 ucfg2000 = UsersConfig(
     baseDN='ou=users2000,dc=my-domain,dc=com',
-    attrmap={
-        'id': 'uid',
-        'login': 'uid',
-        'cn': 'cn',
-        'rdn': 'uid',
-        'sn': 'sn',
-        'mail': 'mail',
-        },
+    attrmap=inetOrgPerson_attrmap,
     scope=ONELEVEL,
     queryFilter='(objectClass=inetOrgPerson)',
-    objectClasses=['inetOrgPerson'],
-    )
+    objectClasses=['inetOrgPerson'])
+
 
 # base groups config
 #gcfg_openldap = GroupsConfig(
@@ -316,442 +314,377 @@ ucfg2000 = UsersConfig(
 #        member_relation='member:dn',
 #        )
 
-# old ones used by current node.ext.ldap tests - 2010-11-09
+
 LDIF_data = Ldif(
     resource('ldifs/data.ldif'),
     name='LDIF_data',
-    ucfg=ucfg,
-    )
+    ucfg=ucfg)
+
+
 LDIF_principals = Ldif(
     resource('ldifs/principals.ldif'),
     bases=(LDIF_data,),
     name='LDIF_principals',
-    ucfg=ucfg,
-    )
+    ucfg=ucfg)
+
 
 LDIF_data_old_props = Ldif(
     resource('ldifs/data.ldif'),
     name='LDIF_data',
-    ucfg=ucfg,
-    )
+    ucfg=ucfg)
+
+
 LDIF_principals_old_props = Ldif(
     resource('ldifs/principals.ldif'),
     bases=(LDIF_data,),
     name='LDIF_principals',
-    ucfg=ucfg,
-    )
+    ucfg=ucfg)
+
 
 # new ones
 LDIF_base = Ldif(
     resource('ldifs/base.ldif'),
-    name="LDIF_base",
-    )
+    name="LDIF_base")
+
+
 LDIF_users300 = Ldif(
     resource('ldifs/users300.ldif'),
     bases=(LDIF_base,),
     name="LDIF_users300",
-    ucfg=ucfg300,
-    )
+    ucfg=ucfg300)
+
+
 LDIF_users700 = Ldif(
     resource('ldifs/users700.ldif'),
     bases=(LDIF_base,),
     name="LDIF_users700",
-    ucfg=ucfg700,
-    )
+    ucfg=ucfg700)
+
+
 LDIF_users1000 = Ldif(
     resource('ldifs/users1000.ldif'),
     bases=(LDIF_base,),
     name="LDIF_users1000",
-    ucfg=ucfg1000,
-    )
+    ucfg=ucfg1000)
+
+
 LDIF_users2000 = Ldif(
     resource('ldifs/users2000.ldif'),
     bases=(LDIF_base,),
     name="LDIF_users2000",
-    ucfg=ucfg2000,
-    )
+    ucfg=ucfg2000)
+
 
 # Users and groups
+
+groupOfNamesUcfgAttrmap = {
+    'id': 'uid',
+    'login': 'cn',
+    'rdn': 'uid',
+    'cn': 'cn',
+    'sn': 'sn',
+    'mail': 'mail',
+}
+
+
+groupOfNamesGcfgAttrmap = {
+    'id': 'cn',
+    'rdn': 'cn',
+    'businessCategory': 'businessCategory',
+}
+
+
 LDIF_groupOfNames = Ldif(
     resource('ldifs/groupOfNames.ldif'),
     bases=(LDIF_base,),
     name="LDIF_groupOfNames",
     ucfg=UsersConfig(
         baseDN='ou=users,ou=groupOfNames,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'uid',
-            'login': 'cn',
-            'rdn': 'uid',
-            'cn': 'cn',
-            'sn': 'sn',
-            'mail': 'mail',
-            },
+        attrmap=groupOfNamesUcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
         objectClasses=['person', 'inetOrgPerson'],
         ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'cn',
-            'rdn': 'cn',
-            'businessCategory': 'businessCategory',
-            },
+        attrmap=groupOfNamesGcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=groupOfNames)',
         objectClasses=['groupOfNames'],
         ),
     )
+
+
 LDIF_groupOfNames_add = Ldif(
     resource('ldifs/groupOfNames_add.ldif'),
     bases=(LDIF_groupOfNames,),
     name="LDIF_groupOfNames_add",
     ucfg=UsersConfig(
         baseDN='ou=users,ou=groupOfNames,dc=my-domain,dc=com',
-        newDN='ou=add,ou=users,ou=groupOfNames,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'uid',
-            'login': 'cn',
-            'rdn': 'uid',
-            'cn': 'cn',
-            'sn': 'sn',
-            },
+        attrmap=groupOfNamesUcfgAttrmap,
         scope=SUBTREE,
         queryFilter='(objectClass=inetOrgPerson)',
         objectClasses=['person', 'inetOrgPerson'],
         ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
-        newDN='ou=add,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'cn',
-            'rdn': 'cn',
-            'businessCategory': 'businessCategory',
-            },
+        attrmap=groupOfNamesGcfgAttrmap,
         scope=SUBTREE,
         queryFilter='(objectClass=groupOfNames)',
         objectClasses=['groupOfNames'],
         ),
     )
+
+
 LDIF_groupOfNames_10_10 = Ldif(
     resource('ldifs/groupOfNames_10_10.ldif'),
     bases=(LDIF_base,),
     name="LDIF_groupOfNames_10_10",
     ucfg=UsersConfig(
         baseDN='ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'uid',
-            'login': 'uid',
-            'rdn': 'uid',
-            'cn': 'cn',
-            'sn': 'sn',
-            'mail': 'mail',
-            },
+        attrmap=groupOfNamesUcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
         objectClasses=['inetOrgPerson'],
         ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_10_10,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'cn',
-            'rdn': 'cn',
-            'businessCategory': 'businessCategory',
-            },
+        attrmap=groupOfNamesGcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=groupOfNames)',
         objectClasses=['groupOfNames'],
         ),
     )
+
+
 LDIF_groupOfNames_100_100 = Ldif(
     resource('ldifs/groupOfNames_100_100.ldif'),
     bases=(LDIF_base,),
     name="LDIF_groupOfNames_100_100",
     ucfg=UsersConfig(
         baseDN='ou=users,ou=groupOfNames_100_100,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'uid',
-            'login': 'cn',
-            'rdn': 'uid',
-            'cn': 'cn',
-            'sn': 'sn',
-            },
+        attrmap=groupOfNamesUcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
         objectClasses=['person', 'inetOrgPerson'],
         ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_100_100,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'cn',
-            'rdn': 'cn',
-            'businessCategory': 'businessCategory',
-            },
+        attrmap=groupOfNamesGcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=groupOfNames)',
         objectClasses=['groupOfNames'],
         ),
     )
+
+
 LDIF_groupOfNames_100_100_add = Ldif(
     resource('ldifs/groupOfNames_100_100_add.ldif'),
     bases=(LDIF_groupOfNames_100_100,),
     name="LDIF_groupOfNames_100_100_add",
     ucfg=UsersConfig(
         baseDN='ou=users,ou=groupOfNames_100_100,dc=my-domain,dc=com',
-        newDN='ou=add,ou=users,ou=groupOfNames_100_100,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'uid',
-            'login': 'cn',
-            'rdn': 'uid',
-            'cn': 'cn',
-            'sn': 'sn',
-            },
+        attrmap=groupOfNamesUcfgAttrmap,
         scope=SUBTREE,
         queryFilter='(objectClass=inetOrgPerson)',
         objectClasses=['person', 'inetOrgPerson'],
         ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_100_100,dc=my-domain,dc=com',
-        newDN='ou=add,ou=groups,ou=groupOfNames_100_100,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'cn',
-            'rdn': 'cn',
-            'businessCategory': 'businessCategory',
-            },
+        attrmap=groupOfNamesGcfgAttrmap,
         scope=SUBTREE,
         queryFilter='(objectClass=groupOfNames)',
         objectClasses=['groupOfNames'],
         ),
     )
+
+
 LDIF_groupOfNames_300_300 = Ldif(
     resource('ldifs/groupOfNames_300_300.ldif'),
     bases=(LDIF_base,),
     name="LDIF_groupOfNames_300_300",
     ucfg=UsersConfig(
         baseDN='ou=users,ou=groupOfNames_300_300,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'uid',
-            'login': 'cn',
-            'rdn': 'uid',
-            'cn': 'cn',
-            'sn': 'sn',
-            },
+        attrmap=groupOfNamesUcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
         objectClasses=['person', 'inetOrgPerson'],
         ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_300_300,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'cn',
-            'rdn': 'cn',
-            'businessCategory': 'businessCategory',
-            },
+        attrmap=groupOfNamesGcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=groupOfNames)',
         objectClasses=['groupOfNames'],
         ),
     )
+
+
 LDIF_groupOfNames_300_300_add = Ldif(
     resource('ldifs/groupOfNames_300_300_add.ldif'),
     bases=(LDIF_groupOfNames_300_300,),
     name="LDIF_groupOfNames_300_300_add",
     ucfg=UsersConfig(
         baseDN='ou=users,ou=groupOfNames_300_300,dc=my-domain,dc=com',
-        newDN='ou=add,ou=users,ou=groupOfNames_300_300,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'uid',
-            'login': 'cn',
-            'rdn': 'uid',
-            'cn': 'cn',
-            'sn': 'sn',
-            },
+        attrmap=groupOfNamesUcfgAttrmap,
         scope=SUBTREE,
         queryFilter='(objectClass=inetOrgPerson)',
         objectClasses=['person', 'inetOrgPerson'],
         ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_300_300,dc=my-domain,dc=com',
-        newDN='ou=add,ou=groups,ou=groupOfNames_300_300,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'cn',
-            'rdn': 'cn',
-            'businessCategory': 'businessCategory',
-            },
+        attrmap=groupOfNamesGcfgAttrmap,
         scope=SUBTREE,
         queryFilter='(objectClass=groupOfNames)',
         objectClasses=['groupOfNames'],
         ),
     )
+
+
 LDIF_groupOfNames_700_700 = Ldif(
     resource('ldifs/groupOfNames_700_700.ldif'),
     bases=(LDIF_base,),
     name="LDIF_groupOfNames_700_700",
     ucfg=UsersConfig(
         baseDN='ou=users,ou=groupOfNames_700_700,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'uid',
-            'login': 'cn',
-            'rdn': 'uid',
-            'cn': 'cn',
-            'sn': 'sn',
-            },
+        attrmap=groupOfNamesUcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
         objectClasses=['person', 'inetOrgPerson'],
         ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_700_700,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'cn',
-            'rdn': 'cn',
-            'businessCategory': 'businessCategory',
-            },
+        attrmap=groupOfNamesGcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=groupOfNames)',
         objectClasses=['groupOfNames'],
         ),
     )
+
+
 LDIF_groupOfNames_700_700_add = Ldif(
     resource('ldifs/groupOfNames_700_700_add.ldif'),
     bases=(LDIF_groupOfNames_700_700,),
     name="LDIF_groupOfNames_700_700_add",
     ucfg=UsersConfig(
         baseDN='ou=users,ou=groupOfNames_700_700,dc=my-domain,dc=com',
-        newDN='ou=add,ou=users,ou=groupOfNames_700_700,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'uid',
-            'login': 'cn',
-            'rdn': 'uid',
-            'cn': 'cn',
-            'sn': 'sn',
-            },
+        attrmap=groupOfNamesUcfgAttrmap,
         scope=SUBTREE,
         queryFilter='(objectClass=inetOrgPerson)',
         objectClasses=['person', 'inetOrgPerson'],
         ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_700_700,dc=my-domain,dc=com',
-        newDN='ou=add,ou=groups,ou=groupOfNames_700_700,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'cn',
-            'rdn': 'cn',
-            'businessCategory': 'businessCategory',
-            },
+        attrmap=groupOfNamesGcfgAttrmap,
         scope=SUBTREE,
         queryFilter='(objectClass=groupOfNames)',
         objectClasses=['groupOfNames'],
         ),
     )
+
+
 LDIF_groupOfNames_1000_1000 = Ldif(
     resource('ldifs/groupOfNames_1000_1000.ldif'),
     bases=(LDIF_base,),
     name="LDIF_groupOfNames_1000_1000",
     ucfg=UsersConfig(
         baseDN='ou=users,ou=groupOfNames_1000_1000,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'uid',
-            'login': 'cn',
-            'rdn': 'uid',
-            'cn': 'cn',
-            'sn': 'sn',
-            },
+        attrmap=groupOfNamesUcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
         objectClasses=['person', 'inetOrgPerson'],
         ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_1000_1000,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'cn',
-            'rdn': 'cn',
-            'businessCategory': 'businessCategory',
-            },
+        attrmap=groupOfNamesGcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=groupOfNames)',
         objectClasses=['groupOfNames'],
         ),
     )
+
+
 LDIF_groupOfNames_1000_1000_add = Ldif(
     resource('ldifs/groupOfNames_1000_1000_add.ldif'),
     bases=(LDIF_groupOfNames_1000_1000,),
     name="LDIF_groupOfNames_1000_1000_add",
     ucfg=UsersConfig(
         baseDN='ou=users,ou=groupOfNames_1000_1000,dc=my-domain,dc=com',
-        newDN='ou=add,ou=users,ou=groupOfNames_1000_1000,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'uid',
-            'login': 'cn',
-            'rdn': 'uid',
-            'cn': 'cn',
-            'sn': 'sn',
-            },
+        attrmap=groupOfNamesUcfgAttrmap,
         scope=SUBTREE,
         queryFilter='(objectClass=inetOrgPerson)',
         objectClasses=['person', 'inetOrgPerson'],
         ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_1000_1000,dc=my-domain,dc=com',
-        newDN='ou=add,ou=groups,ou=groupOfNames_1000_1000,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'cn',
-            'rdn': 'cn',
-            'businessCategory': 'businessCategory',
-            },
+        attrmap=groupOfNamesGcfgAttrmap,
         scope=SUBTREE,
         queryFilter='(objectClass=groupOfNames)',
         objectClasses=['groupOfNames'],
         ),
     )
 
+
 # Users and groups (posix)
+
+posixGroupsUcfgAttrmap = {
+    'id': 'uid',
+    'login': 'cn',
+    'rdn': 'uid',
+    'cn': 'cn',
+    'uidNumber': 'uidNumber',
+    'gidNumber': 'gidNumber',
+    'homeDirectory': 'homeDirectory',
+}
+
+
+posixGroupsGcfgAttrmap = {
+    'id': 'cn',
+    'rdn': 'cn',
+    'gidNumber': 'gidNumber',
+}
+
+
 LDIF_posixGroups = Ldif(
     resource('ldifs/posixGroups.ldif'),
     bases=(LDIF_base,),
     name="LDIF_posixGroups",
     ucfg=UsersConfig(
         baseDN='ou=users,ou=posixGroups,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'uid',
-            'login': 'cn',
-            'rdn': 'uid',
-            'cn': 'cn',
-            'uidNumber': 'uidNumber',
-            'gidNumber': 'gidNumber',
-            'homeDirectory': 'homeDirectory',
-            },
+        attrmap=posixGroupsUcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=posixAccount)',
         objectClasses=['account', 'posixAccount'],
         ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=posixGroups,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'cn',
-            'rdn': 'cn',
-            'gidNumber': 'gidNumber',
-            },
+        attrmap=posixGroupsGcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=posixGroup)',
         objectClasses=['posixGroup'],
         ),
     )
 
-# Samba Users
+
+# users (samba)
+
+sambaUsersUcfgAttrmap = {
+    'id': 'uid',
+    'login': 'uid',
+    'rdn': 'uid',
+    'sambaSID': 'sambaSID',
+    'sambaNTPassword': 'sambaNTPassword',
+    'sambaLMPassword': 'sambaLMPassword',
+}
+
+
 LDIF_sambaUsers = Ldif(
     resource('ldifs/sambaUsers.ldif'),
     bases=(LDIF_base,),
     name='LDIF_sambaUsers',
     ucfg=UsersConfig(
         baseDN='ou=sambaUsers,dc=my-domain,dc=com',
-        attrmap={
-            'id': 'uid',
-            'login': 'uid',
-            'rdn': 'uid',
-            'sambaSID': 'sambaSID',
-            'sambaNTPassword': 'sambaNTPassword',
-            'sambaLMPassword': 'sambaLMPassword',
-            },
+        attrmap=sambaUsersUcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=sambaSamAccount)',
         objectClasses=['sambaSamAccount'],

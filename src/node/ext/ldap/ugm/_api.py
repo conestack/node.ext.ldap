@@ -50,7 +50,6 @@ class PrincipalsConfig(object):
     
     def __init__(self,
             baseDN='',
-            newDN='',
             attrmap={},
             scope=ONELEVEL,
             queryFilter='',
@@ -60,7 +59,6 @@ class PrincipalsConfig(object):
             strict=True):
         self.baseDN = baseDN
         # XXX: never used. what was this supposed for?
-        self.newDN = newDN or baseDN
         self.attrmap = attrmap
         self.scope = scope
         self.queryFilter = queryFilter
@@ -407,11 +405,8 @@ class PrincipalsPart(Part):
         return unaliased_dct
 
     @default
-    def search(self, criteria=None, attrlist=None, exact_match=False,
-               or_search=False):
-        # XXX: stripped down for now, compare to LDAPNode.search
-        # XXX: are single values always lists in results?
-        #      is this what we want -> yes!
+    def search(self, criteria=None, attrlist=None,
+               exact_match=False, or_search=False):
         results = self.context.search(
             criteria=self._unalias_dict(criteria),
             attrlist=self._unalias_list(attrlist),
