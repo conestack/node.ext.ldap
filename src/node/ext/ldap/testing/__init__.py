@@ -197,7 +197,7 @@ class Ldif(LDAPLayer):
             cmd = [self.ldapaddbin, '-f', ldif, '-x', '-D', self['binddn'], '-w',
                    self['bindpw'], '-c', '-a', '-H', self['uris']]
             retcode = subprocess.call(cmd)
-            print "done."
+            print "done. %s" % retcode
 
     def tearDown(self):
         """remove previously added ldifs
@@ -212,7 +212,7 @@ class Ldif(LDAPLayer):
             cmd = [self.ldapdeletebin, '-x', '-D', self['binddn'], '-c', '-r',
                    '-w', self['bindpw'], '-H', self['uris']] + dns
             retcode = subprocess.call(cmd, stderr=subprocess.PIPE)
-            print "done."
+            print "done. %s" % retcode
         for key in ('ucfg', 'gcfg'):
             if key in self:
                 del self[key]

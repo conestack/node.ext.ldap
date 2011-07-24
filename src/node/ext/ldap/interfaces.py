@@ -133,8 +133,7 @@ class ILDAPStorage(IStorage):
             a string of attribute pairs:
             ``<relation> = '<our_attr>:<child_attr>'``.
             The value of these attributes must match for relation to match.
-            Multiple pairs can be or-joined with. ``self.search_relation`` is
-            considered as well if set. Multiple relation filters are ORed.
+            Multiple pairs can be or-joined with.
             
         attrlist
             Normally a list of keys is returned. By defining attrlist the

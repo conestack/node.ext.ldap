@@ -16,10 +16,10 @@ DOCFILES = [
     ('_node.txt', testing.LDIF_data),
     # XXX: schema later
     #('schema.txt', testing.LDIF_data),
-    ('ugm/ugm_principals.txt', testing.LDIF_principals),
-    ('ugm/ugm_groupOfNames.txt', testing.LDIF_groupOfNames),
-    ('ugm/ugm_posixGroups.txt', testing.LDIF_posixGroups),
-    ('ugm/ugm_sambaUsers.txt', testing.LDIF_sambaUsers),
+    ('ugm/principals.txt', testing.LDIF_principals),
+    ('ugm/groupOfNames.txt', testing.LDIF_groupOfNames),
+    ('ugm/posixGroups.txt', testing.LDIF_posixGroups),
+    ('ugm/sambaUsers.txt', testing.LDIF_sambaUsers),
 ]
 
 optionflags = \
