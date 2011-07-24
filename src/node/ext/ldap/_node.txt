@@ -44,12 +44,7 @@ The node has session::
     >>> root.ldap_session
     <node.ext.ldap.session.LDAPSession object at ...>
 
-Check child keys of root::
-
-    >>> root.keys()
-    [u'ou=customers']
-
-Check/modify attributes of root::
+Check and modify attributes of root::
 
     >>> root.attrs.items()
     [(u'objectClass', [u'top', u'dcObject', u'organization']),
@@ -78,6 +73,11 @@ Reset o::
 
     >>> root.attrs['o'] = 'my-organization'
     >>> root()
+
+Check child keys of root::
+
+    >>> root.keys()
+    [u'ou=customers']
 
 Access inexistent child::
 
@@ -112,12 +112,6 @@ Customers child keys::
     >>> customers.keys()
     [u'ou=customer1', u'ou=customer2', u'ou=n\xe4sty\\, customer']
 
-XXX: why is this a list???
-     maybe python-ldap bug or even openldap bug
-     also behaves this way when queried with LDAPCommunicator.search
-    >>> customers[u'ou=n\xe4sty\\, customer'].attrs['ou']
-    [u'n\xe4sty\\, customer', u'n\xe4sty, customer']
-
 Customer has not been changed::
 
     >>> customers.changed
@@ -129,12 +123,21 @@ Create new LDAPNode and add it to customers::
     >>> customer.attrs['ou'] = 'customer3'
     >>> customer.attrs['description'] = 'customer3'
     >>> customer.attrs['objectClass'] = ['top', 'organizationalUnit']
-    >>> customer.DN
-    u''
-    
+
+The already created node has not been attached to the tree, so rdn_attr is not
+known yet::
+
     >>> print customer.rdn_attr
     None
-    
+
+Also no DN and no LDAP session yet::
+
+    >>> customer.DN
+    u''
+
+    >>> customer.ldap_session is None
+    True
+
     >>> customer.attrs['ou']
     u'customer3'
     
@@ -143,11 +146,6 @@ Create new LDAPNode and add it to customers::
     
     >>> customer.keys()
     []
-
-There is not LDAP session set. Customer not part of tree yet::
-
-    >>> customer.ldap_session is None
-    True
 
 Tree has not changed yet::
 
@@ -163,6 +161,9 @@ Set already created customer::
     >>> customers['ou=customer3'] = customer
     >>> customer.DN
     u'ou=customer3,ou=customers,dc=my-domain,dc=com'
+    
+    >>> customer.rdn_attr
+    u'ou'
 
 Now it got the LDAP session which is used by the whole tree::
 
@@ -250,7 +251,7 @@ All nodes are flagged unchanged again::
         <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
 
-Add a person to test modification stuff::
+Add a person for more modification and changed flag tests::
 
     >>> person = LDAPNode()
     >>> person.attrs['objectClass'] = ['top', 'person']
@@ -273,11 +274,11 @@ Again, not in directory yet::
     >>> len(res)
     0
 
-Let's also change the container of the person::
+Change the container of the person::
 
     >>> customer.attrs['street'] = 'foo'
 
-And tell the person to commit its changes. The container (customer3) is still
+Tell the person to commit its changes. The container (customer3) is still
 changed because of its changed attributes::
 
     >>> person()
@@ -290,7 +291,7 @@ changed because of its changed attributes::
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
 
-Call the customer now, whole tree unchanged again::
+Call customer now, whole tree unchanged again::
 
     >>> customer()
     >>> root.printtree()
@@ -302,7 +303,7 @@ Call the customer now, whole tree unchanged again::
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
 
-Now we change the person and customer again, and discard the attribute change 
+Change the person and customer again, and discard the attribute change 
 of the customer. It must not delete the changed state of the whole tree, as the
 person is still changed::
 
@@ -327,7 +328,7 @@ person is still changed::
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - True>
 
-After calling person, the whole tree is unchanged again::
+After calling person, whole tree is unchanged again::
 
     >>> person()
     >>> root.printtree()
@@ -355,19 +356,19 @@ Check set child immediately after init time::
     [u'ou=customer1', u'ou=customer2', 
     u'ou=n\xe4sty\\, customer', u'ou=customer3', u'cn=child']
 
-Secondary keys and _child_dns.
+Secondary keys and child DN's.
 
-Setting the DN as seckey only seem to work because it is returned by LDAP
-search result and considered. Child DN's are always available at _child_dns
-
-XXX: discuss::
+Note: Setting the DN as seckey only seem to work because it is returned by LDAP
+search result and considered (XXX: discuss). Child DN's are always available 
+at _child_dns::
     
     >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
     >>> tmp._seckey_attrs = ('cn',)
     >>> tmp.keys()
     Traceback (most recent call last):
       ...
-    KeyError: u"Secondary key 'cn' missing on: ou=customer1,ou=customers,dc=my-domain,dc=com."
+    KeyError: u"Secondary key 'cn' missing on: 
+    ou=customer1,ou=customers,dc=my-domain,dc=com."
 
     >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
     >>> tmp._seckey_attrs = ('dn',)
@@ -376,6 +377,13 @@ XXX: discuss::
     u'ou=customer2', 
     u'ou=n\xe4sty\\, customer', 
     u'ou=customer3']
+    
+    >>> tmp._seckeys
+    {'dn': 
+    {u'ou=customer2,ou=customers,dc=my-domain,dc=com': u'ou=customer2', 
+    u'ou=customer1,ou=customers,dc=my-domain,dc=com': u'ou=customer1', 
+    u'ou=customer3,ou=customers,dc=my-domain,dc=com': u'ou=customer3', 
+    u'ou=n\xe4sty\\2C customer,ou=Customers,dc=My-Domain,dc=com': u'ou=n\xe4sty\\, customer'}}
     
     >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
     >>> tmp._seckey_attrs = ('description', 'businessCategory')
@@ -448,13 +456,15 @@ Changing the rdn attribute on loaded nodes fails.::
     >>> person()
     Traceback (most recent call last):
       ...
-    NAMING_VIOLATION: {'info': "value of naming attribute 'cn' is not present in entry", 'desc': 'Naming violation'}
+    NAMING_VIOLATION: {'info': "value of naming attribute 'cn' 
+    is not present in entry", 'desc': 'Naming violation'}
     
     >>> person.attrs.load()
     >>> person.attrs['cn']
     u'Max'
 
-Create Customer convenience query function. Need this more than once::
+More attributes modification tests. Create Customer convenience query function
+for later tests.::
 
     >>> def queryPersonDirectly():
     ...     res = customer.ldap_session.search('(objectClass=person)',
@@ -470,17 +480,18 @@ Create Customer convenience query function. Need this more than once::
        u'objectClass': [u'top', u'person'],
        u'sn': [u'Mustermann']})]
 
-Lets modify this person. First look at the flags::
+Modify this person. First look at the changed flags::
 
     >>> root.changed, customer.changed, person.changed
     (False, False, False)
   
-    >>> person._action
+    >>> print person._action
+    None
 
     >>> person.attrs.changed
     False
 
-Now modify::
+Modify and check flags again::
     
     >>> person.attrs['description'] = 'Another description'
     >>> person.attrs.changed
@@ -580,7 +591,14 @@ Check queryNode with nästy dn. (see node.__repr__)::
 
     >>> node = queryNode(props, \
     ...     r'ou=nästy\, customer,ou=customers,dc=my-domain,dc=com')
-    >>> node.__name__
+    
+    XXX: why is this a list???
+         maybe python-ldap bug or even openldap bug
+         also behaves this way when queried with ``LDAPCommunicator.search``
+    >>> node.attrs['ou']
+    [u'n\xe4sty\\, customer', u'n\xe4sty, customer']
+    
+    >>> node.name
     u'ou=n\xe4sty\\, customer'
     
     >>> node
@@ -713,6 +731,11 @@ node gets created then and attrs are set from original node.
     
     >>> del customer['cn=from_other']
     >>> customer()
+
+Test invaliation::
+
+############
+    XXX
 
 Test search function::
 

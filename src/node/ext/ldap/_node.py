@@ -490,6 +490,10 @@ class LDAPStorage(OdictStorage):
                 res.append(key)
         return res
     
+    @default
+    def invalidate(self, key=None):
+        pass
+    
     #@finalize
     #def sort(self, cmp=None, key=None, reverse=False):
     #    # XXX: a sort working only on the keys could work without wakeup -->
