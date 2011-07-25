@@ -34,6 +34,7 @@ setup(name='node.ext.ldap',
           'python-ldap',
           'smbpasswd',
           'bda.cache',
+          'bda.basen',
           'node.ext.ugm',
       ],
       extras_require={
