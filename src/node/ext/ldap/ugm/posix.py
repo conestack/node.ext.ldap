@@ -51,4 +51,6 @@ def loginShell(node, id):
 
 
 def memberUid(node, id):
-    return ['nobody']
+    # XXX: not tested right now. this changes as soon as the groups __setitem__
+    #      plumbing hook is gone
+    return ['nobody']                                       #pragma NO COVERAGE

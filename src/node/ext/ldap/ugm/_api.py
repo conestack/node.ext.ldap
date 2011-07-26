@@ -532,8 +532,12 @@ class GroupsPart(PrincipalsPart, BaseGroupsPart):
     def __setitem__(_next, self, key, vessel):
         # XXX: kick this, dummy member should be created by default value
         #      callback
-        vessel.attrs.setdefault(
-            self._member_attribute, []).insert(0, 'cn=nobody')
+        if self._member_format is FORMAT_UID:
+            vessel.attrs.setdefault(
+                self._member_attribute, []).insert(0, 'nobody')
+        else:
+            vessel.attrs.setdefault(
+                self._member_attribute, []).insert(0, 'cn=nobody')
         _next(self, key, vessel)
 
 

@@ -20,6 +20,7 @@ DOCFILES = [
     ('ugm/groupOfNames.txt', testing.LDIF_groupOfNames),
     ('ugm/posixGroups.txt', testing.LDIF_posixGroups),
     ('ugm/sambaUsers.txt', testing.LDIF_sambaUsers),
+    ('ugm/defaults.txt', testing.LDIF_data),
 ]
 
 optionflags = \
