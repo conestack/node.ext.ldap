@@ -58,7 +58,7 @@ class PrincipalsConfig(object):
             scope=ONELEVEL,
             queryFilter='',
             objectClasses=[],
-            member_relation='',
+            #member_relation='',
             defaults={},
             strict=True):
         self.baseDN = baseDN
@@ -66,7 +66,7 @@ class PrincipalsConfig(object):
         self.scope = scope
         self.queryFilter = queryFilter
         self.objectClasses = objectClasses
-        self.member_relation = member_relation
+        #self.member_relation = member_relation
         self.defaults = defaults
         self.strict = strict
 
@@ -91,9 +91,6 @@ class PrincipalAliasedAttributes(AliasedNodespace):
     def changed(self):
         return self.context.changed
 
-    def __call__(self):
-        self.context()
-
 
 class PrincipalPart(Part):
     
@@ -104,8 +101,6 @@ class PrincipalPart(Part):
     
     @default
     def principal_attributes_factory(self, name=None, parent=None):
-        if self.attraliaser is None:
-            return self.context.attrs
         aliased_attrs = PrincipalAliasedAttributes(self.context.attrs,
                                                    self.attraliaser)
         return aliased_attrs
@@ -126,6 +121,11 @@ class PrincipalPart(Part):
         return self.parent.parent.roles(self)
     
     @default
+    @property
+    def changed(self):
+        return self.context.changed
+    
+    @default
     def __call__(self):
         self.context()
 
@@ -142,8 +142,6 @@ class UserPart(PrincipalPart, BaseUserPart):
             criteria = { attribute: self.context.DN }
         elif format == FORMAT_UID:
             criteria = { attribute: self.context.attrs['uid'] }
-        else:
-            raise Exception(u"Unknow group format")
         res = groups.context.search(criteria=criteria)
         ret = list()
         for id in res:
@@ -233,7 +231,6 @@ class GroupPart(PrincipalPart, BaseGroupPart):
             return [self.parent.parent.users.idbydn(dn) for dn in members]
         if self._member_format == FORMAT_UID:
             return members
-        raise Exception(u"Unknown member value format.")
     
     @default
     @property
@@ -279,8 +276,8 @@ class PrincipalsPart(Part):
         context._key_attr = cfg.attrmap['id']
         context._rdn_attr = cfg.attrmap['rdn']
         
-        if cfg.member_relation:
-            context.search_relation = cfg.member_relation
+        #if cfg.member_relation:
+        #    context.search_relation = cfg.member_relation
         
         context._seckey_attrs = ('dn',)
         if cfg.attrmap.get('login') \
@@ -328,7 +325,6 @@ class PrincipalsPart(Part):
     @extend
     @property
     def ids(self):
-        # XXX: do we really need this?
         return self.context.keys()
 
     @default
@@ -372,15 +368,21 @@ class PrincipalsPart(Part):
         self.context[name] = nextvessel
     
     @default
+    @property
+    def changed(self):
+        return self.context.changed
+    
+    @default
     def __call__(self):
         self.context()
 
     @default
     def _alias_dict(self, dct):
-        if dct is None:
-            return None
+        # XXX: seem to be not reached at all
+        #if dct is None:
+        #    return None
         
-        # this code does not work if multiple keys map to same value
+        # XXX: this code does not work if multiple keys map to same value
         #alias = self.principal_attraliaser.alias
         #aliased_dct = dict(
         #    [(alias(key), val) for key, val in dct.iteritems()])
@@ -526,6 +528,8 @@ class GroupsPart(PrincipalsPart, BaseGroupsPart):
     
     @plumb
     def __setitem__(_next, self, key, vessel):
+        # XXX: kick this, dummy member should be created by default value
+        #      callback
         vessel.attrs.setdefault(
             self._member_attribute, []).insert(0, 'cn=nobody')
         _next(self, key, vessel)

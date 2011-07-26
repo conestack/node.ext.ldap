@@ -56,8 +56,9 @@ class ILDAPPrincipalsConfig(Interface):
 
     queryFilter = Attribute(u"Search Query filter for principals")
 
-    member_relation = Attribute(u"Optional member relation to be used to speed "
-                                u"up groups search, i.e. 'uid:memberUid'")
+    # XXX
+    #member_relation = Attribute(u"Optional member relation to be used to speed "
+    #                            u"up groups search, i.e. 'uid:memberUid'")
     
     objectClasses = Attribute(u"Object classes for new principals.")
     

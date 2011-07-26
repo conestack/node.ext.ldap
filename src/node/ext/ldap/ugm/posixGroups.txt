@@ -371,8 +371,7 @@ Role Management is not implemented yet::
       ...
     NotImplementedError: not yet
 
-Test search function
-XXX: propably we need other search result formatting::
+Test search function::
 
     >>> users.search(criteria={'login': 'cn0'})
     [u'uid0']
@@ -380,9 +379,7 @@ XXX: propably we need other search result formatting::
     >>> groups.search(criteria={'id': 'group2'})
     [u'group2']
 
-There's an ids property on Proncipals object, which users and groups objects
-base on.
-XXX: do we want to keep?::
+There's an ids property on principals base class::
 
     >>> users.ids
     [u'uid0', u'uid1', u'uid2', u'sepp']

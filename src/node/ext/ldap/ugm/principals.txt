@@ -1,17 +1,24 @@
 # -*- coding: utf-8 -*-
 
-Get an LDAPUsers node and configure it. In addition to the key attribute, the
+Create a LDAPUsers node and configure it. In addition to the key attribute, the
 login attribute also needs to be unique, which will be checked upon calling
 ids() the first time::
 
-    >>> from node.ext.ldap.properties import LDAPProps
     >>> from node.ext.ldap.ugm import Users, UsersConfig
     >>> from node.ext.ldap import SUBTREE
 
     >>> from node.ext.ldap.testing import props, ucfg
+    >>> ucfg.attrmap
+    {'telephoneNumber': 'telephoneNumber', 
+    'login': 'description', 
+    'rdn': 'ou', 
+    'id': 'sn', 
+    'sn': 'sn'}
+
     >>> users = Users(props, ucfg)
 
-Query all user ids. ``description`` is missing on some::
+Query all user ids. ``description`` is set as login attribute and is missing
+on some::
 
     >>> users.ids
     Traceback (most recent call last):
@@ -19,7 +26,8 @@ Query all user ids. ``description`` is missing on some::
     KeyError:
       u"Secondary key 'description' missing on: cn=user1,dc=my-domain,dc=com."
 
-Query all user ids. ``telephoneNumber`` is not unique::
+Query all user ids. Set ``telephoneNumber`` as login attribute, which is not
+unique::
 
     >>> ucfg.attrmap['login'] = 'telephoneNumber'
     >>> users = Users(props, ucfg)
@@ -28,45 +36,44 @@ Query all user ids. ``telephoneNumber`` is not unique::
     ...
     KeyError: u"Secondary key not unique: telephoneNumber='1234'."
 
-Query all user ids. ``cn`` finally in this case is unique and therefore
-suitable as login attr::
+Query all user ids. Set ``cn`` as login attribute. In this case, values are
+unique and therefore suitable as login attr::
 
     >>> ucfg.attrmap['login'] = 'cn'
     >>> users = Users(props, ucfg)
     >>> users.ids
     [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
 
-Query a user by id (utf-8 or unicode)::
+Principals idbydn::
+
+    >>> users.idbydn('cn=user3,ou=customers,dc=my-domain,dc=com')
+    u'Schmidt'
+    
+    >>> users.idbydn('cN=user3, ou=customers,dc=MY-domain,dc= com')
+    u'Schmidt'
+    
+    >>> users.idbydn('cN=inexistent, ou=customers,dc=MY-domain,dc= com')
+    Traceback (most recent call last):
+      ...
+    KeyError: 'cN=inexistent, ou=customers,dc=MY-domain,dc= com'
+
+Get a user by id (utf-8 or unicode)::
 
     >>> mueller = users['Müller']
     >>> mueller
     <User object 'M?ller' at ...>
-    
-    >>> mueller.context
-    <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
 
-XXX: No caching of factored objects yet::
+XXX: At the moment th principal is created each time it is accessed.::
 
     >>> mueller is users['Müller']
     False
 
+The real LDAP node is on ``context``::
 
-########
-XXX: maybe later
+    >>> mueller.context
+    <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
 
-Find a user by login::
-
-    >> users.idbylogin(mueller.login) == mueller.id
-    True
-
-Using idbylogin before calling .ids() works - was a bug::
-
-    >> users2 = LDAPUsers(props, ucfg)
-    >> users2.idbylogin(mueller.login) == mueller.id
-    True
-########
-
-The '?' is just __repr__ going to ascii, the id is in proper unicode::
+The '?' is just ``__repr__`` going to ascii, the id is in proper unicode::
 
     >>> mueller.id
     u'M\xfcller'
@@ -143,31 +150,33 @@ id is returned if sucessful, otherwise None::
     >>> users.authenticate(id=mueller.id, pw='newer')
     u'M\xfcller'
 
-Add a user::
+Create new User. Provide some user defaults in user configuration. A default
+is either the desired value or a callback accepting the principals node and the
+id and returns the desired value.::
 
     >>> from node.ext.ldap import ONELEVEL
-    >>> def telephoneNumberDefault(container, key):
+    >>> def telephoneNumberDefault(node, id):
     ...     # default value callback function
     ...     return '123'
     
-    >>> adducfg = UsersConfig(
-    ...         baseDN='ou=customers,dc=my-domain,dc=com',
-    ...         attrmap={
-    ...             'id': 'sn',
-    ...             'login': 'cn',
-    ...             'rdn': 'cn',
-    ...             'telephoneNumber': 'telephoneNumber',
-    ...             'sn': 'sn',
-    ...             },
-    ...         scope=ONELEVEL,
-    ...         queryFilter='(objectClass=person)',
-    ...         objectClasses=['top', 'person'],
-    ...         defaults={
-    ...             'sn': 'Surname',
-    ...             'telephoneNumber': telephoneNumberDefault,
-    ...             },
-    ...         )
-    >>> users = Users(props, adducfg)
+    >>> add_ucfg = UsersConfig(
+    ...     baseDN='ou=customers,dc=my-domain,dc=com',
+    ...     attrmap={
+    ...         'id': 'sn',
+    ...         'login': 'cn',
+    ...         'rdn': 'cn',
+    ...         'telephoneNumber': 'telephoneNumber',
+    ...         'sn': 'sn',
+    ...      },
+    ...     scope=ONELEVEL,
+    ...     queryFilter='(objectClass=person)',
+    ...     objectClasses=['top', 'person'],
+    ...     defaults={
+    ...         'sn': 'Surname',
+    ...         'telephoneNumber': telephoneNumberDefault,
+    ...     },
+    ... )
+    >>> users = Users(props, add_ucfg)
 
     >>> users.ids
     [u'M\xfcller', u'Schmidt', u'Umhauer']
@@ -186,6 +195,23 @@ Add a user::
     >>> newuser = users['newid']
     >>> newuser.context
     <cn=newcn,ou=customers,dc=my-domain,dc=com:newid - True>
+
+Create function uses __setitem__ for adding new members. You can use this as
+well, but create is propably the better choice. Test egde cases::
+
+    >>> from node.base import BaseNode
+    >>> node = BaseNode()
+    >>> users['foo'] = node
+    Traceback (most recent call last):
+      ...
+    ValueError: no attributes found, cannot convert.
+    
+    >>> from node.base import AttributedNode
+    >>> node = AttributedNode()
+    >>> users['newid'] = node
+    Traceback (most recent call last):
+      ...
+    KeyError: u"Key already exists: 'newid'."
 
 # XXX: there need more attrs to show up::
 
@@ -215,7 +241,7 @@ Delete User::
     >>> del users['newid']
     >>> users.context()
 
-XXX: Review: Search users by criteria OR queryFilter. eg. person, top, foo::
+Search for users::
 
     >>> users = Users(props, ucfg)
     >>> schmidt = users['Schmidt']
@@ -225,102 +251,208 @@ XXX: Review: Search users by criteria OR queryFilter. eg. person, top, foo::
     >>> users.search()
     [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
 
-XXX: maybe later
-    >> users.search(queryFilter='(objectClass=person)')
-    [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
+    >>> users.search(attrlist=['login'])
+    [(u'Meier', {'login': [u'user1']}), 
+    (u'M\xfcller', {'login': [u'user2']}), 
+    (u'Schmidt', {'login': [u'user3']}), 
+    (u'Umhauer', {'login': [u'n\xe4sty, User']})]
+    
+    >>> users.search(criteria=dict(sn=schmidt.attrs['sn']), attrlist=['login'])
+    [(u'Schmidt', {'login': [u'user3']})]
 
-    >>> users.search(criteria=dict(sn=schmidt.attrs['sn']), exact_match=False)
-    [u'Schmidt']
+Only attributes defined in attrmap can be queried::
 
-XXX: this test is propably obsolete, due to non strict aliasing
-    >> users.search(criteria=dict(sn=schmidt.attrs['sn']), attrlist=['description'], exact_match=False)
+    >>> users.search(criteria=dict(sn=schmidt.attrs['sn']),
+    ...                            attrlist=['description'])
     Traceback (most recent call last):
     ...
     KeyError: 'description'
+    
+    >>> users.search(criteria=dict(sn=schmidt.attrs['sn']),
+    ...                            attrlist=['telephoneNumber'])
+    [(u'Schmidt', {'telephoneNumber': [u'1234']})]
 
-    >>> users.search(criteria=dict(sn=schmidt.attrs['sn']), attrlist=['login', 'telephoneNumber'], exact_match=False)
-    [(u'Schmidt', {'telephoneNumber': [u'1234'], 'login': [u'user3']})]
+    >>> from node.ext.ldap.filter import LDAPFilter
+    >>> filter = LDAPFilter('(objectClass=person)')
+    >>> filter |= LDAPFilter('(objectClass=some)')
+    
+    # normally set via principals config
+    >>> users.context.search_filter = filter
+    >>> users.search()
+    [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
+    
+    >>> filter = LDAPFilter('(objectClass=person)')
+    >>> filter &= LDAPFilter('(objectClass=some)')
+    
+    # normally set via principals config
+    >>> users.context.search_filter = filter
+    >>> users.search()
+    []
+    
+    >>> users.context.search_filter = None
 
-#    >>> qFilter = LDAPFilter('(objectClass=person)')
-#    >>> qFilter |= LDAPFilter('(objectClass=some)')
-#    >>> users.search(queryFilter=qFilter, exact_match=False)
-#    [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
-#
-#    >>> cFilter = dict(sn=['meier','schmidt'])
-#    >>> users.search(criteria=cFilter, exact_match=False, or_search=False)
-#    []
-#
-#    >>> cFilter = dict(sn=['meier','schmidt'])
-#    >>> users.search(criteria=cFilter, exact_match=False, or_search=True)
-#    [u'Meier', u'Schmidt']
-#
-#    >>> users.search(queryFilter=qFilter, criteria=cFilter, exact_match=False, or_search=True)
-#    [u'Meier', u'Schmidt']
-#
-#    >>> from node.ext.ldap.filter import *
-#    >>> node = FooNode({'groupattr1': 'Member #1', 'groupattr2':'Member #2', 'groupattr3':'Member #3'})
-#    >>> rel_empty = LDAPRelationFilter(node, '')
-#    >>> rel_empty.__str__()
-#    ''
-#
-#    >>> rel_empty |= LDAPRelationFilter(node, 'groupattr1:member1')
-#    >>> rel_empty.__str__()
-#    ''
-#
-#    >>> rel_empty &= LDAPRelationFilter(node, 'groupattr1:member1')
-#    >>> rel_empty.__str__()
-#    '(member1=Member #1)'
-#
-#    >>> rel_single = LDAPRelationFilter(node, 'groupattr1:member1')
-#    >>> rel_single.__str__()
-#    '(member1=Member #1)'
-#
-#    >>> rel_double = LDAPRelationFilter(node, 'groupattr1:member1|groupattr2:member2')
-#    >>> rel_double.__str__()
-#    '(|(member1=Member #1)(member2=Member #2))'
-#
-#    >>> rel_double &= LDAPFilter('(objectClass=person)')
-#    >>> rel_double.__str__()
-#    '(&(|(member1=Member #1)(member2=Member #2))(objectClass=person))'
+The changed flag::
 
-XXX: tests that need to be moved to good locations
+    >>> users.changed
+    False
+    
+    >>> users.printtree()
+    <class 'node.ext.ldap.ugm._api.Users'>: None
+      <class 'node.ext.ldap.ugm._api.User'>: Meier
+      <class 'node.ext.ldap.ugm._api.User'>: M?ller
+      <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+      <class 'node.ext.ldap.ugm._api.User'>: Umhauer
+    
+    >>> users.context.printtree()
+    <dc=my-domain,dc=com - False>
+      <cn=user1,dc=my-domain,dc=com:Meier - False>
+      <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
+      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
+      <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>
+    
+    >>> users['Meier'].attrs['telephoneNumber'] = '12345'
+    >>> users['Meier'].attrs.changed
+    True
+    
+    >>> users['Meier'].changed
+    True
+    
+    >>> users.changed
+    True
+    
+    >>> users.context.printtree()
+    <dc=my-domain,dc=com - True>
+      <cn=user1,dc=my-domain,dc=com:Meier - True>
+      <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
+      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
+      <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>
+    
+    >>> users['Meier'].attrs.context.load()
+    >>> users['Meier'].attrs.changed
+    False
+    
+    >>> users['Meier'].changed
+    False
+    
+    >>> users.changed
+    False
+    
+    >>> users.context.printtree()
+    <dc=my-domain,dc=com - False>
+      <cn=user1,dc=my-domain,dc=com:Meier - False>
+      <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
+      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
+      <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>
 
-#    >>> mueller.attrs['telephoneNumber'] = '9876'
-#    >>> users.printtree()
-#    <dc=my-domain,dc=com - True>
-#      <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - True>
-#      <cn=user1,dc=my-domain,dc=com:Meier - False>
-#      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
-#      <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>
-#    >>> mueller()
-#    >>> users.printtree()
-#    <dc=my-domain,dc=com - False>
-#      <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
-#      <cn=user1,dc=my-domain,dc=com:Meier - False>
-#      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
-#      <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>
-#    >>> from node.ext.ldap.node import queryNode
-#    >>> queryNode(props, mueller.DN).attrs
-#    {u'objectClass': [u'top', u'person'],
-#     u'telephoneNumber': u'9876',
-#     u'userPassword': u'foo2',
-#     u'cn': u'user2',
-#     u'sn': u'M\xfcller'}
-#    >>> del users['Müller']
-#    >>> users.printtree()
-#    <dc=my-domain,dc=com - True>
-#      <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - True>
-#      <cn=user1,dc=my-domain,dc=com:Meier - False>
-#      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
-#      <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>
-#    >>> mueller()
-#    >>> users.printtree()
-#    <dc=my-domain,dc=com - False>
-#      <cn=user1,dc=my-domain,dc=com:Meier - False>
-#      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
-#      <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>
+A user does not know about it's groups if initialized directly::
 
-XXX: How does mueller know he is not in ldap anymore?
+    >>> users['Meier'].groups
+    Traceback (most recent call last):
+      ...
+    AttributeError: 'NoneType' object has no attribute 'groups'
 
-#    >>> queryNode(props, mueller.DN) is None
-#    True
+Create a LDAPGroups node and configure it::
+
+    >>> from node.ext.ldap.ugm import Groups, GroupsConfig
+    >>> gcfg = GroupsConfig(
+    ...     baseDN='dc=my-domain,dc=com',
+    ...     attrmap={
+    ...         'id': 'cn',
+    ...         'rdn': 'cn',
+    ...     },
+    ...     scope=SUBTREE,
+    ...     queryFilter='(objectClass=groupOfNames)',
+    ...     objectClasses=['groupOfNames'],
+    ... )
+
+    >>> groups = Groups(props, gcfg)
+    >>> groups.keys()
+    [u'group1', u'group2']
+    
+    >>> groups.ids
+    [u'group1', u'group2']
+    
+    >>> group = groups['group1']
+    >>> group
+    <Group object 'group1' at ...>
+    
+    >>> group = groups.create('group3')
+    >>> groups()
+    >>> groups.ids
+    [u'group1', u'group2', u'group3']
+    
+    # XXX: dummy member should be created by default value callback, currently
+    #      a __setitem__ plumbing on groups object
+    
+    >>> groups.context.ldap_session.search(queryFilter='cn=group3',
+    ...                                    scope=SUBTREE)
+    [(u'cn=group3,dc=my-domain,dc=com', 
+    {u'member': [u'cn=nobody'], 
+    u'objectClass': [u'groupOfNames'], 
+    u'cn': [u'group3']})]
+    
+    >>> groups['group1']._member_format
+    0
+    
+    >>> groups['group1']._member_attribute
+    'member'
+
+Directly created groups object have no access to it's refering users::
+
+    >>> groups['group1'].member_ids
+    Traceback (most recent call last):
+      ...
+    AttributeError: 'NoneType' object has no attribute 'users'
+
+Create a UGM object::
+
+    >>> from node.ext.ldap.ugm import Ugm
+    >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg)
+
+Currently, the member relation is computed hardcoded and maps to object classes.
+This will propably change in future. Right now 'posigGroup',
+'groupOfUniqueNames', and 'groupOfNames' are supported::
+
+    >>> from node.ext.ldap.ugm._api import member_format, member_attribute
+    >>> member_format('groupOfUniqueNames')
+    0
+    
+    >>> member_attribute('groupOfUniqueNames')
+    'uniqueMember'
+    
+    >>> member_format('groupOfNames')
+    0
+    
+    >>> member_attribute('groupOfNames')
+    'member'
+    
+    >>> member_format('posixGroup')
+    1
+    
+    >>> member_attribute('posixGroup')
+    'memberUid'
+    
+    >>> member_format('foo')
+    Traceback (most recent call last):
+      ...
+    Exception: Unknown format
+    
+    >>> member_attribute('foo')
+    Traceback (most recent call last):
+      ...
+    Exception: Unknown member attribute
+
+Fetch users and groups::
+
+    >>> ugm.users
+    <Users object 'users' at ...>
+    
+    >>> ugm.groups
+    <Groups object 'groups' at ...>
+    
+    >>> ugm.groups['group1'].users
+    [<User object 'Schmidt' at ...>, 
+    <User object 'M?ller' at ...>]
+    
+    >>> ugm.users['Schmidt'].groups
+    [<Group object 'group1' at ...>]
