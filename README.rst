@@ -1,68 +1,96 @@
-LDAP convenience library
-========================
+Overview
+========
 
-This Package provides node based LDAP computing. 
+``node.ext.ldap`` is a LDAP convenience library for LDAP communication based on 
+`python-ldap <http://pypi.python.org/pypi/python-ldap>`_ python-ldap and
+`node <http://pypi.python.org/pypi/node>`_ packages.
 
+The package contains base configuration and communication objects, a LDAP node
+object and a LDAP node based user and group management implementation.
 
-LDAP Session
-------------
+Usage
+=====
+
+LDAPProps
+---------
+
+    >>> from node.ext.ldap import LDAPProps
+    >>> from node.ext.ldap import testLDAPConnectivity
+    
+    >>> props = LDAPProps(uri='ldap://localhost:12345/',
+    ...                   user='cn=Manager,dc=my-domain,dc=com',
+    ...                   password='secret',
+    ...                   cache=False)
+    
+    >>> testLDAPConnectivity(props=props)
+    'success'
+
+LDAPConnector
+-------------
+
+    >>> 
+
+LDAPCommunicator
+----------------
+
+LDAPSession
+-----------
 
 You can work with the ``LDAPSession`` object.::
 
-    >>> from node.ext.ldap import ONELEVEL
-    >>> from node.ext.ldap import LDAPSession
-    >>> from node.ext.ldap import LDAPProps
+    >> from node.ext.ldap import ONELEVEL
+    >> from node.ext.ldap import LDAPSession
+    >> from node.ext.ldap import LDAPProps
     
-    >>> props = LDAPProps('localhost',
-    ...                   389,
-    ...                   'cn=user,dc=example,dc=com',
-    ...                   'secret'
-    ...                   cache=True,
-    ...                   timeout=12345)
-    >>> session = LDAPSession(props)
-    >>> res = session.search('(uid=*)', ONELEVEL)
+    >> props = LDAPProps('localhost',
+    ..                   389,
+    ..                   'cn=user,dc=example,dc=com',
+    ..                   'secret'
+    ..                   cache=True,
+    ..                   timeout=12345)
+    >> session = LDAPSession(props)
+    >> res = session.search('(uid=*)', ONELEVEL)
 
-
-LDAP Node
----------
+LDAPNode
+--------
 
 You can build and edit LDAP data trees with the ``LDAPNode`` which utilizes the
 `node <http://pypi.python.org/pypi/node>`_ package.
 
 The root Node expects the base DN and the server properties to initialize.::
 
-    >>> from node.ext.ldap import LDAPNode
-    >>> root = LDAPNode('dc=my-domain,dc=com', props=props)
-    >>> root.keys()
+    >> from node.ext.ldap import LDAPNode
+    >> root = LDAPNode('dc=my-domain,dc=com', props=props)
+    >> root.keys()
     ['ou=customers']
 
 You can create and add new LDAP entries.::
 
-    >>> person = LDAPNode()
-    >>> person.attributes['objectClass'] = ['top', 'person']
-    >>> person.attributes['sn'] = 'Mustermann'
-    >>> person.attributes['cn'] = 'Max'
-    >>> person.attributes['description'] = 'Description'
-    >>> customers['cn=max'] = person
-    >>> customers.keys()
+    >> person = LDAPNode()
+    >> person.attributes['objectClass'] = ['top', 'person']
+    >> person.attributes['sn'] = 'Mustermann'
+    >> person.attributes['cn'] = 'Max'
+    >> person.attributes['description'] = 'Description'
+    >> customers['cn=max'] = person
+    >> customers.keys()
     ['cn=max']
 
 On ``__call__`` the modifications of the tree are written to the directory.::
 
-    >>> customers()
+    >> customers()
 
 Modification of entry attributes.::
 
-    >>> person.attributes['description'] = 'Another description'
-    >>> person()
+    >> person.attributes['description'] = 'Another description'
+    >> person()
     
-    >>> del person.attributes['description']
-    >>> person()
+    >> del person.attributes['description']
+    >> person()
 
 Deleting of entries.::
 
-    >>> del customers['cn=max']
-    >>> customers()
+    >> del customers['cn=max']
+    >> customers()
 
 For more details see the corresponding source and test files.
 
@@ -107,17 +135,17 @@ does not cache anything and is just an API placeholder.
 To provide an cache based on ``Memcached`` install memcached server and
 configure it. Then you need to provide the factory utility.::
     
-    >>> from node.ext.ldap.cache import MemcachedProviderFactory
-    >>> providerfactory = MemcachedProviderFactory()
-    >>> from zope.component import provideUtility
-    >>> provideUtility(providerfactory)
+    >> from node.ext.ldap.cache import MemcachedProviderFactory
+    >> providerfactory = MemcachedProviderFactory()
+    >> from zope.component import provideUtility
+    >> provideUtility(providerfactory)
     
 In the case of more than one memcached backend running or not running on
 127.0.0.1 at default port, initialization of factory looks like::    
 
-    >>> providerfactory = MemcachedProviderFactory(servers=[10.0.0.10:22122,
+    >> providerfactory = MemcachedProviderFactory(servers=[10.0.0.10:22122,
     ...                                                     10.0.0.11:22322])
-    >>> provideUtility(providerfactory)
+    >> provideUtility(providerfactory)
 
 
 Dependencies
