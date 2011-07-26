@@ -21,7 +21,6 @@ from node.parts import (
     Attributes,
     DefaultInit,
     Nodify,
-    Storage,
     OdictStorage,
 )
 from node.utils import debug
@@ -38,6 +37,11 @@ from node.ext.ldap.interfaces import (
 )
 from node.ext.ldap.scope import ONELEVEL
 from node.ext.ldap._node import LDAPNode
+from node.ext.ldap.ugm.defaults import creation_defaults
+from node.ext.ldap.ugm.samba import (
+    sambaNTPassword,
+    sambaLMPassword,
+)
 
 
 FORMAT_DN = 0
@@ -58,12 +62,10 @@ class PrincipalsConfig(object):
             defaults={},
             strict=True):
         self.baseDN = baseDN
-        # XXX: never used. what was this supposed for?
         self.attrmap = attrmap
         self.scope = scope
         self.queryFilter = queryFilter
         self.objectClasses = objectClasses
-        # XXX: never used. what was this supposed for?
         self.member_relation = member_relation
         self.defaults = defaults
         self.strict = strict
@@ -261,29 +263,33 @@ class PrincipalsPart(Part):
     
     @extend
     def __init__(self, props, cfg):
-        self.context = LDAPNode(name=cfg.baseDN, props=props)
-        self.context.search_filter = cfg.queryFilter
-        self.context.search_scope = int(cfg.scope)
+        context = LDAPNode(name=cfg.baseDN, props=props)
+        context.search_filter = cfg.queryFilter
+        context.search_scope = int(cfg.scope)
         
-        # XXX: should this object classes be used for search and creation?
-        self.context.child_defaults = dict()
-        self.context.child_defaults['objectClass'] = cfg.objectClasses
-        self.context.child_defaults.update(cfg.defaults)
+        context.child_defaults = dict()
+        context.child_defaults['objectClass'] = cfg.objectClasses
+        context.child_defaults.update(cfg.defaults)
+        for oc in cfg.objectClasses:
+            for key, val in creation_defaults.get(oc, dict()).items():
+                if not key in context.child_defaults:
+                    context.child_defaults[key] = val
         
         # XXX: make these attrs public
-        self.context._key_attr = cfg.attrmap['id']
-        self.context._rdn_attr = cfg.attrmap['rdn']
+        context._key_attr = cfg.attrmap['id']
+        context._rdn_attr = cfg.attrmap['rdn']
         
         if cfg.member_relation:
-            self.context.search_relation = cfg.member_relation
+            context.search_relation = cfg.member_relation
         
-        self.context._seckey_attrs = ('dn',)
+        context._seckey_attrs = ('dn',)
         if cfg.attrmap.get('login') \
           and cfg.attrmap['login'] != cfg.attrmap['id']:
-            self.context._seckey_attrs += (cfg.attrmap['login'],)
+            context._seckey_attrs += (cfg.attrmap['login'],)
         
         self.principal_attrmap = cfg.attrmap
         self.principal_attraliaser = DictAliaser(cfg.attrmap, cfg.strict)
+        self.context = context
     
     @default
     def idbydn(self, dn):
@@ -459,6 +465,11 @@ class UsersPart(PrincipalsPart, BaseUsersPart):
     def passwd(self, id, oldpw, newpw):
         self.context.ldap_session.passwd(
             self.context.child_dn(id), oldpw, newpw)
+        object_classes = self.context.child_defaults['objectClass']
+        if 'sambaSamAccount' in object_classes:
+            user_node = self[id].context
+            user_node.attrs['sambaNTPassword'] = sambaNTPassword(newpw)
+            user_node.attrs['sambaLMPassword'] = sambaLMPassword(newpw)
 
 
 class Users(object):

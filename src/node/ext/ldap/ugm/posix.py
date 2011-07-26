@@ -1,43 +1,54 @@
+"""
+posixAccount
+------------
+
+- cn (must)
+- uid (must)
+- uidNumber (must)
+- gidNumber (must)
+- homeDirectory (must)
+- userPassword ----> no default callback available
+- loginShell
+- gecos -----------> no default callback available
+- description -----> no default callback available
+
+
+posixGroup
+----------
+
+- cn (must)
+- gidNumber(must)
+- userPassword ----> no default callback available
+- memberUid
+- description -----> no default callback available
+"""
 from bda.basen import base62
 
 
-###############################################################################
-# posix user related
-#
-# - uidNumber
-# - gidNumber
-# - uid -------------> no default callback available
-# - cn --------------> no default callback available
-# - userPassword ----> no default callback available
-# - homeDirectory
-# - loginShell
-# - gecos -----------> no default callback available
-# - description -----> no default callback available
+def cn(node, id):
+    return id
+
+
+def uid(node, id):
+    return id
+
 
 def uidNumber(node, id):
     term = base62(id)
     return str(int(term))
 
-def posixGidNumber(node, id):
-    term = base62(id)
-    return str(int(term))
 
-DEFAULT_GID = '12345'
-def gidNumber(node, id):
-    return DEFAULT_GID
+gidNumber = uidNumber
+
 
 def homeDirectory(node, id):
     return '/home/%s' % id
 
-DEFAULT_SHELL = '/bin/false'
+
+POSIX_DEFAULT_SHELL = '/bin/false'
 def loginShell(node, id):
-    return DEFAULT_SHELL
+    return POSIX_DEFAULT_SHELL
 
-
-###############################################################################
-# posix group related
-#
-# - memberUid
 
 def memberUid(node, id):
     return ['nobody']

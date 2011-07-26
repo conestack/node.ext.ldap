@@ -54,16 +54,17 @@ class ILDAPPrincipalsConfig(Interface):
 
     scope = Attribute(u"Search scope for principals")
 
-    queryFilter = Attribute(u"Query filter for principals")
+    queryFilter = Attribute(u"Search Query filter for principals")
 
-    objectClasses = Attribute(u"Default object classes for new principals.")
-    
     member_relation = Attribute(u"Optional member relation to be used to speed "
-                                u"up groups search")
+                                u"up groups search, i.e. 'uid:memberUid'")
+    
+    objectClasses = Attribute(u"Object classes for new principals.")
     
     defaults = Attribute(u"Dict like object containing default values for "
                          u"principal creation. A value could either be static "
-                         u"or a callable.")
+                         u"or a callable. This defaults take precedence to "
+                         u"defaults detected via set object classes.")
     
     strict = Attribute(u"Flag whether to initialize Aliaser for LDAP "
                        u"attributes in strict mode. Defaults to True.")
