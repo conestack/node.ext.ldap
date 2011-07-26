@@ -468,10 +468,12 @@ class UsersPart(PrincipalsPart, BaseUsersPart):
         self.context.ldap_session.passwd(
             self.context.child_dn(id), oldpw, newpw)
         object_classes = self.context.child_defaults['objectClass']
+        user_node = self[id].context
+        user_node.attrs.load()
         if 'sambaSamAccount' in object_classes:
-            user_node = self[id].context
             user_node.attrs['sambaNTPassword'] = sambaNTPassword(newpw)
             user_node.attrs['sambaLMPassword'] = sambaLMPassword(newpw)
+            user_node()
 
 
 class Users(object):
