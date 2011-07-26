@@ -2,18 +2,22 @@ Overview
 ========
 
 ``node.ext.ldap`` is a LDAP convenience library for LDAP communication based on 
-`python-ldap <http://pypi.python.org/pypi/python-ldap>`_ python-ldap and
-`node <http://pypi.python.org/pypi/node>`_ packages.
+`python-ldap <http://pypi.python.org/pypi/python-ldap>`_ and
+`node <http://pypi.python.org/pypi/node>`_.
 
 The package contains base configuration and communication objects, a LDAP node
-object and a LDAP node based user and group management implementation.
+object and a LDAP node based user and group management implementation utilizing
+`node.ext.ldap <http://pypi.python.org/pypi/node.ext.ldap>`_.
+
 
 Usage
 =====
 
+
 LDAPProps
 ---------
 
+    >>> import node.ext.ldap
     >>> from node.ext.ldap import LDAPProps
     >>> from node.ext.ldap import testLDAPConnectivity
     
@@ -25,13 +29,64 @@ LDAPProps
     >>> testLDAPConnectivity(props=props)
     'success'
 
+
 LDAPConnector
 -------------
 
-    >>> 
+    >>> from node.ext.ldap import LDAPConnector
+    >>> connector = LDAPConnector(props=props)
+    >>> connector
+    <node.ext.ldap.base.LDAPConnector object at ...>
+    
+    >>> connector.bind()
+    <ldap.ldapobject.SimpleLDAPObject instance at ...>
+    
+    >>> connector.unbind()
+
 
 LDAPCommunicator
 ----------------
+
+    >>> from node.ext.ldap import LDAPCommunicator
+    >>> communicator = LDAPCommunicator(connector)
+    >>> communicator
+    <node.ext.ldap.base.LDAPCommunicator object at ...>
+    
+    >>> communicator.bind()
+    
+    >>> communicator.add(
+    ...     'cn=foo,ou=demo,dc=my-domain,dc=com',
+    ...     {
+    ...         'cn': 'foo',
+    ...         'sn': 'Mustermann',
+    ...         'objectClass': ['person'],
+    ...     })
+    
+    >>> communicator.baseDN = 'ou=demo,dc=my-domain,dc=com'
+    
+    >>> communicator.search('(objectClass=person)', node.ext.ldap.SUBTREE)
+    [('cn=foo,ou=demo,dc=my-domain,dc=com', 
+    {'objectClass': ['person'], 
+    'cn': ['foo'], 
+    'sn': ['Mustermann']})]
+    
+    >>> from ldap import MOD_REPLACE
+    
+    >>> communicator.modify('cn=foo,ou=demo,dc=my-domain,dc=com',
+    ...                     [(MOD_REPLACE, 'sn', 'Musterfrau')])
+    
+    >>> communicator.search('(objectClass=person)',
+    ...                     node.ext.ldap.SUBTREE,
+    ...                     attrlist=['cn'])
+    [('cn=foo,ou=demo,dc=my-domain,dc=com', 
+    {'cn': ['foo']})]
+    
+    >>> communicator.delete('cn=foo,ou=demo,dc=my-domain,dc=com')
+    >>> communicator.search('(objectClass=person)', node.ext.ldap.SUBTREE)
+    []
+    
+    >>> communicator.unbind()
+
 
 LDAPSession
 -----------

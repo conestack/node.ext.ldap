@@ -32,3 +32,9 @@ description: nästy
 businessCategory: customers
 objectClass: top
 objectClass: organizationalUnit
+
+dn: ou=demo,dc=my-domain,dc=com
+ou: demo
+description: Demo organizational unit
+objectClass: top
+objectClass: organizationalUnit

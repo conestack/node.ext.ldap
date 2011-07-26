@@ -180,7 +180,8 @@ class LDAPCommunicator(object):
             LDAP attrlist to query.
         
         attrsonly
-            Flag whether to load DN's (?) only.
+            Flag whether to return only attribute names, without corresponding
+            values.
         """
         if baseDN is None:
             baseDN = self.baseDN

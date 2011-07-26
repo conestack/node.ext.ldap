@@ -77,7 +77,7 @@ Reset o::
 Check child keys of root::
 
     >>> root.keys()
-    [u'ou=customers']
+    [u'ou=customers', u'ou=demo']
 
 Access inexistent child::
 
@@ -155,6 +155,7 @@ Tree has not changed yet::
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
         <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
+      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
 
 Set already created customer::
 
@@ -183,6 +184,7 @@ new node::
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
         <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
+      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
 
 New entry has no childs, but was added to the parent. There
 was a bug where iteration tried to load from ldap at this stage. Lets test
@@ -250,6 +252,7 @@ All nodes are flagged unchanged again::
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
         <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
+      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
 
 Add a person for more modification and changed flag tests::
 
@@ -290,6 +293,7 @@ changed because of its changed attributes::
         <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
+      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
 
 Call customer now, whole tree unchanged again::
 
@@ -302,6 +306,7 @@ Call customer now, whole tree unchanged again::
         <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
+      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
 
 Change the person and customer again, and discard the attribute change 
 of the customer. It must not delete the changed state of the whole tree, as the
@@ -317,6 +322,7 @@ person is still changed::
         <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - True>
+      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
     
     >>> customer.attrs.load()
     >>> root.printtree()
@@ -327,6 +333,7 @@ person is still changed::
         <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - True>
+      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
 
 After calling person, whole tree is unchanged again::
 
@@ -339,6 +346,7 @@ After calling person, whole tree is unchanged again::
         <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
+      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
 
 Changing attributes of a node, where keys are not loaded, yet::
 
@@ -538,6 +546,7 @@ Check deleting of entries::
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
         <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
+      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
 
     >>> [k for k in customer._keys]
     [u'cn=max']
@@ -558,6 +567,7 @@ Check deleting of entries::
         <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
         <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
+      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
     
     >>> customer()
     >>> queryPersonDirectly()
@@ -571,6 +581,7 @@ Check deleting of entries::
         <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
         <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
+      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
 
     >>> root.changed, customer.changed
     (True, False)
@@ -584,6 +595,7 @@ Check deleting of entries::
         <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
         <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
+      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
 
 Test LDAPNode.child_defaults. A default value can either be a string or a
 callback accepting the container node and the child key with which the new
@@ -776,7 +788,7 @@ No other default search criteria set::
 Search with no arguments given return childs keys::
 
     >>> node.search()
-    [u'ou=customers']
+    [u'ou=customers', u'ou=demo']
 
 Set default search scope to SUBTREE. Be aware that this might not make much
 sense, because of possible duplicate keys, since search with no other defaults
@@ -790,6 +802,7 @@ for counting entries::
     u'ou=customer1', 
     u'ou=customer2', 
     u'ou=n\xe4sty\\, customer', 
+    u'ou=demo', 
     u'ou=customer3', 
     u'cn=customer99']
 
@@ -803,6 +816,7 @@ Lets add a default search filter.::
     u'ou=customer1', 
     u'ou=customer2', 
     u'ou=n\xe4sty\\, customer', 
+    u'ou=demo', 
     u'ou=customer3']
 
 The default search filter could also be a string::
@@ -813,6 +827,7 @@ The default search filter could also be a string::
     u'ou=customer1', 
     u'ou=customer2', 
     u'ou=n\xe4sty\\, customer', 
+    u'ou=demo', 
     u'ou=customer3']
 
 Its also possible to define default search criteria as dict::
@@ -823,8 +838,7 @@ Its also possible to define default search criteria as dict::
     >>> node.search()
     [u'ou=customer1', 
     u'ou=customer2', 
-    u'ou=n\xe4sty\\, 
-    customer']
+    u'ou=n\xe4sty\\, customer']
     
     >>> node.search_criteria = {
     ...     'businessCategory': 'customers_container',
@@ -1100,6 +1114,7 @@ We can change attributes::
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
           <cn=Moritz,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=Moritz - False>
         <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
+      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
     
     >>> node.printtree()
     <ou=customer3,ou=customers,dc=my-domain,dc=com - True>

@@ -22,7 +22,7 @@ Set a baseDN and perform LDAP search::
     >>> from node.ext.ldap import SUBTREE
     >>> res = session.search('(objectClass=*)', SUBTREE)
     >>> len(res)
-    5
+    6
 
 Add an entry::
 
@@ -35,7 +35,7 @@ Add an entry::
     >>> session.add(dn, entry)
     >>> res = session.search('(objectClass=*)', SUBTREE)
     >>> len(res)
-    6
+    7
 
 Modify this entry and check the result::
 
