@@ -13,7 +13,6 @@ object and a LDAP node based user and group management implementation utilizing
 Usage
 =====
 
-
 LDAPProps
 ---------
 
@@ -59,6 +58,7 @@ LDAPCommunicator
     ...     {
     ...         'cn': 'foo',
     ...         'sn': 'Mustermann',
+    ...         'userPassword': 'secret',
     ...         'objectClass': ['person'],
     ...     })
     
@@ -67,6 +67,7 @@ LDAPCommunicator
     >>> communicator.search('(objectClass=person)', node.ext.ldap.SUBTREE)
     [('cn=foo,ou=demo,dc=my-domain,dc=com', 
     {'objectClass': ['person'], 
+    'userPassword': ['secret'], 
     'cn': ['foo'], 
     'sn': ['Mustermann']})]
     
@@ -81,6 +82,14 @@ LDAPCommunicator
     [('cn=foo,ou=demo,dc=my-domain,dc=com', 
     {'cn': ['foo']})]
     
+    >>> communicator.passwd(
+    ...     'cn=foo,ou=demo,dc=my-domain,dc=com', 'secret', '12345')
+    >>> communicator.search('(objectClass=person)',
+    ...                     node.ext.ldap.SUBTREE,
+    ...                     attrlist=['userPassword'])
+    [('cn=foo,ou=demo,dc=my-domain,dc=com', 
+    {'userPassword': ['{SSHA}...']})]
+    
     >>> communicator.delete('cn=foo,ou=demo,dc=my-domain,dc=com')
     >>> communicator.search('(objectClass=person)', node.ext.ldap.SUBTREE)
     []
@@ -91,20 +100,13 @@ LDAPCommunicator
 LDAPSession
 -----------
 
-You can work with the ``LDAPSession`` object.::
-
-    >> from node.ext.ldap import ONELEVEL
-    >> from node.ext.ldap import LDAPSession
-    >> from node.ext.ldap import LDAPProps
+    >>> from node.ext.ldap import LDAPSession
+    >>> session = LDAPSession(props)
     
-    >> props = LDAPProps('localhost',
-    ..                   389,
-    ..                   'cn=user,dc=example,dc=com',
-    ..                   'secret'
-    ..                   cache=True,
-    ..                   timeout=12345)
-    >> session = LDAPSession(props)
-    >> res = session.search('(uid=*)', ONELEVEL)
+    >>> session.checkServerProperties()
+    (True, 'OK')
+    
+    >> session.search()
 
 LDAPNode
 --------
@@ -269,9 +271,9 @@ Changes
 Contributors
 ============
 
-- Florian Friesdorf <flo@chaoflow.net>
-
 - Robert Niederreiter <rnix@squarewave.at>
+
+- Florian Friesdorf <flo@chaoflow.net>
 
 - Jens Klein <jens@bluedynamics.com>
 
