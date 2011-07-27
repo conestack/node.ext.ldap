@@ -483,7 +483,7 @@ Test role mappings. Create container for roles::
     <Roles object 'roles' at ...>
     
     >>> user = ugm.users['Meier']
-    >>> ugm.roles(ugm.users['Meier'])
+    >>> ugm.roles(user)
     []
     
     >>> ugm.add_role('viewer', user)
@@ -492,10 +492,13 @@ Test role mappings. Create container for roles::
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
     
+    >>> ugm.roles(user)
+    [u'viewer']
+    
     >>> user.roles
     [u'viewer']
     
-    >>> user =  ugm.users['Schmidt']
+    >>> user = ugm.users['Schmidt']
     >>> ugm.add_role('viewer', user)
     >>> ugm.add_role('editor', user)
     
@@ -523,5 +526,24 @@ Test role mappings. Create container for roles::
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
+    
+    >>> group = ugm.groups['group1']
+    >>> ugm.roles(group)
+    []
+    
+    >>> ugm.add_role('viewer', group)
+    >>> storage.printtree()
+    <class 'node.ext.ldap.ugm._api.Roles'>: roles
+      <class 'node.ext.ldap.ugm._api.Role'>: viewer
+        <class 'node.ext.ldap.ugm._api.User'>: Meier
+        <class 'node.ext.ldap.ugm._api.Group'>: group1
+          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+          <class 'node.ext.ldap.ugm._api.User'>: M?ller
+    
+    >>> ugm.roles(group)
+    [u'viewer']
+    
+    >>> group.roles
+    [u'viewer']
     
     

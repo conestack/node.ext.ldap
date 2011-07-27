@@ -172,8 +172,7 @@ class User(object):
 class LDAPGroupMapping(Part):
     
     @default
-    @property
-    def related_principals(self):
+    def related_principals(self, key):
         raise NotImplementedError(u"Abstract group mapping does not implement "
                                   u"``related_principals``")
     
@@ -181,7 +180,7 @@ class LDAPGroupMapping(Part):
     def __getitem__(self, key):
         if key not in self:
             raise KeyError(key)
-        return self.related_principals[key]
+        return self.related_principals(key)[key]
     
     @extend
     @locktree
@@ -189,7 +188,7 @@ class LDAPGroupMapping(Part):
         if key not in self:
             raise KeyError(key)
         if self._member_format == FORMAT_DN:
-            val = self.related_principals.context.child_dn(key)
+            val = self.related_principals(key).context.child_dn(key)
         elif self._member_format == FORMAT_UID:
             val = key
         # self.context.attrs[self._member_attribute].remove won't work here
@@ -216,13 +215,7 @@ class LDAPGroupMapping(Part):
     @locktree
     def add(self, key):
         if not key in self.member_ids:
-            if self._member_format == FORMAT_DN:
-                principals = self.related_principals
-                # make sure principal is loaded
-                principals[key]
-                val = principals.context.child_dn(key)
-            elif self._member_format == FORMAT_UID:
-                val = key
+            val = self.translate_key(key)
             # self.context.attrs[self._member_attribute].append won't work here
             # issue in LDAPNodeAttributes, does not recognize changed this way.
             old = self.context.attrs.get(self._member_attribute, list())
@@ -233,16 +226,14 @@ class LDAPGroupMapping(Part):
     @default
     @property
     def member_ids(self):
-        ret = list() 
+        ret = list()
         members = self.context.attrs.get(self._member_attribute, list())
         for member in members:
             if member in ['nobody', 'cn=nobody']:
                 continue
             ret.append(member)
-        principals = self.related_principals
-        if self._member_format == FORMAT_DN:
-            ret = [principals.idbydn(dn) for dn in ret]
-        keys = principals.keys()
+        ret = self.translate_ids(ret)
+        keys = self.existing_member_ids
         ret = [id for id in ret if id in keys]
         return ret
     
@@ -260,14 +251,37 @@ class LDAPGroupMapping(Part):
 class LDAPGroup(LDAPGroupMapping, LDAPPrincipal, UgmGroup):
     
     @default
-    @property
-    def related_principals(self):
+    def related_principals(self, key=None):
         return self.parent.parent.users
     
     @default
     @property
     def users(self):
         return [self.parent.parent.users[id] for id in self.member_ids]
+    
+    @default
+    @property
+    def existing_member_ids(self):
+        return self.related_principals().keys()
+    
+    @default
+    def translate_ids(self, members):
+        if self._member_format == FORMAT_DN:
+            principals = self.related_principals()
+            members = [principals.idbydn(dn) for dn in members]
+        return members
+    
+    @default
+    def translate_key(self, key):
+        ret = None
+        if self._member_format == FORMAT_DN:
+            principals = self.related_principals()
+            # make sure principal is loaded
+            principals[key]
+            ret = principals.context.child_dn(key)
+        elif self._member_format == FORMAT_UID:
+            ret = key
+        return ret
 
 
 class Group(object):
@@ -318,7 +332,7 @@ class LDAPPrincipals(Part):
         self.context = context
     
     @default
-    def idbydn(self, dn):
+    def idbydn(self, dn, strict=False):
         """Return a principal's id for a given dn.
 
         Raise KeyError if not enlisted.
@@ -344,6 +358,8 @@ class LDAPPrincipals(Part):
             # solution, but requires implementation of all comparison
             # rules defined in schemas. Maybe we can retrieve them
             # from LDAP.
+            if strict:
+                raise KeyError(dn)
             search = self.context.ldap_session.search
             try:
                 dn = search(baseDN=dn)[0][0]
@@ -482,10 +498,6 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
     @default
     @debug
     def authenticate(self, id=None, pw=None):
-        #import pdb;pdb.set_trace()
-        #if self.context._seckeys is not None:
-        #    id = self.context._seckeys.get(
-        #        self.principal_attrmap.get('login'), {}).get(id, id)
         id = self.context._seckeys.get(
             self.principal_attrmap.get('login'), {}).get(id, id)
         try:
@@ -592,10 +604,89 @@ class Groups(object):
 class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
     
     @default
+    def related_principals(self, key):
+        ugm = self.parent.parent
+        if key.startswith('group:'):
+            return ugm.groups
+        return ugm.users
+    
+    @default
     @property
-    def related_principals(self):
-        # XXX: or groups, depends, later
-        return self.parent.parent.users
+    def existing_member_ids(self):
+        ugm = self.parent.parent
+        users = ugm.users
+        groups = ugm.groups
+        ret = [key for key in users]
+        for key in groups:
+            ret.append('group:%s' % key)
+        return ret
+    
+    @default
+    def translate_ids(self, members):
+        if self._member_format == FORMAT_DN:
+            ugm = self.parent.parent
+            users = ugm.users
+            groups = ugm.groups
+            user_members = list()
+            for dn in members:
+                try:
+                    user_members.append(users.idbydn(dn, True))
+                except KeyError:
+                    pass
+            group_members = list()
+            for dn in members:
+                try:
+                    group_members.append('group:%s' % groups.idbydn(dn, True))
+                except KeyError:
+                    pass
+            members = user_members + group_members
+        return members
+    
+    @default
+    def translate_key(self, key):
+        ret = None
+        if self._member_format == FORMAT_DN:
+            if key.startswith('group:'):
+                key = key[6:]
+                principals = self.parent.parent.groups
+            else:
+                principals = self.parent.parent.users
+            # make sure principal is loaded
+            principals[key]
+            ret = principals.context.child_dn(key)
+        elif self._member_format == FORMAT_UID:
+            ret = key
+        return ret
+    
+    @extend
+    def __getitem__(self, key):
+        if key not in self:
+            raise KeyError(key)
+        principals = self.related_principals(key)
+        if key.startswith('group:'):
+            key = key[6:]
+        return principals[key]
+    
+    @extend
+    @locktree
+    def __delitem__(self, key):
+        if key not in self:
+            raise KeyError(key)
+        principals = self.related_principals(key)
+        if self._member_format == FORMAT_DN:
+            real_key = key
+            if key.startswith('group:'):
+                real_key = key[6:]
+            val = principals.context.child_dn(real_key)
+        elif self._member_format == FORMAT_UID:
+            val = key
+        # self.context.attrs[self._member_attribute].remove won't work here
+        # issue in LDAPNodeAttributes, does not recognize changed this way.
+        members = self.context.attrs[self._member_attribute]
+        members.remove(val)
+        self.context.attrs[self._member_attribute] = members
+        # XXX: call here immediately?
+        self.context()
 
 
 class Role(object):
