@@ -471,6 +471,207 @@ combined.::
     []
 
 
+User and Group management
+-------------------------
+
+LDAP is often used to manage Authentication, thus ``node.ext.ldap`` provides
+an API for User and Group management. The API follows the contract of
+`node.ext.ugm <http://pypi.python.org/pypi/node.ext.ugm>`_.::
+
+    >>> from node.ext.ldap.ugm import (
+    ...     UsersConfig,
+    ...     GroupsConfig,
+    ...     Ugm,
+    ... )
+
+Instantiate users and groups configuration. Both are based on
+``PrincipalsConfig`` class and expect this settings:
+
+baseDN
+    Principals container base DN.
+
+attrmap
+    Principals Attribute map as ``odict.odict``. This object must contain the
+    mapping between reserved keys and the real LDAP attribute, as well as
+    mappings to all accessible attributes for principal nodes if instanciated
+    in strict mode, see below.
+
+scope
+    Search scope for principals.
+
+queryFilter
+    Search Query filter for principals
+
+objectClasses
+    Object classes used for creation of new principals. For some objectClasses
+    default value callbacks are registered, which are used to generate default
+    values for mandatory attributes if not already set on principal vessel node. 
+    
+defaults
+    Dict like object containing default values for principal creation. A value 
+    could either be static or a callable accepting the principals node and the
+    new principal id as arguments. This defaults take precedence to defaults
+    detected via set object classes.
+
+strict
+    Define whether all principal attributes availabe must be declared in attmap,
+    or only reserved ones. Defaults to True.
+
+Reserved attrmap keys for Users and Groups:
+
+id
+    The attribute containing the user id (mandatory).
+
+rdn
+    The attribute representing the RDN of the node (mandatory)
+    XXX: get rid off, should be detected automatically
+
+Reserved attrmap keys for Users:
+
+login
+    Alternative login name attribute (optional)
+
+Create config objects.::
+
+    >>> ucfg = UsersConfig(
+    ...     baseDN='ou=demo,dc=my-domain,dc=com',
+    ...     attrmap={
+    ...         'id': 'cn',
+    ...         'rdn': 'cn',
+    ...         'login': 'sn',
+    ...     },
+    ...     scope=SUBTREE,
+    ...     queryFilter='(objectClass=person)',
+    ...     objectClasses=['person'],
+    ...     defaults={},
+    ...     strict=False,
+    ... )
+    
+    >>> gcfg = GroupsConfig(
+    ...     baseDN='ou=demo,dc=my-domain,dc=com',
+    ...     attrmap={
+    ...         'id': 'cn',
+    ...         'rdn': 'cn',
+    ...     },
+    ...     scope=SUBTREE,
+    ...     queryFilter='(objectClass=groupOfNames)',
+    ...     objectClasses=['groupOfNames'],
+    ...     defaults={},
+    ...     strict=False,
+    ... )
+
+Instantiate ``Ugm`` object.::
+
+    >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg)
+    >>> ugm
+    <Ugm object 'None' at ...>
+
+The Ugm object has 2 children, the users container and the groups container.
+The are accessible via node API, but also on ``users`` respective ``groups``
+attribute.::
+
+    >>> ugm.keys()
+    ['users', 'groups']
+    
+    >>> ugm.users
+    <Users object 'users' at ...>
+    
+    >>> ugm.groups
+    <Groups object 'groups' at ...>
+
+Fetch user.::
+
+    >>> user = ugm.users['person1']
+    >>> user
+    <User object 'person1' at ...>
+
+User attributes. Reserved keys are available on user attributes::
+
+    >>> user.attrs['id']
+    u'person1'
+    
+    >>> user.attrs['login']
+    u'Mustermensch'
+
+'login' maps to 'sn'.::
+
+    >>> user.attrs['sn']
+    u'Mustermensch'
+
+    >>> user.attrs['login'] = u'Mustermensch1'
+    >>> user.attrs['sn']
+    u'Mustermensch1'
+
+    >>> user.attrs['description'] = 'Some description'
+    >>> user()
+
+Check user credentials.::
+
+    >>> user.authenticate('secret')
+    True
+
+Change user password.::
+
+    >>> user.passwd('secret', 'newsecret')
+    >>> user.authenticate('newsecret')
+    True
+
+Groups user is member of.::
+
+    >>> user.groups
+    [<Group object 'group1' at ...>]
+
+Add new User.::
+
+    >>> user = ugm.users.create('person99', sn='Person 99')
+    >>> user()
+    
+    >>> ugm.users.keys()
+    [u'person1', 
+    u'person2', 
+    u'person3', 
+    u'person4', 
+    u'person5', 
+    u'person99']
+
+Delete User.::
+
+    >>> del ugm.users['person99']
+    >>> ugm.users()
+    >>> ugm.users.keys()
+    [u'person1', 
+    u'person2', 
+    u'person3', 
+    u'person4', 
+    u'person5']
+
+Fetch Group.::
+
+    >>> group = ugm.groups['group1']
+
+Group members.::
+
+    >>> group.member_ids
+    [u'person1', u'person2']
+    
+    >>> group.users
+    [<User object 'person1' at ...>, <User object 'person2' at ...>]  
+
+Add group member.::
+
+    >>> group.add('person3')
+    >>> group.member_ids
+    [u'person1', u'person2', u'person3']
+    
+Delete group member.::
+
+    >>> del group['person3']
+    >>> group.member_ids
+    [u'person1', u'person2']
+
+Group attribute manipulation works the same way as on user objects.
+
+
 Character Encoding
 ------------------
 
@@ -537,6 +738,31 @@ There are different compile issues on different platforms. If you experience
 problems with ``python-ldap``, make sure it is available in the python
 environment you run buildout in, so it won't be fetched and build by buildout
 itself.
+
+
+Test Coverage
+-------------
+
+Summary of the test coverage report::
+
+  lines   cov%   module
+    6   100%   node.ext.ldap.__init__
+  416   100%   node.ext.ldap._node
+  115   100%   node.ext.ldap.base
+   13   100%   node.ext.ldap.cache
+  101   100%   node.ext.ldap.filter
+   46   100%   node.ext.ldap.interfaces
+   28   100%   node.ext.ldap.properties
+    6   100%   node.ext.ldap.scope
+   60   100%   node.ext.ldap.session
+  462   100%   node.ext.ldap.testing.__init__
+   27   100%   node.ext.ldap.tests
+    1   100%   node.ext.ldap.ugm.__init__
+  391   100%   node.ext.ldap.ugm._api
+   21   100%   node.ext.ldap.ugm.defaults
+   16   100%   node.ext.ldap.ugm.posix
+   26   100%   node.ext.ldap.ugm.samba
+   21   100%   node.ext.ldap.ugm.shadow
 
 
 TODO
