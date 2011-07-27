@@ -15,12 +15,10 @@ ids() the first time::
     'id': 'sn', 
     'sn': 'sn'}
 
-    >>> users = Users(props, ucfg)
-
 Query all user ids. ``description`` is set as login attribute and is missing
 on some::
 
-    >>> users.ids
+    >>> users = Users(props, ucfg)
     Traceback (most recent call last):
     ...
     KeyError:
@@ -31,7 +29,6 @@ unique::
 
     >>> ucfg.attrmap['login'] = 'telephoneNumber'
     >>> users = Users(props, ucfg)
-    >>> users.ids
     Traceback (most recent call last):
     ...
     KeyError: u"Secondary key not unique: telephoneNumber='1234'."

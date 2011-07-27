@@ -287,6 +287,8 @@ class PrincipalsPart(Part):
           and cfg.attrmap['login'] != cfg.attrmap['id']:
             context._seckey_attrs += (cfg.attrmap['login'],)
         
+        context._load_keys()
+        
         self.principal_attrmap = cfg.attrmap
         self.principal_attraliaser = DictAliaser(cfg.attrmap, cfg.strict)
         self.context = context
@@ -456,6 +458,10 @@ class UsersPart(PrincipalsPart, BaseUsersPart):
     @default
     @debug
     def authenticate(self, id=None, pw=None):
+        #import pdb;pdb.set_trace()
+        #if self.context._seckeys is not None:
+        #    id = self.context._seckeys.get(
+        #        self.principal_attrmap.get('login'), {}).get(id, id)
         id = self.context._seckeys.get(
             self.principal_attrmap.get('login'), {}).get(id, id)
         try:
