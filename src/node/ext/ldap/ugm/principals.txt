@@ -499,8 +499,8 @@ Test role mappings. Create container for roles::
     [u'viewer']
     
     >>> user = ugm.users['Schmidt']
-    >>> ugm.add_role('viewer', user)
-    >>> ugm.add_role('editor', user)
+    >>> user.add_role('viewer')
+    >>> user.add_role('editor')
     
     >>> storage.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
@@ -521,7 +521,7 @@ Test role mappings. Create container for roles::
       <class 'node.ext.ldap.ugm._api.Role'>: editor
         <class 'node.ext.ldap.ugm._api.User'>: Schmidt
     
-    >>> ugm.remove_role('editor', user)
+    >>> user.remove_role('editor')
     >>> storage.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
@@ -545,5 +545,78 @@ Test role mappings. Create container for roles::
     
     >>> group.roles
     [u'viewer']
+    
+    >>> group = ugm.groups['group3']
+    >>> group.add_role('viewer')
+    >>> group.add_role('editor')
+    
+    >>> group.add_role('editor')
+    Traceback (most recent call last):
+      ...
+    ValueError: Principal already has role 'editor'
+    
+    >>> storage.printtree()
+    <class 'node.ext.ldap.ugm._api.Roles'>: roles
+      <class 'node.ext.ldap.ugm._api.Role'>: viewer
+        <class 'node.ext.ldap.ugm._api.User'>: Meier
+        <class 'node.ext.ldap.ugm._api.Group'>: group1
+          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+          <class 'node.ext.ldap.ugm._api.User'>: M?ller
+        <class 'node.ext.ldap.ugm._api.Group'>: group3
+      <class 'node.ext.ldap.ugm._api.Role'>: editor
+        <class 'node.ext.ldap.ugm._api.Group'>: group3
+    
+    >>> group.roles
+    [u'viewer', u'editor']
+    
+    >>> ugm.remove_role('viewer', group)
+    >>> storage.printtree()
+    <class 'node.ext.ldap.ugm._api.Roles'>: roles
+      <class 'node.ext.ldap.ugm._api.Role'>: viewer
+        <class 'node.ext.ldap.ugm._api.User'>: Meier
+        <class 'node.ext.ldap.ugm._api.Group'>: group1
+          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+          <class 'node.ext.ldap.ugm._api.User'>: M?ller
+      <class 'node.ext.ldap.ugm._api.Role'>: editor
+        <class 'node.ext.ldap.ugm._api.Group'>: group3
+    
+    >>> group.remove_role('editor')
+    >>> storage.printtree()
+    <class 'node.ext.ldap.ugm._api.Roles'>: roles
+      <class 'node.ext.ldap.ugm._api.Role'>: viewer
+        <class 'node.ext.ldap.ugm._api.User'>: Meier
+        <class 'node.ext.ldap.ugm._api.Group'>: group1
+          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+          <class 'node.ext.ldap.ugm._api.User'>: M?ller
+    
+    >>> group.remove_role('editor')
+    Traceback (most recent call last):
+      ...
+    ValueError: Role not exists 'editor'
+    
+    >>> group.remove_role('viewer')
+    Traceback (most recent call last):
+      ...
+    ValueError: Principal does not has role 'viewer'
+
+    >>> role = storage['viewer']
+    >>> role.member_ids
+    [u'Meier', u'group:group1']
+    
+    >>> role['Meier']
+    <User object 'Meier' at ...>
+    
+    >>> role['group:group1']
+    <Group object 'group1' at ...>
+    
+    >>> role['inexistent']
+    Traceback (most recent call last):
+      ...
+    KeyError: 'inexistent'
+    
+    >>> del role['inexistent']
+    Traceback (most recent call last):
+      ...
+    KeyError: 'inexistent'
     
     

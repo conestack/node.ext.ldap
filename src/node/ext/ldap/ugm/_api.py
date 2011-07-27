@@ -171,11 +171,6 @@ class User(object):
 
 class LDAPGroupMapping(Part):
     
-    @default
-    def related_principals(self, key):
-        raise NotImplementedError(u"Abstract group mapping does not implement "
-                                  u"``related_principals``")
-    
     @extend
     def __getitem__(self, key):
         if key not in self:
@@ -816,7 +811,7 @@ class LDAPUgm(UgmBase):
         if role is None:
             raise ValueError(u"Role not exists '%s'" % rolename)
         if not id in role.member_ids:
-            raise ValueError(u"Principal does not has role '%s'" % role)
+            raise ValueError(u"Principal does not has role '%s'" % rolename)
         del role[id]
         if not role.member_ids:
             parent = role.parent
