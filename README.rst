@@ -25,7 +25,7 @@ Usage
 LDAP Properties
 ---------------
 
-To define connectivity properties for LDAP use ``node.ext.ldap.LDAPProps``
+To define connection properties for LDAP use ``node.ext.ldap.LDAPProps``
 object.::
 
     >>> from node.ext.ldap import LDAPProps    
@@ -358,7 +358,7 @@ Add some users and groups we'll search for.::
       <cn=group1,ou=demo,dc=my-domain,dc=com:cn=group1 - False>
       <cn=group2,ou=demo,dc=my-domain,dc=com:cn=group2 - False>
 
-For defining search criteria LDAP filter are used, which can be combined by
+For defining search criteria LDAP filters are used, which can be combined by
 bool operators '&' and '|'.::
 
     >>> from node.ext.ldap import LDAPFilter
@@ -391,14 +391,14 @@ Define a relation LDAP filter. In this case we build a relation between group
     u'cn=person4', 
     u'cn=person5']
 
-The different LDAP filter types can be combined.::
+Different LDAP filter types can be combined.::
 
     >>> filter &= LDAPFilter('(cn=person2)')
     >>> str(filter) 
     '(&(description=group1)(cn=person2))'
 
-All keyword arguments accepted by ``LDAPNode.search``. If multiple keywords are
-given, search criteria is '&' combined where appropriate:
+The following keyword arguments are accepted by ``LDAPNode.search``. If multiple keywords are
+used, combine search criteria with '&' where appropriate:
     
 queryFilter
     Either a LDAP filter instance or a string. If given argument is string type,
@@ -429,8 +429,8 @@ or_search
     of LDAPDictFilter controlling whether to combine criteria with '&' or '|'.
 
 You can define search defaults on the node which are always considered when
-callins ``search`` on this node. If set, they are always '&' combined with
-the optional passed filters.
+calling ``search`` on this node. If set, they are always '&' combined with
+any (optional) passed filters.
 
 Define the default search scope::
 
@@ -469,7 +469,7 @@ Define default search relation.::
 Again, like with the keyword arguments, multiple defined defaults are '&'
 combined.::
 
-    # empty result, ther are no groups with group 'cn' as 'description' 
+    # empty result, there are no groups with group 'cn' as 'description' 
     >>> root.search_criteria = {'objectClass': 'group'}
     >>> root.search()
     []
@@ -497,7 +497,7 @@ baseDN
 attrmap
     Principals Attribute map as ``odict.odict``. This object must contain the
     mapping between reserved keys and the real LDAP attribute, as well as
-    mappings to all accessible attributes for principal nodes if instanciated
+    mappings to all accessible attributes for principal nodes if instantiated
     in strict mode, see below.
 
 scope
@@ -518,7 +518,7 @@ defaults
     detected via set object classes.
 
 strict
-    Define whether all principal attributes availabe must be declared in attmap,
+    Define whether all available principal attributes must be declared in attmap,
     or only reserved ones. Defaults to True.
 
 Reserved attrmap keys for Users and Groups:
@@ -528,7 +528,7 @@ id
 
 rdn
     The attribute representing the RDN of the node (mandatory)
-    XXX: get rid off, should be detected automatically
+    XXX: get rid of, should be detected automatically
 
 Reserved attrmap keys for Users:
 
@@ -680,16 +680,17 @@ Character Encoding
 ------------------
 
 LDAP (v3 at least, `RFC 2251`_) uses utf8 string encoding. ``LDAPSession`` and 
-``LDAPNode`` do translation for you. Consider it a bug, if you receive anything
-else than unicode from ``LDAPSession`` or ``LDAPNode``. Everything below that
-``LDAPConnector`` and ``LDAPCommunicator`` give you the real ldap experience.
+``LDAPNode`` do the encoding for you. Consider it a bug, if you receive 
+anything else than unicode from ``LDAPSession`` or ``LDAPNode``. The 
+``LDAPConnector`` and ``LDAPCommunicator`` are encoding-neutral, they do no 
+decoding or encoding.
 
-Unicode strings you pass to nodes or sessions are automatically encoded to uft8
-for LDAP. If you feed them normal strings they are decoded as utf8 and
+Unicode strings you pass to nodes or sessions are automatically encoded as uft8
+for LDAP. If you feed them ordinary strings they are decoded as utf8 and
 reencoded as utf8 to make sure they are utf8 or compatible, e.g. ascii.
 
-If decoding as utf8 fails, the value is assumed to be in binary and left as a
-string. This is not the final behavior since schema parsing is missing.
+If decoding as utf8 fails, the value is assumed to be binary and left 
+unaltered. This is not the final behavior since schema parsing is missing.
 
 If you have an LDAP server that does not use utf8, monkey-patch
 ``node.ext.ldap._node.CHARACTER_ENCODING``.
@@ -703,7 +704,7 @@ to provide a cache factory utility in you application in order to make caching
 work. If you don't, ``node.ext.ldap`` falls back to use ``bda.cache.NullCache``,
 which does not cache anything and is just an API placeholder. 
 
-To provide an cache based on ``Memcached`` install memcached server and
+To provide a cache based on ``Memcached`` install memcached server and
 configure it. Then you need to provide the factory utility.::
 
     >>> # Dummy registry.
@@ -714,8 +715,8 @@ configure it. Then you need to provide the factory utility.::
     >>> cache_factory = MemcachedProviderFactory()
     >>> components.registerUtility(cache_factory)
     
-In case of multiple memcached backends running or not running on
-127.0.0.1 at default port, initialization of factory looks like this.::    
+In case of multiple memcached backends on various IPs and ports initialization
+of the factory looks like this.::    
 
     >>> # Dummy registry.
     >>> components = registry.Components('comps')
@@ -740,7 +741,7 @@ Notes on python-ldap
 
 There are different compile issues on different platforms. If you experience
 problems with ``python-ldap``, make sure it is available in the python
-environment you run buildout in, so it won't be fetched and build by buildout
+environment you run buildout in, so it won't be fetched and built by buildout
 itself.
 
 
@@ -779,12 +780,12 @@ TODO
   XXX: SmartLDAPObject has been removed from the most recent python-ldap,
   because of being too buggy.
 
-- define how our retry logic should look like, re-think job of session,
+- define what our retry logic should look like, re-think function of session,
   communicator and connector. (check ldap.ldapobject.ReconnectLDAPObject)
   ideas: more complex retry logic with fallback servers, eg. try immediately
-  again, if fails use backup server, start to test other server after
-  timespan, report status of ldap servers, preferred server, equal servers,
-  load balance; Are there ldap load balancers to recommend?
+  again, if that fails use backup server, then start to probe other server 
+  after a timespan, report status of ldap servers, preferred server, 
+  equal servers, load balancing; Are there ldap load balancers to recommend?
 
 - consider search_st with timeout.
 
@@ -800,8 +801,8 @@ TODO
 
 - auto-detection of rdn attribute.
 
-- interactive configuration showing life how many users/groups are found with
-  the current config and how a selected user/group would look like
+- interactive configuration showing live how many users/groups are found with
+  the current config and what a selected user/group would look like
 
 
 Changes
