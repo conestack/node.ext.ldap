@@ -328,23 +328,6 @@ Recreate UGM object::
     >>> users = ugm.users
     >>> groups = ugm.groups
 
-#Role Management is not implemented yet::
-#
-#    >>> users['uid0'].add_role('foo')
-#    Traceback (most recent call last):
-#      ...
-#    NotImplementedError: not yet
-#    
-#    >>> users['uid0'].remove_role('foo')
-#    Traceback (most recent call last):
-#      ...
-#    NotImplementedError: not yet
-#    
-#    >>> users['uid0'].roles
-#    Traceback (most recent call last):
-#      ...
-#    NotImplementedError: not yet
-
 Test search function::
 
     >>> users.search(criteria={'login': 'cn0'})

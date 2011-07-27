@@ -786,7 +786,13 @@ class LDAPUgm(UgmBase):
         if format == FORMAT_DN:
             criteria = { attribute: principal.context.DN }
         elif format == FORMAT_UID:
-            criteria = { attribute: principal.context.attrs['uid'] }
+            # XXX: this is hacky. we really need member relations!!!
+            if isinstance(principal, Group):
+                attrkey = principal.parent.context._rdn_attr
+                value = 'group:%s' % principal.context.attrs[attrkey]
+            else:
+                value = principal.context.attrs['uid']
+            criteria = { attribute: value }
         return storage.context.search(criteria=criteria)
     
     @default

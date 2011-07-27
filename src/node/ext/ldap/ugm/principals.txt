@@ -461,7 +461,9 @@ Test role mappings. Create container for roles::
     >>> node['ou=roles'] = LDAPNode()
     >>> node['ou=roles'].attrs['objectClass'] = ['organizationalUnit']
     >>> node()
-    
+
+Configure role config represented by object class 'groupOfNames'::
+
     >>> from node.ext.ldap.ugm import RolesConfig
     >>> rcfg = RolesConfig(
     ...     baseDN='ou=roles,dc=my-domain,dc=com',
@@ -477,27 +479,42 @@ Test role mappings. Create container for roles::
     
     >>> from node.ext.ldap.ugm import Ugm
     >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
-    
+
     >>> storage = ugm._roles_storage
     >>> storage
     <Roles object 'roles' at ...>
-    
+
+No roles yet.::
+
+    >>> storage.printtree()
+    <class 'node.ext.ldap.ugm._api.Roles'>: roles
+
+Test roles for users.::
+
     >>> user = ugm.users['Meier']
     >>> ugm.roles(user)
     []
-    
+
+Add role for user, role gets created if not exists.::
+
     >>> ugm.add_role('viewer', user)
     >>> storage.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
-    
+
+Query roles for principal via ugm object.::
+
     >>> ugm.roles(user)
     [u'viewer']
-    
+
+Query roles for principal directly.::
+
     >>> user.roles
     [u'viewer']
-    
+
+Add some roles for 'Schmidt'.::
+
     >>> user = ugm.users['Schmidt']
     >>> user.add_role('viewer')
     >>> user.add_role('editor')
@@ -512,7 +529,9 @@ Test role mappings. Create container for roles::
     
     >>> user.roles
     [u'viewer', u'editor']
-    
+
+Remove role 'viewer'.::
+
     >>> ugm.remove_role('viewer', user)
     >>> storage.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
@@ -520,13 +539,17 @@ Test role mappings. Create container for roles::
         <class 'node.ext.ldap.ugm._api.User'>: Meier
       <class 'node.ext.ldap.ugm._api.Role'>: editor
         <class 'node.ext.ldap.ugm._api.User'>: Schmidt
-    
+
+Remove role 'editor', No other principal left, remove role as well.::
+
     >>> user.remove_role('editor')
     >>> storage.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
-    
+
+Test roles for group.::
+
     >>> group = ugm.groups['group1']
     >>> ugm.roles(group)
     []
@@ -550,11 +573,6 @@ Test role mappings. Create container for roles::
     >>> group.add_role('viewer')
     >>> group.add_role('editor')
     
-    >>> group.add_role('editor')
-    Traceback (most recent call last):
-      ...
-    ValueError: Principal already has role 'editor'
-    
     >>> storage.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
@@ -565,6 +583,13 @@ Test role mappings. Create container for roles::
         <class 'node.ext.ldap.ugm._api.Group'>: group3
       <class 'node.ext.ldap.ugm._api.Role'>: editor
         <class 'node.ext.ldap.ugm._api.Group'>: group3
+    
+If role already granted, an error is raised.::
+
+    >>> group.add_role('editor')
+    Traceback (most recent call last):
+      ...
+    ValueError: Principal already has role 'editor'
     
     >>> group.roles
     [u'viewer', u'editor']
@@ -588,35 +613,51 @@ Test role mappings. Create container for roles::
         <class 'node.ext.ldap.ugm._api.Group'>: group1
           <class 'node.ext.ldap.ugm._api.User'>: Schmidt
           <class 'node.ext.ldap.ugm._api.User'>: M?ller
-    
+
+If role not exists, an error is raised.::
+
     >>> group.remove_role('editor')
     Traceback (most recent call last):
       ...
     ValueError: Role not exists 'editor'
-    
+
+If role is not granted, an error is raised.::
+
     >>> group.remove_role('viewer')
     Traceback (most recent call last):
       ...
     ValueError: Principal does not has role 'viewer'
 
+Roles storage returns ``Role`` instances on ``__getitem__``
+
     >>> role = storage['viewer']
+    >>> role
+    <Role object 'viewer' at ...>
+
+Group keys are prefixed with 'group:'.::
+
     >>> role.member_ids
     [u'Meier', u'group:group1']
-    
+
+``__getitem__`` of ``Role`` returns ``User`` or ``Group`` instance, depending
+on key.::
+
     >>> role['Meier']
     <User object 'Meier' at ...>
     
     >>> role['group:group1']
     <Group object 'group1' at ...>
-    
+
+A KeyError is raised when trying to access an inexistent role member.::
+
     >>> role['inexistent']
     Traceback (most recent call last):
       ...
     KeyError: 'inexistent'
-    
+
+A KeyError is raised when trying to delete an inexistent role member.::
+
     >>> del role['inexistent']
     Traceback (most recent call last):
       ...
     KeyError: 'inexistent'
-    
-    

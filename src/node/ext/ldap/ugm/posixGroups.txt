@@ -354,23 +354,6 @@ Recreate UGM object::
     >>> users = ugm.users
     >>> groups = ugm.groups
 
-#Role Management is not implemented yet::
-#
-#    >>> users['uid0'].add_role('foo')
-#    Traceback (most recent call last):
-#      ...
-#    NotImplementedError: not yet
-#    
-#    >>> users['uid0'].remove_role('foo')
-#    Traceback (most recent call last):
-#      ...
-#    NotImplementedError: not yet
-#    
-#    >>> users['uid0'].roles
-#    Traceback (most recent call last):
-#      ...
-#    NotImplementedError: not yet
-
 Test search function::
 
     >>> users.search(criteria={'login': 'cn0'})
@@ -488,3 +471,87 @@ Test case where group contains reference to inexistent member.::
     >>> group = ugm.groups['group0']
     >>> group.items()
     [(u'uid1', <User object 'uid1' at ...>)]
+
+Role Management. Create container for roles.::
+
+    >>> from node.ext.ldap import LDAPNode
+    >>> node = LDAPNode('dc=my-domain,dc=com', props)
+    >>> node['ou=roles'] = LDAPNode()
+    >>> node['ou=roles'].attrs['objectClass'] = ['organizationalUnit']
+    >>> node()
+
+    >>> from node.ext.ldap.ugm import RolesConfig    
+    >>> from node.ext.ldap import SUBTREE
+    >>> rcfg = RolesConfig(
+    ...     baseDN='ou=roles,dc=my-domain,dc=com',
+    ...     attrmap={
+    ...         'id': 'cn',
+    ...         'rdn': 'cn',
+    ...     },
+    ...     scope=SUBTREE,
+    ...     queryFilter='(objectClass=posixGroup)',
+    ...     objectClasses=['posixGroup'],
+    ...     defaults={},
+    ...     strict=False,
+    ... )
+    
+    >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
+    
+    >>> user = ugm.users['uid1']
+    >>> ugm.roles(user)
+    []
+    
+    >>> ugm.add_role('viewer', user)
+    >>> ugm.roles(user)
+    [u'viewer']
+    
+    >>> user.roles
+    [u'viewer']
+    
+    >>> user = ugm.users['uid2']
+    >>> user.add_role('viewer')
+    >>> user.add_role('editor')
+    >>> user.roles
+    [u'viewer', u'editor']
+    
+    >>> ugm.remove_role('viewer', user)
+    >>> user.remove_role('editor')
+    >>> user.roles
+    []
+    
+    >>> group = ugm.groups['group1']
+    >>> ugm.roles(group)
+    []
+    
+    >>> ugm.add_role('viewer', group)
+    
+    >>> ugm.roles(group)
+    [u'viewer']
+    
+    >>> group.roles
+    [u'viewer']
+    
+    >>> group = ugm.groups['group0']
+    >>> group.add_role('viewer')
+    >>> group.add_role('editor')
+    
+    >>> group.roles
+    [u'viewer', u'editor']
+    
+    >>> group.add_role('editor')
+    Traceback (most recent call last):
+      ...
+    ValueError: Principal already has role 'editor'
+    
+    >>> ugm.remove_role('viewer', group)
+    >>> group.remove_role('editor')
+    
+    >>> group.remove_role('editor')
+    Traceback (most recent call last):
+      ...
+    ValueError: Role not exists 'editor'
+    
+    >>> group.remove_role('viewer')
+    Traceback (most recent call last):
+      ...
+    ValueError: Principal does not has role 'viewer'
