@@ -7,52 +7,74 @@ Overview
 
 The package contains base configuration and communication objects, a LDAP node
 object and a LDAP node based user and group management implementation utilizing
-`node.ext.ldap <http://pypi.python.org/pypi/node.ext.ldap>`_.
+`node.ext.ugm <http://pypi.python.org/pypi/node.ext.ugm>`_.
 
 
 Usage
 =====
 
-LDAPProps
----------
+LDAP Properties
+---------------
 
-    >>> import node.ext.ldap
-    >>> from node.ext.ldap import LDAPProps
-    >>> from node.ext.ldap import testLDAPConnectivity
-    
+To define connectivity properties for LDAP use ``node.ext.ldap.LDAPProps``
+object.::
+
+    >>> from node.ext.ldap import LDAPProps    
     >>> props = LDAPProps(uri='ldap://localhost:12345/',
     ...                   user='cn=Manager,dc=my-domain,dc=com',
     ...                   password='secret',
     ...                   cache=False)
-    
+
+Test server connectivity with ``node.ext.ldap.testLDAPConnectivity``.::
+
+    >>> from node.ext.ldap import testLDAPConnectivity
     >>> testLDAPConnectivity(props=props)
     'success'
 
 
-LDAPConnector
--------------
+LDAP Connection
+---------------
+
+For handling LDAP connections, ``node.ext.ldap.LDAPConnector`` is used. It
+expects a ``LDAPProps`` instance in the constructor. Normally there is no
+need to instantiate this object directly, this happens during creation of
+higher abstractions, see below.::
 
     >>> from node.ext.ldap import LDAPConnector
     >>> connector = LDAPConnector(props=props)
     >>> connector
     <node.ext.ldap.base.LDAPConnector object at ...>
-    
+
+Calling ``bind`` creates and returns the LDAP connection.::
+
     >>> connector.bind()
     <ldap.ldapobject.SimpleLDAPObject instance at ...>
-    
+
+Calling ``unbind`` destroys the connection.::
+
     >>> connector.unbind()
 
 
-LDAPCommunicator
-----------------
+LDAP Communication
+------------------
+
+For communicating with an LDAP server, ``node.ext.ldap.LDAPCommunicator`` is
+used. It provides all the basic functions needed to search and modify the
+directory.
+
+``LDAPCommunicator`` expects a ``LDAPConnector`` instance at creation time.::
 
     >>> from node.ext.ldap import LDAPCommunicator
     >>> communicator = LDAPCommunicator(connector)
     >>> communicator
     <node.ext.ldap.base.LDAPCommunicator object at ...>
-    
+
+Bind to server.::
+
     >>> communicator.bind()
-    
+
+Adding directory entry.::
+
     >>> communicator.add(
     ...     'cn=foo,ou=demo,dc=my-domain,dc=com',
     ...     {
@@ -61,18 +83,24 @@ LDAPCommunicator
     ...         'userPassword': 'secret',
     ...         'objectClass': ['person'],
     ...     })
-    
+
+Set default search DN.::
+
     >>> communicator.baseDN = 'ou=demo,dc=my-domain,dc=com'
-    
+
+Search in directory.::
+
+    >>> import node.ext.ldap
     >>> communicator.search('(objectClass=person)', node.ext.ldap.SUBTREE)
     [('cn=foo,ou=demo,dc=my-domain,dc=com', 
     {'objectClass': ['person'], 
     'userPassword': ['secret'], 
     'cn': ['foo'], 
     'sn': ['Mustermann']})]
-    
+
+Modify directory entry.::
+
     >>> from ldap import MOD_REPLACE
-    
     >>> communicator.modify('cn=foo,ou=demo,dc=my-domain,dc=com',
     ...                     [(MOD_REPLACE, 'sn', 'Musterfrau')])
     
@@ -81,32 +109,100 @@ LDAPCommunicator
     ...                     attrlist=['cn'])
     [('cn=foo,ou=demo,dc=my-domain,dc=com', 
     {'cn': ['foo']})]
-    
+
+Change the password of a directory entry which represents a user.::
+
     >>> communicator.passwd(
     ...     'cn=foo,ou=demo,dc=my-domain,dc=com', 'secret', '12345')
+    
     >>> communicator.search('(objectClass=person)',
     ...                     node.ext.ldap.SUBTREE,
     ...                     attrlist=['userPassword'])
     [('cn=foo,ou=demo,dc=my-domain,dc=com', 
     {'userPassword': ['{SSHA}...']})]
-    
+
+Delete directory entry.::
+
     >>> communicator.delete('cn=foo,ou=demo,dc=my-domain,dc=com')
+    
     >>> communicator.search('(objectClass=person)', node.ext.ldap.SUBTREE)
     []
-    
+
+Close connection.::
+
     >>> communicator.unbind()
 
 
-LDAPSession
------------
+LDAP Session
+------------
+
+A more convenient way for dealing with LDAP is provided by
+``node.ext.ldap.LDAPSession``. It basically provides the same functionality
+as ``LDAPCommunicator``, but automatically creates the connectivity objects
+and checks the connection state before performing actions.
+
+Instantiate ``LDAPSession`` object. Expects ``LDAPProps`` instance.::
 
     >>> from node.ext.ldap import LDAPSession
     >>> session = LDAPSession(props)
-    
+
+LDAP session has a convenience to check given properties.::
+
     >>> session.checkServerProperties()
     (True, 'OK')
+
+Set default search DN for session.::
+
+    >>> session.baseDN = 'ou=demo,dc=my-domain,dc=com'
+
+Search in directory.::
+
+    >>> session.search()
+    [(u'ou=demo,dc=my-domain,dc=com', 
+    {u'objectClass': [u'top', u'organizationalUnit'], 
+    u'ou': [u'demo'], 
+    u'description': [u'Demo organizational unit']})]
+
+Add directory entry.::
+
+    >>> session.add(
+    ...     'cn=foo,ou=demo,dc=my-domain,dc=com',
+    ...     {
+    ...         'cn': 'foo',
+    ...         'sn': 'Mustermann',
+    ...         'userPassword': 'secret',
+    ...         'objectClass': ['person'],
+    ...     })
+
+Change the password of a directory entry which represents a user.::
+
+    >>> session.passwd('cn=foo,ou=demo,dc=my-domain,dc=com', 'secret', '12345')
+
+Authenticate a specific user.::
+
+    >>> session.authenticate('cn=foo,ou=demo,dc=my-domain,dc=com', '12345')
+    True
+
+Modify directory entry.::
     
-    >> session.search()
+    >>> session.modify('cn=foo,ou=demo,dc=my-domain,dc=com',
+    ...                [(MOD_REPLACE, 'sn', 'Musterfrau')])
+    
+    >>> session.search('(objectClass=person)',
+    ...                node.ext.ldap.SUBTREE,
+    ...                attrlist=['cn'])
+    [(u'cn=foo,ou=demo,dc=my-domain,dc=com', {u'cn': [u'foo']})]
+
+Delete directory entry.::
+
+    >>> session.delete('cn=foo,ou=demo,dc=my-domain,dc=com')
+    >>> session.search('(objectClass=person)', node.ext.ldap.SUBTREE)
+    []
+
+Close session.::
+
+    >>> session.unbind()
+
 
 LDAPNode
 --------
