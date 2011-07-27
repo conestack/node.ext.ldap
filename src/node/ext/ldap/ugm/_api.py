@@ -25,11 +25,11 @@ from node.parts import (
 )
 from node.utils import debug
 from node.ext.ugm import (
-    User as BaseUserPart,
-    Group as BaseGroupPart,
-    Users as BaseUsersPart,
-    Groups as BaseGroupsPart,
-    Ugm as BaseUgmPart,
+    User as UgmUser,
+    Group as UgmGroup,
+    Users as UgmUsers,
+    Groups as UgmGroups,
+    Ugm as UgmBase,
 )
 from node.ext.ldap.interfaces import (
     ILDAPGroupsConfig as IGroupsConfig,
@@ -83,6 +83,13 @@ class GroupsConfig(PrincipalsConfig):
     implements(IGroupsConfig)
 
 
+class RolesConfig(PrincipalsConfig):
+    """Define how roles are mapping in LDAP. Basically a role mapping works
+    like a group mapping, but the id attribute is considered as the role name,
+    and the members set have this role granted.
+    """
+
+
 class PrincipalAliasedAttributes(AliasedNodespace):
     
     allow_non_node_childs = True
@@ -92,7 +99,7 @@ class PrincipalAliasedAttributes(AliasedNodespace):
         return self.context.changed
 
 
-class PrincipalPart(Part):
+class AliasedPrincipal(Part):
     
     @extend
     def __init__(self, context, attraliaser):
@@ -106,6 +113,9 @@ class PrincipalPart(Part):
         return aliased_attrs
     
     attributes_factory = finalize(principal_attributes_factory)
+
+
+class LDAPPrincipal(AliasedPrincipal):
     
     @default
     def add_role(self, role):
@@ -130,7 +140,7 @@ class PrincipalPart(Part):
         self.context()
 
 
-class UserPart(PrincipalPart, BaseUserPart):
+class LDAPUser(LDAPPrincipal, UgmUser):
     
     @default
     @property
@@ -152,20 +162,26 @@ class UserPart(PrincipalPart, BaseUserPart):
 class User(object):
     __metaclass__ = plumber
     __plumbing__ = (
-        UserPart,
+        LDAPUser,
         Nodespaces,
         Attributes,
         Nodify,
     )
 
 
-class GroupPart(PrincipalPart, BaseGroupPart):
+class LDAPGroupMapping(Part):
+    
+    @default
+    @property
+    def related_principals(self):
+        raise NotImplementedError(u"Abstract group mapping does not implement "
+                                  u"``related_principals``")
     
     @extend
     def __getitem__(self, key):
         if key not in self:
             raise KeyError(key)
-        return self.parent.parent.users[key]
+        return self.related_principals[key]
     
     @extend
     @locktree
@@ -173,7 +189,7 @@ class GroupPart(PrincipalPart, BaseGroupPart):
         if key not in self:
             raise KeyError(key)
         if self._member_format == FORMAT_DN:
-            val = self.parent.parent.users.context.child_dn(key)
+            val = self.related_principals.context.child_dn(key)
         elif self._member_format == FORMAT_UID:
             val = key
         # self.context.attrs[self._member_attribute].remove won't work here
@@ -201,10 +217,10 @@ class GroupPart(PrincipalPart, BaseGroupPart):
     def add(self, key):
         if not key in self.member_ids:
             if self._member_format == FORMAT_DN:
-                users = self.parent.parent.users
-                # make sure user is loaded
-                users[key]
-                val = users.context.child_dn(key)
+                principals = self.related_principals
+                # make sure principal is loaded
+                principals[key]
+                val = principals.context.child_dn(key)
             elif self._member_format == FORMAT_UID:
                 val = key
             # self.context.attrs[self._member_attribute].append won't work here
@@ -216,11 +232,6 @@ class GroupPart(PrincipalPart, BaseGroupPart):
     
     @default
     @property
-    def users(self):
-        return [self.parent.parent.users[id] for id in self.member_ids]
-    
-    @default
-    @property
     def member_ids(self):
         ret = list() 
         members = self.context.attrs.get(self._member_attribute, list())
@@ -228,10 +239,10 @@ class GroupPart(PrincipalPart, BaseGroupPart):
             if member in ['nobody', 'cn=nobody']:
                 continue
             ret.append(member)
-        users = self.parent.parent.users
+        principals = self.related_principals
         if self._member_format == FORMAT_DN:
-            ret = [users.idbydn(dn) for dn in ret]
-        keys = users.keys()
+            ret = [principals.idbydn(dn) for dn in ret]
+        keys = principals.keys()
         ret = [id for id in ret if id in keys]
         return ret
     
@@ -246,10 +257,23 @@ class GroupPart(PrincipalPart, BaseGroupPart):
         return self.parent._member_attribute
 
 
+class LDAPGroup(LDAPGroupMapping, LDAPPrincipal, UgmGroup):
+    
+    @default
+    @property
+    def related_principals(self):
+        return self.parent.parent.users
+    
+    @default
+    @property
+    def users(self):
+        return [self.parent.parent.users[id] for id in self.member_ids]
+
+
 class Group(object):
     __metaclass__ = plumber
     __plumbing__ = (
-        GroupPart,
+        LDAPGroup,
         NodeChildValidate,
         Nodespaces,
         Attributes,
@@ -257,7 +281,7 @@ class Group(object):
     )
 
 
-class PrincipalsPart(Part):
+class LDAPPrincipals(Part):
     principal_attrmap = default(None)
     principal_attraliaser = default(None)
     
@@ -440,7 +464,7 @@ class PrincipalsPart(Part):
         return self[_id]
 
 
-class UsersPart(PrincipalsPart, BaseUsersPart):
+class LDAPUsers(LDAPPrincipals, UgmUsers):
     
     principal_factory = default(User)
 
@@ -488,7 +512,7 @@ class UsersPart(PrincipalsPart, BaseUsersPart):
 class Users(object):
     __metaclass__ = plumber
     __plumbing__ = (
-        UsersPart,         
+        LDAPUsers,         
         NodeChildValidate,
         Nodespaces,
         Adopt,
@@ -517,9 +541,7 @@ def member_attribute(obj_cl):
     raise Exception(u"Unknown member attribute")
 
 
-class GroupsPart(PrincipalsPart, BaseGroupsPart):
-    
-    principal_factory = default(Group)
+class LDAPGroupsMapping(LDAPPrincipals, UgmGroups):
     
     @default
     @property
@@ -550,10 +572,15 @@ class GroupsPart(PrincipalsPart, BaseGroupsPart):
         _next(self, key, vessel)
 
 
+class LDAPGroups(LDAPGroupsMapping):
+    
+    principal_factory = default(Group)
+
+
 class Groups(object):
     __metaclass__ = plumber
     __plumbing__ = (
-        GroupsPart,         
+        LDAPGroups,         
         NodeChildValidate,
         Nodespaces,
         Adopt,
@@ -562,7 +589,44 @@ class Groups(object):
     )
 
 
-class UgmPart(BaseUgmPart):
+class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
+    
+    @default
+    @property
+    def related_principals(self):
+        # XXX: or groups, depends, later
+        return self.parent.parent.users
+
+
+class Role(object):
+    __metaclass__ = plumber
+    __plumbing__ = (
+        LDAPRole,
+        NodeChildValidate,
+        Nodespaces,
+        Attributes,
+        Nodify,
+    )
+
+
+class LDAPRoles(LDAPGroupsMapping):
+    
+    principal_factory = default(Role)
+
+
+class Roles(object):
+    __metaclass__ = plumber
+    __plumbing__ = (
+        LDAPRoles,         
+        NodeChildValidate,
+        Nodespaces,
+        Adopt,
+        Attributes,
+        Nodify,
+    )
+
+
+class LDAPUgm(UgmBase):
     
     @extend
     def __init__(self, name=None, parent=None, props=None,
@@ -598,7 +662,7 @@ class UgmPart(BaseUgmPart):
         if not key in self.storage:
             if key == 'users':
                 self['users'] = Users(self.props, self.ucfg)
-            else:
+            elif key == 'groups':
                 self['groups'] = Groups(self.props, self.gcfg)
         return self.storage[key]
     
@@ -628,19 +692,54 @@ class UgmPart(BaseUgmPart):
         return self['groups']
     
     @default
-    def add_role(self, role, principal):
-        # XXX
-        raise NotImplementedError(u"not yet")
+    def roles(self, principal):
+        id = self._principal_id(principal)
+        storage = self._roles_storage
+        member_attribute = storage._member_attribute
+        return storage.context.search(criteria={member_attribute: id})
     
     @default
-    def remove_role(self, role, principal):
-        # XXX
-        raise NotImplementedError(u"not yet")
-        
+    @locktree
+    def add_role(self, rolename, principal):
+        id = self._principal_id(principal)
+        storage = self._roles_storage
+        role = storage.get(rolename)
+        if role is None:
+            role = storage.create(rolename)
+        if id in role.member_ids:
+            raise ValueError(u"Principal already has role '%s'" % rolename)
+        role.add(id)
+        role()
+    
     @default
-    def roles(self, principal):
-        # XXX
-        raise NotImplementedError(u"not yet")
+    @locktree
+    def remove_role(self, rolename, principal):
+        id = self._principal_id(principal)
+        storage = self._roles_storage
+        role = storage.get(rolename)
+        if role is None:
+            raise ValueError(u"Role not exists '%s'" % rolename)
+        if not id in role.member_ids:
+            raise ValueError(u"Principal does not has role '%s'" % role)
+        del role[id]
+        role()
+    
+    @default
+    @property
+    def _roles_storage(self):
+        if not 'roles' in self.storage:
+            roles = Roles(self.props, self.rcfg)
+            roles.__name__ = 'roles'
+            roles.__parent__ = self
+            self.storage['roles'] = roles
+        return self.storage['roles']
+    
+    @default
+    def _principal_id(self, principal):
+        id = principal.name
+        if isinstance(principal, Group):
+            id = 'group:%s' % id
+        return id
     
     @default
     def _chk_key(self, key):
@@ -651,7 +750,7 @@ class UgmPart(BaseUgmPart):
 class Ugm(object):
     __metaclass__ = plumber
     __plumbing__ = (
-        UgmPart,
+        LDAPUgm,
         NodeChildValidate,
         Nodespaces,
         Adopt,

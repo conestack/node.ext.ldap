@@ -453,3 +453,38 @@ Fetch users and groups::
     
     >>> ugm.users['Schmidt'].groups
     [<Group object 'group1' at ...>]
+
+Test role mappings. Create container for roles::
+
+    >>> from node.ext.ldap import LDAPNode
+    >>> node = LDAPNode('dc=my-domain,dc=com', props)
+    >>> node['ou=roles'] = LDAPNode()
+    >>> node['ou=roles'].attrs['objectClass'] = ['organizationalUnit']
+    >>> node()
+    
+    >>> from node.ext.ldap.ugm import RolesConfig
+    >>> rcfg = RolesConfig(
+    ...     baseDN='ou=roles,dc=my-domain,dc=com',
+    ...     attrmap={
+    ...         'id': 'cn',
+    ...         'rdn': 'cn',
+    ...     },
+    ...     scope=SUBTREE,
+    ...     queryFilter='(objectClass=groupOfNames)',
+    ...     objectClasses=['groupOfNames'],
+    ...     defaults={},
+    ... )
+    
+    >>> from node.ext.ldap.ugm import Ugm
+    >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
+    
+    >>> storage = ugm._roles_storage
+    >>> storage
+    <Roles object 'roles' at ...>
+    
+    >>> user = ugm.users['Meier']
+    >>> ugm.roles(ugm.users['Meier'])
+    []
+    
+    >> ugm.add_role('viewer', user)
+    >> storage.printtree()
