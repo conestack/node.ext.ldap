@@ -14,9 +14,13 @@ object and a LDAP node based user and group management implementation utilizing
 This package is the successor of 
 `bda.ldap <http://pypi.python.org/pypi/bda.ldap>`_.
 
+.. contents::
+    :depth: 2
+
 
 Usage
 =====
+
 
 LDAP Properties
 ---------------
@@ -813,12 +817,8 @@ Changes
 Contributors
 ============
 
-- Robert Niederreiter <rnix@squarewave.at>
-
-- Florian Friesdorf <flo@chaoflow.net>
-
-- Jens Klein <jens@bluedynamics.com>
-
-- Georg Bernhard <g.bernhard@akbild.ac.at>
-
-- Johannes Raggam <johannes@bluedynamics.com>
+- Robert Niederreiter <rnix [at] squarewave [dot] at>
+- Florian Friesdorf <flo [at] chaoflow [dot] net>
+- Jens Klein <jens [at] bluedynamics [dot] com>
+- Georg Bernhard <g.bernhard [at] akbild [dot] ac [dot] at>
+- Johannes Raggam <johannes [at] bluedynamics [dot] com>
