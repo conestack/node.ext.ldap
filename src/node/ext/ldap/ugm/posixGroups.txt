@@ -460,3 +460,31 @@ Delete Group::
           <class 'node.ext.ldap.ugm._api.User'>: uid0
           <class 'node.ext.ldap.ugm._api.User'>: uid1
           <class 'node.ext.ldap.ugm._api.User'>: uid2
+
+Test case where group object does not have 'memberUid' attribute set yet.::
+
+    >>> from node.ext.ldap import LDAPNode
+    >>> node = LDAPNode(
+    ...     u'cn=group0,ou=groups,ou=posixGroups,dc=my-domain,dc=com',
+    ...     props=props)
+    
+    >>> del node.attrs['memberUid']
+    >>> node()
+    
+    >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg)
+    >>> group = ugm.groups['group0']
+    >>> group.items()
+    []
+    
+    >>> group.add('uid0')
+    >>> group()
+
+Test case where group contains reference to inexistent member.::
+
+    >>> node.attrs['memberUid'] = ['uid1', 'inexistent']
+    >>> node()
+    
+    >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg)
+    >>> group = ugm.groups['group0']
+    >>> group.items()
+    [(u'uid1', <User object 'uid1' at ...>)]

@@ -209,7 +209,7 @@ class GroupPart(PrincipalPart, BaseGroupPart):
                 val = key
             # self.context.attrs[self._member_attribute].append won't work here
             # issue in LDAPNodeAttributes, does not recognize changed this way.
-            old = self.context.attrs[self._member_attribute]
+            old = self.context.attrs.get(self._member_attribute, list())
             self.context.attrs[self._member_attribute] = old + [val]
             # XXX: call here immediately?
             #self.context()
@@ -222,15 +222,18 @@ class GroupPart(PrincipalPart, BaseGroupPart):
     @default
     @property
     def member_ids(self):
-        members = list()
-        for member in self.context.attrs[self._member_attribute]:
+        ret = list() 
+        members = self.context.attrs.get(self._member_attribute, list())
+        for member in members:
             if member in ['nobody', 'cn=nobody']:
                 continue
-            members.append(member)
+            ret.append(member)
+        users = self.parent.parent.users
         if self._member_format == FORMAT_DN:
-            return [self.parent.parent.users.idbydn(dn) for dn in members]
-        if self._member_format == FORMAT_UID:
-            return members
+            ret = [users.idbydn(dn) for dn in ret]
+        keys = users.keys()
+        ret = [id for id in ret if id in keys]
+        return ret
     
     @default
     @property
