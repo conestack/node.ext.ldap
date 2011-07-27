@@ -306,17 +306,169 @@ Delete an attribute.::
 
 Delete LDAP node.::
 
-    >>> del root['cn=person1']
+    >>> del root['cn=person2']
     >>> root()
     >>> root.printtree()
     <ou=demo,dc=my-domain,dc=com - False>
-      <cn=person2,ou=demo,dc=my-domain,dc=com:cn=person2 - False>
+      <cn=person1,ou=demo,dc=my-domain,dc=com:cn=person1 - False>
 
 
 Searching LDAP
 --------------
 
-XXX
+Add some users and groups we'll search for.::
+
+    >>> for i in range(2, 6):
+    ...     node = LDAPNode()
+    ...     node.attrs['objectClass'] = ['person']
+    ...     node.attrs['sn'] = 'Surname %s' % i
+    ...     node.attrs['userPassword'] = 'secret%s' % i
+    ...     node.attrs['description'] = 'group1'
+    ...     root['cn=person%s' % i] = node
+    
+    >>> node = LDAPNode()
+    >>> node.attrs['objectClass'] = ['groupOfNames']
+    >>> node.attrs['member'] = [
+    ...     root.child_dn('cn=person1'),
+    ...     root.child_dn('cn=person2'),
+    ... ]
+    ... node.attrs['description'] = 'IT'
+    >>> root['cn=group1'] = node
+    
+    >>> node = LDAPNode()
+    >>> node.attrs['objectClass'] = ['groupOfNames']
+    >>> node.attrs['member'] = [
+    ...     root.child_dn('cn=person4'),
+    ...     root.child_dn('cn=person5'),
+    ... ]
+    >>> root['cn=group2'] = node
+    
+    >>> root()
+    >>> root.printtree()
+    <ou=demo,dc=my-domain,dc=com - False>
+      <cn=person1,ou=demo,dc=my-domain,dc=com:cn=person1 - False>
+      <cn=person2,ou=demo,dc=my-domain,dc=com:cn=person2 - False>
+      <cn=person3,ou=demo,dc=my-domain,dc=com:cn=person3 - False>
+      <cn=person4,ou=demo,dc=my-domain,dc=com:cn=person4 - False>
+      <cn=person5,ou=demo,dc=my-domain,dc=com:cn=person5 - False>
+      <cn=group1,ou=demo,dc=my-domain,dc=com:cn=group1 - False>
+      <cn=group2,ou=demo,dc=my-domain,dc=com:cn=group2 - False>
+
+For defining search criteria LDAP filter are used, which can be combined by
+bool operators '&' and '|'.::
+
+    >>> from node.ext.ldap import LDAPFilter
+    >>> filter = LDAPFilter('(objectClass=person)')
+    >>> filter |= LDAPFilter('(objectClass=groupOfNames)')
+    >>> root.search(queryFilter=filter)
+    [u'cn=person1', 
+    u'cn=person2', 
+    u'cn=person3', 
+    u'cn=person4', 
+    u'cn=person5', 
+    u'cn=group1', 
+    u'cn=group2']
+
+Define multiple criteria LDAP filter.::
+
+    >>> from node.ext.ldap import LDAPDictFilter
+    >>> filter = LDAPDictFilter({'objectClass': ['person'], 'cn': 'person1'})
+    >>> root.search(queryFilter=filter)
+    [u'cn=person1']
+
+Define a relation LDAP filter. In this case we build a relation between group
+'cn' and person 'description'::
+
+    >>> from node.ext.ldap import LDAPRelationFilter
+    >>> filter = LDAPRelationFilter(root['cn=group1'], 'cn:description')
+    >>> root.search(queryFilter=filter)
+    [u'cn=person2', 
+    u'cn=person3', 
+    u'cn=person4', 
+    u'cn=person5']
+
+The different LDAP filter types can be combined.::
+
+    >>> filter &= LDAPFilter('(cn=person2)')
+    >>> str(filter) 
+    '(&(description=group1)(cn=person2))'
+
+All keyword arguments accepted by ``LDAPNode.search``. If multiple keywords are
+given, search criteria is '&' combined where appropriate:
+    
+queryFilter
+    Either a LDAP filter instance or a string. If given argument is string type,
+    a ``LDAPFilter`` instance is created.
+    
+criteria
+    A dictionary containing search criteria. A ``LDAPDictFilter`` instance is
+    created.
+
+attrlist
+    List of attribute names to return.
+ 
+relation
+    Either ``LDAPRelationFilter`` instance or a string defining the relation.
+    If given argument is string type, a ``LDAPRelationFilter`` instance is
+    created.
+    
+relation_node
+    In combination with ``relation`` argument, when given as string, use
+    ``relation_node`` instead of self for filter creation.  
+
+exact_match
+    Flag whether 1-length result is expected. Raises an error if empty result
+    or more than one entry found.
+
+or_search
+    In combination with ``criteria``, this parameter is passed to the creation
+    of LDAPDictFilter controlling whether to combine criteria with '&' or '|'.
+
+You can define search defaults on the node which are always considered when
+callins ``search`` on this node. If set, they are always '&' combined with
+the optional passed filters.
+
+Define the default search scope::
+
+    >>> from node.ext.ldap import SUBTREE
+    >>> root.search_scope = SUBTREE
+
+Define default search filter, could be of type LDAPFilter, LDAPDictFilter,
+LDAPRelationFilter or string.:
+
+    >>> root.search_filter = LDAPFilter('objectClass=groupOfNames')
+    >>> root.search()
+    [u'cn=group1', u'cn=group2']
+
+    >>> root.search_filter = None
+
+Define default search criteria as dict.::
+    
+    >>> root.search_criteria = {'objectClass': 'person'}
+    >>> root.search()
+    [u'cn=person1', 
+    u'cn=person2', 
+    u'cn=person3', 
+    u'cn=person4', 
+    u'cn=person5']
+
+Define default search relation.::
+
+    >>> root.search_relation = \
+    ...     LDAPRelationFilter(root['cn=group1'], 'cn:description')
+    >>> root.search()
+    [u'cn=person2', 
+    u'cn=person3', 
+    u'cn=person4', 
+    u'cn=person5']
+
+Again, like with the keyword arguments, multiple defined defaults are '&'
+combined.::
+
+    # empty result, ther are no groups with group 'cn' as 'description' 
+    >>> root.search_criteria = {'objectClass': 'group'}
+    >>> root.search()
+    []
 
 
 Character Encoding
