@@ -486,5 +486,42 @@ Test role mappings. Create container for roles::
     >>> ugm.roles(ugm.users['Meier'])
     []
     
-    >> ugm.add_role('viewer', user)
-    >> storage.printtree()
+    >>> ugm.add_role('viewer', user)
+    >>> storage.printtree()
+    <class 'node.ext.ldap.ugm._api.Roles'>: roles
+      <class 'node.ext.ldap.ugm._api.Role'>: viewer
+        <class 'node.ext.ldap.ugm._api.User'>: Meier
+    
+    >>> user.roles
+    [u'viewer']
+    
+    >>> user =  ugm.users['Schmidt']
+    >>> ugm.add_role('viewer', user)
+    >>> ugm.add_role('editor', user)
+    
+    >>> storage.printtree()
+    <class 'node.ext.ldap.ugm._api.Roles'>: roles
+      <class 'node.ext.ldap.ugm._api.Role'>: viewer
+        <class 'node.ext.ldap.ugm._api.User'>: Meier
+        <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+      <class 'node.ext.ldap.ugm._api.Role'>: editor
+        <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+    
+    >>> user.roles
+    [u'viewer', u'editor']
+    
+    >>> ugm.remove_role('viewer', user)
+    >>> storage.printtree()
+    <class 'node.ext.ldap.ugm._api.Roles'>: roles
+      <class 'node.ext.ldap.ugm._api.Role'>: viewer
+        <class 'node.ext.ldap.ugm._api.User'>: Meier
+      <class 'node.ext.ldap.ugm._api.Role'>: editor
+        <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+    
+    >>> ugm.remove_role('editor', user)
+    >>> storage.printtree()
+    <class 'node.ext.ldap.ugm._api.Roles'>: roles
+      <class 'node.ext.ldap.ugm._api.Role'>: viewer
+        <class 'node.ext.ldap.ugm._api.User'>: Meier
+    
+    

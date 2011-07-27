@@ -113,6 +113,10 @@ class AliasedPrincipal(Part):
         return aliased_attrs
     
     attributes_factory = finalize(principal_attributes_factory)
+    
+    @default
+    def __call__(self):
+        self.context()
 
 
 class LDAPPrincipal(AliasedPrincipal):
@@ -134,10 +138,6 @@ class LDAPPrincipal(AliasedPrincipal):
     @property
     def changed(self):
         return self.context.changed
-    
-    @default
-    def __call__(self):
-        self.context()
 
 
 class LDAPUser(LDAPPrincipal, UgmUser):
@@ -695,8 +695,13 @@ class LDAPUgm(UgmBase):
     def roles(self, principal):
         id = self._principal_id(principal)
         storage = self._roles_storage
-        member_attribute = storage._member_attribute
-        return storage.context.search(criteria={member_attribute: id})
+        attribute = storage._member_attribute
+        format = storage._member_format
+        if format == FORMAT_DN:
+            criteria = { attribute: principal.context.DN }
+        elif format == FORMAT_UID:
+            criteria = { attribute: principal.context.attrs['uid'] }
+        return storage.context.search(criteria=criteria)
     
     @default
     @locktree
@@ -722,7 +727,12 @@ class LDAPUgm(UgmBase):
         if not id in role.member_ids:
             raise ValueError(u"Principal does not has role '%s'" % role)
         del role[id]
-        role()
+        if not role.member_ids:
+            parent = role.parent
+            del parent[rolename]
+            parent()
+        else:
+            role()
     
     @default
     @property
