@@ -22,7 +22,6 @@ posixGroup
 - memberUid
 - description -----> no default callback available
 """
-from bda.basen import base62
 
 
 def cn(node, id):
@@ -34,8 +33,10 @@ def uid(node, id):
 
 
 def uidNumber(node, id):
-    term = base62(id)
-    return str(int(term))
+    num = 0
+    for char in id:
+        num += ord(char)
+    return str(num)
 
 
 gidNumber = uidNumber
