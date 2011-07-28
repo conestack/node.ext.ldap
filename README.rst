@@ -806,7 +806,6 @@ Dependencies
 - node
 - node.ext.ldap
 - bda.cache
-- bda.basen
 
 
 Notes on python-ldap
@@ -878,7 +877,10 @@ TODO
   the current config and what a selected user/group would look like
 
 - Scope SUBTREE for Principals containers is not tested properly yet.
-  Especially ``__getitem__`` needs a little love::
+  Especially ``__getitem__`` needs a little love.
+
+- Configuration validation for UGM. Add some checks in ``Ugm.__init__`` which
+  tries to block stupid configuration.
 
 
 Changes
