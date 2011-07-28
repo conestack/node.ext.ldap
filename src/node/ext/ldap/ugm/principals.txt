@@ -5,7 +5,7 @@ login attribute also needs to be unique, which will be checked upon calling
 ids() the first time::
 
     >>> from node.ext.ldap.ugm import Users, UsersConfig
-    >>> from node.ext.ldap import SUBTREE
+    >>> from node.ext.ldap import ONELEVEL
 
     >>> from node.ext.ldap.testing import props, ucfg
     >>> ucfg.attrmap
@@ -357,7 +357,7 @@ Create a LDAPGroups node and configure it::
     ...         'id': 'cn',
     ...         'rdn': 'cn',
     ...     },
-    ...     scope=SUBTREE,
+    ...     scope=ONELEVEL,
     ...     queryFilter='(objectClass=groupOfNames)',
     ...     objectClasses=['groupOfNames'],
     ... )
@@ -382,7 +382,7 @@ Create a LDAPGroups node and configure it::
     #      a __setitem__ plumbing on groups object
     
     >>> groups.context.ldap_session.search(queryFilter='cn=group3',
-    ...                                    scope=SUBTREE)
+    ...                                    scope=ONELEVEL)
     [(u'cn=group3,dc=my-domain,dc=com', 
     {u'member': [u'cn=nobody'], 
     u'objectClass': [u'groupOfNames'], 
@@ -471,22 +471,21 @@ Configure role config represented by object class 'groupOfNames'::
     ...         'id': 'cn',
     ...         'rdn': 'cn',
     ...     },
-    ...     scope=SUBTREE,
+    ...     scope=ONELEVEL,
     ...     queryFilter='(objectClass=groupOfNames)',
     ...     objectClasses=['groupOfNames'],
     ...     defaults={},
     ... )
     
-    >>> from node.ext.ldap.ugm import Ugm
     >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
 
-    >>> storage = ugm._roles_storage
-    >>> storage
+    >>> roles = ugm._roles
+    >>> roles
     <Roles object 'roles' at ...>
 
 No roles yet.::
 
-    >>> storage.printtree()
+    >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
 
 Test roles for users.::
@@ -498,7 +497,7 @@ Test roles for users.::
 Add role for user, role gets created if not exists.::
 
     >>> ugm.add_role('viewer', user)
-    >>> storage.printtree()
+    >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
@@ -519,7 +518,7 @@ Add some roles for 'Schmidt'.::
     >>> user.add_role('viewer')
     >>> user.add_role('editor')
     
-    >>> storage.printtree()
+    >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
@@ -533,7 +532,7 @@ Add some roles for 'Schmidt'.::
 Remove role 'viewer'.::
 
     >>> ugm.remove_role('viewer', user)
-    >>> storage.printtree()
+    >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
@@ -543,7 +542,7 @@ Remove role 'viewer'.::
 Remove role 'editor', No other principal left, remove role as well.::
 
     >>> user.remove_role('editor')
-    >>> storage.printtree()
+    >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
@@ -555,7 +554,7 @@ Test roles for group.::
     []
     
     >>> ugm.add_role('viewer', group)
-    >>> storage.printtree()
+    >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
@@ -573,7 +572,7 @@ Test roles for group.::
     >>> group.add_role('viewer')
     >>> group.add_role('editor')
     
-    >>> storage.printtree()
+    >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
@@ -595,7 +594,7 @@ If role already granted, an error is raised.::
     [u'viewer', u'editor']
     
     >>> ugm.remove_role('viewer', group)
-    >>> storage.printtree()
+    >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
@@ -606,7 +605,7 @@ If role already granted, an error is raised.::
         <class 'node.ext.ldap.ugm._api.Group'>: group3
     
     >>> group.remove_role('editor')
-    >>> storage.printtree()
+    >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
@@ -628,9 +627,9 @@ If role is not granted, an error is raised.::
       ...
     ValueError: Principal does not has role 'viewer'
 
-Roles storage returns ``Role`` instances on ``__getitem__``
+Roles return ``Role`` instances on ``__getitem__``
 
-    >>> role = storage['viewer']
+    >>> role = roles['viewer']
     >>> role
     <Role object 'viewer' at ...>
 
@@ -661,3 +660,53 @@ A KeyError is raised when trying to delete an inexistent role member.::
     Traceback (most recent call last):
       ...
     KeyError: 'inexistent'
+
+Delete user and check if roles are removed.::
+
+    >>> ugm.printtree()
+    <class 'node.ext.ldap.ugm._api.Ugm'>: None
+      <class 'node.ext.ldap.ugm._api.Users'>: users
+        <class 'node.ext.ldap.ugm._api.User'>: Meier
+        <class 'node.ext.ldap.ugm._api.User'>: M?ller
+        <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+        <class 'node.ext.ldap.ugm._api.User'>: Umhauer
+      <class 'node.ext.ldap.ugm._api.Groups'>: groups
+        <class 'node.ext.ldap.ugm._api.Group'>: group1
+          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+          <class 'node.ext.ldap.ugm._api.User'>: M?ller
+        <class 'node.ext.ldap.ugm._api.Group'>: group2
+          <class 'node.ext.ldap.ugm._api.User'>: Umhauer
+        <class 'node.ext.ldap.ugm._api.Group'>: group3
+    
+    >>> roles.printtree()
+    <class 'node.ext.ldap.ugm._api.Roles'>: roles
+      <class 'node.ext.ldap.ugm._api.Role'>: viewer
+        <class 'node.ext.ldap.ugm._api.User'>: Meier
+        <class 'node.ext.ldap.ugm._api.Group'>: group1
+          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+          <class 'node.ext.ldap.ugm._api.User'>: M?ller
+    
+    >>> del ugm.users['Meier']
+    >>> roles.printtree()
+    <class 'node.ext.ldap.ugm._api.Roles'>: roles
+      <class 'node.ext.ldap.ugm._api.Role'>: viewer
+        <class 'node.ext.ldap.ugm._api.Group'>: group1
+          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+          <class 'node.ext.ldap.ugm._api.User'>: M?ller
+
+Delete group and check if roles are removed.::
+
+    >>> del ugm.groups['group1']
+    >>> roles.printtree()
+    <class 'node.ext.ldap.ugm._api.Roles'>: roles
+
+    >>> ugm.printtree()
+    <class 'node.ext.ldap.ugm._api.Ugm'>: None
+      <class 'node.ext.ldap.ugm._api.Users'>: users
+        <class 'node.ext.ldap.ugm._api.User'>: M?ller
+        <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+        <class 'node.ext.ldap.ugm._api.User'>: Umhauer
+      <class 'node.ext.ldap.ugm._api.Groups'>: groups
+        <class 'node.ext.ldap.ugm._api.Group'>: group2
+          <class 'node.ext.ldap.ugm._api.User'>: Umhauer
+        <class 'node.ext.ldap.ugm._api.Group'>: group3

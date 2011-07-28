@@ -152,6 +152,11 @@ class LDAPUser(LDAPPrincipal, UgmUser):
             criteria = { attribute: self.context.DN }
         elif format == FORMAT_UID:
             criteria = { attribute: self.context.attrs['uid'] }
+        # if roles configuration points to child of groups container, and
+        # group configuration has search scope SUBTREE, and groups are
+        # specified by the same criteria as roles, the search returns the 
+        # role id's as well.
+        # XXX: such edge cases should be resolved at UGM init time
         res = groups.context.search(criteria=criteria)
         ret = list()
         for id in res:
@@ -261,10 +266,17 @@ class LDAPGroup(LDAPGroupMapping, LDAPPrincipal, UgmGroup):
     
     @default
     def translate_ids(self, members):
-        if self._member_format == FORMAT_DN:
-            principals = self.related_principals()
-            members = [principals.idbydn(dn) for dn in members]
-        return members
+        if self._member_format != FORMAT_DN:
+            return members
+        principals = self.related_principals()
+        translated = list()
+        for dn in members:
+            try:
+                translated.append(principals.idbydn(dn))
+            except KeyError:
+                # inexistent DN
+                pass
+        return translated
     
     @default
     def translate_key(self, key):
@@ -488,6 +500,10 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
             groups = list()
         for group in groups:
             del group[user.name]
+        parent = self.parent
+        if parent and parent.rcfg is not None:
+            for role in user.roles:
+                user.remove_role(role)
         del self.context[id]
     
     @default
@@ -582,6 +598,15 @@ class LDAPGroupsMapping(LDAPPrincipals, UgmGroups):
 class LDAPGroups(LDAPGroupsMapping):
     
     principal_factory = default(Group)
+    
+    @extend
+    def __delitem__(self, id):
+        group = self[id]
+        parent = self.parent
+        if parent and parent.rcfg is not None:
+            for role in group.roles:
+                group.remove_role(role)
+        del self.context[id]
 
 
 class Groups(object):
@@ -780,9 +805,9 @@ class LDAPUgm(UgmBase):
     @default
     def roles(self, principal):
         id = self._principal_id(principal)
-        storage = self._roles_storage
-        attribute = storage._member_attribute
-        format = storage._member_format
+        roles = self._roles
+        attribute = roles._member_attribute
+        format = roles._member_format
         if format == FORMAT_DN:
             criteria = { attribute: principal.context.DN }
         elif format == FORMAT_UID:
@@ -793,16 +818,16 @@ class LDAPUgm(UgmBase):
             else:
                 value = principal.context.attrs['uid']
             criteria = { attribute: value }
-        return storage.context.search(criteria=criteria)
+        return roles.context.search(criteria=criteria)
     
     @default
     @locktree
     def add_role(self, rolename, principal):
         id = self._principal_id(principal)
-        storage = self._roles_storage
-        role = storage.get(rolename)
+        roles = self._roles
+        role = roles.get(rolename)
         if role is None:
-            role = storage.create(rolename)
+            role = roles.create(rolename)
         if id in role.member_ids:
             raise ValueError(u"Principal already has role '%s'" % rolename)
         role.add(id)
@@ -812,8 +837,8 @@ class LDAPUgm(UgmBase):
     @locktree
     def remove_role(self, rolename, principal):
         id = self._principal_id(principal)
-        storage = self._roles_storage
-        role = storage.get(rolename)
+        roles = self._roles
+        role = roles.get(rolename)
         if role is None:
             raise ValueError(u"Role not exists '%s'" % rolename)
         if not id in role.member_ids:
@@ -828,7 +853,7 @@ class LDAPUgm(UgmBase):
     
     @default
     @property
-    def _roles_storage(self):
+    def _roles(self):
         if not 'roles' in self.storage:
             roles = Roles(self.props, self.rcfg)
             roles.__name__ = 'roles'
