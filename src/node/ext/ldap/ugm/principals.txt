@@ -454,13 +454,30 @@ Fetch users and groups::
     >>> ugm.users['Schmidt'].groups
     [<Group object 'group1' at ...>]
 
-Test role mappings. Create container for roles::
+Test role mappings. Create container for roles.::
 
     >>> from node.ext.ldap import LDAPNode
     >>> node = LDAPNode('dc=my-domain,dc=com', props)
     >>> node['ou=roles'] = LDAPNode()
     >>> node['ou=roles'].attrs['objectClass'] = ['organizationalUnit']
     >>> node()
+
+Test accessing unconfigured roles.::
+
+    >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg, rcfg=None)
+    >>> user = ugm.users['Meier']
+    >>> ugm.roles(user)
+    []
+    
+    >>> ugm.add_role('viewer', user)
+    Traceback (most recent call last):
+      ...
+    ValueError: Role support not configured properly
+    
+    >>> ugm.remove_role('viewer', user)
+    Traceback (most recent call last):
+      ...
+    ValueError: Role support not configured properly
 
 Configure role config represented by object class 'groupOfNames'::
 

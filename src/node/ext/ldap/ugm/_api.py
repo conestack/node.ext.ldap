@@ -806,6 +806,9 @@ class LDAPUgm(UgmBase):
     def roles(self, principal):
         id = self._principal_id(principal)
         roles = self._roles
+        if roles is None:
+            # XXX: logging
+            return list()
         attribute = roles._member_attribute
         format = roles._member_format
         if format == FORMAT_DN:
@@ -825,6 +828,8 @@ class LDAPUgm(UgmBase):
     def add_role(self, rolename, principal):
         id = self._principal_id(principal)
         roles = self._roles
+        if roles is None:
+            raise ValueError(u"Role support not configured properly")
         role = roles.get(rolename)
         if role is None:
             role = roles.create(rolename)
@@ -838,6 +843,8 @@ class LDAPUgm(UgmBase):
     def remove_role(self, rolename, principal):
         id = self._principal_id(principal)
         roles = self._roles
+        if roles is None:
+            raise ValueError(u"Role support not configured properly")
         role = roles.get(rolename)
         if role is None:
             raise ValueError(u"Role not exists '%s'" % rolename)
@@ -855,7 +862,11 @@ class LDAPUgm(UgmBase):
     @property
     def _roles(self):
         if not 'roles' in self.storage:
-            roles = Roles(self.props, self.rcfg)
+            try:
+                roles = Roles(self.props, self.rcfg)
+            except Exception:
+                # XXX: logging
+                return None
             roles.__name__ = 'roles'
             roles.__parent__ = self
             self.storage['roles'] = roles

@@ -835,7 +835,7 @@ Summary of the test coverage report::
     462   100%   node.ext.ldap.testing.__init__
      27   100%   node.ext.ldap.tests
       1   100%   node.ext.ldap.ugm.__init__
-    567   100%   node.ext.ldap.ugm._api
+    576   100%   node.ext.ldap.ugm._api
      21   100%   node.ext.ldap.ugm.defaults
      17   100%   node.ext.ldap.ugm.posix
      26   100%   node.ext.ldap.ugm.samba
