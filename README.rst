@@ -482,13 +482,15 @@ LDAP is often used to manage Authentication, thus ``node.ext.ldap`` provides
 an API for User and Group management. The API follows the contract of
 `node.ext.ugm <http://pypi.python.org/pypi/node.ext.ugm>`_.::
 
+    >>> from node.ext.ldap import ONELEVEL
     >>> from node.ext.ldap.ugm import (
     ...     UsersConfig,
     ...     GroupsConfig,
+    ...     RolesConfig,
     ...     Ugm,
     ... )
 
-Instantiate users and groups configuration. Both are based on
+Instantiate users, groups and roles configuration. They are based on
 ``PrincipalsConfig`` class and expect this settings:
 
 baseDN
@@ -521,7 +523,7 @@ strict
     Define whether all available principal attributes must be declared in attmap,
     or only reserved ones. Defaults to True.
 
-Reserved attrmap keys for Users and Groups:
+Reserved attrmap keys for Users, Groups and roles:
 
 id
     The attribute containing the user id (mandatory).
@@ -544,7 +546,7 @@ Create config objects.::
     ...         'rdn': 'cn',
     ...         'login': 'sn',
     ...     },
-    ...     scope=SUBTREE,
+    ...     scope=ONELEVEL,
     ...     queryFilter='(objectClass=person)',
     ...     objectClasses=['person'],
     ...     defaults={},
@@ -557,16 +559,34 @@ Create config objects.::
     ...         'id': 'cn',
     ...         'rdn': 'cn',
     ...     },
-    ...     scope=SUBTREE,
+    ...     scope=ONELEVEL,
     ...     queryFilter='(objectClass=groupOfNames)',
     ...     objectClasses=['groupOfNames'],
     ...     defaults={},
     ...     strict=False,
     ... )
 
+Roles are represented in LDAP like groups. Note, if groups and roles are mixed
+up in the same container, make sure that query filter fits. For our demo,
+different group object classes are used. Anyway, in real world it might be
+worth considering a seperate container for roles.::
+
+    >>> rcfg = GroupsConfig(
+    ...     baseDN='ou=demo,dc=my-domain,dc=com',
+    ...     attrmap={
+    ...         'id': 'cn',
+    ...         'rdn': 'cn',
+    ...     },
+    ...     scope=ONELEVEL,
+    ...     queryFilter='(objectClass=groupOfUniqueNames)',
+    ...     objectClasses=['groupOfUniqueNames'],
+    ...     defaults={},
+    ...     strict=False,
+    ... )
+
 Instantiate ``Ugm`` object.::
 
-    >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg)
+    >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
     >>> ugm
     <Ugm object 'None' at ...>
 
@@ -674,6 +694,59 @@ Delete group member.::
     [u'person1', u'person2']
 
 Group attribute manipulation works the same way as on user objects.
+
+Manage roles for users and groups. Roles can be queried, added and removed via
+ugm or principal object. Fetch a user::
+
+    >>> user = ugm.users['person1']
+
+Add role for user via ugm.::
+
+    >>> ugm.add_role('viewer', user)
+
+Add role for user directly.::
+
+    >>> user.add_role('editor')
+
+Query roles for user via ugm.::
+
+    >>> ugm.roles(user)
+    [u'viewer', u'editor']
+
+Query roles directly.::
+
+    >>> user.roles
+    [u'viewer', u'editor']
+
+Delete role via ugm.::
+
+    >>> ugm.remove_role('viewer', user)
+    >>> user.roles
+    [u'editor']
+
+Delete role directly.::
+
+    >>> user.remove_role('editor')
+    >>> user.roles
+    []
+
+Same with group. Fetch a group::
+
+    >>> group = ugm.groups['group1']
+
+Add roles.::
+
+    >>> ugm.add_role('viewer', group)
+    >>> group.add_role('editor')
+    >>> group.roles
+    [u'viewer', u'editor']
+
+Remove roles.::
+
+    >>> ugm.remove_role('viewer', group)
+    >>> group.remove_role('editor')
+    >>> group.roles
+    []
 
 
 Character Encoding
@@ -803,6 +876,9 @@ TODO
 
 - interactive configuration showing live how many users/groups are found with
   the current config and what a selected user/group would look like
+
+- Scope SUBTREE for Principals containers is not tested properly yet.
+  Especially ``__getitem__`` needs a little love::
 
 
 Changes
