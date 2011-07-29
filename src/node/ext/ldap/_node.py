@@ -73,7 +73,7 @@ def queryNode(props, dn):
     """
     
     exploded = explode_dn(dn)
-    if len(exploded) == '1':
+    if len(exploded) == 1:
         return LDAPNode(dn, props=props)
     
     containerdn = ','.join(explode_dn(dn)[1:])
