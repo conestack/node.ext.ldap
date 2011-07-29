@@ -68,7 +68,14 @@ def queryNode(props, dn):
     The difference to just LDAPNode(props=props, name=dn) is, that the node
     generated here will have only the rdn as its name, whereas LDAPNode() would
     generate a root node, with the full dn as its name.
+    
+    XXX: fetch container and then access child? weird, fetch DN directly
     """
+    
+    exploded = explode_dn(dn)
+    if len(exploded) == '1':
+        return LDAPNode(dn, props=props)
+    
     containerdn = ','.join(explode_dn(dn)[1:])
     nodedn = explode_dn(dn)[0]
     container = LDAPNode(name=containerdn, props=props)
