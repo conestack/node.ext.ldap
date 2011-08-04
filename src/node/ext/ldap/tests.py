@@ -9,18 +9,18 @@ from node.ext.ldap import testing
 
 
 DOCFILES = [
-    ('cache.txt', testing.LDIF_data),
-    ('base.txt', testing.LDIF_data),
-    ('session.txt', testing.LDIF_data),
-    ('filter.txt', testing.LDIF_data),
-    ('_node.txt', testing.LDIF_data),
+    ('cache.rst', testing.LDIF_data),
+    ('base.rst', testing.LDIF_data),
+    ('session.rst', testing.LDIF_data),
+    ('filter.rst', testing.LDIF_data),
+    ('_node.rst', testing.LDIF_data),
     # XXX: schema later
-    #('schema.txt', testing.LDIF_data),
-    ('ugm/principals.txt', testing.LDIF_principals),
-    ('ugm/groupOfNames.txt', testing.LDIF_groupOfNames),
-    ('ugm/posixGroups.txt', testing.LDIF_posixGroups),
-    ('ugm/sambaUsers.txt', testing.LDIF_sambaUsers),
-    ('ugm/defaults.txt', testing.LDIF_data),
+    #('schema.rst', testing.LDIF_data),
+    ('ugm/principals.rst', testing.LDIF_principals),
+    ('ugm/groupOfNames.rst', testing.LDIF_groupOfNames),
+    ('ugm/posixGroups.rst', testing.LDIF_posixGroups),
+    ('ugm/sambaUsers.rst', testing.LDIF_sambaUsers),
+    ('ugm/defaults.rst', testing.LDIF_data),
     ('../../../../README.rst', testing.LDIF_data),
 ]
 
