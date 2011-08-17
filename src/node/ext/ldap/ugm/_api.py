@@ -792,6 +792,14 @@ class LDAPUgm(UgmBase):
         for key in ['users', 'groups']:
             yield key
     
+    @extend
+    @locktree
+    def __call__(self):
+        """XXX: Call roles as well and remove auto calling on role manipulation.
+        """
+        self.users()
+        self.groups()
+    
     @default
     @property
     def users(self):
