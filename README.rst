@@ -824,12 +824,12 @@ Summary of the test coverage report::
 
   lines   cov%   module
       6   100%   node.ext.ldap.__init__
-    416   100%   node.ext.ldap._node
+    409   100%   node.ext.ldap._node
     115   100%   node.ext.ldap.base
      13   100%   node.ext.ldap.cache
     101   100%   node.ext.ldap.filter
      46   100%   node.ext.ldap.interfaces
-     28   100%   node.ext.ldap.properties 
+     28   100%   node.ext.ldap.properties
       6   100%   node.ext.ldap.scope
      60   100%   node.ext.ldap.session
     462   100%   node.ext.ldap.testing.__init__

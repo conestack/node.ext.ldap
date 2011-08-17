@@ -19,7 +19,6 @@ from node.ext.ldap._node import (
     LDAPNodeAttributes,
     LDAPStorage,
     LDAPNode,
-    queryNode,
 )
 from node.ext.ldap.filter import (
     LDAPFilter,

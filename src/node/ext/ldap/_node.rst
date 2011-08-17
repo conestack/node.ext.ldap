@@ -350,9 +350,8 @@ After calling person, whole tree is unchanged again::
 
 Changing attributes of a node, where keys are not loaded, yet::
 
-    >>> from node.ext.ldap import queryNode
     >>> dn = 'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com'
-    >>> tmp = queryNode(props, dn)
+    >>> tmp = LDAPNode(dn, props=props)
     >>> tmp.attrs['description'] = 'Initial Description'
     >>> tmp()
 
@@ -500,26 +499,6 @@ Attribute with non-ascii str (utf8) returns as unicode::
 #    ...
 #    UnicodeDecodeError:
 #      'utf8' codec can't decode byte 0xff in position 0: unexpected code byte
-
-Check queryNode with nästy dn. (see node.__repr__)::
-
-    >>> node = queryNode(props, \
-    ...     r'ou=nästy\, customer,ou=customers,dc=my-domain,dc=com')
-    
-    XXX: why is this a list???
-         maybe python-ldap bug or even openldap bug
-         also behaves this way when queried with ``LDAPCommunicator.search``
-    >>> node.attrs['ou']
-    [u'n\xe4sty\\, customer', u'n\xe4sty, customer']
-    
-    >>> node.name
-    u'ou=n\xe4sty\\, customer'
-    
-    >>> node
-    <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
-    
-    >>> node.parent
-    <ou=customers,dc=my-domain,dc=com - False>
 
 Check access to attributes on a fresh but added-to-parent node. There was a bug
 so we test it. Note that rdn attribute is computed from key if not set yet::
@@ -1039,9 +1018,9 @@ at _child_dns::
     >>> print tmp._seckeys
     None
 
-###############################################################################
+###########################
 Experimental features below
-###############################################################################
+###########################
 
 Using some other attribute as key, instead of the RDN. Let's first add two
 person's the way we know it::

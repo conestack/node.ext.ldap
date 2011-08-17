@@ -1,5 +1,3 @@
-import types
-import copy
 try:
     from zope.app.event.objectevent import objectEventNotify # BBB
 except ImportError, e:
@@ -11,7 +9,6 @@ from plumber import (
     Part,
     plumb,
     default,
-    extend,
     finalize,
 )
 from node.parts import (
@@ -23,7 +20,6 @@ from node.parts import (
     NodeChildValidate,
     Adopt,
     UnicodeAware,
-    DefaultInit,
     Nodify,
     OdictStorage,
 )
@@ -55,31 +51,6 @@ from ldap import (
 ACTION_ADD = 0
 ACTION_MODIFY = 1
 ACTION_DELETE = 2
-
-
-def queryNode(props, dn):
-    """Query an ldap entry and return as LDAPNode.
-
-    props
-        ``LDAPProps`` instance
-    dn
-        DN of the node to query
-
-    The difference to just LDAPNode(props=props, name=dn) is, that the node
-    generated here will have only the rdn as its name, whereas LDAPNode() would
-    generate a root node, with the full dn as its name.
-    
-    XXX: fetch container and then access child? weird, fetch DN directly
-    """
-    
-    exploded = explode_dn(dn)
-    if len(exploded) == 1:
-        return LDAPNode(dn, props=props)
-    
-    containerdn = ','.join(explode_dn(dn)[1:])
-    nodedn = explode_dn(dn)[0]
-    container = LDAPNode(name=containerdn, props=props)
-    return container.get(nodedn, None)
 
 
 class AttributesPart(Part):
