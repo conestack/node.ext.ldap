@@ -314,7 +314,8 @@ class LDAPPrincipals(Part):
         
         context.child_defaults = dict()
         context.child_defaults['objectClass'] = cfg.objectClasses
-        context.child_defaults.update(cfg.defaults)
+        if hasattr(cfg, 'defaults'):
+            context.child_defaults.update(cfg.defaults)
         for oc in cfg.objectClasses:
             for key, val in creation_defaults.get(oc, dict()).items():
                 if not key in context.child_defaults:
