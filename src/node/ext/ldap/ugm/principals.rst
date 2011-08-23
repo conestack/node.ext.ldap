@@ -518,6 +518,8 @@ Add role for user, role gets created if not exists.::
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
+    
+    >>> ugm()
 
 Query roles for principal via ugm object.::
 
@@ -545,6 +547,8 @@ Add some roles for 'Schmidt'.::
     
     >>> user.roles
     [u'viewer', u'editor']
+    
+    >>> ugm()
 
 Remove role 'viewer'.::
 
@@ -563,6 +567,8 @@ Remove role 'editor', No other principal left, remove role as well.::
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
+    
+    >>> ugm()
 
 Test roles for group.::
 
@@ -600,6 +606,8 @@ Test roles for group.::
       <class 'node.ext.ldap.ugm._api.Role'>: editor
         <class 'node.ext.ldap.ugm._api.Group'>: group3
     
+    >>> ugm()
+    
 If role already granted, an error is raised.::
 
     >>> group.add_role('editor')
@@ -629,6 +637,8 @@ If role already granted, an error is raised.::
         <class 'node.ext.ldap.ugm._api.Group'>: group1
           <class 'node.ext.ldap.ugm._api.User'>: Schmidt
           <class 'node.ext.ldap.ugm._api.User'>: M?ller
+    
+    >>> ugm()
 
 If role not exists, an error is raised.::
 
@@ -644,7 +654,7 @@ If role is not granted, an error is raised.::
       ...
     ValueError: Principal does not has role 'viewer'
 
-Roles return ``Role`` instances on ``__getitem__``
+Roles return ``Role`` instances on ``__getitem__``::
 
     >>> role = roles['viewer']
     >>> role
@@ -727,3 +737,5 @@ Delete group and check if roles are removed.::
         <class 'node.ext.ldap.ugm._api.Group'>: group2
           <class 'node.ext.ldap.ugm._api.User'>: Umhauer
         <class 'node.ext.ldap.ugm._api.Group'>: group3
+    
+    >>> ugm()

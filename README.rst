@@ -718,6 +718,10 @@ Query roles directly.::
     >>> user.roles
     [u'viewer', u'editor']
 
+Call UGM to persist roles.::
+
+    >>> ugm()
+
 Delete role via ugm.::
 
     >>> ugm.remove_role('viewer', user)
@@ -730,16 +734,26 @@ Delete role directly.::
     >>> user.roles
     []
 
+Call UGM to persist roles.::
+
+    >>> ugm()
+
 Same with group. Fetch a group::
 
     >>> group = ugm.groups['group1']
 
 Add roles.::
-
+    
     >>> ugm.add_role('viewer', group)
     >>> group.add_role('editor')
+    
+    >>> ugm.roles(group)
+    [u'viewer', u'editor']
+    
     >>> group.roles
     [u'viewer', u'editor']
+    
+    >>> ugm()
 
 Remove roles.::
 
@@ -747,6 +761,8 @@ Remove roles.::
     >>> group.remove_role('editor')
     >>> group.roles
     []
+    
+    >>> ugm()
 
 
 Character Encoding

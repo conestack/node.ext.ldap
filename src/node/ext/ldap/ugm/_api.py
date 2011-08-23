@@ -796,10 +796,11 @@ class LDAPUgm(UgmBase):
     @extend
     @locktree
     def __call__(self):
-        """XXX: Call roles as well and remove auto calling on role manipulation.
-        """
         self.users()
         self.groups()
+        roles = self._roles
+        if roles is not None:
+            roles()
     
     @default
     @property
@@ -815,22 +816,31 @@ class LDAPUgm(UgmBase):
     def roles(self, principal):
         id = self._principal_id(principal)
         roles = self._roles
+        ret = list()
         if roles is None:
             # XXX: logging
-            return list()
-        attribute = roles._member_attribute
-        format = roles._member_format
-        if format == FORMAT_DN:
-            criteria = { attribute: principal.context.DN }
-        elif format == FORMAT_UID:
-            # XXX: this is hacky. we really need member relations!!!
-            if isinstance(principal, Group):
-                attrkey = principal.parent.context._rdn_attr
-                value = 'group:%s' % principal.context.attrs[attrkey]
-            else:
-                value = principal.context.attrs['uid']
-            criteria = { attribute: value }
-        return roles.context.search(criteria=criteria)
+            return ret        
+        for role in roles.values():
+            if id in role.member_ids:
+                ret.append(role.name)
+        return ret
+
+# XXX: Below is the logic for querying roles from LDAP via query. Integrate
+#      to use this logic whenever roles are queried and the roles node is
+#      unchanged.
+#        attribute = roles._member_attribute
+#        format = roles._member_format
+#        if format == FORMAT_DN:
+#            criteria = { attribute: principal.context.DN }
+#        elif format == FORMAT_UID:
+#            # XXX: this is hacky. we really need member relations!!!
+#            if isinstance(principal, Group):
+#                attrkey = principal.parent.context._rdn_attr
+#                value = 'group:%s' % principal.context.attrs[attrkey]
+#            else:
+#                value = principal.context.attrs['uid']
+#            criteria = { attribute: value }
+#        return roles.context.search(criteria=criteria)
     
     @default
     @locktree
@@ -845,7 +855,6 @@ class LDAPUgm(UgmBase):
         if id in role.member_ids:
             raise ValueError(u"Principal already has role '%s'" % rolename)
         role.add(id)
-        role()
     
     @default
     @locktree
@@ -863,9 +872,6 @@ class LDAPUgm(UgmBase):
         if not role.member_ids:
             parent = role.parent
             del parent[rolename]
-            parent()
-        else:
-            role()
     
     @default
     @property

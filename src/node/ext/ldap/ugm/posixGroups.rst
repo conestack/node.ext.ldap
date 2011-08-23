@@ -514,10 +514,14 @@ Role Management. Create container for roles.::
     >>> user.roles
     [u'viewer', u'editor']
     
+    >>> ugm()
+    
     >>> ugm.remove_role('viewer', user)
     >>> user.remove_role('editor')
     >>> user.roles
     []
+    
+    >>> ugm()
     
     >>> group = ugm.groups['group1']
     >>> ugm.roles(group)
@@ -538,6 +542,8 @@ Role Management. Create container for roles.::
     >>> group.roles
     [u'viewer', u'editor']
     
+    >>> ugm()
+    
     >>> group.add_role('editor')
     Traceback (most recent call last):
       ...
@@ -555,3 +561,5 @@ Role Management. Create container for roles.::
     Traceback (most recent call last):
       ...
     ValueError: Principal does not has role 'viewer'
+    
+    >>> ugm()
