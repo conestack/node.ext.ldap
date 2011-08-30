@@ -75,6 +75,8 @@ Fetch some users::
 XXX: LDAPNodeAttributes.items does not return consistent results if attrmap
      points to same attribute twice ('cn' missing here)
 
+::
+
     >>> user_0.attrs.items()
     [('cn', u'cn0'), ('rdn', u'uid0'), ('uidNumber', u'0'), 
     ('gidNumber', u'0'), ('homeDirectory', u'/home/uid0')]
@@ -371,7 +373,7 @@ There's an ids property on principals base class::
     [u'group0', u'group1', u'group2', u'group99']
 
 Add now user to some groups and then delete user, check whether user is removed
-from all this groups.
+from all this groups::
 
     >>> ugm = Ugm(name='ugm', parent=None, props=props,
     ...           ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
@@ -514,14 +516,14 @@ Role Management. Create container for roles.::
     >>> user.roles
     [u'viewer', u'editor']
     
-    >>> ugm()
+    >>> ugm.roles_storage()
     
     >>> ugm.remove_role('viewer', user)
     >>> user.remove_role('editor')
     >>> user.roles
     []
     
-    >>> ugm()
+    >>> ugm.roles_storage()
     
     >>> group = ugm.groups['group1']
     >>> ugm.roles(group)
@@ -542,7 +544,7 @@ Role Management. Create container for roles.::
     >>> group.roles
     [u'viewer', u'editor']
     
-    >>> ugm()
+    >>> ugm.roles_storage()
     
     >>> group.add_role('editor')
     Traceback (most recent call last):
@@ -562,4 +564,4 @@ Role Management. Create container for roles.::
       ...
     ValueError: Principal does not has role 'viewer'
     
-    >>> ugm()
+    >>> ugm.roles_storage()

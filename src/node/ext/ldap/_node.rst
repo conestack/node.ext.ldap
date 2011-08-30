@@ -603,7 +603,7 @@ instance if a custom callback context is desired::
     >>> customer()
 
 It's possible to add other INode implementing objects than LDAPNode. An ldap
-node gets created then and attrs are set from original node.
+node gets created then and attrs are set from original node::
 
     >>> from node.base import BaseNode
     >>> new = BaseNode()
@@ -1128,6 +1128,8 @@ Addings items, if _rdn_attr is set::
     >>> newnode.attrs['objectClass'] = ['top', 'person']
 
 XXX: these need to be the same as 'sn' if used as key
+
+::
 
     >>> newnode.attrs['sn'] = 'foo'
     >>> node['foo'] = newnode

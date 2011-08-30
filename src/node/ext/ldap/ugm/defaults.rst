@@ -1,6 +1,8 @@
 Default value callbacks testing
 ===============================
 
+::
+
     >>> props = layer['props']
     >>> from node.ext.ldap import LDAPNode
     >>> root = LDAPNode('dc=my-domain,dc=com', props)

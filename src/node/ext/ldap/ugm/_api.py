@@ -798,9 +798,9 @@ class LDAPUgm(UgmBase):
     def __call__(self):
         self.users()
         self.groups()
-        roles = self._roles
-        if roles is not None:
-            roles()
+        roles_storage = self.roles_storage
+        if roles_storage is not None:
+            roles_storage()
     
     @default
     @property
@@ -811,6 +811,11 @@ class LDAPUgm(UgmBase):
     @property
     def groups(self):
         return self['groups']
+    
+    @default
+    @property
+    def roles_storage(self):
+        return self._roles
     
     @default
     def roles(self, principal):

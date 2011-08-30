@@ -1,6 +1,8 @@
 Samba users
 -----------
 
+::
+
     >>> ucfg = layer['ucfg']
     >>> gcfg = layer['gcfg']
     >>> props = layer['props']

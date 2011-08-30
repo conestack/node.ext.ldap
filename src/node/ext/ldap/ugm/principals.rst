@@ -519,7 +519,7 @@ Add role for user, role gets created if not exists.::
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
     
-    >>> ugm()
+    >>> ugm.roles_storage()
 
 Query roles for principal via ugm object.::
 
@@ -548,7 +548,7 @@ Add some roles for 'Schmidt'.::
     >>> user.roles
     [u'viewer', u'editor']
     
-    >>> ugm()
+    >>> ugm.roles_storage()
 
 Remove role 'viewer'.::
 
@@ -568,7 +568,7 @@ Remove role 'editor', No other principal left, remove role as well.::
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
     
-    >>> ugm()
+    >>> ugm.roles_storage()
 
 Test roles for group.::
 
@@ -606,7 +606,7 @@ Test roles for group.::
       <class 'node.ext.ldap.ugm._api.Role'>: editor
         <class 'node.ext.ldap.ugm._api.Group'>: group3
     
-    >>> ugm()
+    >>> ugm.roles_storage()
     
 If role already granted, an error is raised.::
 
@@ -638,7 +638,7 @@ If role already granted, an error is raised.::
           <class 'node.ext.ldap.ugm._api.User'>: Schmidt
           <class 'node.ext.ldap.ugm._api.User'>: M?ller
     
-    >>> ugm()
+    >>> ugm.roles_storage()
 
 If role not exists, an error is raised.::
 
