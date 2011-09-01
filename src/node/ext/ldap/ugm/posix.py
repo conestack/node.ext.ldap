@@ -31,21 +31,22 @@ def cn(node, id):
 def uid(node, id):
     return id
 
-uidNumber_tmp = '' # XXX
+
+UID_NUMBER = ''
 def uidNumber(node, id):
     """Default function gets called twice, second time without node.
     
     Bug. fix me.
     """
     if not node:
-        return uidNumber_tmp # XXX why?
+        return UID_NUMBER
     existing = node.search(criteria={'uidNumber': '*'}, attrlist=['uidNumber'])
     uidNumbers = [int(item[1]['uidNumber'][0]) for item in existing]
     uidNumbers.sort()
     if not uidNumbers:
         return '100'
-    uidNumber_tmp = str(uidNumbers[-1] + 1)
-    return uidNumber_tmp
+    UID_NUMBER = str(uidNumbers[-1] + 1)
+    return UID_NUMBER
 
 
 def gidNumber(node, id):
