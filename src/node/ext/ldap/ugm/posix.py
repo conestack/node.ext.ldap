@@ -38,15 +38,16 @@ def uidNumber(node, id):
     
     Bug. fix me.
     """
+    from node.ext.ldap.ugm import posix
     if not node:
-        return UID_NUMBER
+        return posix.UID_NUMBER
     existing = node.search(criteria={'uidNumber': '*'}, attrlist=['uidNumber'])
     uidNumbers = [int(item[1]['uidNumber'][0]) for item in existing]
     uidNumbers.sort()
-    if not uidNumbers:
+    if not len(uidNumbers):
         return '100'
-    UID_NUMBER = str(uidNumbers[-1] + 1)
-    return UID_NUMBER
+    posix.UID_NUMBER = str(uidNumbers[-1] + 1)
+    return posix.UID_NUMBER
 
 
 def gidNumber(node, id):
