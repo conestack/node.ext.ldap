@@ -33,6 +33,8 @@ def uid(node, id):
 
 
 def uidNumber(node, id):
+    if not node:
+        return '' # XXX why?
     existing = node.search(criteria={'uidNumber': '*'}, attrlist=['uidNumber'])
     uidNumbers = [int(item[1]['uidNumber'][0]) for item in existing]
     uidNumbers.sort()
@@ -42,6 +44,8 @@ def uidNumber(node, id):
 
 
 def gidNumber(node, id):
+    if not node:
+        return '' # XXX why?
     existing = node.search(criteria={'gidNumber': '*'}, attrlist=['gidNumber'])
     gidNumbers = [int(item[1]['gidNumber'][0]) for item in existing]
     gidNumbers.sort()
