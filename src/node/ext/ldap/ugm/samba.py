@@ -74,7 +74,7 @@ def sambaPrimaryGroupSID(node, id):
 
 
 def sambaPwdLastSet(node, id):
-    return int(time.time())
+    return str(int(time.time()))
 
 
 SAMBA_DEFAULT_ACCOUNT_FLAGS = '[U]'
