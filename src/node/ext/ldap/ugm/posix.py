@@ -33,13 +33,21 @@ def uid(node, id):
 
 
 def uidNumber(node, id):
-    num = 0
-    for char in id:
-        num += ord(char)
-    return str(num)
+    existing = node.search(criteria={'uidNumber': '*'}, attrlist=['uidNumber'])
+    uidNumbers = [int(item[1]['uidNumber'][0]) for item in existing]
+    uidNumbers.sort()
+    if not uidNumbers:
+        return '100'
+    return str(uidNumbers[-1] + 1)
 
 
-gidNumber = uidNumber
+def gidNumber(node, id):
+    existing = node.search(criteria={'gidNumber': '*'}, attrlist=['gidNumber'])
+    gidNumbers = [int(item[1]['gidNumber'][0]) for item in existing]
+    gidNumbers.sort()
+    if not gidNumbers:
+        return '100'
+    return str(gidNumbers[-1] + 1)
 
 
 def homeDirectory(node, id):
