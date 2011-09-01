@@ -6,7 +6,7 @@ sambaSamAccount
 - cn
 - sambaLMPassword
 - sambaNTPassword
-- sambaPwdLastSet ---------> no default callback available
+- sambaPwdLastSet
 - sambaLogonTime ----------> no default callback available
 - sambaLogoffTime ---------> no default callback available
 - sambaKickoffTime --------> no default callback available
@@ -41,6 +41,7 @@ sambaGroupMapping
 """
 import smbpasswd
 import posix
+import time
 
 
 def sambaNTPassword(passwd):              
@@ -70,6 +71,10 @@ def sambaDomainName(node, id):
 SAMBA_PRIMARY_GROUP_SID = 'S-1-5-21-1234567890-1234567890-1234567890-123'
 def sambaPrimaryGroupSID(node, id):
     return SAMBA_PRIMARY_GROUP_SID
+
+
+def sambaPwdLastSet(node, id):
+    return int(time.time())
 
 
 SAMBA_DEFAULT_ACCOUNT_FLAGS = '[U]'
