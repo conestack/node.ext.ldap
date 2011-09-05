@@ -56,39 +56,39 @@ def sambaLMPassword(passwd):
 SAMBA_LOCAL_SID = 'S-1-5-21-1234567890-1234567890-1234567890'
 
 
-def sambaUserSID(node, id):
+def sambaUserSID(node, uid):
     """uid * 2 + 1000 = rid for users
     """
-    rid = int(posix.uidNumber(None, id)) * 2 + 1000
+    rid = int(posix.uidNumber(None, uid)) * 2 + 1000
     return SAMBA_LOCAL_SID + '-' + str(rid)
 
 
 SAMBA_DEFAULT_DOMAIN = 'CONE_UGM'
-def sambaDomainName(node, id):
+def sambaDomainName(node, uid):
     return SAMBA_DEFAULT_DOMAIN
 
 
 SAMBA_PRIMARY_GROUP_SID = 'S-1-5-21-1234567890-1234567890-1234567890-123'
-def sambaPrimaryGroupSID(node, id):
+def sambaPrimaryGroupSID(node, uid):
     return SAMBA_PRIMARY_GROUP_SID
 
 
-def sambaPwdLastSet(node, id):
+def sambaPwdLastSet(node, uid):
     return str(int(time.time()))
 
 
 SAMBA_DEFAULT_ACCOUNT_FLAGS = '[U]'
-def sambaAcctFlags(node, id):
+def sambaAcctFlags(node, uid):
     return SAMBA_DEFAULT_ACCOUNT_FLAGS
 
 
-def sambaGroupSID(node, id):
+def sambaGroupSID(node, uid):
     """gid * 2 + 1001 = rid for groups
     """
-    rid = int(posix.gidNumber(None, id)) * 2 + 1000
+    rid = int(posix.gidNumber(None, uid)) * 2 + 1000
     return SAMBA_LOCAL_SID + '-' + str(rid)
 
 
 SAMBA_DEFAULT_GROUP_TYPE = '2'
-def sambaGroupType(node, id):
+def sambaGroupType(node, uid):
     return SAMBA_DEFAULT_GROUP_TYPE

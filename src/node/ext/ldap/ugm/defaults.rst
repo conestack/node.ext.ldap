@@ -24,14 +24,14 @@ Default value callbacks testing
     {'shadowAccount': 
     {'uid': <function uid at ...>}, 
     'posixGroup': 
-    {'gidNumber': <function uidNumber at ...>, 
+    {'gidNumber': <function gidNumber at ...>, 
     'cn': <function cn at ...>}, 
     'sambaGroupMapping': 
     {'sambaGroupType': <function sambaGroupType at ...>, 
-    'gidNumber': <function uidNumber at ...>, 
+    'gidNumber': <function gidNumber at ...>, 
     'sambaSID': <function sambaGroupSID at ...>}, 
     'posixAccount': 
-    {'gidNumber': <function uidNumber at ...>, 
+    {'gidNumber': <function gidNumber at ...>, 
     'homeDirectory': <function homeDirectory at ...>, 
     'uidNumber': <function uidNumber at ...>, 
     'cn': <function cn at ...>, 
@@ -61,8 +61,8 @@ Posix Account
     [(u'cn', u'posixuser'), 
     (u'uid', u'posixuser'), 
     (u'objectClass', ['account', 'posixAccount']), 
-    (u'uidNumber', u'1010'), 
-    (u'gidNumber', u'1010'), 
+    (u'uidNumber', u'100'), 
+    (u'gidNumber', u'100'), 
     (u'homeDirectory', u'/home/posixuser')]
     
     >>> from node.ext.ldap.ugm import posix
@@ -88,8 +88,8 @@ Posix Account
     (u'cn', u'posixuser1'), 
     (u'objectClass', ['account', 'posixAccount']), 
     (u'loginShell', u'/bin/false'), 
-    (u'uidNumber', u'1059'), 
-    (u'gidNumber', u'1059'), 
+    (u'uidNumber', u'101'), 
+    (u'gidNumber', u'101'), 
     (u'homeDirectory', u'/home/posixuser1')]
     
     >>> del defaults.creation_defaults['posixAccount']['loginShell']
@@ -116,7 +116,7 @@ Posix Group
     [(u'memberUid', ['nobody']), 
     (u'cn', u'posixgroup'), 
     (u'objectClass', ['posixGroup']), 
-    (u'gidNumber', u'1120')]
+    (u'gidNumber', u'100')]
 
 
 Shadow Account
@@ -207,9 +207,9 @@ Samba Account
     [(u'cn', u'sambauser'), 
     (u'uid', u'sambauser'), 
     (u'objectClass', ['account', 'posixAccount', 'sambaSamAccount']), 
-    (u'uidNumber', u'963'), 
-    (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-2926'), 
-    (u'gidNumber', u'963'), 
+    (u'uidNumber', u'100'), 
+    (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-1202'), 
+    (u'gidNumber', u'100'), 
     (u'homeDirectory', u'/home/sambauser')]
     
     >>> user.passwd(None, 'secret')
@@ -217,9 +217,9 @@ Samba Account
     [(u'cn', u'sambauser'), 
     (u'objectClass', [u'account', u'posixAccount', u'sambaSamAccount']), 
     (u'userPassword', u'{SSHA}...'), 
-    (u'uidNumber', u'963'), 
-    (u'gidNumber', u'963'), 
-    (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-2926'), 
+    (u'uidNumber', u'100'), 
+    (u'gidNumber', u'100'), 
+    (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-1202'), 
     (u'homeDirectory', u'/home/sambauser'), 
     (u'uid', u'sambauser'), 
     (u'sambaNTPassword', u'878D8014606CDA29677A44EFA1353FC7'), 
@@ -251,12 +251,12 @@ Samba Account
     [(u'cn', u'sambauser1'), 
     (u'uid', u'sambauser1'), 
     (u'objectClass', ['account', 'posixAccount', 'sambaSamAccount']), 
-    (u'uidNumber', u'1012'), 
-    (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-3024'), 
+    (u'uidNumber', u'101'), 
+    (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-1202'), 
     (u'sambaAcctFlags', u'[U]'), 
     (u'sambaPrimaryGroupSID', u'S-1-5-21-1234567890-1234567890-1234567890-123'), 
     (u'sambaDomainName', u'CONE_UGM'), 
-    (u'gidNumber', u'1012'), 
+    (u'gidNumber', u'101'), 
     (u'homeDirectory', u'/home/sambauser1')]
     
     >>> del samba_d['sambaDomainName']
@@ -286,5 +286,5 @@ Samba Group
     (u'cn', u'sambagroup'), 
     (u'objectClass', ['posixGroup', 'sambaGroupMapping']), 
     (u'sambaGroupType', u'2'), 
-    (u'gidNumber', u'1073'), 
-    (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-3146')]
+    (u'gidNumber', u'100'), 
+    (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-1202')]

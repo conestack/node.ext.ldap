@@ -24,19 +24,21 @@ posixGroup
 """
 
 
-def cn(node, id):
-    return id
+def cn(node, uid):
+    return uid
 
 
-def uid(node, id):
-    return id
+def uid(node, uid):
+    return uid
 
 
 UID_NUMBER = ''
-def uidNumber(node, id):
+def uidNumber(node, uid):
     """Default function gets called twice, second time without node.
     
     Bug. fix me.
+    
+    XXX: gets called by samba defaults
     """
     from node.ext.ldap.ugm import posix
     if not node:
@@ -50,27 +52,36 @@ def uidNumber(node, id):
     return posix.UID_NUMBER
 
 
-def gidNumber(node, id):
+GID_NUMBER = ''
+def gidNumber(node, uid):
+    """Default function gets called twice, second time without node.
+    
+    Bug. fix me.
+    
+    XXX: gets called by samba defaults
+    """
+    from node.ext.ldap.ugm import posix
     if not node:
-        return '' # XXX why?
+        return posix.GID_NUMBER
     existing = node.search(criteria={'gidNumber': '*'}, attrlist=['gidNumber'])
     gidNumbers = [int(item[1]['gidNumber'][0]) for item in existing]
     gidNumbers.sort()
     if not gidNumbers:
         return '100'
-    return str(gidNumbers[-1] + 1)
+    posix.GID_NUMBER = str(gidNumbers[-1] + 1)
+    return posix.GID_NUMBER
 
 
-def homeDirectory(node, id):
-    return '/home/%s' % id
+def homeDirectory(node, uid):
+    return '/home/%s' % uid
 
 
 POSIX_DEFAULT_SHELL = '/bin/false'
-def loginShell(node, id):
+def loginShell(node, uid):
     return POSIX_DEFAULT_SHELL
 
 
-def memberUid(node, id):
+def memberUid(node, uid):
     # XXX: not tested right now. this changes as soon as the groups __setitem__
     #      plumbing hook is gone
     return ['nobody']                                       #pragma NO COVERAGE

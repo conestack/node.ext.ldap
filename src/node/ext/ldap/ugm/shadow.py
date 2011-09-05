@@ -16,39 +16,39 @@ shadowAccount
 
 
 SHADOW_DEFAULT_FLAG = '0'
-def shadowFlag(node, id):
+def shadowFlag(node, uid):
     return SHADOW_DEFAULT_FLAG
 
 
 SHADOW_DEFAULT_MIN = '0'
-def shadowMin(node, id): 
+def shadowMin(node, uid): 
     """Min number of days between password changes.
     """
     return SHADOW_DEFAULT_MIN
 
 
 SHADOW_DEFAULT_MAX = '99999'
-def shadowMax(node, id): 
+def shadowMax(node, uid): 
     """max number of days password is valid.
     """
     return SHADOW_DEFAULT_MAX
 
 
 SHADOW_DEFAULT_WARNING = '0'
-def shadowWarning(node, id): 
+def shadowWarning(node, uid): 
     """Numer of days before password expires to warn user.
     """
     return SHADOW_DEFAULT_WARNING
 
 
 SHADOW_DEFAULT_INACTIVE = '99999'
-def shadowInactive(node, id): 
+def shadowInactive(node, uid): 
     """Numer of days to allow account to be inactive.
     """
     return SHADOW_DEFAULT_INACTIVE
 
 
-def shadowLastChange(node, id): 
+def shadowLastChange(node, uid): 
     """Last change of shadow info, int value.
     
     XXX: compute.
@@ -57,7 +57,7 @@ def shadowLastChange(node, id):
 
 
 SHADOW_DEFAULT_EXPIRE = '99999'
-def shadowExpire(node, id): 
+def shadowExpire(node, uid): 
     """Absolute date to expire account counted in days since 1.1.1970
     """
     return SHADOW_DEFAULT_EXPIRE
