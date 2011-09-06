@@ -60,10 +60,8 @@ Get a user by id (utf-8 or unicode)::
     >>> mueller
     <User object 'M?ller' at ...>
 
-XXX: At the moment th principal is created each time it is accessed.::
-
     >>> mueller is users['Müller']
-    False
+    True
 
 The real LDAP node is on ``context``::
 

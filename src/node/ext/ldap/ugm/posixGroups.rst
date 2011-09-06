@@ -262,10 +262,8 @@ The member users are fetched via ``__getitem__``::
     >>> group_1['uid1']
     <User object 'uid1' at ...>
 
-XXX: This is not yet true as users creates a new node on every getitem::
-
     >>> group_1['uid1'] is user_1
-    False
+    True
 
 Querying a group for a non-member results in a KeyError::
 

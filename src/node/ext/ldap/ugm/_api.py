@@ -147,11 +147,11 @@ class LDAPUser(LDAPPrincipal, UgmUser):
     @property
     def groups(self):
         groups = self.parent.parent.groups
-        format = groups._member_format
+        member_format = groups._member_format
         attribute = groups._member_attribute
-        if format == FORMAT_DN:
+        if member_format == FORMAT_DN:
             criteria = { attribute: self.context.DN }
-        elif format == FORMAT_UID:
+        elif member_format == FORMAT_UID:
             criteria = { attribute: self.context.attrs['uid'] }
         # if roles configuration points to child of groups container, and
         # group configuration has search scope SUBTREE, and groups are
@@ -160,8 +160,8 @@ class LDAPUser(LDAPPrincipal, UgmUser):
         # XXX: such edge cases should be resolved at UGM init time
         res = groups.context.search(criteria=criteria)
         ret = list()
-        for id in res:
-            ret.append(groups[id])
+        for uid in res:
+            ret.append(groups[uid])
         return ret
 
 
@@ -202,13 +202,13 @@ class LDAPGroupMapping(Part):
     
     @extend
     def __iter__(self):
-        for id in self.member_ids:
-            yield id
+        for uid in self.member_ids:
+            yield uid
     
     @extend
     def __contains__(self, key):
-        for id in self:
-            if id == key:
+        for uid in self:
+            if uid == key:
                 return True
         return False
     
@@ -235,7 +235,7 @@ class LDAPGroupMapping(Part):
             ret.append(member)
         ret = self.translate_ids(ret)
         keys = self.existing_member_ids
-        ret = [id for id in ret if id in keys]
+        ret = [uid for uid in ret if uid in keys]
         return ret
     
     @default
@@ -258,7 +258,7 @@ class LDAPGroup(LDAPGroupMapping, LDAPPrincipal, UgmGroup):
     @default
     @property
     def users(self):
-        return [self.parent.parent.users[id] for id in self.member_ids]
+        return [self.parent.parent.users[uid] for uid in self.member_ids]
     
     @default
     @property
@@ -303,7 +303,7 @@ class Group(object):
     )
 
 
-class LDAPPrincipals(Part):
+class LDAPPrincipals(OdictStorage):
     principal_attrmap = default(None)
     principal_attraliaser = default(None)
     
@@ -385,17 +385,24 @@ class LDAPPrincipals(Part):
     @locktree
     def __delitem__(self, key):
         del self.context[key]
+        try:
+            del self.storage[key]
+        except KeyError:
+            pass
 
     @default
     @locktree
     def __getitem__(self, key):
         # XXX: should use lazynodes caching, for now:
         # users['foo'] is not users['foo']
+        if key in self.storage:
+            return self.storage[key]
         principal = self.principal_factory(
             self.context[key],
             attraliaser=self.principal_attraliaser)
         principal.__name__ = self.context[key].name
         principal.__parent__ = self
+        self.storage[key] = principal
         return principal
 
     @default
@@ -482,7 +489,7 @@ class LDAPPrincipals(Part):
         if attrlist is None:
             return results
         aliased_results = \
-            [(id, self._alias_dict(attrs)) for id, attrs in results]
+            [(uid, self._alias_dict(attrs)) for uid, attrs in results]
         return aliased_results
     
     @default
@@ -501,8 +508,8 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
 
     @extend
     @locktree
-    def __delitem__(self, id):
-        user = self[id]
+    def __delitem__(self, key):
+        user = self[key]
         try:
             groups = user.groups
         except AttributeError:
@@ -513,7 +520,7 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
         if parent and parent.rcfg is not None:
             for role in user.roles:
                 user.remove_role(role)
-        del self.context[id]
+        del self.context[key]
     
     @default
     @debug
@@ -610,13 +617,13 @@ class LDAPGroups(LDAPGroupsMapping):
     
     @extend
     @locktree
-    def __delitem__(self, id):
-        group = self[id]
+    def __delitem__(self, key):
+        group = self[key]
         parent = self.parent
         if parent and parent.rcfg is not None:
             for role in group.roles:
                 group.remove_role(role)
-        del self.context[id]
+        del self.context[key]
 
 
 class Groups(object):
@@ -831,14 +838,14 @@ class LDAPUgm(UgmBase):
     @default
     @locktree
     def roles(self, principal):
-        id = self._principal_id(principal)
+        uid = self._principal_id(principal)
         roles = self._roles
         ret = list()
         if roles is None:
             # XXX: logging
             return ret        
         for role in roles.values():
-            if id in role.member_ids:
+            if uid in role.member_ids:
                 ret.append(role.name)
         return ret
 
@@ -862,30 +869,30 @@ class LDAPUgm(UgmBase):
     @default
     @locktree
     def add_role(self, rolename, principal):
-        id = self._principal_id(principal)
+        uid = self._principal_id(principal)
         roles = self._roles
         if roles is None:
             raise ValueError(u"Role support not configured properly")
         role = roles.get(rolename)
         if role is None:
             role = roles.create(rolename)
-        if id in role.member_ids:
+        if uid in role.member_ids:
             raise ValueError(u"Principal already has role '%s'" % rolename)
-        role.add(id)
+        role.add(uid)
     
     @default
     @locktree
     def remove_role(self, rolename, principal):
-        id = self._principal_id(principal)
+        uid = self._principal_id(principal)
         roles = self._roles
         if roles is None:
             raise ValueError(u"Role support not configured properly")
         role = roles.get(rolename)
         if role is None:
             raise ValueError(u"Role not exists '%s'" % rolename)
-        if not id in role.member_ids:
+        if not uid in role.member_ids:
             raise ValueError(u"Principal does not has role '%s'" % rolename)
-        del role[id]
+        del role[uid]
         if not role.member_ids:
             parent = role.parent
             del parent[rolename]
@@ -906,10 +913,10 @@ class LDAPUgm(UgmBase):
     
     @default
     def _principal_id(self, principal):
-        id = principal.name
+        uid = principal.name
         if isinstance(principal, Group):
-            id = 'group:%s' % id
-        return id
+            uid = 'group:%s' % uid
+        return uid
     
     @default
     def _chk_key(self, key):
