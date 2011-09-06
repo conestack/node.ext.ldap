@@ -185,8 +185,8 @@ class LDAPStorage(OdictStorage):
             key = decode(key)
         if not self._keys:
             self._load_keys()
-        if not key in self._keys:
-            raise KeyError(u"Entry not existent: %s" % key)
+        #if not key in self._keys:
+        #    raise KeyError(u"Entry not existent: %s" % key)
         if self._keys[key] is not None:
             return self.storage[key]
         val = self.child_factory()

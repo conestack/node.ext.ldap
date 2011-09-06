@@ -84,7 +84,7 @@ Access inexistent child::
     >>> foo = root['foo']
     Traceback (most recent call last):
     ...
-    KeyError: u'Entry not existent: foo'
+    KeyError: u'foo'
 
 Access existent child and it's attributes::
   
