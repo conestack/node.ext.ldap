@@ -393,8 +393,6 @@ class LDAPPrincipals(OdictStorage):
     @default
     @locktree
     def __getitem__(self, key):
-        # XXX: should use lazynodes caching, for now:
-        # users['foo'] is not users['foo']
         if key in self.storage:
             return self.storage[key]
         principal = self.principal_factory(
