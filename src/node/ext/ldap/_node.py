@@ -185,8 +185,6 @@ class LDAPStorage(OdictStorage):
             key = decode(key)
         if not self._keys:
             self._load_keys()
-        #if not key in self._keys:
-        #    raise KeyError(u"Entry not existent: %s" % key)
         if self._keys[key] is not None:
             return self.storage[key]
         val = self.child_factory()
@@ -291,17 +289,15 @@ class LDAPStorage(OdictStorage):
         """This is where keys are retrieved from ldap
         """
         if self.name is None:
-            return
+            return iter(list())
         if self._reload:
             self._init_keys()
         if self._keys is None and self._action != ACTION_ADD:
             self._load_keys()
         try:
-            for key in self._keys:
-                yield key
-        except TypeError:
-            # no keys loaded
-            pass
+            return self._keys.__iter__()
+        except Exception:
+            return iter(list())
 
     @finalize
     def __call__(self):
@@ -403,7 +399,8 @@ class LDAPStorage(OdictStorage):
                 pass
             childs = getattr(self, '_deleted', [])
             if self._keys is not None:
-                childs.extend(filter(lambda x: x is not None, self._keys.values()))
+                childs.extend(
+                    filter(lambda x: x is not None, self._keys.values()))
             for child in childs:
                 if child.changed:
                     return
@@ -512,7 +509,7 @@ class LDAPStorage(OdictStorage):
             self._init_keys()
             self._reload = True
             return
-        if key in self._keys:
+        try:
             child = self._keys[key]
             if child is not None:
                 if child.changed:
@@ -521,6 +518,8 @@ class LDAPStorage(OdictStorage):
                         u"changed child node '%s'." % (key,))
                 del self.storage[key]
                 self._keys[key] = None
+        except KeyError:
+            pass
     
     #@finalize
     #def sort(self, cmp=None, key=None, reverse=False):
