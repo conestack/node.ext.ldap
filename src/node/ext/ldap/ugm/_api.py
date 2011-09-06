@@ -202,8 +202,7 @@ class LDAPGroupMapping(Part):
     
     @extend
     def __iter__(self):
-        for uid in self.member_ids:
-            yield uid
+        return iter(self.member_ids)
     
     @extend
     def __contains__(self, key):
@@ -393,15 +392,16 @@ class LDAPPrincipals(OdictStorage):
     @default
     @locktree
     def __getitem__(self, key):
-        if key in self.storage:
+        try:
             return self.storage[key]
-        principal = self.principal_factory(
-            self.context[key],
-            attraliaser=self.principal_attraliaser)
-        principal.__name__ = self.context[key].name
-        principal.__parent__ = self
-        self.storage[key] = principal
-        return principal
+        except KeyError:
+            principal = self.principal_factory(
+                self.context[key],
+                attraliaser=self.principal_attraliaser)
+            principal.__name__ = self.context[key].name
+            principal.__parent__ = self
+            self.storage[key] = principal
+            return principal
 
     @default
     @locktree
@@ -492,12 +492,12 @@ class LDAPPrincipals(OdictStorage):
     
     @default
     @locktree
-    def create(self, _id, **kw):
+    def create(self, pid, **kw):
         vessel = AttributedNode()
         for k, v in kw.items():
             vessel.attrs[k] = v
-        self[_id] = vessel
-        return self[_id]
+        self[pid] = vessel
+        return self[pid]
 
 
 class LDAPUsers(LDAPPrincipals, UgmUsers):
