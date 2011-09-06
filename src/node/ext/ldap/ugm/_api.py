@@ -115,6 +115,7 @@ class AliasedPrincipal(Part):
     attributes_factory = finalize(principal_attributes_factory)
     
     @default
+    @locktree
     def __call__(self):
         self.context()
 
@@ -381,10 +382,12 @@ class LDAPPrincipals(Part):
         return self.context.keys()
 
     @default
+    @locktree
     def __delitem__(self, key):
         del self.context[key]
 
     @default
+    @locktree
     def __getitem__(self, key):
         # XXX: should use lazynodes caching, for now:
         # users['foo'] is not users['foo']
@@ -396,10 +399,12 @@ class LDAPPrincipals(Part):
         return principal
 
     @default
+    @locktree
     def __iter__(self):
         return self.context.__iter__()
 
     @default
+    @locktree
     def __setitem__(self, name, vessel):
         try:
             attrs = vessel.attrs
@@ -426,6 +431,7 @@ class LDAPPrincipals(Part):
         return self.context.changed
     
     @default
+    @locktree
     def __call__(self):
         self.context()
 
@@ -480,6 +486,7 @@ class LDAPPrincipals(Part):
         return aliased_results
     
     @default
+    @locktree
     def create(self, _id, **kw):
         vessel = AttributedNode()
         for k, v in kw.items():
@@ -493,6 +500,7 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
     principal_factory = default(User)
 
     @extend
+    @locktree
     def __delitem__(self, id):
         user = self[id]
         try:
@@ -601,6 +609,7 @@ class LDAPGroups(LDAPGroupsMapping):
     principal_factory = default(Group)
     
     @extend
+    @locktree
     def __delitem__(self, id):
         group = self[id]
         parent = self.parent
@@ -680,6 +689,7 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
         return ret
     
     @extend
+    @locktree
     def __getitem__(self, key):
         if key not in self:
             raise KeyError(key)
@@ -770,6 +780,7 @@ class LDAPUgm(UgmBase):
         self.rcfg = rcfg
     
     @extend
+    @locktree
     def __getitem__(self, key):
         if not key in self.storage:
             if key == 'users':
@@ -818,6 +829,7 @@ class LDAPUgm(UgmBase):
         return self._roles
     
     @default
+    @locktree
     def roles(self, principal):
         id = self._principal_id(principal)
         roles = self._roles
