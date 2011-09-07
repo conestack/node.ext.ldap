@@ -2,8 +2,17 @@ import os
 import subprocess
 import sys
 import tempfile
+import argparse
 from node.ext.ldap import testing
 
+parser = argparse.ArgumentParser(
+             description='Controls test LDAP server, loads predefined LDIF.')
+
+parser.add_argument('task', nargs=1, action='store', choices=['start', 'stop'],
+                   help='start or stop LDAP server')
+parser.add_argument('ldiflayer', nargs='?', default='base', 
+                    choices=testing.ldif_layer.keys(),
+                    help='Predefined LDIF Layer to load.')
 
 # XXX: could these go into parts/testldap?
 def user_home():
@@ -60,54 +69,31 @@ def flatlayers(layer, layers=[]):
     return layers
 
 
-def startslapd(layer, args):
-    mk_ldif(args[1])
+def startslapd(layer, layername):
+    mk_ldif(layername)
     os.environ['node.ext.ldap.testldap.env'] = mk_tmp()
     for layer in flatlayers(layer):
-        layer.setUp(args[2:])
+        layer.setUp()
 
 
-def stopslapd(layer, args):
+def stopslapd():
+    layer = testing.ldif_layer[read_ldif()]
     os.environ['node.ext.ldap.testldap.env'] = read_tmp()
     for layer in reversed(flatlayers(layer)):
         layer.tearDown()
     cleanup_env()
 
 
-CMD = {
-    'start': startslapd,
-    'stop': stopslapd,
-}
-
 def slapd():
-    args = sys.argv[1:]
-    if (len(args) == 0) \
-      or (len(args) == 1 and args[0] != 'stop') \
-      or (len(args) >= 2 and args[0] != 'start'):
-        print
-        print u"Usage: ./bin/testldap start|stop [LDIFLayer]"
-        print u"'start' option requires 'LDIFLayer'"
-        print u"Available layers:"
-        for x in sorted([x[5:] for x in dir(testing) if x.startswith('LDIF_')]):
-            print "\t" + x
-        sys.exit(2)
-    if len(args) == 1:
-        ldif = read_ldif()
-        if not ldif:
-            print u"Server not Running"
+    ns = parser.parse_args()
+    task = ns.task[0]
+    layer = testing.ldif_layer[ns.ldiflayer]
+    if task == 'start':    
+        # XXX should check for distinct slapd
+        checkslapd = 'ps ax| grep slapd| grep -v grep -q'
+        if not subprocess.call(checkslapd, shell=True) == 1:
+            print u"LDAP already running. abort."
             sys.exit(2)
-        cmd = args[0]
+        startslapd(layer, ns.ldiflayer)
     else:
-        if read_tmp() is not None:
-            checkslapd = 'ps ax| grep slapd| grep -v grep -q'
-            if not subprocess.call(checkslapd, shell=True) == 1:
-                print u"LDAP already running. abort."
-                sys.exit(2)
-        cmd = args[0]
-        ldif = args[1]
-    try:
-        layer = getattr(testing, 'LDIF_%s' % ldif)
-    except AttributeError:
-        print u"Given layer not found: %s" % args[0]
-        sys.exit(2)
-    CMD[cmd](layer, args)
+        stopslapd()
