@@ -233,7 +233,11 @@ class Ldif(LDAPLayer):
             if key in self:
                 del self[key]
         # Pop the global registry
-        zca.popGlobalRegistry()
+        try:
+            zca.popGlobalRegistry()
+        except ValueError, e:
+            # may fail if used with testldap script 'stop', this is fine
+            pass
                 
 
 ldif_layer = odict()
