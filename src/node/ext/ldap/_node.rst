@@ -8,6 +8,9 @@ LDAP Nodes
     >>> from node.ext.ldap import LDAPProps
     >>> from node.ext.ldap import LDAPNode
     >>> from node.ext.ldap.testing import props
+    
+Root Node
+---------
 
 Create the root node. The Root node expects the initial base DN as name and
 the server properties::
@@ -85,6 +88,9 @@ Access inexistent child::
     Traceback (most recent call last):
     ...
     KeyError: u'foo'
+    
+Existent Child Nodes
+--------------------
 
 Access existent child and it's attributes::
   
@@ -116,10 +122,16 @@ Customer has not been changed::
 
     >>> customers.changed
     False
+    
+Create New Node
+---------------
 
 Create new LDAPNode and add it to customers::
 
     >>> customer = LDAPNode()
+    >>> repr(customer)
+    '<(dn not set) - False>'
+    
     >>> customer.attrs['ou'] = 'customer3'
     >>> customer.attrs['description'] = 'customer3'
     >>> customer.attrs['objectClass'] = ['top', 'organizationalUnit']
@@ -308,7 +320,7 @@ Call customer now, whole tree unchanged again::
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
       <ou=demo,dc=my-domain,dc=com:ou=demo - False>
 
-Change the person and customer again, and discard the attribute change 
+Change the person and customer again, and discard the attribute change
 of the customer. It must not delete the changed state of the whole tree, as the
 person is still changed::
 
@@ -923,7 +935,7 @@ Test relation filter::
 Secondary keys and child DN's.
 
 Note: Setting the DN as seckey only seem to work because it is returned by LDAP
-search result and considered (XXX: discuss). Child DN's are always available 
+search result and considered (XXX: discuss). Child DN's are always available
 at _child_dns::
     
     >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
@@ -1240,8 +1252,111 @@ New entries in case of scope SUBTREE are added in the ONELEVEL scope::
     >>> node['cn=foo'].attrs['objectClass']
     [u'top', u'person']
 
+Events
+======
+
+Use new registry::
+
+    >>> from plone.testing.zca import pushGlobalRegistry, popGlobalRegistry
+    >>> reg = pushGlobalRegistry()
+    
+Provide a bucnh of printing subscribers for testing::
+    
+    >>> from zope.component import adapter, provideHandler
+    >>> from node.ext.ldap.interfaces import (
+    ...     ILDAPNodeCreatedEvent,
+    ...     ILDAPNodeAddedEvent,
+    ...     ILDAPNodeModifiedEvent,
+    ...     ILDAPNodeDetachedEvent,
+    ...     ILDAPNodeRemovedEvent,
+    ... )
+    >>> from node.interfaces import INode
+
+    >>> @adapter(INode, ILDAPNodeCreatedEvent)
+    ... def test_node_created_event(obj, event):
+    ...     print "Created", event.object
+    >>> provideHandler(test_node_created_event)
+
+    >>> @adapter(INode, ILDAPNodeAddedEvent)
+    ... def test_node_added_event(obj, event):
+    ...     print "Added", event.object
+    >>> provideHandler(test_node_added_event)
+
+    >>> @adapter(INode, ILDAPNodeModifiedEvent)
+    ... def test_node_modified_event(obj, event):
+    ...     print "Modified", event.object
+    >>> provideHandler(test_node_modified_event)
+
+    >>> @adapter(INode, ILDAPNodeDetachedEvent)
+    ... def test_node_detached_event(obj, event):
+    ...     print "Detached", event.object
+    >>> provideHandler(test_node_detached_event)
+
+    >>> @adapter(INode, ILDAPNodeRemovedEvent)
+    ... def test_node_removed_event(obj, event):
+    ...     print "Removed", event.object
+    >>> provideHandler(test_node_removed_event)
+
+Check basic event notification with *added*::
+
+    >>> from zope.component.event import objectEventNotify
+    >>> from node.ext.ldap.events import LDAPNodeAddedEvent
+    >>> objectEventNotify(LDAPNodeAddedEvent(node))
+    Added <dc=my-domain,dc=com - False>
+
+Check for each event type in context::
+
+    >>> root = LDAPNode('dc=my-domain,dc=com', props)
+    Created <dc=my-domain,dc=com - False>
+    
+    >>> dummy = root.items()
+    Created <(dn not set) - False>
+    Created <(dn not set) - False>
+    Created <(dn not set) - False>
+    Created <(dn not set) - False>
+
+create empty node::
+
+    >>> newnode = LDAPNode()
+    Created <(dn not set) - False>    
+
+add new node::    
+
+    >>> root['ou=eventtest01'] = newnode
+    Added <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>
+    
+modify attrs::
+
+    >>> newnode.attrs['description'] = 'foobar'
+    Modified <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>
+
+    >>> del newnode.attrs['description']
+    Modified <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>
+
+detach::
+
+    >>> eventtest = root.detach('ou=eventtest01')
+    Detached <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>
+    
+    >>> root['ou=eventtest01'] = eventtest
+    Added <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>
+    
+delete::    
+
+    >>> del root['ou=eventtest01'] 
+    Removed <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>
+
+Remove registry::
+
+    >>> reg = popGlobalRegistry()
+
+
+Clean
+=====
+
 Cleanup for following tests::
 
     >>> root = LDAPNode('dc=my-domain,dc=com', props)
     >>> del root['cn=foo']
     >>> root()
+    

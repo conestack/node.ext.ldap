@@ -2,8 +2,14 @@ from zope.interface import (
     Interface,
     Attribute,
 )
-from node.interfaces import IStorage
-
+from node.interfaces import (
+    IStorage,
+    INodeCreatedEvent,
+    INodeAddedEvent,
+    INodeModifiedEvent,
+    INodeRemovedEvent,
+    INodeDetachedEvent,
+)
 
 class ICacheProviderFactory(Interface):
     """Create some ICacheProvider implementing object on __call__.
@@ -150,3 +156,32 @@ class ILDAPStorage(IStorage):
         or_search
             flag whether criteria should be ORer or ANDed. defaults to False.
         """
+        
+###############################################################################
+# events
+###############################################################################
+
+
+class ILDAPNodeCreatedEvent(INodeCreatedEvent):
+    """new LDAP node was born.
+    """
+
+
+class ILDAPNodeAddedEvent(INodeAddedEvent):
+    """LDAP node has been added to its parent.
+    """
+
+
+class ILDAPNodeModifiedEvent(INodeModifiedEvent):
+    """LDAP node has been modified.
+    """
+
+
+class ILDAPNodeRemovedEvent(INodeRemovedEvent):
+    """LDAP node has been removed from its parent.
+    """
+
+
+class ILDAPNodeDetachedEvent(INodeRemovedEvent):
+    """LDAP node has been detached from its parent.
+    """        

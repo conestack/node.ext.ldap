@@ -36,6 +36,13 @@ from node.ext.ldap import (
     LDAPSession,
 )
 from node.ext.ldap.interfaces import ILDAPStorage
+from node.ext.ldap.events import (
+    LDAPNodeCreatedEvent,
+    LDAPNodeAddedEvent,
+    LDAPNodeModifiedEvent,
+    LDAPNodeRemovedEvent,
+    LDAPNodeDetachedEvent
+)    
 from node.ext.ldap.filter import (
     LDAPFilter,
     LDAPDictFilter,
@@ -223,9 +230,9 @@ class LDAPStorage(OdictStorage):
             # set rdn attr if not present
             rdn, rdn_val = key.split('=')
             if not rdn in val.attrs:
-                val.attrs._loading = True
+                val._notify_suppress = True
                 val.attrs[rdn] = rdn_val
-                val.attrs._loading = False
+                val._notify_suppress = False
         
         val.__name__ = key
         val.__parent__ = self
@@ -242,9 +249,7 @@ class LDAPStorage(OdictStorage):
             val.changed = True
             self.changed = True
         
-        #self._notify_suppress = True
         self.storage[key] = val
-        #self._notify_suppress = False
         self._keys[key] = val
         
         if self._key_attr == 'rdn':
@@ -261,11 +266,7 @@ class LDAPStorage(OdictStorage):
                 if callable(v):
                     v = v(self, key)
                 val.attrs[k] = v
-        
-        if val._action == ACTION_ADD:
-            objectEventNotify(self.events['added'](val, newParent=self,
-                                                   newName=key))
-
+                
     @finalize
     def __delitem__(self, key):
         """Do not delete immediately. Just mark LDAPNode to be deleted and
@@ -323,10 +324,13 @@ class LDAPStorage(OdictStorage):
     @finalize
     def __repr__(self):
         # Doctest fails if we output utf-8
-        dn = self.DN.encode('ascii', 'replace')
-        name = self.name.encode('ascii', 'replace')
+        try:
+            dn =  self.DN.encode('ascii', 'replace') or '(dn not set)'
+        except KeyError, e:
+            dn = '(dn not available yet)' 
         if self.parent is None:
             return "<%s - %s>" % (dn, self.changed)
+        name = self.name.encode('ascii', 'replace')        
         return "<%s:%s - %s>" % (dn, name, self.changed)
 
     __str__ = finalize(__repr__)
@@ -676,3 +680,11 @@ class LDAPNode(object):
         Nodify,
         LDAPStorage,
     )
+    
+    events = {
+        'created':  LDAPNodeCreatedEvent,
+        'added':    LDAPNodeAddedEvent,
+        'modified': LDAPNodeModifiedEvent,
+        'removed':  LDAPNodeRemovedEvent,
+        'detached': LDAPNodeDetachedEvent,
+    }
