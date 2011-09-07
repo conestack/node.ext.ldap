@@ -4,7 +4,7 @@ import subprocess
 import tempfile
 import time
 from odict import odict
-from plone.testing import Layer
+from plone.testing import Layer, zca
 from pkg_resources import resource_filename
 from node.ext.ldap import (
     ONELEVEL,
@@ -202,6 +202,9 @@ class Ldif(LDAPLayer):
     def setUp(self, args=None):
         """run ldapadd for list of ldifs
         """
+        # Create a new global registry
+        zca.pushGlobalRegistry()        
+
         read_env(self)
         self['ucfg'] = self.ucfg
         self['gcfg'] = self.gcfg
@@ -216,7 +219,6 @@ class Ldif(LDAPLayer):
     def tearDown(self):
         """remove previously added ldifs
         """
-        print
         read_env(self)
         for ldif in self.ldifs:
             print "Removing ldif %s recursively: " % (ldif,),
@@ -230,6 +232,8 @@ class Ldif(LDAPLayer):
         for key in ('ucfg', 'gcfg'):
             if key in self:
                 del self[key]
+        # Pop the global registry
+        zca.popGlobalRegistry()
                 
 
 ldif_layer = odict()
