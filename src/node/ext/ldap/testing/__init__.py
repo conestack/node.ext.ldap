@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import tempfile
 import time
+from odict import odict
 from plone.testing import Layer
 from pkg_resources import resource_filename
 from node.ext.ldap import (
@@ -229,8 +230,10 @@ class Ldif(LDAPLayer):
         for key in ('ucfg', 'gcfg'):
             if key in self:
                 del self[key]
+                
 
-
+ldif_layer = odict()
+            
 # testing ldap props
 user = 'cn=Manager,dc=my-domain,dc=com'
 pwd = 'secret'
@@ -319,6 +322,7 @@ LDIF_data = Ldif(
     resource('ldifs/data.ldif'),
     name='LDIF_data',
     ucfg=ucfg)
+ldif_layer['data'] = LDIF_data
 
 
 LDIF_principals = Ldif(
@@ -326,12 +330,14 @@ LDIF_principals = Ldif(
     bases=(LDIF_data,),
     name='LDIF_principals',
     ucfg=ucfg)
+ldif_layer['principals'] = LDIF_principals
 
 
 LDIF_data_old_props = Ldif(
     resource('ldifs/data.ldif'),
     name='LDIF_data',
     ucfg=ucfg)
+ldif_layer['data_old_props'] = LDIF_data_old_props
 
 
 LDIF_principals_old_props = Ldif(
@@ -339,12 +345,14 @@ LDIF_principals_old_props = Ldif(
     bases=(LDIF_data,),
     name='LDIF_principals',
     ucfg=ucfg)
+ldif_layer['principals_old_props'] = LDIF_principals_old_props
 
 
 # new ones
 LDIF_base = Ldif(
     resource('ldifs/base.ldif'),
     name="LDIF_base")
+ldif_layer['base'] = LDIF_base
 
 
 LDIF_users300 = Ldif(
@@ -352,6 +360,7 @@ LDIF_users300 = Ldif(
     bases=(LDIF_base,),
     name="LDIF_users300",
     ucfg=ucfg300)
+ldif_layer['users300'] = LDIF_users300
 
 
 LDIF_users700 = Ldif(
@@ -359,6 +368,7 @@ LDIF_users700 = Ldif(
     bases=(LDIF_base,),
     name="LDIF_users700",
     ucfg=ucfg700)
+ldif_layer['users700'] = LDIF_users700
 
 
 LDIF_users1000 = Ldif(
@@ -366,6 +376,7 @@ LDIF_users1000 = Ldif(
     bases=(LDIF_base,),
     name="LDIF_users1000",
     ucfg=ucfg1000)
+ldif_layer['users1000'] = LDIF_users1000
 
 
 LDIF_users2000 = Ldif(
@@ -373,6 +384,7 @@ LDIF_users2000 = Ldif(
     bases=(LDIF_base,),
     name="LDIF_users2000",
     ucfg=ucfg2000)
+ldif_layer['users2000'] = LDIF_users2000
 
 
 # Users and groups
@@ -413,6 +425,7 @@ LDIF_groupOfNames = Ldif(
         objectClasses=['groupOfNames'],
         ),
     )
+ldif_layer['groupOfNames'] = LDIF_groupOfNames
 
 
 LDIF_groupOfNames_add = Ldif(
@@ -434,6 +447,7 @@ LDIF_groupOfNames_add = Ldif(
         objectClasses=['groupOfNames'],
         ),
     )
+ldif_layer['groupOfNames_add'] = LDIF_groupOfNames_add
 
 
 LDIF_groupOfNames_10_10 = Ldif(
@@ -455,6 +469,7 @@ LDIF_groupOfNames_10_10 = Ldif(
         objectClasses=['groupOfNames'],
         ),
     )
+ldif_layer['groupOfNames_10_10'] = LDIF_groupOfNames_10_10
 
 
 LDIF_groupOfNames_100_100 = Ldif(
@@ -476,6 +491,7 @@ LDIF_groupOfNames_100_100 = Ldif(
         objectClasses=['groupOfNames'],
         ),
     )
+ldif_layer['groupOfNames_100_100'] = LDIF_groupOfNames_100_100
 
 
 LDIF_groupOfNames_100_100_add = Ldif(
@@ -497,6 +513,7 @@ LDIF_groupOfNames_100_100_add = Ldif(
         objectClasses=['groupOfNames'],
         ),
     )
+ldif_layer['groupOfNames_100_100_add'] = LDIF_groupOfNames_100_100_add
 
 
 LDIF_groupOfNames_300_300 = Ldif(
@@ -518,6 +535,7 @@ LDIF_groupOfNames_300_300 = Ldif(
         objectClasses=['groupOfNames'],
         ),
     )
+ldif_layer['groupOfNames_300_300'] = LDIF_groupOfNames_300_300
 
 
 LDIF_groupOfNames_300_300_add = Ldif(
@@ -539,6 +557,7 @@ LDIF_groupOfNames_300_300_add = Ldif(
         objectClasses=['groupOfNames'],
         ),
     )
+ldif_layer['groupOfNames_300_300_add'] = LDIF_groupOfNames_300_300_add
 
 
 LDIF_groupOfNames_700_700 = Ldif(
@@ -560,6 +579,7 @@ LDIF_groupOfNames_700_700 = Ldif(
         objectClasses=['groupOfNames'],
         ),
     )
+ldif_layer['groupOfNames_700_700'] = LDIF_groupOfNames_700_700
 
 
 LDIF_groupOfNames_700_700_add = Ldif(
@@ -581,6 +601,7 @@ LDIF_groupOfNames_700_700_add = Ldif(
         objectClasses=['groupOfNames'],
         ),
     )
+ldif_layer['groupOfNames_700_700_add'] = LDIF_groupOfNames_700_700_add
 
 
 LDIF_groupOfNames_1000_1000 = Ldif(
@@ -602,6 +623,7 @@ LDIF_groupOfNames_1000_1000 = Ldif(
         objectClasses=['groupOfNames'],
         ),
     )
+ldif_layer['groupOfNames_1000_1000'] = LDIF_groupOfNames_1000_1000
 
 
 LDIF_groupOfNames_1000_1000_add = Ldif(
@@ -623,6 +645,7 @@ LDIF_groupOfNames_1000_1000_add = Ldif(
         objectClasses=['groupOfNames'],
         ),
     )
+ldif_layer['groupOfNames_1000_1000_add'] = LDIF_groupOfNames_1000_1000_add
 
 
 # Users and groups (posix)
@@ -664,6 +687,7 @@ LDIF_posixGroups = Ldif(
         objectClasses=['posixGroup'],
         ),
     )
+ldif_layer['posixGroups'] = LDIF_posixGroups
 
 
 # users (samba)
@@ -690,3 +714,4 @@ LDIF_sambaUsers = Ldif(
         objectClasses=['sambaSamAccount'],
         ),
     )
+ldif_layer['sambaUsers'] = LDIF_sambaUsers
