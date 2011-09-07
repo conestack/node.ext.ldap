@@ -437,6 +437,20 @@ class LDAPPrincipals(OdictStorage):
     
     @default
     @locktree
+    def invalidate(self, key=None):
+        """Invalidate LDAPPrincipals.
+        """
+        self.context.invalidate(key)
+        if key is None:
+            self.storage.clear()
+            return
+        try:
+            del self.storage[key]
+        except KeyError:
+            pass
+    
+    @default
+    @locktree
     def __call__(self):
         self.context()
 
