@@ -199,11 +199,12 @@ class Ldif(LDAPLayer):
         self.ucfg = ucfg
         self.gcfg = gcfg
 
-    def setUp(self, args=None):
+    def setUp(self):
         """run ldapadd for list of ldifs
         """
         # Create a new global registry
-        zca.pushGlobalRegistry()        
+        if not os.environ.get('node.ext.ldap.testldap.skip_zca_hook'):
+            zca.pushGlobalRegistry()        
 
         read_env(self)
         self['ucfg'] = self.ucfg
@@ -233,11 +234,8 @@ class Ldif(LDAPLayer):
             if key in self:
                 del self[key]
         # Pop the global registry
-        try:
+        if not os.environ.get('node.ext.ldap.testldap.skip_zca_hook'):
             zca.popGlobalRegistry()
-        except ValueError, e:
-            # may fail if used with testldap script 'stop', this is fine
-            pass
                 
 
 ldif_layer = odict()
