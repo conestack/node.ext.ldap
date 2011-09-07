@@ -72,6 +72,7 @@ def flatlayers(layer, layers=[]):
 def startslapd(layer, layername):
     mk_ldif(layername)
     os.environ['node.ext.ldap.testldap.env'] = mk_tmp()
+    os.environ['node.ext.ldap.testldap.skip_zca_hook'] = 'skip'
     for layer in flatlayers(layer):
         layer.setUp()
 
@@ -79,6 +80,7 @@ def startslapd(layer, layername):
 def stopslapd():
     layer = testing.ldif_layer[read_ldif()]
     os.environ['node.ext.ldap.testldap.env'] = read_tmp()
+    os.environ['node.ext.ldap.testldap.skip_zca_hook'] = 'skip'
     for layer in reversed(flatlayers(layer)):
         layer.tearDown()
     cleanup_env()
