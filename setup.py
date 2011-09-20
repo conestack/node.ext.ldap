@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '0.9pre2'
+version = '0.9'
 shortdesc = "Node based LDAP support"
 longdesc = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 longdesc += open(os.path.join(os.path.dirname(__file__), 'LICENSE.rst')).read()
@@ -11,16 +11,14 @@ setup(name='node.ext.ldap',
       description=shortdesc,
       long_description=longdesc,
       classifiers=[
-            'License :: OSI Approved :: GNU General Public License (GPL)',
             'Operating System :: OS Independent',
             'Programming Language :: Python',
-            'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
       ], # Get strings from http://www.python.org/pypi?%3Aaction=list_classifiers
       keywords='',
       author='BlueDynamics Alliance',
       author_email='dev@bluedynamics.com',
       url='https://github.com/bluedynamics/node.ext.ldap',
-      license='General Public Licence',
+      license='Simplified BSD',
       packages=find_packages('src'),
       package_dir = {'': 'src'},
       namespace_packages=['node', 'node.ext'],

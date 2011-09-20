@@ -26,7 +26,7 @@ LDAP Properties
 ---------------
 
 To define connection properties for LDAP use ``node.ext.ldap.LDAPProps``
-object.::
+object::
 
     >>> from node.ext.ldap import LDAPProps    
     >>> props = LDAPProps(uri='ldap://localhost:12345/',
@@ -34,7 +34,7 @@ object.::
     ...                   password='secret',
     ...                   cache=False)
 
-Test server connectivity with ``node.ext.ldap.testLDAPConnectivity``.::
+Test server connectivity with ``node.ext.ldap.testLDAPConnectivity``::
 
     >>> from node.ext.ldap import testLDAPConnectivity
     >>> testLDAPConnectivity(props=props)
@@ -47,19 +47,19 @@ LDAP Connection
 For handling LDAP connections, ``node.ext.ldap.LDAPConnector`` is used. It
 expects a ``LDAPProps`` instance in the constructor. Normally there is no
 need to instantiate this object directly, this happens during creation of
-higher abstractions, see below.::
+higher abstractions, see below::
 
     >>> from node.ext.ldap import LDAPConnector
     >>> connector = LDAPConnector(props=props)
     >>> connector
     <node.ext.ldap.base.LDAPConnector object at ...>
 
-Calling ``bind`` creates and returns the LDAP connection.::
+Calling ``bind`` creates and returns the LDAP connection::
 
     >>> connector.bind()
     <ldap.ldapobject.SimpleLDAPObject instance at ...>
 
-Calling ``unbind`` destroys the connection.::
+Calling ``unbind`` destroys the connection::
 
     >>> connector.unbind()
 
@@ -71,18 +71,18 @@ For communicating with an LDAP server, ``node.ext.ldap.LDAPCommunicator`` is
 used. It provides all the basic functions needed to search and modify the
 directory.
 
-``LDAPCommunicator`` expects a ``LDAPConnector`` instance at creation time.::
+``LDAPCommunicator`` expects a ``LDAPConnector`` instance at creation time::
 
     >>> from node.ext.ldap import LDAPCommunicator
     >>> communicator = LDAPCommunicator(connector)
     >>> communicator
     <node.ext.ldap.base.LDAPCommunicator object at ...>
 
-Bind to server.::
+Bind to server::
 
     >>> communicator.bind()
 
-Adding directory entry.::
+Adding directory entry::
 
     >>> communicator.add(
     ...     'cn=foo,ou=demo,dc=my-domain,dc=com',
@@ -93,11 +93,11 @@ Adding directory entry.::
     ...         'objectClass': ['person'],
     ...     })
 
-Set default search DN.::
+Set default search DN::
 
     >>> communicator.baseDN = 'ou=demo,dc=my-domain,dc=com'
 
-Search in directory.::
+Search in directory::
 
     >>> import node.ext.ldap
     >>> communicator.search('(objectClass=person)', node.ext.ldap.SUBTREE)
@@ -107,7 +107,7 @@ Search in directory.::
     'cn': ['foo'], 
     'sn': ['Mustermann']})]
 
-Modify directory entry.::
+Modify directory entry::
 
     >>> from ldap import MOD_REPLACE
     >>> communicator.modify('cn=foo,ou=demo,dc=my-domain,dc=com',
@@ -119,7 +119,7 @@ Modify directory entry.::
     [('cn=foo,ou=demo,dc=my-domain,dc=com', 
     {'cn': ['foo']})]
 
-Change the password of a directory entry which represents a user.::
+Change the password of a directory entry which represents a user::
 
     >>> communicator.passwd(
     ...     'cn=foo,ou=demo,dc=my-domain,dc=com', 'secret', '12345')
@@ -130,14 +130,14 @@ Change the password of a directory entry which represents a user.::
     [('cn=foo,ou=demo,dc=my-domain,dc=com', 
     {'userPassword': ['{SSHA}...']})]
 
-Delete directory entry.::
+Delete directory entry::
 
     >>> communicator.delete('cn=foo,ou=demo,dc=my-domain,dc=com')
     
     >>> communicator.search('(objectClass=person)', node.ext.ldap.SUBTREE)
     []
 
-Close connection.::
+Close connection::
 
     >>> communicator.unbind()
 
@@ -150,21 +150,21 @@ A more convenient way for dealing with LDAP is provided by
 as ``LDAPCommunicator``, but automatically creates the connectivity objects
 and checks the connection state before performing actions.
 
-Instantiate ``LDAPSession`` object. Expects ``LDAPProps`` instance.::
+Instantiate ``LDAPSession`` object. Expects ``LDAPProps`` instance::
 
     >>> from node.ext.ldap import LDAPSession
     >>> session = LDAPSession(props)
 
-LDAP session has a convenience to check given properties.::
+LDAP session has a convenience to check given properties::
 
     >>> session.checkServerProperties()
     (True, 'OK')
 
-Set default search DN for session.::
+Set default search DN for session::
 
     >>> session.baseDN = 'ou=demo,dc=my-domain,dc=com'
 
-Search in directory.::
+Search in directory::
 
     >>> session.search()
     [(u'ou=demo,dc=my-domain,dc=com', 
@@ -172,7 +172,7 @@ Search in directory.::
     u'ou': [u'demo'], 
     u'description': [u'Demo organizational unit']})]
 
-Add directory entry.::
+Add directory entry::
 
     >>> session.add(
     ...     'cn=foo,ou=demo,dc=my-domain,dc=com',
@@ -183,16 +183,16 @@ Add directory entry.::
     ...         'objectClass': ['person'],
     ...     })
 
-Change the password of a directory entry which represents a user.::
+Change the password of a directory entry which represents a user::
 
     >>> session.passwd('cn=foo,ou=demo,dc=my-domain,dc=com', 'secret', '12345')
 
-Authenticate a specific user.::
+Authenticate a specific user::
 
     >>> session.authenticate('cn=foo,ou=demo,dc=my-domain,dc=com', '12345')
     True
 
-Modify directory entry.::
+Modify directory entry::
     
     >>> session.modify('cn=foo,ou=demo,dc=my-domain,dc=com',
     ...                [(MOD_REPLACE, 'sn', 'Musterfrau')])
@@ -202,13 +202,13 @@ Modify directory entry.::
     ...                attrlist=['cn'])
     [(u'cn=foo,ou=demo,dc=my-domain,dc=com', {u'cn': [u'foo']})]
 
-Delete directory entry.::
+Delete directory entry::
 
     >>> session.delete('cn=foo,ou=demo,dc=my-domain,dc=com')
     >>> session.search('(objectClass=person)', node.ext.ldap.SUBTREE)
     []
 
-Close session.::
+Close session::
 
     >>> session.unbind()
 
@@ -221,12 +221,12 @@ One can deal with LDAP entries as node objects. Therefor
 node API, see `node <http://pypi.python.org/pypi/node>`_ package.
 
 Create a LDAP node. The root Node expects the base DN and a ``LDAPProps``
-instance.::
+instance::
 
     >>> from node.ext.ldap import LDAPNode
     >>> root = LDAPNode('ou=demo,dc=my-domain,dc=com', props=props)
 
-Every LDAP node has a DN and a RDN.::
+Every LDAP node has a DN and a RDN::
 
     >>> root.DN
     u'ou=demo,dc=my-domain,dc=com'
@@ -234,12 +234,12 @@ Every LDAP node has a DN and a RDN.::
     >>> root.rdn_attr
     u'ou'
 
-Directory entry has no children yet.::
+Directory entry has no children yet::
 
     >>> root.keys()
     []
     
-Add children to root node.::
+Add children to root node::
 
     >>> person = LDAPNode()
     >>> person.attrs['objectClass'] = ['person']
@@ -254,7 +254,7 @@ Add children to root node.::
     >>> root['cn=person2'] = person
 
 If the RDN attribute was not set during node creation, it is computed from
-node key and set automatically.::
+node key and set automatically::
 
     >>> person.attrs['cn']
     u'person2'
@@ -270,7 +270,7 @@ existing children::
       ...
     KeyError: 'cn=person99'
 
-Have a look at the tree.::
+Have a look at the tree::
 
     >>> root.printtree()
     <ou=demo,dc=my-domain,dc=com - True>
@@ -290,25 +290,25 @@ children has changed::
     >>> root.changed
     False
 
-Modify a LDAP node.::
+Modify a LDAP node::
 
     >>> person = root['cn=person1']
 
-Modify existing attribute.::
+Modify existing attribute::
 
     >>> person.attrs['sn'] = 'Mustermensch'
 
-Add new attribute.::
+Add new attribute::
 
     >>> person.attrs['description'] = 'Mustermensch description'
     >>> person()
 
-Delete an attribute.::
+Delete an attribute::
 
     >>> del person.attrs['description']
     >>> person()
 
-Delete LDAP node.::
+Delete LDAP node::
 
     >>> del root['cn=person2']
     >>> root()
@@ -320,7 +320,7 @@ Delete LDAP node.::
 Searching LDAP
 --------------
 
-Add some users and groups we'll search for.::
+Add some users and groups we'll search for::
 
     >>> for i in range(2, 6):
     ...     node = LDAPNode()
@@ -359,7 +359,7 @@ Add some users and groups we'll search for.::
       <cn=group2,ou=demo,dc=my-domain,dc=com:cn=group2 - False>
 
 For defining search criteria LDAP filters are used, which can be combined by
-bool operators '&' and '|'.::
+bool operators '&' and '|'::
 
     >>> from node.ext.ldap import LDAPFilter
     >>> filter = LDAPFilter('(objectClass=person)')
@@ -373,7 +373,7 @@ bool operators '&' and '|'.::
     u'cn=group1', 
     u'cn=group2']
 
-Define multiple criteria LDAP filter.::
+Define multiple criteria LDAP filter::
 
     >>> from node.ext.ldap import LDAPDictFilter
     >>> filter = LDAPDictFilter({'objectClass': ['person'], 'cn': 'person1'})
@@ -391,7 +391,7 @@ Define a relation LDAP filter. In this case we build a relation between group
     u'cn=person4', 
     u'cn=person5']
 
-Different LDAP filter types can be combined.::
+Different LDAP filter types can be combined::
 
     >>> filter &= LDAPFilter('(cn=person2)')
     >>> str(filter) 
@@ -438,7 +438,7 @@ Define the default search scope::
     >>> root.search_scope = SUBTREE
 
 Define default search filter, could be of type LDAPFilter, LDAPDictFilter,
-LDAPRelationFilter or string.:
+LDAPRelationFilter or string::
 
     >>> root.search_filter = LDAPFilter('objectClass=groupOfNames')
     >>> root.search()
@@ -446,7 +446,7 @@ LDAPRelationFilter or string.:
 
     >>> root.search_filter = None
 
-Define default search criteria as dict.::
+Define default search criteria as dict::
     
     >>> root.search_criteria = {'objectClass': 'person'}
     >>> root.search()
@@ -456,7 +456,7 @@ Define default search criteria as dict.::
     u'cn=person4', 
     u'cn=person5']
 
-Define default search relation.::
+Define default search relation::
 
     >>> root.search_relation = \
     ...     LDAPRelationFilter(root['cn=group1'], 'cn:description')
@@ -467,7 +467,7 @@ Define default search relation.::
     u'cn=person5']
 
 Again, like with the keyword arguments, multiple defined defaults are '&'
-combined.::
+combined::
 
     # empty result, there are no groups with group 'cn' as 'description' 
     >>> root.search_criteria = {'objectClass': 'group'}
@@ -480,7 +480,7 @@ User and Group management
 
 LDAP is often used to manage Authentication, thus ``node.ext.ldap`` provides
 an API for User and Group management. The API follows the contract of
-`node.ext.ugm <http://pypi.python.org/pypi/node.ext.ugm>`_.::
+`node.ext.ugm <http://pypi.python.org/pypi/node.ext.ugm>`_::
 
     >>> from node.ext.ldap import ONELEVEL
     >>> from node.ext.ldap.ugm import (
@@ -537,7 +537,7 @@ Reserved attrmap keys for Users:
 login
     Alternative login name attribute (optional)
 
-Create config objects.::
+Create config objects::
 
     >>> ucfg = UsersConfig(
     ...     baseDN='ou=demo,dc=my-domain,dc=com',
@@ -569,7 +569,7 @@ Create config objects.::
 Roles are represented in LDAP like groups. Note, if groups and roles are mixed
 up in the same container, make sure that query filter fits. For our demo,
 different group object classes are used. Anyway, in real world it might be
-worth considering a seperate container for roles.::
+worth considering a seperate container for roles::
 
     >>> rcfg = GroupsConfig(
     ...     baseDN='ou=demo,dc=my-domain,dc=com',
@@ -584,7 +584,7 @@ worth considering a seperate container for roles.::
     ...     strict=False,
     ... )
 
-Instantiate ``Ugm`` object.::
+Instantiate ``Ugm`` object::
 
     >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
     >>> ugm
@@ -592,7 +592,7 @@ Instantiate ``Ugm`` object.::
 
 The Ugm object has 2 children, the users container and the groups container.
 The are accessible via node API, but also on ``users`` respective ``groups``
-attribute.::
+attribute::
 
     >>> ugm.keys()
     ['users', 'groups']
@@ -603,7 +603,7 @@ attribute.::
     >>> ugm.groups
     <Groups object 'groups' at ...>
 
-Fetch user.::
+Fetch user::
 
     >>> user = ugm.users['person1']
     >>> user
@@ -617,7 +617,7 @@ User attributes. Reserved keys are available on user attributes::
     >>> user.attrs['login']
     u'Mustermensch'
 
-'login' maps to 'sn'.::
+'login' maps to 'sn'::
 
     >>> user.attrs['sn']
     u'Mustermensch'
@@ -629,23 +629,23 @@ User attributes. Reserved keys are available on user attributes::
     >>> user.attrs['description'] = 'Some description'
     >>> user()
 
-Check user credentials.::
+Check user credentials::
 
     >>> user.authenticate('secret')
     True
 
-Change user password.::
+Change user password::
 
     >>> user.passwd('secret', 'newsecret')
     >>> user.authenticate('newsecret')
     True
 
-Groups user is member of.::
+Groups user is member of::
 
     >>> user.groups
     [<Group object 'group1' at ...>]
 
-Add new User.::
+Add new User::
 
     >>> user = ugm.users.create('person99', sn='Person 99')
     >>> user()
@@ -658,7 +658,7 @@ Add new User.::
     u'person5', 
     u'person99']
 
-Delete User.::
+Delete User::
 
     >>> del ugm.users['person99']
     >>> ugm.users()
@@ -669,11 +669,11 @@ Delete User.::
     u'person4', 
     u'person5']
 
-Fetch Group.::
+Fetch Group::
 
     >>> group = ugm.groups['group1']
 
-Group members.::
+Group members::
 
     >>> group.member_ids
     [u'person1', u'person2']
@@ -681,13 +681,13 @@ Group members.::
     >>> group.users
     [<User object 'person1' at ...>, <User object 'person2' at ...>]  
 
-Add group member.::
+Add group member::
 
     >>> group.add('person3')
     >>> group.member_ids
     [u'person1', u'person2', u'person3']
     
-Delete group member.::
+Delete group member::
 
     >>> del group['person3']
     >>> group.member_ids
@@ -700,41 +700,41 @@ ugm or principal object. Fetch a user::
 
     >>> user = ugm.users['person1']
 
-Add role for user via ugm.::
+Add role for user via ugm::
 
     >>> ugm.add_role('viewer', user)
 
-Add role for user directly.::
+Add role for user directly::
 
     >>> user.add_role('editor')
 
-Query roles for user via ugm.::
+Query roles for user via ugm::
 
     >>> ugm.roles(user)
     [u'viewer', u'editor']
 
-Query roles directly.::
+Query roles directly::
 
     >>> user.roles
     [u'viewer', u'editor']
 
-Call UGM to persist roles.::
+Call UGM to persist roles::
 
     >>> ugm()
 
-Delete role via ugm.::
+Delete role via ugm::
 
     >>> ugm.remove_role('viewer', user)
     >>> user.roles
     [u'editor']
 
-Delete role directly.::
+Delete role directly::
 
     >>> user.remove_role('editor')
     >>> user.roles
     []
 
-Call UGM to persist roles.::
+Call UGM to persist roles::
 
     >>> ugm()
 
@@ -742,7 +742,7 @@ Same with group. Fetch a group::
 
     >>> group = ugm.groups['group1']
 
-Add roles.::
+Add roles::
     
     >>> ugm.add_role('viewer', group)
     >>> group.add_role('editor')
@@ -755,7 +755,7 @@ Add roles.::
     
     >>> ugm()
 
-Remove roles.::
+Remove roles::
 
     >>> ugm.remove_role('viewer', group)
     >>> group.remove_role('editor')
@@ -794,7 +794,7 @@ work. If you don't, ``node.ext.ldap`` falls back to use ``bda.cache.NullCache``,
 which does not cache anything and is just an API placeholder. 
 
 To provide a cache based on ``Memcached`` install memcached server and
-configure it. Then you need to provide the factory utility.::
+configure it. Then you need to provide the factory utility::
 
     >>> # Dummy registry.
     >>> from zope.component import registry
@@ -805,7 +805,7 @@ configure it. Then you need to provide the factory utility.::
     >>> components.registerUtility(cache_factory)
     
 In case of multiple memcached backends on various IPs and ports initialization
-of the factory looks like this.::    
+of the factory looks like this::    
 
     >>> # Dummy registry.
     >>> components = registry.Components('comps')
@@ -819,8 +819,11 @@ Dependencies
 ------------
 
 - python-ldap
+- smbpasswd
+- argparse
+- plumber
 - node
-- node.ext.ldap
+- node.ext.ugm
 - bda.cache
 
 
@@ -902,8 +905,8 @@ TODO
 Changes
 =======
 
-0.9dev
-------
+0.9
+---
 
 - refactor form ``bda.ldap``.
   [rnix, chaoflow]
@@ -913,7 +916,11 @@ Contributors
 ============
 
 - Robert Niederreiter <rnix [at] squarewave [dot] at>
+
 - Florian Friesdorf <flo [at] chaoflow [dot] net>
+
 - Jens Klein <jens [at] bluedynamics [dot] com>
+
 - Georg Bernhard <g.bernhard [at] akbild [dot] ac [dot] at>
+
 - Johannes Raggam <johannes [at] bluedynamics [dot] com>
