@@ -902,16 +902,6 @@ TODO
   tries to block stupid configuration.
 
 
-Changes
-=======
-
-0.9
----
-
-- refactor form ``bda.ldap``.
-  [rnix, chaoflow]
-
-
 Contributors
 ============
 
