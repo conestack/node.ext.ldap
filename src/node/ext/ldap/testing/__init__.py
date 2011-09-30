@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import tempfile
 import time
+import logging
 from odict import odict
 from plone.testing import Layer, zca
 from pkg_resources import resource_filename
@@ -23,11 +24,12 @@ try:
     SLAPDURIS = os.environ['SLAPD_URIS']
     LDAPADDBIN = os.environ['LDAP_ADD_BIN']
     LDAPDELETEBIN = os.environ['LDAP_DELETE_BIN']
-except KeyError:                                            #pragma NO COVERAGE
-    raise RuntimeError(                                     #pragma NO COVERAGE
-        u"Environment variables SLAPD_BIN, SLAPD_URIS, "    #pragma NO COVERAGE
-        u"LDAP_ADD_BIN, LDAP_DELETE_BIN needed.")           #pragma NO COVERAGE
-
+    LDAPSUFFIX = os.environ.get('LDAP_SUFFIX', None) or "dc=my-domain,dc=com"
+except KeyError, e:                                          #pragma NO COVERAGE
+    logging.exception(                                       #pragma NO COVERAGE
+        u"Environment variables SLAPD_BIN, SLAPD_URIS, "     #pragma NO COVERAGE
+        u"LDAP_ADD_BIN, LDAP_DELETE_BIN needed.")            #pragma NO COVERAGE 
+    exit(1)                                                  #pragma NO COVERAGE
 
 def resource(string):
     return resource_filename(__name__, string)
@@ -46,7 +48,8 @@ def read_env(layer):
     layer['confdir'] = tmpdir
     layer['dbdir'] = "%s/openldap-data" % (layer['confdir'],)
     layer['slapdconf'] = "%s/slapd.conf" % (layer['confdir'],)
-    layer['binddn'] = "cn=Manager,dc=my-domain,dc=com"
+    layer['binddn'] = "cn=Manager,%s" % LDAPSUFFIX
+    layer['suffix'] = LDAPSUFFIX
     layer['bindpw'] = "secret"
     print tmpdir
 
@@ -58,7 +61,7 @@ pidfile		%(confdir)s/slapd.pid
 argsfile	%(confdir)s/slapd.args
 
 database	bdb
-suffix		"dc=my-domain,dc=com"
+suffix		"%(suffix)s"
 rootdn		"%(binddn)s"
 rootpw		%(bindpw)s
 directory	%(dbdir)s
@@ -83,6 +86,7 @@ class SlapdConf(Layer):
         knows
         """
         read_env(self)
+        suffix = self['suffix']
         binddn = self['binddn']
         bindpw = self['bindpw']
         confdir = self['confdir']
@@ -98,7 +102,8 @@ class SlapdConf(Layer):
                     bindpw=bindpw,
                     confdir=confdir,
                     dbdir=dbdir,
-                    schema=schema
+                    schema=schema,
+                    suffix=suffix,
                     ))
         os.mkdir(dbdir)
         self['props'] = props
@@ -149,6 +154,7 @@ class Slapd(LDAPLayer):
         read_env(self)
         cmd = [self.slapdbin, '-f', self['slapdconf'], '-h', self['uris']]
         cmd += args
+        print ' '.join(cmd)
         self.slapd = subprocess.Popen(cmd)
         time.sleep(1)
         print "done."
