@@ -210,6 +210,8 @@ class Ldif(LDAPLayer):
         """
         # Create a new global registry
         if not os.environ.get('node.ext.ldap.testldap.skip_zca_hook'):
+            import zope.testing.cleanup
+            zope.testing.cleanup.cleanUp()            
             zca.pushGlobalRegistry()        
 
         read_env(self)
@@ -241,10 +243,8 @@ class Ldif(LDAPLayer):
                 del self[key]
         # Pop the global registry
         if not os.environ.get('node.ext.ldap.testldap.skip_zca_hook'):
-            try:
-                zca.popGlobalRegistry()
-            except IndexError:
-                pass  
+            import zope.testing.cleanup
+            zope.testing.cleanup.cleanUp()            
                 
 
 ldif_layer = odict()
