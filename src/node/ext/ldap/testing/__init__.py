@@ -241,7 +241,10 @@ class Ldif(LDAPLayer):
                 del self[key]
         # Pop the global registry
         if not os.environ.get('node.ext.ldap.testldap.skip_zca_hook'):
-            zca.popGlobalRegistry()
+            try:
+                zca.popGlobalRegistry()
+            except IndexError:
+                pass  
                 
 
 ldif_layer = odict()
