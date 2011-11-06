@@ -573,6 +573,8 @@ class Users(object):
 
 
 def member_format(obj_cl):
+    if 'group' in obj_cl:
+        return FORMAT_DN
     if 'groupOfNames' in obj_cl:
         return FORMAT_DN
     if 'groupOfUniqueNames' in obj_cl:
@@ -583,6 +585,8 @@ def member_format(obj_cl):
 
 
 def member_attribute(obj_cl):
+    if 'group' in obj_cl:
+        return 'memberOf'
     if 'groupOfNames' in obj_cl:
         return 'member'
     if 'groupOfUniqueNames' in obj_cl:
