@@ -245,7 +245,7 @@ class Ldif(LDAPLayer):
         if not os.environ.get('node.ext.ldap.testldap.skip_zca_hook'):
             import zope.testing.cleanup
             zope.testing.cleanup.cleanUp()            
-                
+
 
 ldif_layer = odict()
             

@@ -573,26 +573,26 @@ class Users(object):
 
 
 def member_format(obj_cl):
-    if 'group' in obj_cl:
-        return FORMAT_DN
     if 'groupOfNames' in obj_cl:
         return FORMAT_DN
     if 'groupOfUniqueNames' in obj_cl:
         return FORMAT_DN
     if 'posixGroup' in obj_cl:
         return FORMAT_UID
+    if 'group' in obj_cl:
+        return FORMAT_DN
     raise Exception(u"Unknown format")
 
 
 def member_attribute(obj_cl):
-    if 'group' in obj_cl:
-        return 'memberOf'
     if 'groupOfNames' in obj_cl:
         return 'member'
     if 'groupOfUniqueNames' in obj_cl:
         return 'uniqueMember'
     if 'posixGroup' in obj_cl:
         return 'memberUid'
+    if 'group' in obj_cl:
+        return 'memberOf'
     raise Exception(u"Unknown member attribute")
 
 
