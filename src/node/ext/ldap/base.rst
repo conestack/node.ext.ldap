@@ -1,4 +1,10 @@
-LDAP credentials.::
+NullCachManager registration::
+
+    >>> from bda.cache.nullcache import NullCacheManager
+    >>> from zope.component import provideAdapter
+    >>> provideAdapter(NullCacheManager)
+
+LDAP credentials::
 
     >>> host = "127.0.0.1"
     >>> port = 12345
