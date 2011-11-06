@@ -1,4 +1,5 @@
 import ldap
+import types
 from plumber import (
     plumber,
     plumb,
@@ -228,6 +229,8 @@ class LDAPGroupMapping(Part):
     def member_ids(self):
         ret = list()
         members = self.context.attrs.get(self._member_attribute, list())
+        if not type(members) is types.ListType:
+            members = [members]
         for member in members:
             if member in ['nobody', 'cn=nobody']:
                 continue

@@ -5,7 +5,10 @@ from node.ext.ldap import (
     LDAPConnector,
     LDAPCommunicator,
 )
-from node.ext.ldap.base import testLDAPConnectivity
+from node.ext.ldap.base import (
+    testLDAPConnectivity,
+    escape,
+)
 
 
 class LDAPSession(object):
@@ -40,14 +43,20 @@ class LDAPSession(object):
 
     def search(self, queryFilter='(objectClass=*)', scope=BASE, baseDN=None,
                force_reload=False, attrlist=None, attrsonly=0):
+        
+        #if self._props.escape_queries and baseDN is not None:
+        #    baseDN = escape(baseDN)
+        
         if queryFilter in ('', u'', None):
             # It makes no sense to really pass these to LDAP, therefore, we
             # interpret them as "don't filter" which in LDAP terms is
             # '(objectClass=*)'
             queryFilter='(objectClass=*)'
+        
         func = self._communicator.search
         res = self._perform(func, queryFilter, scope, baseDN,
                             force_reload, attrlist, attrsonly)
+        
         # ActiveDirectory returns entries with dn None, which can be ignored
         res = filter(lambda x: x[0] is not None, res)
         return res

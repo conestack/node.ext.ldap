@@ -35,6 +35,7 @@ from node.ext.ldap import (
     ONELEVEL,
     LDAPSession,
 )
+from node.ext.ldap.base import escape
 from node.ext.ldap.interfaces import ILDAPStorage
 from node.ext.ldap.events import (
     LDAPNodeCreatedEvent,
@@ -169,6 +170,7 @@ class LDAPStorage(OdictStorage):
         if props:
             self._ldap_session = LDAPSession(props)
             self._ldap_session.baseDN = self.DN
+            
         
         # XXX: make them public
         self._key_attr = 'rdn'
@@ -430,7 +432,13 @@ class LDAPStorage(OdictStorage):
         # fetch also the key attribute
         if not self._key_attr == 'rdn':
             attrset.add(self._key_attr)
-
+        
+        # XXX: Make this work for string queries and move to LDADCommunicator
+        #if self.ldap_session._props.escape_queries:
+        #    if criteria is not None:
+        #        for key, val in criteria.items():
+        #            criteria[key] = escape(val)
+        
         # Create queryFilter from all filter definitions
         # filter for this search ANDed with the default filters defined on self
         search_filter = LDAPFilter(queryFilter)
@@ -455,7 +463,7 @@ class LDAPStorage(OdictStorage):
         # would it be better to fail? (see also __iter__ secondary key)
         if self._key_attr != 'rdn' and self._key_attr not in _filter:
             _filter &= '(%s=*)' % (self._key_attr,)
-
+        
         # perform the backend search
         matches = self.ldap_session.search(
             str(_filter),

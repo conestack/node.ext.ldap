@@ -48,6 +48,9 @@ class ILDAPProps(Interface):
     retry_max = Attribute(u"Retry count")
 
     retry_delay = Attribute(u"Retry delay in seconds")
+    
+    escape_queries = Attribute(u"Flag whether to escape queries for "
+                               u"ActiveDirectory")
 
 
 class ILDAPPrincipalsConfig(Interface):

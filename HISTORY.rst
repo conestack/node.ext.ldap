@@ -5,6 +5,9 @@ Changes
 0.9.1
 -----
 
+- add ``LDAPProps.escape_queries`` for ActiveDirectory.
+  [rnix, 2011-11-06]
+
 - add group object class to member attribute mapping for ActiveDirectory.
   [rnix, 2011-11-06]
 

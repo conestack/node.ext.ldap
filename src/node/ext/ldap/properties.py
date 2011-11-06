@@ -22,6 +22,7 @@ class LDAPServerProperties(object):
                  #tls_clkeyfile=None,
                  retry_max=1,
                  retry_delay=10.0,
+                 escape_queries=False,
                  ):
         """Take the connection properties as arguments.
 
@@ -81,6 +82,9 @@ class LDAPServerProperties(object):
         retry_delay
             Time span to wait between two reconnect trials
             Not yet
+        
+        escape_queries
+            Flag whether to escape queries
         """
         if uri is None:
             # old school
@@ -99,5 +103,6 @@ class LDAPServerProperties(object):
         #self.tls_clkeyfile = tls_clkeyfile
         self.retry_max = retry_max
         self.retry_delay = retry_delay
+        self.escape_queries = escape_queries
 
 LDAPProps = LDAPServerProperties

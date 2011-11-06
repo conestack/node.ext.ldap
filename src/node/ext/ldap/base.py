@@ -57,6 +57,23 @@ def md5digest(key):
     return m.hexdigest()
 
 
+def escape(value):
+    """Escapes a value, note that this is documented for AD queries, but 
+    not for OpenLDAP etc, but hopefully they work in the same manner.
+    """
+    # don't know how to 'find' NUL = \\0
+    #'*' :'\\2a',
+    replacements = {
+        '(' :'\\28',
+        ')' :'\\29',
+        '\\':'\\5c',
+        '/' :'\\2f',
+    }
+    for key, val in replacements.items():
+        value = value.replace(key, val)
+    return value
+
+
 class LDAPConnector(object):
     """Object is responsible for the LDAP connection.
 
@@ -101,6 +118,7 @@ class LDAPConnector(object):
             self._cache = props.cache
             self._cachetimeout = props.timeout
             self._start_tls = props.start_tls
+            #self._escape_queries = props.escape_queries
 
     def bind(self):
         """Bind to Server and return the Connection Object.
@@ -187,7 +205,10 @@ class LDAPCommunicator(object):
             baseDN = self.baseDN
             if not baseDN:
                 raise ValueError(u"baseDN unset.")
-                
+        
+        #if self._connector._escape_queries:
+        #    queryFilter = self._escape_query(queryFilter)
+        
         if self._cache:
             # XXX: Consider attrlist and attrsonly in cachekey.
             key = '%s-%s-%s-%i' % (self._connector._bindDN,
