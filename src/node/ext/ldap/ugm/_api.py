@@ -159,7 +159,7 @@ class LDAPPrincipal(AliasedPrincipal):
             baseDN=self.context.DN,
             force_reload=self.context._reload,
             attrlist=['memberOf'])
-        return entry[0][1]['memberOf']
+        return entry[0][1].get('memberOf', list())
 
 
 class LDAPUser(LDAPPrincipal, UgmUser):
@@ -169,7 +169,14 @@ class LDAPUser(LDAPPrincipal, UgmUser):
     def groups(self):
         groups = self.parent.parent.groups
         if self.parent.parent.ucfg.memberOfSupport:
-            res = [groups.idbydn(dn) for dn in self.member_of_attr]
+            res = list()
+            for dn in self.member_of_attr:
+                try:
+                    res.append(groups.idbydn(dn))
+                except KeyError:
+                    # happens if DN is returned which does not fit the groups
+                    # base DN.
+                    pass
         else:
             member_format = groups._member_format
             attribute = groups._member_attribute
@@ -252,6 +259,7 @@ class LDAPGroupMapping(Part):
     def member_ids(self):
         ugm = self.parent.parent
         if ugm:
+            # XXX: roles with memberOf use rcfg!
             gcfg = ugm.gcfg
             if gcfg and gcfg.memberOfSupport:
                 users = ugm.users
@@ -629,7 +637,7 @@ def member_attribute(obj_cl):
     if 'posixGroup' in obj_cl:
         return 'memberUid'
     if 'group' in obj_cl:
-        return 'memberOf'
+        return 'member' # XXX: check AD!
     raise Exception(u"Unknown member attribute")
 
 
@@ -830,7 +838,7 @@ class LDAPUgm(UgmBase):
             GroupsConfig
         
         rcfg
-            RolesConfig XXX: not yet
+            RolesConfig
         """
         self.__name__ = name
         self.__parent__ = parent
