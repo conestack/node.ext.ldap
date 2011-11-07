@@ -78,6 +78,11 @@ class ILDAPPrincipalsConfig(Interface):
     
     strict = Attribute(u"Flag whether to initialize Aliaser for LDAP "
                        u"attributes in strict mode. Defaults to True.")
+    
+    memberOfSupport = Attribute(u"Flag whether to use 'memberOf' attribute "
+                                u"(AD) or memberOf overlay (openldap) for "
+                                u"Group membership resolution where "
+                                u"appropriate.")
 
 
 class ILDAPUsersConfig(ILDAPPrincipalsConfig):

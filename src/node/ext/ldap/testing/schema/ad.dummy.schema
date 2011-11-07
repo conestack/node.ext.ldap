@@ -1,0 +1,31 @@
+# IANA ENTERPRISE No. 32929 - Squarewave Computing
+# OID 1.3.6.1.4.1.32929
+#
+# OID         Assignment
+# ------------------------------
+# 1.1         Organization's OID
+# 1.1.1       SNMP Elements
+# 1.1.2       LDAP Elements
+# 1.1.2.1     AttributeTypes
+# 1.1.2.1.1   myAttribute
+# 1.1.2.2     ObjectClasses
+# 1.1.2.2.1   myObjectClass 
+#
+# Active Directory Testing Schema
+#
+# 1.3.6.1.4.1.32929.2.2.1 - user
+# 1.3.6.1.4.1.32929.2.2.2 - group
+#
+# written by Robert Niederreiter <rnix@squarewave.at>
+
+objectclass ( 1.3.6.1.4.1.32929.2.2.1
+              NAME 'user'
+              SUP top
+              STRUCTURAL
+              MAY ( ) )
+
+objectclass ( 1.3.6.1.4.1.32929.2.2.2
+              NAME 'group'
+              SUP top
+              STRUCTURAL
+              MAY (  ) )

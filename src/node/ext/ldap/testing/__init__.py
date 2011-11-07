@@ -67,6 +67,8 @@ rootpw		%(bindpw)s
 directory	%(dbdir)s
 # Indices to maintain
 index	objectClass	eq
+
+overlay memberof
 """
 
 
@@ -123,6 +125,7 @@ schema = [
     resource('schema/inetorgperson.schema'),
     resource('schema/nis.schema'),
     resource('schema/samba.schema'),
+    resource('schema/ad.dummy.schema'),
 ]
 
 SLAPD_CONF = SlapdConf(schema)

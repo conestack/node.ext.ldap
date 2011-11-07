@@ -523,6 +523,10 @@ strict
     Define whether all available principal attributes must be declared in attmap,
     or only reserved ones. Defaults to True.
 
+memberOfSupport
+    Flag whether to use 'memberOf' attribute (AD) or memberOf overlay
+    (openldap) for Group membership resolution where appropriate.
+
 Reserved attrmap keys for Users, Groups and roles:
 
 id
@@ -564,6 +568,7 @@ Create config objects::
     ...     objectClasses=['groupOfNames'],
     ...     defaults={},
     ...     strict=False,
+    ...     memberOfSupport=False,
     ... )
 
 Roles are represented in LDAP like groups. Note, if groups and roles are mixed

@@ -36,7 +36,10 @@ from node.ext.ldap.interfaces import (
     ILDAPGroupsConfig as IGroupsConfig,
     ILDAPUsersConfig as IUsersConfig,
 )
-from node.ext.ldap.scope import ONELEVEL
+from node.ext.ldap.scope import (
+    BASE,
+    ONELEVEL,
+)
 from node.ext.ldap._node import LDAPNode
 from node.ext.ldap.ugm.defaults import creation_defaults
 from node.ext.ldap.ugm.samba import (
@@ -61,7 +64,8 @@ class PrincipalsConfig(object):
             objectClasses=[],
             #member_relation='',
             defaults={},
-            strict=True):
+            strict=True,
+            memberOfSupport=False):
         self.baseDN = baseDN
         self.attrmap = attrmap
         self.scope = scope
@@ -70,6 +74,7 @@ class PrincipalsConfig(object):
         #self.member_relation = member_relation
         self.defaults = defaults
         self.strict = strict
+        self.memberOfSupport = memberOfSupport
 
 
 class UsersConfig(PrincipalsConfig):
@@ -148,18 +153,28 @@ class LDAPUser(LDAPPrincipal, UgmUser):
     @property
     def groups(self):
         groups = self.parent.parent.groups
-        member_format = groups._member_format
-        attribute = groups._member_attribute
-        if member_format == FORMAT_DN:
-            criteria = { attribute: self.context.DN }
-        elif member_format == FORMAT_UID:
-            criteria = { attribute: self.context.attrs['uid'] }
-        # if roles configuration points to child of groups container, and
-        # group configuration has search scope SUBTREE, and groups are
-        # specified by the same criteria as roles, the search returns the 
-        # role id's as well.
-        # XXX: such edge cases should be resolved at UGM init time
-        res = groups.context.search(criteria=criteria)
+        
+        if self.parent.parent.ucfg.memberOfSupport:
+            entry = self.context.ldap_session.search(
+                    scope=BASE,
+                    baseDN=self.context.DN,
+                    force_reload=self.context._reload,
+                    attrlist=['memberOf'],
+                    )
+            res = [groups.idbydn(dn) for dn in entry[0][1]['memberOf']]
+        else:
+            member_format = groups._member_format
+            attribute = groups._member_attribute
+            if member_format == FORMAT_DN:
+                criteria = { attribute: self.context.DN }
+            elif member_format == FORMAT_UID:
+                criteria = { attribute: self.context.attrs['uid'] }
+            # if roles configuration points to child of groups container, and
+            # group configuration has search scope SUBTREE, and groups are
+            # specified by the same criteria as roles, the search returns the 
+            # role id's as well.
+            # XXX: such edge cases should be resolved at UGM init time
+            res = groups.context.search(criteria=criteria)
         ret = list()
         for uid in res:
             ret.append(groups[uid])

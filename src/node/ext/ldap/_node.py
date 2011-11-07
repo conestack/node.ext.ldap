@@ -95,8 +95,9 @@ class AttributesPart(Part):
             # XXX: future: self[key] = item, always!
             # XXX: maybe we want to keep behaviour, but validate against
             #      schema?
+            mv = ['member', 'uniqueMember', 'memberUid', 'memberOf']
             if len(item) == 1 \
-              and key not in ('member', 'uniqueMember', 'memberUid'):
+              and key not in mv:
                 self[key] = item[0]
             else:
                 self[key] = item
