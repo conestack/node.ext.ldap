@@ -145,6 +145,21 @@ class LDAPPrincipal(AliasedPrincipal):
     @property
     def changed(self):
         return self.context.changed
+    
+    @default
+    @property
+    def member_of_attr(self):
+        """memberOf is in openldap realized as overlay and in Active
+        Directory also computed. In case of openldap this attribute is not
+        delivered in LDAP response unless explicitly queried. Thus a separate
+        property is used to query memberOf information explicit.
+        """
+        entry = self.context.ldap_session.search(
+            scope=BASE,
+            baseDN=self.context.DN,
+            force_reload=self.context._reload,
+            attrlist=['memberOf'])
+        return entry[0][1]['memberOf']
 
 
 class LDAPUser(LDAPPrincipal, UgmUser):
@@ -153,15 +168,8 @@ class LDAPUser(LDAPPrincipal, UgmUser):
     @property
     def groups(self):
         groups = self.parent.parent.groups
-        
         if self.parent.parent.ucfg.memberOfSupport:
-            entry = self.context.ldap_session.search(
-                    scope=BASE,
-                    baseDN=self.context.DN,
-                    force_reload=self.context._reload,
-                    attrlist=['memberOf'],
-                    )
-            res = [groups.idbydn(dn) for dn in entry[0][1]['memberOf']]
+            res = [groups.idbydn(dn) for dn in self.member_of_attr]
         else:
             member_format = groups._member_format
             attribute = groups._member_attribute
@@ -242,10 +250,21 @@ class LDAPGroupMapping(Part):
     @default
     @property
     def member_ids(self):
+        ugm = self.parent.parent
+        if ugm:
+            gcfg = ugm.gcfg
+            if gcfg and gcfg.memberOfSupport:
+                users = ugm.users
+                criteria = {
+                    'memberOf': self.context.DN,
+                }
+                # XXX: use users instead of users.context.
+                #      Problem: Aliaed Attributes in strict mode do not know
+                #               about memberOf by default. Check for related
+                #               configuration flag and set transparently 
+                return users.context.search(criteria=criteria)
         ret = list()
         members = self.context.attrs.get(self._member_attribute, list())
-        if not type(members) is types.ListType:
-            members = [members]
         for member in members:
             if member in ['nobody', 'cn=nobody']:
                 continue

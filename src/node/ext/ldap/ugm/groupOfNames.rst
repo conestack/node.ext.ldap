@@ -412,7 +412,7 @@ Delete Group::
           <class 'node.ext.ldap.ugm._api.User'>: uid1
           <class 'node.ext.ldap.ugm._api.User'>: uid2
 
-MemberOf::
+MemberOf Support::
 
     >>> users = ugm.users
     >>> users.context.search(queryFilter='(memberOf=*)')
@@ -432,6 +432,12 @@ MemberOf::
     >>> users['uid1'].groups
     [<Group object 'group2' at ...>, 
     <Group object 'group1' at ...>]
+    
+    >>> groups['group1'].member_ids
+    [u'uid1']
+    
+    >>> groups['group2'].member_ids
+    [u'uid1', u'uid2']
     
     >>> ugm.ucfg.memberOfSupport = False
     >>> ugm.gcfg.memberOfSupport = False
