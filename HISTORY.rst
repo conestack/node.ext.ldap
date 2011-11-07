@@ -2,8 +2,12 @@
 Changes
 =======
 
-0.9.1
------
+0.9.1dev
+--------
+
+- implement memberOf Support for openldap memberof overlay and AD memberOf
+  behavior.
+  [rnix, 2011-11-07]
 
 - add ``LDAPProps.escape_queries`` for ActiveDirectory.
   [rnix, 2011-11-06]
