@@ -14,8 +14,7 @@ DOCFILES = [
     ('session.rst', testing.LDIF_data),
     ('filter.rst', testing.LDIF_data),
     ('_node.rst', testing.LDIF_data),
-    # XXX: schema later
-    #('schema.rst', testing.LDIF_data),
+    ('schema.rst', testing.LDIF_data),
     ('ugm/principals.rst', testing.LDIF_principals),
     ('ugm/groupOfNames.rst', testing.LDIF_groupOfNames),
     ('ugm/posixGroups.rst', testing.LDIF_posixGroups),

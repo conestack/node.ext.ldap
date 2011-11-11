@@ -1,22 +1,28 @@
 import ldapurl
-from ldap.schema.subentry import urlfetch
-from ldap.schema.models import AttributeType
-from ldap.schema.models import ObjectClass
-from ldap.schema.models import LDAPSyntax
+import ldap
+from node.ext.ldap import (
+    LDAPConnector,
+    LDAPCommunicator,
+)
 
-############
-# XXX: later
-
-#class LDAPSchemaInfo(object):
-#    
-#    def __init__(self, props):
-#        self.props = props
-#        self.baseDN = ''
-#    
+class LDAPSchemaInfo(object):
+    
+    def __init__(self, props):
+        connector = LDAPConnector(props=props) 
+        communicator = LDAPCommunicator(connector)
+        communicator.baseDN = 'dc=my-domain,dc=com'
+        communicator.bind()
+        res = communicator.search('(objectclass=*)', ldap.SCOPE_BASE, 
+                                  'cn=subschema', attrlist=['*','+'])                                       
+        if len(res) != 1:
+            raise ValueError, 'subschema not found'        
+        self.subschema = ldap.schema.SubSchema(ldap.cidict.cidict(res[0][1]))
+        
+    def __getitem__(self, key):
+        return self.subschema.get_obj(ldap.schema.AttributeType, key)
+    
 #    def binary(self):
-#        base_uri = self.props.uri or "ldap://%s:%d/" % (self.props.server,
-#                self.props.port)
-#        ldap_url = ldapurl.LDAPUrl(ldapUrl=base_uri)
+#        
 #        ldap_url.dn = self.baseDN
 #        ldap_url.who = self.props.user
 #        ldap_url.cred = self.props.password
