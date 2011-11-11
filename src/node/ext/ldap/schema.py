@@ -18,24 +18,8 @@ class LDAPSchemaInfo(object):
             raise ValueError, 'subschema not found'        
         self.subschema = ldap.schema.SubSchema(ldap.cidict.cidict(res[0][1]))
         
-    def __getitem__(self, key):
-        return self.subschema.get_obj(ldap.schema.AttributeType, key)
+    def attribute(self, name):
+        return self.subschema.get_obj(ldap.schema.AttributeType, name)
     
-#    def binary(self):
-#        
-#        ldap_url.dn = self.baseDN
-#        ldap_url.who = self.props.user
-#        ldap_url.cred = self.props.password
-#        uri = ldap_url.unparse()
-#        rdn, subschema = urlfetch(uri)
-#        syntaxes = subschema.sed[LDAPSyntax]
-#        attrs = list()
-#        for schemata in subschema.attribute_types(subschema.sed[ObjectClass],
-#                                                  raise_keyerror=0):
-#            for attr in schemata.values():
-#                if not attr:
-#                    continue
-#                syntax = syntaxes.get(attr.syntax)
-#                if syntax and syntax.not_human_readable:
-#                    attrs.append(attr)
-#        return attrs
+    def objectclass(self, name):
+        return self.subschema.get_obj(ldap.schema.ObjectClass, name)
