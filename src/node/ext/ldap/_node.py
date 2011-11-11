@@ -78,11 +78,22 @@ class AttributesPart(Part):
         
         self.clear()
         
+        attrlist = ['*']
+        
+        # XXX: operational attributes
+        #if self.session._props.operationalAttributes:
+        #    attrlist.append('+')
+        
+        # XXX: if memberOf support enabled
+        #if self.session._props.memberOfSupport:
+        #    attrlist.append('memberOf')
+        
         # fetch our node with all attributes
         entry = self.parent.ldap_session.search(
                 scope=BASE,
                 baseDN=self.parent.DN,
-                force_reload=self.parent._reload
+                force_reload=self.parent._reload,
+                attrlist=attrlist,
                 )
         
         if len(entry) != 1:

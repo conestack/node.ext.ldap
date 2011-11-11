@@ -19,13 +19,43 @@ Schema object::
     >>> info = LDAPSchemaInfo(props)
     >>> info.subschema
     <ldap.schema.subentry.SubSchema instance at 0x...>
-    
+
+CN Attribute::
+
     >>> attrcn = info.attribute('cn')
     >>> attrcn
     <ldap.schema.models.AttributeType instance at 0x...>
     
     >>> attrcn.names
-    ('cn', 'commonName')    
+    ('cn', 'commonName')
+     
+    >>> attrcn.collective
+    False
+    
+    >>> attrcn.desc
+    'RFC4519: common name(s) for which the entity is known by'
+    
+    >>> attrcn.no_user_mod
+    False
+    
+    >>> attrcn.obsolete
+    False
+    
+    >>> attrcn.ordering
+    
+    >>> attrcn.schema_attribute
+    'attributeTypes'
+    
+    >>> attrcn.single_value
+    False
+    
+    >>> attrcn.substr
+    
+    >>> attrcn.sup
+    ('name',)
+    
+    >>> attrcn.usage
+    0
     
     >>> gof = info.objectclass('groupOfNames')
     >>> gof
