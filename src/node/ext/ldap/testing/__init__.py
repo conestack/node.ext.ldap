@@ -211,11 +211,15 @@ class Ldif(LDAPLayer):
     def setUp(self):
         """run ldapadd for list of ldifs
         """
+        
         # Create a new global registry
+        #if not os.environ.get('node.ext.ldap.testldap.skip_zca_hook'):
+        #    import zope.testing.cleanup
+        #    zope.testing.cleanup.cleanUp()            
+        #    zca.pushGlobalRegistry()
+        
         if not os.environ.get('node.ext.ldap.testldap.skip_zca_hook'):
-            import zope.testing.cleanup
-            zope.testing.cleanup.cleanUp()            
-            zca.pushGlobalRegistry()        
+            zca.pushGlobalRegistry()
 
         read_env(self)
         self['ucfg'] = self.ucfg
@@ -244,10 +248,14 @@ class Ldif(LDAPLayer):
         for key in ('ucfg', 'gcfg'):
             if key in self:
                 del self[key]
+       
         # Pop the global registry
+        #if not os.environ.get('node.ext.ldap.testldap.skip_zca_hook'):
+        #    import zope.testing.cleanup
+        #    zope.testing.cleanup.cleanUp()  
+        
         if not os.environ.get('node.ext.ldap.testldap.skip_zca_hook'):
-            import zope.testing.cleanup
-            zope.testing.cleanup.cleanUp()            
+            zca.popGlobalRegistry()         
 
 
 ldif_layer = odict()
