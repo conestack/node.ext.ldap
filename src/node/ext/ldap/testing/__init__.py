@@ -211,13 +211,6 @@ class Ldif(LDAPLayer):
     def setUp(self):
         """run ldapadd for list of ldifs
         """
-        
-        # Create a new global registry
-        #if not os.environ.get('node.ext.ldap.testldap.skip_zca_hook'):
-        #    import zope.testing.cleanup
-        #    zope.testing.cleanup.cleanUp()            
-        #    zca.pushGlobalRegistry()
-        
         if not os.environ.get('node.ext.ldap.testldap.skip_zca_hook'):
             zca.pushGlobalRegistry()
 
@@ -248,14 +241,18 @@ class Ldif(LDAPLayer):
         for key in ('ucfg', 'gcfg'):
             if key in self:
                 del self[key]
-       
-        # Pop the global registry
-        #if not os.environ.get('node.ext.ldap.testldap.skip_zca_hook'):
-        #    import zope.testing.cleanup
-        #    zope.testing.cleanup.cleanUp()  
         
         if not os.environ.get('node.ext.ldap.testldap.skip_zca_hook'):
-            zca.popGlobalRegistry()         
+            # XXX: fails to pop global registry in Zope 2. Why?
+            try:
+                zca.popGlobalRegistry()
+                print 80 * '*'
+                print "pop global registry"
+            except Exception, e:
+                print 80 * '*'
+                print "pop global registry failed"
+                print e
+                print 80 * '*'
 
 
 ldif_layer = odict()
