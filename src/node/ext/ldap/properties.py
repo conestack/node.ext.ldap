@@ -12,7 +12,7 @@ class LDAPServerProperties(object):
                  port=None,
                  user='',
                  password='',
-                 cache=True,
+                 cache=True, # XXX: default False
                  timeout=43200,
                  uri=None,
                  start_tls=0,
