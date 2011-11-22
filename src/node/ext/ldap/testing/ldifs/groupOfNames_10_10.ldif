@@ -10,6 +10,10 @@ dn: ou=groups,ou=groupOfNames_10_10,dc=my-domain,dc=com
 ou: groups
 objectClass: organizationalUnit
 
+dn: ou=roles,ou=groupOfNames_10_10,dc=my-domain,dc=com
+ou: roles
+objectClass: organizationalUnit
+
 dn: uid=uid0,ou=users,ou=groupOfNames_10_10,dc=my-domain,dc=com
 uid: uid0
 objectClass: inetOrgPerson
