@@ -116,6 +116,7 @@ class SlapdConf(Layer):
         """
         read_env(self)
         shutil.rmtree(self['confdir'])
+        del self['confdir']
         print "SlapdConf torn down."
 
 
