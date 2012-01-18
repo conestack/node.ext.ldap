@@ -580,10 +580,15 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
         del self.context[key]
     
     @default
+    def id_for_login(self, login):
+        return self.context._seckeys.get(
+            self.principal_attrmap.get('login'), {}).get(login, login)
+    
+    @default
     @debug
     def authenticate(self, id=None, pw=None):
-        id = self.context._seckeys.get(
-            self.principal_attrmap.get('login'), {}).get(id, id)
+        # XXX: id -> login
+        id = self.id_for_login(id)
         try:
             userdn = self.context.child_dn(id)
         except KeyError:

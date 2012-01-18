@@ -5,6 +5,9 @@ Changes
 0.9.1dev
 --------
 
+- add ``LDAPUsers.id_for_login``.
+  [rnix, 2012-01-18]
+
 - implement memberOf Support for openldap memberof overlay and AD memberOf
   behavior.
   [rnix, 2011-11-07]
