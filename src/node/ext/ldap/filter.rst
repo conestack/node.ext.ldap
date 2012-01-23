@@ -39,6 +39,10 @@ another LDAPFilter, a string or a None type.::
     >>> foo
     LDAPFilter('(a=*)')
     
+    >>> foo = LDAPFilter(u'(a=\xe4)')
+    >>> foo
+    LDAPFilter('(a=ä)')
+    
     >>> filter = LDAPFilter('(objectClass=person)')
     >>> filter |= LDAPFilter('(objectClass=some)')
     >>> filter
@@ -50,6 +54,11 @@ another LDAPFilter, a string or a None type.::
     >>> filter &= LDAPFilter('(objectClass=other)')
     >>> str(filter)
     '(&(|(objectClass=person)(objectClass=some))(objectClass=other))'
+    
+    >>> filter = LDAPFilter(u'(objectClass=person\xe4)')
+    >>> filter |= LDAPFilter(u'(objectClass=some\xe4)')
+    >>> filter
+    LDAPFilter('(|(objectClass=personä)(objectClass=someä))')
 
 
 LDAPDictFilter
@@ -59,17 +68,17 @@ LDAPDictFilter inherits from LDAPFilter and provides converting dict like
 objects to LDAP filters.::
 
     >>> from node.ext.ldap.filter import dict_to_filter
-    >>> str(dict_to_filter(dict(), False))
+    >>> str(dict_to_filter(dict(), False, 'utf-8'))
     ''
     
     >>> from node.ext.ldap.filter import LDAPDictFilter
-    >>> criteria = dict(sn='meier', cn='sepp')
+    >>> criteria = dict(sn=u'meier\xe4', cn='sepp')
     >>> filter = LDAPDictFilter(criteria, or_search=True)
     >>> filter
-    LDAPDictFilter(criteria={'cn': 'sepp', 'sn': 'meier'})
+    LDAPDictFilter(criteria={'cn': 'sepp', 'sn': u'meier\xe4'})
     
     >>> str(filter)
-    '(|(cn=sepp)(sn=meier))'
+    '(|(cn=sepp)(sn=meier\xc3\xa4))'
     
     >>> criteria = dict(mail='*@example.com', homeDirectory='/home/*')
     >>> other_filter = LDAPDictFilter(criteria)
@@ -77,13 +86,13 @@ objects to LDAP filters.::
     '(&(mail=*@example.com)(homeDirectory=/home/*))'
     
     >>> str(filter & other_filter)
-    '(&(|(cn=sepp)(sn=meier))(&(mail=*@example.com)(homeDirectory=/home/*)))'
+    '(&(|(cn=sepp)(sn=meier\xc3\xa4))(&(mail=*@example.com)(homeDirectory=/home/*)))'
     
     >>> str(filter | other_filter)
-    '(|(|(cn=sepp)(sn=meier))(&(mail=*@example.com)(homeDirectory=/home/*)))'
+    '(|(|(cn=sepp)(sn=meier\xc3\xa4))(&(mail=*@example.com)(homeDirectory=/home/*)))'
     
     >>> str(filter & LDAPFilter('(objectClass=person)'))
-    '(&(|(cn=sepp)(sn=meier))(objectClass=person))'
+    '(&(|(cn=sepp)(sn=meier\xc3\xa4))(objectClass=person))'
 
 
 LDAPRelationFilter
@@ -94,37 +103,37 @@ from relations.::
 
     >>> from node.base import AttributedNode
     >>> node = AttributedNode()
-    >>> node.attrs['someUid'] = '123'
+    >>> node.attrs['someUid'] = u'123\xe4'
     >>> node.attrs['someName'] = 'Name'
     
     >>> from node.ext.ldap.filter import LDAPRelationFilter
     >>> rel_filter = LDAPRelationFilter(node, 'someUid:otherUid')
     >>> rel_filter
-    LDAPRelationFilter('(otherUid=123)')
+    LDAPRelationFilter('(otherUid=123ä)')
     
     >>> str(rel_filter)
-    '(otherUid=123)'
+    '(otherUid=123\xc3\xa4)'
     
     >>> rel_filter = LDAPRelationFilter(
     ...     node, 'someUid:otherUid|someName:otherName')
     >>> str(rel_filter)
-    '(|(otherUid=123)(otherName=Name))'
+    '(|(otherUid=123\xc3\xa4)(otherName=Name))'
     
     >>> rel_filter &= LDAPFilter('(objectClass=person)')
     >>> str(rel_filter)
-    '(&(|(otherUid=123)(otherName=Name))(objectClass=person))'
+    '(&(|(otherUid=123\xc3\xa4)(otherName=Name))(objectClass=person))'
     
     >>> rel_filter = LDAPRelationFilter(
     ...     node, 'someUid:otherUid|someName:otherName', False)
     >>> str(rel_filter)
-    '(&(otherUid=123)(otherName=Name))'
+    '(&(otherUid=123\xc3\xa4)(otherName=Name))'
     
     >>> rel_filter = LDAPRelationFilter(
     ...     node, 'someUid:otherUid|someUid:otherName', False)
     >>> str(rel_filter)
-    '(&(otherUid=123)(otherName=123))'
+    '(&(otherUid=123\xc3\xa4)(otherName=123\xc3\xa4))'
     
     >>> rel_filter = LDAPRelationFilter(
     ...     node, 'someUid:otherUid|inexistent:inexistent')
     >>> str(rel_filter)
-    '(otherUid=123)'
+    '(otherUid=123\xc3\xa4)'

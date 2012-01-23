@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import ldapurl
 import ldap
 from node.ext.ldap import (

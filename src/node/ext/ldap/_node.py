@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 try:
     from zope.app.event.objectevent import objectEventNotify # BBB
 except ImportError, e:
@@ -339,7 +340,7 @@ class LDAPStorage(OdictStorage):
     def __repr__(self):
         # Doctest fails if we output utf-8
         try:
-            dn =  self.DN.encode('ascii', 'replace') or '(dn not set)'
+            dn = self.DN.encode('ascii', 'replace') or '(dn not set)'
         except KeyError, e:
             dn = '(dn not available yet)' 
         if self.parent is None:

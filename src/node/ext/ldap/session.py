@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import ldap
 from node.utils import encode, decode
 from node.ext.ldap import (

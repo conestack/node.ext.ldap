@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import posix
 import shadow
 import samba

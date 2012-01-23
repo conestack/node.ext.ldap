@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 try:
     import ldap
 except ImportError:                                         #pragma NO COVERAGE

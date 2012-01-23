@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import ldap
 import types
 from plumber import (

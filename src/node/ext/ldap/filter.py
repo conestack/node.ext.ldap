@@ -1,10 +1,15 @@
+# -*- coding: utf-8 -*-
 class LDAPFilter(object):
+    
+    encoding = 'utf-8'
     
     def __init__(self, queryFilter=None):
         if queryFilter is not None \
                 and not isinstance(queryFilter, basestring) \
                 and not isinstance(queryFilter, LDAPFilter):
             raise TypeError('Query filter must be LDAPFilter or string')
+        if isinstance(queryFilter, unicode):
+            queryFilter = queryFilter.encode(self.encoding)
         self._filter = queryFilter
         if isinstance(queryFilter, LDAPFilter):
             self._filter = str(queryFilter)
@@ -59,8 +64,7 @@ class LDAPDictFilter(LDAPFilter):
     def __str__(self):
         if not self.criteria:
             return ''
-        return unicode(dict_to_filter(
-            criteria=self.criteria, or_search=self.or_search))
+        return str(dict_to_filter(self.criteria, self.or_search, self.encoding))
 
     def __repr__(self):
         return "LDAPDictFilter(criteria=%r)" % (self.criteria,)
@@ -100,25 +104,29 @@ class LDAPRelationFilter(LDAPFilter):
         if len(dictionary) is 1:
             _filter = LDAPFilter(self.relation)
         else:
-            _filter = dict_to_filter(parsedRelation, self.or_search)
+            _filter = dict_to_filter(
+                parsedRelation, self.or_search, self.encoding)
 
         return self.dictionary and \
             str(dict_to_filter(
-                criteria=self.dictionary, or_search=self.or_search)) or ''
+                self.dictionary, self.or_search, self.encoding)) or ''
     
     def __repr__(self):
         return "LDAPRelationFilter('%s')" % (str(self),)
 
 
-def dict_to_filter(criteria, or_search):
+def dict_to_filter(criteria, or_search, encoding):
     """Turn dictionary criteria into ldap queryFilter string
     """
     _filter = None
     for attr, values in criteria.items():
+        if isinstance(attr, unicode):
+            attr = attr.encode(encoding)
         if not isinstance(values, list):
             values = [values]
-        
         for value in values:
+            if isinstance(value, unicode):
+                value = value.encode(encoding)
             if _filter is None:
                 _filter = LDAPFilter('(%s=%s)' % (attr, value))
             else:
