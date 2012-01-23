@@ -105,7 +105,7 @@ User is a leaf::
 Authenticate::
 
     >>> users.authenticate('uid0', 'secret0')
-    'uid0'
+    u'uid0'
     
     >>> users.authenticate('cn0', 'secret0')
     u'uid0'
@@ -129,11 +129,11 @@ Change password::
     >>> users.passwd('foo', 'secret0', 'bar')
     Traceback (most recent call last):
       ...
-    KeyError: 'foo'
+    KeyError: u'foo'
     
     >>> users.passwd('uid0', 'secret0', 'bar')
     >>> users.authenticate('uid0', 'bar')
-    'uid0'
+    u'uid0'
 
 Add user::
 
@@ -184,7 +184,7 @@ After calling, new user is available in LDAP::
     >>> ugm()
     >>> ugm.users.passwd('sepp', None, 'secret')
     >>> users.authenticate('sepp', 'secret')
-    'sepp'
+    u'sepp'
     
 Groups object::
 
@@ -262,14 +262,14 @@ Querying a group for a non-member results in a KeyError::
     >>> group_0['uid1']
     Traceback (most recent call last):
       ...
-    KeyError: 'uid1'
+    KeyError: u'uid1'
 
 Deleting inexistend member from group fails::
 
     >>> del group_0['inexistent']
     Traceback (most recent call last):
       ...
-    KeyError: 'inexistent'
+    KeyError: u'inexistent'
 
 ``__setitem__`` is prohibited::
 

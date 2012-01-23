@@ -43,6 +43,8 @@ Default value callbacks testing
 Posix Account
 -------------
 
+::
+
     >>> ucfg = UsersConfig(
     ...     baseDN='ou=defaults,dc=my-domain,dc=com',
     ...     attrmap={
@@ -98,6 +100,8 @@ Posix Account
 Posix Group
 -----------
 
+::
+
     >>> gcfg = GroupsConfig(
     ...     baseDN='ou=defaults,dc=my-domain,dc=com',
     ...     attrmap={
@@ -121,6 +125,8 @@ Posix Group
 
 Shadow Account
 --------------
+
+::
 
     >>> ucfg = UsersConfig(
     ...     baseDN='ou=defaults,dc=my-domain,dc=com',
@@ -186,6 +192,8 @@ Shadow Account
 
 Samba Account
 -------------
+
+::
 
     >>> ucfg = UsersConfig(
     ...     baseDN='ou=defaults,dc=my-domain,dc=com',
@@ -266,6 +274,8 @@ Samba Account
 
 Samba Group
 -----------
+
+::
 
     >>> gcfg = GroupsConfig(
     ...     baseDN='ou=defaults,dc=my-domain,dc=com',

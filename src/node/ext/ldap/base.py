@@ -58,6 +58,18 @@ def md5digest(key):
     return m.hexdigest()
 
 
+def decode_utf8(value):
+    if value and not isinstance(value, unicode):
+        value = value.decode('utf-8')
+    return value
+
+
+def encode_utf8(value):
+    if value and isinstance(value, unicode):
+        value = value.encode('utf-8')
+    return value
+
+
 def escape(value):
     """Escapes a value, note that this is documented for AD queries, but 
     not for OpenLDAP etc, but hopefully they work in the same manner.

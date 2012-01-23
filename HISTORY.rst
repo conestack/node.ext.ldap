@@ -5,6 +5,12 @@ Changes
 0.9.1dev
 --------
 
+- Force unicode ids and keys in UGM API.
+  [rnix, 2012-01-23]
+
+- add unicode support for filters.
+  [rnix, 2012-01-23]
+
 - add ``LDAPUsers.id_for_login``.
   [rnix, 2012-01-18]
 

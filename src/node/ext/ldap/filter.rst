@@ -68,7 +68,7 @@ LDAPDictFilter inherits from LDAPFilter and provides converting dict like
 objects to LDAP filters.::
 
     >>> from node.ext.ldap.filter import dict_to_filter
-    >>> str(dict_to_filter(dict(), False, 'utf-8'))
+    >>> str(dict_to_filter(dict(), False))
     ''
     
     >>> from node.ext.ldap.filter import LDAPDictFilter

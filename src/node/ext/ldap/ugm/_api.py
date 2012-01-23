@@ -41,6 +41,7 @@ from node.ext.ldap.scope import (
     BASE,
     ONELEVEL,
 )
+from node.ext.ldap.base import decode_utf8
 from node.ext.ldap._node import LDAPNode
 from node.ext.ldap.ugm.defaults import creation_defaults
 from node.ext.ldap.ugm.samba import (
@@ -211,6 +212,7 @@ class LDAPGroupMapping(Part):
     
     @extend
     def __getitem__(self, key):
+        key = decode_utf8(key)
         if key not in self:
             raise KeyError(key)
         return self.related_principals(key)[key]
@@ -218,6 +220,7 @@ class LDAPGroupMapping(Part):
     @extend
     @locktree
     def __delitem__(self, key):
+        key = decode_utf8(key)
         if key not in self:
             raise KeyError(key)
         if self._member_format == FORMAT_DN:
@@ -238,6 +241,7 @@ class LDAPGroupMapping(Part):
     
     @extend
     def __contains__(self, key):
+        key = decode_utf8(key)
         for uid in self:
             if uid == key:
                 return True
@@ -246,6 +250,7 @@ class LDAPGroupMapping(Part):
     @default
     @locktree
     def add(self, key):
+        key = decode_utf8(key)
         if not key in self.member_ids:
             val = self.translate_key(key)
             # self.context.attrs[self._member_attribute].append won't work here
@@ -429,6 +434,7 @@ class LDAPPrincipals(OdictStorage):
     @default
     @locktree
     def __delitem__(self, key):
+        key = decode_utf8(key)
         del self.context[key]
         try:
             del self.storage[key]
@@ -438,6 +444,7 @@ class LDAPPrincipals(OdictStorage):
     @default
     @locktree
     def __getitem__(self, key):
+        key = decode_utf8(key)
         try:
             return self.storage[key]
         except KeyError:
@@ -486,6 +493,7 @@ class LDAPPrincipals(OdictStorage):
     def invalidate(self, key=None):
         """Invalidate LDAPPrincipals.
         """
+        key = decode_utf8(key)
         self.context.invalidate(key)
         if key is None:
             self.storage.clear()
@@ -567,6 +575,7 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
     @extend
     @locktree
     def __delitem__(self, key):
+        key = decode_utf8(key)
         user = self[key]
         try:
             groups = user.groups
@@ -589,6 +598,7 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
     @debug
     def authenticate(self, id=None, pw=None):
         # XXX: id -> login
+        id = decode_utf8(id)
         id = self.id_for_login(id)
         try:
             userdn = self.context.child_dn(id)
@@ -600,6 +610,7 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
     @default
     @debug
     def passwd(self, id, oldpw, newpw):
+        id = decode_utf8(id)
         self.context.ldap_session.passwd(
             self.context.child_dn(id), oldpw, newpw)
         object_classes = self.context.child_defaults['objectClass']
@@ -685,6 +696,7 @@ class LDAPGroups(LDAPGroupsMapping):
     @extend
     @locktree
     def __delitem__(self, key):
+        key = decode_utf8(key)
         group = self[key]
         parent = self.parent
         if parent and parent.rcfg is not None:
@@ -765,6 +777,7 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
     @extend
     @locktree
     def __getitem__(self, key):
+        key = decode_utf8(key)
         if key not in self:
             raise KeyError(key)
         principals = self.related_principals(key)
@@ -775,6 +788,7 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
     @extend
     @locktree
     def __delitem__(self, key):
+        key = decode_utf8(key)
         if key not in self:
             raise KeyError(key)
         principals = self.related_principals(key)

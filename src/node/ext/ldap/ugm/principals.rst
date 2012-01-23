@@ -677,14 +677,14 @@ A KeyError is raised when trying to access an inexistent role member.::
     >>> role['inexistent']
     Traceback (most recent call last):
       ...
-    KeyError: 'inexistent'
+    KeyError: u'inexistent'
 
 A KeyError is raised when trying to delete an inexistent role member.::
 
     >>> del role['inexistent']
     Traceback (most recent call last):
       ...
-    KeyError: 'inexistent'
+    KeyError: u'inexistent'
 
 Delete user and check if roles are removed.::
 
