@@ -5,6 +5,10 @@ Changes
 0.9.1dev
 --------
 
+- Do not throw ``KeyError`` if secondary key set but attribute not found on
+  entry. In case, skip entry.
+  [rnix, 2012-02-10] 
+
 - Force unicode ids and keys in UGM API.
   [rnix, 2012-01-23]
 

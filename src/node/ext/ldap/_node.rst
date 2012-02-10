@@ -941,14 +941,13 @@ at _child_dns::
     >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
     >>> del tmp['cn=customer99']
     >>> tmp()
-    
+
+Note -> if seckey attr is missing on LDAP entry, entry is skipped::
+
     >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
     >>> tmp._seckey_attrs = ('cn',)
     >>> tmp.keys()
-    Traceback (most recent call last):
-      ...
-    KeyError: u"Secondary key 'cn' missing on: 
-    ou=customer1,ou=customers,dc=my-domain,dc=com."
+    [u'ou=customer1', u'ou=customer2', u'ou=n\xe4sty\\, customer', u'ou=customer3']
 
     >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
     >>> tmp._seckey_attrs = ('dn',)

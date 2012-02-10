@@ -626,9 +626,8 @@ class LDAPStorage(OdictStorage):
             try:
                 seckey = attrs[seckey_attr]
             except KeyError:
-                raise KeyError(
-                    u"Secondary key '%s' missing on: %s." % \
-                        (seckey_attr, attrs['dn']))
+                # no sec key found, skip
+                continue
             else:
                 if isinstance(seckey, list):
                     if len(seckey) != 1:

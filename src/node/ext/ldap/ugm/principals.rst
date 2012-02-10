@@ -15,14 +15,13 @@ ids() the first time::
     'id': 'sn', 
     'sn': 'sn'}
 
-Query all user ids. ``description`` is set as login attribute and is missing
-on some::
+Query all user ids. ``description`` is set as login attribute, which is not
+unique::
 
     >>> users = Users(props, ucfg)
     Traceback (most recent call last):
     ...
-    KeyError:
-      u"Secondary key 'description' missing on: cn=user1,dc=my-domain,dc=com."
+    KeyError: u"Secondary key not unique: description='foo'."
 
 Query all user ids. Set ``telephoneNumber`` as login attribute, which is not
 unique::
