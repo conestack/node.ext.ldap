@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import ldap
 import types
+import time
+import logging
 from plumber import (
     plumber,
     plumb,
@@ -50,33 +52,33 @@ from node.ext.ldap.ugm.samba import (
 )
 
 
+logger = logging.getLogger('node.ext.ldap')
+
+
+# group member format
 FORMAT_DN = 0
 FORMAT_UID = 1
 
 
 class PrincipalsConfig(object):
-    """Superclass for UsersConfig, GroupsConfig and RolesConfig (later)
-    """
     
-    def __init__(self,
-            baseDN='',
-            attrmap={},
-            scope=ONELEVEL,
-            queryFilter='',
-            objectClasses=[],
-            #member_relation='',
-            defaults={},
-            strict=True,
-            memberOfSupport=False):
+    def __init__(self, baseDN='', attrmap={}, scope=ONELEVEL, queryFilter='',
+                 objectClasses=[], defaults={}, strict=True,
+                 memberOfSupport=False, expiresAttr=None):
         self.baseDN = baseDN
         self.attrmap = attrmap
         self.scope = scope
         self.queryFilter = queryFilter
         self.objectClasses = objectClasses
-        #self.member_relation = member_relation
+        
         self.defaults = defaults
         self.strict = strict
         self.memberOfSupport = memberOfSupport
+        # XXX: currently expiresAttr only gets considered for user
+        #      authentication group and role expiration is not implemented yet.
+        self.expiresAttr = expiresAttr
+        # XXX: member_relation
+        #self.member_relation = member_relation
 
 
 class UsersConfig(PrincipalsConfig):
@@ -386,6 +388,7 @@ class LDAPPrincipals(OdictStorage):
         
         context._load_keys()
         
+        self.expiresAttr = cfg.expiresAttr
         self.principal_attrmap = cfg.attrmap
         self.principal_attraliaser = DictAliaser(cfg.attrmap, cfg.strict)
         self.context = context
@@ -464,6 +467,9 @@ class LDAPPrincipals(OdictStorage):
     @default
     @locktree
     def __setitem__(self, name, vessel):
+        """XXX: mechanism for defining a target container if search scope is
+                SUBTREE
+        """
         try:
             attrs = vessel.attrs
         except AttributeError:
@@ -597,11 +603,34 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
     @default
     @debug
     def authenticate(self, id=None, pw=None):
-        # XXX: id -> login
+        # XXX: rename 'id' kw arg to 'login'
         id = decode_utf8(id)
         id = self.id_for_login(id)
         try:
-            userdn = self.context.child_dn(id)
+            if self.expiresAttr:
+                user = self.context[id]
+                expires = user.attrs.get(self.expiresAttr)
+                if expires and expires not in ['99999' '-1']:
+                    # check expiration timestamp
+                    try:
+                        expires = int(expires)
+                    except ValueError:
+                        # unknown expires field data
+                        msg= u"Accound expiration flag for user '%s' " +\
+                             u"contains unknown data"
+                        msg = msg % id
+                        logger.error(msg)
+                        return False
+                    # shadow account specific
+                    if self.expiresAttr == 'shadowExpire':
+                        expires += int(user.attrs.get('shadowInactive', '0'))
+                    # numer of days since epoch
+                    days = int(time.time() / 86400)
+                    if days >= expires:
+                        return False
+                userdn = user.DN
+            else:
+                userdn = self.context.child_dn(id)
         except KeyError:
             return False
         return self.context.ldap_session.authenticate(userdn, pw) \

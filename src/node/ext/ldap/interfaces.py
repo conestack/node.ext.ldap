@@ -12,6 +12,7 @@ from node.interfaces import (
     INodeDetachedEvent,
 )
 
+
 class ICacheProviderFactory(Interface):
     """Create some ICacheProvider implementing object on __call__.
 
@@ -84,6 +85,12 @@ class ILDAPPrincipalsConfig(Interface):
                                 u"(AD) or memberOf overlay (openldap) for "
                                 u"Group membership resolution where "
                                 u"appropriate.")
+    
+    # XXX: currently expiresAttr only gets considered for user authentication
+    #      group and role expiration is not implemented yet.
+    expiresAttr = Attribute(u"Attribue containing an expiration timestamp "
+                            u"from epoch in UTC. If None, entry never "
+                            u"expires.")
 
 
 class ILDAPUsersConfig(ILDAPPrincipalsConfig):
@@ -165,7 +172,8 @@ class ILDAPStorage(IStorage):
         or_search
             flag whether criteria should be ORer or ANDed. defaults to False.
         """
-        
+
+
 ###############################################################################
 # events
 ###############################################################################
@@ -193,4 +201,4 @@ class ILDAPNodeRemovedEvent(INodeRemovedEvent):
 
 class ILDAPNodeDetachedEvent(INodeRemovedEvent):
     """LDAP node has been detached from its parent.
-    """        
+    """

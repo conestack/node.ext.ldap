@@ -101,7 +101,9 @@ User is a leaf::
     >>> user_0.keys()
     []
 
-Authenticate::
+Authenticate no account expiration configured::
+
+    >>> users.expiresAttr
 
     >>> users.authenticate('uid0', 'secret0')
     u'uid0'
@@ -116,6 +118,35 @@ Authenticate::
     False
     
     >>> users.authenticate('foo', 'secret0')
+    False
+
+Check Account expiration::
+
+    
+    >>> users.expiresAttr = 'shadowExpire'
+    
+    >>> users['uid0'].context.attrs['shadowExpire']
+    u'99999'
+    
+    >>> users['uid0'].context.attrs['shadowInactive']
+    u'99999'
+    
+Uid0 never expires - or at leas expires in many years and even if, there are
+99999 more days unless account gets disabled::
+
+    >>> users.authenticate('uid0', 'secret0')
+    u'uid0'
+
+Set expires a while ago, leave inactive high, authentication still works::
+
+    >>> users['uid0'].context.attrs['shadowExpire'] = '1'
+    >>> users.authenticate('uid0', 'secret0')
+    u'uid0'
+
+Set shadow inactive to 0 days. authentication will fail::
+
+    >>> users['uid0'].context.attrs['shadowInactive'] = '0'
+    >>> users.authenticate('uid0', 'secret0')
     False
 
 Change password::
