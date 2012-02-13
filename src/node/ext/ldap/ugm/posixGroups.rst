@@ -147,7 +147,7 @@ Set shadow inactive to 0 days. authentication will fail::
 
     >>> users['uid0'].context.attrs['shadowInactive'] = '0'
     >>> users.authenticate('uid0', 'secret0')
-    False
+    ACCOUNT_EXPIRED
 
 Change password::
 

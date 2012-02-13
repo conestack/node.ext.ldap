@@ -91,6 +91,10 @@ class ILDAPPrincipalsConfig(Interface):
     expiresAttr = Attribute(u"Attribue containing an expiration timestamp "
                             u"from epoch in UTC. If None, entry never "
                             u"expires.")
+    
+    expiresUnit = Attribute(u"Expiration unit. Either "
+                            u"``node.ext.ldap.ugm.EXPIRATION_DAYS`` or "
+                            u"``EXPIRATION_SECONDS``. defaults to days.")
 
 
 class ILDAPUsersConfig(ILDAPPrincipalsConfig):

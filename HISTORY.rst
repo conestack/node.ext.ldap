@@ -5,8 +5,8 @@ Changes
 0.9.1dev
 --------
 
-- Introduce ``expiresAttr`` in principals config. Considered in
-  ``Users.authenticate``.
+- Introduce ``expiresAttr`` and ``expiresUnit`` in principals config.
+  Considered in ``Users.authenticate``.
   [rnix, 2012-02-11]
 
 - Do not throw ``KeyError`` if secondary key set but attribute not found on

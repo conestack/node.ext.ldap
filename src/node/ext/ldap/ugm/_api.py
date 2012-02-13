@@ -54,29 +54,41 @@ from node.ext.ldap.ugm.samba import (
 
 logger = logging.getLogger('node.ext.ldap')
 
-
 # group member format
 FORMAT_DN = 0
 FORMAT_UID = 1
+
+# expiration unit
+EXPIRATION_DAYS = 0
+EXPIRATION_SECONDS = 1
+
+
+class AccountExpired(object):
+    def __repr__(self):
+        return 'ACCOUNT_EXPIRED'
+    __str__ = __repr__
+    
+ACCOUNT_EXPIRED = AccountExpired()
 
 
 class PrincipalsConfig(object):
     
     def __init__(self, baseDN='', attrmap={}, scope=ONELEVEL, queryFilter='',
                  objectClasses=[], defaults={}, strict=True,
-                 memberOfSupport=False, expiresAttr=None):
+                 memberOfSupport=False, expiresAttr=None,
+                 expiresUnit=EXPIRATION_DAYS):
         self.baseDN = baseDN
         self.attrmap = attrmap
         self.scope = scope
         self.queryFilter = queryFilter
         self.objectClasses = objectClasses
-        
         self.defaults = defaults
         self.strict = strict
         self.memberOfSupport = memberOfSupport
         # XXX: currently expiresAttr only gets considered for user
         #      authentication group and role expiration is not implemented yet.
         self.expiresAttr = expiresAttr
+        self.expiresUnit = expiresUnit
         # XXX: member_relation
         #self.member_relation = member_relation
 
@@ -389,6 +401,7 @@ class LDAPPrincipals(OdictStorage):
         context._load_keys()
         
         self.expiresAttr = cfg.expiresAttr
+        self.expiresUnit = cfg.expiresUnit
         self.principal_attrmap = cfg.attrmap
         self.principal_attraliaser = DictAliaser(cfg.attrmap, cfg.strict)
         self.context = context
@@ -624,10 +637,12 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
                     # shadow account specific
                     if self.expiresAttr == 'shadowExpire':
                         expires += int(user.attrs.get('shadowInactive', '0'))
-                    # numer of days since epoch
-                    days = int(time.time() / 86400)
+                    days = time.time()
+                    if self.expiresUnit == EXPIRATION_DAYS:
+                        # numer of days since epoch
+                        days /= 86400
                     if days >= expires:
-                        return False
+                        return ACCOUNT_EXPIRED
                 userdn = user.DN
             else:
                 userdn = self.context.child_dn(id)
