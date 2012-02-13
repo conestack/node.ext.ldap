@@ -715,6 +715,28 @@ LDIF_posixGroups = Ldif(
 ldif_layer['posixGroups'] = LDIF_posixGroups
 
 
+LDIF_posixGroups_10_10 = Ldif(
+    resource('ldifs/posixGroups_10_10.ldif'),
+    bases=(LDIF_base,),
+    name="LDIF_posixGroups_10_10",
+    ucfg=UsersConfig(
+        baseDN='ou=users,ou=posixGroups_10_10,dc=my-domain,dc=com',
+        attrmap=posixGroupsUcfgAttrmap,
+        scope=ONELEVEL,
+        queryFilter='(objectClass=posixAccount)',
+        objectClasses=['account', 'posixAccount'],
+        ),
+    gcfg=GroupsConfig(
+        baseDN='ou=groups,ou=posixGroups_10_10,dc=my-domain,dc=com',
+        attrmap=posixGroupsGcfgAttrmap,
+        scope=ONELEVEL,
+        queryFilter='(objectClass=posixGroup)',
+        objectClasses=['posixGroup'],
+        ),
+    )
+ldif_layer['posixGroups_10_10'] = LDIF_posixGroups_10_10
+
+
 # users (samba)
 
 sambaUsersUcfgAttrmap = {
