@@ -5,6 +5,9 @@ Changes
 0.9.1dev
 --------
 
+- ``shadowInactive`` defaults to ``0``.
+  [rnix, 2012-03-06]
+
 - Introduce ``expiresAttr`` and ``expiresUnit`` in principals config.
   Considered in ``Users.authenticate``.
   [rnix, 2012-02-11]

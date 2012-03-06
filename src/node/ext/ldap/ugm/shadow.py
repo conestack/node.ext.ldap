@@ -53,7 +53,7 @@ def shadowWarning(node, uid):
     return SHADOW_DEFAULT_WARNING
 
 
-SHADOW_DEFAULT_INACTIVE = '99999'
+SHADOW_DEFAULT_INACTIVE = '0'
 def shadowInactive(node, uid): 
     return SHADOW_DEFAULT_INACTIVE
 

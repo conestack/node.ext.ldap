@@ -176,7 +176,7 @@ Shadow Account
     (u'shadowMin', u'0'), 
     (u'shadowWarning', u'0'), 
     (u'objectClass', ['account', 'shadowAccount']), 
-    (u'shadowInactive', u'99999'), 
+    (u'shadowInactive', u'0'), 
     (u'shadowMax', u'99999'), 
     (u'shadowLastChange', u'12011'), 
     (u'shadowExpire', u'99999')]

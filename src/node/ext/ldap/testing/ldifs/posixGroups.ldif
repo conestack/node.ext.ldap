@@ -23,7 +23,7 @@ shadowFlag: 0
 shadowMin: 0
 shadowMax: 99999
 shadowWarning: 0
-shadowInactive: 99999
+shadowInactive: 0
 shadowExpire: 99999
 userPassword: secret0
 uidNumber: 0
@@ -42,7 +42,7 @@ shadowFlag: 0
 shadowMin: 0
 shadowMax: 99999
 shadowWarning: 0
-shadowInactive: 99999
+shadowInactive: 0
 shadowExpire: 99999
 userPassword: secret1
 uidNumber: 1
@@ -61,7 +61,7 @@ shadowFlag: 0
 shadowMin: 0
 shadowMax: 99999
 shadowWarning: 0
-shadowInactive: 99999
+shadowInactive: 0
 shadowExpire: 99999
 userPassword: secret2
 uidNumber: 2
