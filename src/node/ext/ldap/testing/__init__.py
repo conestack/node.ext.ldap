@@ -453,28 +453,6 @@ LDIF_groupOfNames = Ldif(
 ldif_layer['groupOfNames'] = LDIF_groupOfNames
 
 
-LDIF_groupOfNames_add = Ldif(
-    resource('ldifs/groupOfNames_add.ldif'),
-    bases=(LDIF_groupOfNames,),
-    name="LDIF_groupOfNames_add",
-    ucfg=UsersConfig(
-        baseDN='ou=users,ou=groupOfNames,dc=my-domain,dc=com',
-        attrmap=groupOfNamesUcfgAttrmap,
-        scope=SUBTREE,
-        queryFilter='(objectClass=inetOrgPerson)',
-        objectClasses=['person', 'inetOrgPerson'],
-        ),
-    gcfg=GroupsConfig(
-        baseDN='ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
-        attrmap=groupOfNamesGcfgAttrmap,
-        scope=SUBTREE,
-        queryFilter='(objectClass=groupOfNames)',
-        objectClasses=['groupOfNames'],
-        ),
-    )
-ldif_layer['groupOfNames_add'] = LDIF_groupOfNames_add
-
-
 LDIF_groupOfNames_10_10 = Ldif(
     resource('ldifs/groupOfNames_10_10.ldif'),
     bases=(LDIF_base,),
@@ -519,28 +497,6 @@ LDIF_groupOfNames_100_100 = Ldif(
 ldif_layer['groupOfNames_100_100'] = LDIF_groupOfNames_100_100
 
 
-LDIF_groupOfNames_100_100_add = Ldif(
-    resource('ldifs/groupOfNames_100_100_add.ldif'),
-    bases=(LDIF_groupOfNames_100_100,),
-    name="LDIF_groupOfNames_100_100_add",
-    ucfg=UsersConfig(
-        baseDN='ou=users,ou=groupOfNames_100_100,dc=my-domain,dc=com',
-        attrmap=groupOfNamesUcfgAttrmap,
-        scope=SUBTREE,
-        queryFilter='(objectClass=inetOrgPerson)',
-        objectClasses=['person', 'inetOrgPerson'],
-        ),
-    gcfg=GroupsConfig(
-        baseDN='ou=groups,ou=groupOfNames_100_100,dc=my-domain,dc=com',
-        attrmap=groupOfNamesGcfgAttrmap,
-        scope=SUBTREE,
-        queryFilter='(objectClass=groupOfNames)',
-        objectClasses=['groupOfNames'],
-        ),
-    )
-ldif_layer['groupOfNames_100_100_add'] = LDIF_groupOfNames_100_100_add
-
-
 LDIF_groupOfNames_300_300 = Ldif(
     resource('ldifs/groupOfNames_300_300.ldif'),
     bases=(LDIF_base,),
@@ -561,28 +517,6 @@ LDIF_groupOfNames_300_300 = Ldif(
         ),
     )
 ldif_layer['groupOfNames_300_300'] = LDIF_groupOfNames_300_300
-
-
-LDIF_groupOfNames_300_300_add = Ldif(
-    resource('ldifs/groupOfNames_300_300_add.ldif'),
-    bases=(LDIF_groupOfNames_300_300,),
-    name="LDIF_groupOfNames_300_300_add",
-    ucfg=UsersConfig(
-        baseDN='ou=users,ou=groupOfNames_300_300,dc=my-domain,dc=com',
-        attrmap=groupOfNamesUcfgAttrmap,
-        scope=SUBTREE,
-        queryFilter='(objectClass=inetOrgPerson)',
-        objectClasses=['person', 'inetOrgPerson'],
-        ),
-    gcfg=GroupsConfig(
-        baseDN='ou=groups,ou=groupOfNames_300_300,dc=my-domain,dc=com',
-        attrmap=groupOfNamesGcfgAttrmap,
-        scope=SUBTREE,
-        queryFilter='(objectClass=groupOfNames)',
-        objectClasses=['groupOfNames'],
-        ),
-    )
-ldif_layer['groupOfNames_300_300_add'] = LDIF_groupOfNames_300_300_add
 
 
 LDIF_groupOfNames_700_700 = Ldif(
@@ -607,28 +541,6 @@ LDIF_groupOfNames_700_700 = Ldif(
 ldif_layer['groupOfNames_700_700'] = LDIF_groupOfNames_700_700
 
 
-LDIF_groupOfNames_700_700_add = Ldif(
-    resource('ldifs/groupOfNames_700_700_add.ldif'),
-    bases=(LDIF_groupOfNames_700_700,),
-    name="LDIF_groupOfNames_700_700_add",
-    ucfg=UsersConfig(
-        baseDN='ou=users,ou=groupOfNames_700_700,dc=my-domain,dc=com',
-        attrmap=groupOfNamesUcfgAttrmap,
-        scope=SUBTREE,
-        queryFilter='(objectClass=inetOrgPerson)',
-        objectClasses=['person', 'inetOrgPerson'],
-        ),
-    gcfg=GroupsConfig(
-        baseDN='ou=groups,ou=groupOfNames_700_700,dc=my-domain,dc=com',
-        attrmap=groupOfNamesGcfgAttrmap,
-        scope=SUBTREE,
-        queryFilter='(objectClass=groupOfNames)',
-        objectClasses=['groupOfNames'],
-        ),
-    )
-ldif_layer['groupOfNames_700_700_add'] = LDIF_groupOfNames_700_700_add
-
-
 LDIF_groupOfNames_1000_1000 = Ldif(
     resource('ldifs/groupOfNames_1000_1000.ldif'),
     bases=(LDIF_base,),
@@ -649,28 +561,6 @@ LDIF_groupOfNames_1000_1000 = Ldif(
         ),
     )
 ldif_layer['groupOfNames_1000_1000'] = LDIF_groupOfNames_1000_1000
-
-
-LDIF_groupOfNames_1000_1000_add = Ldif(
-    resource('ldifs/groupOfNames_1000_1000_add.ldif'),
-    bases=(LDIF_groupOfNames_1000_1000,),
-    name="LDIF_groupOfNames_1000_1000_add",
-    ucfg=UsersConfig(
-        baseDN='ou=users,ou=groupOfNames_1000_1000,dc=my-domain,dc=com',
-        attrmap=groupOfNamesUcfgAttrmap,
-        scope=SUBTREE,
-        queryFilter='(objectClass=inetOrgPerson)',
-        objectClasses=['person', 'inetOrgPerson'],
-        ),
-    gcfg=GroupsConfig(
-        baseDN='ou=groups,ou=groupOfNames_1000_1000,dc=my-domain,dc=com',
-        attrmap=groupOfNamesGcfgAttrmap,
-        scope=SUBTREE,
-        queryFilter='(objectClass=groupOfNames)',
-        objectClasses=['groupOfNames'],
-        ),
-    )
-ldif_layer['groupOfNames_1000_1000_add'] = LDIF_groupOfNames_1000_1000_add
 
 
 # Users and groups (posix)
