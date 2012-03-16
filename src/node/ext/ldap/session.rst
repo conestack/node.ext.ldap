@@ -26,6 +26,29 @@ Set a baseDN and perform LDAP search::
     >>> len(res)
     6
 
+Perform batched search::
+
+    >>> session.baseDN = 'dc=my-domain,dc=com'
+    >>> from node.ext.ldap import SUBTREE
+    >>> res, cookie = session.search('(objectClass=*)', SUBTREE, page_size=2, cookie='')
+    >>> assert cookie
+    >>> len(res)
+    2
+    >>> res, cookie = session.search('(objectClass=*)', SUBTREE, page_size=2, cookie=cookie)
+    >>> assert cookie
+    >>> len(res)
+    2
+    >>> res, cookie = session.search('(objectClass=*)', SUBTREE, page_size=2, cookie=cookie)
+    >>> assert not cookie
+    >>> len(res)
+    2
+    >>> res, cookie = session.search('(objectClass=*)', SUBTREE, page_size=2, cookie=cookie)
+    >>> len(res)
+    2
+    >>> res, cookie = session.search('(objectClass=*)', SUBTREE, page_size=2, cookie=cookie)
+    >>> len(res)
+    2
+
 Add an entry::
 
     >>> entry = {

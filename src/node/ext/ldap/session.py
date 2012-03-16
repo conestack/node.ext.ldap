@@ -43,7 +43,7 @@ class LDAPSession(object):
     baseDN = property(_get_baseDN, _set_baseDN)
 
     def search(self, queryFilter='(objectClass=*)', scope=BASE, baseDN=None,
-               force_reload=False, attrlist=None, attrsonly=0):
+               force_reload=False, attrlist=None, attrsonly=0, page_size=None, cookie=None):
         
         #if self._props.escape_queries and baseDN is not None:
         #    baseDN = escape(baseDN)
@@ -56,11 +56,17 @@ class LDAPSession(object):
         
         func = self._communicator.search
         res = self._perform(func, queryFilter, scope, baseDN,
-                            force_reload, attrlist, attrsonly)
+                            force_reload, attrlist, attrsonly, page_size, cookie)
         
         # ActiveDirectory returns entries with dn None, which can be ignored
+        if page_size:
+            res, cookie = res
+
         res = filter(lambda x: x[0] is not None, res)
-        return res
+        if page_size:
+            return res, cookie
+        else:
+            return res
 
     def add(self, dn, data):
         func = self._communicator.add

@@ -192,7 +192,8 @@ class LDAPCommunicator(object):
         self._con = None
 
     def search(self, queryFilter, scope, baseDN=None,
-               force_reload=False, attrlist=None, attrsonly=0):
+               force_reload=False, attrlist=None, attrsonly=0,
+               page_size=None, cookie=None):
         """Search the directory.
 
         queryFilter
@@ -213,15 +214,33 @@ class LDAPCommunicator(object):
         attrsonly
             Flag whether to return only attribute names, without corresponding
             values.
+
+        page_size
+            Number of items per paged, when doing pagination.
+
+        cookie
+            Cookie string returned by previous search with pagination.
         """
         if baseDN is None:
             baseDN = self.baseDN
             if not baseDN:
                 raise ValueError(u"baseDN unset.")
-        
+
+        # check that both parameters are set if at least one is set
+        if (page_size is None and cookie is not None) and (page_size is not None and cookie is None):
+            raise ValueError('For pagination supply page_size and cookie. First'
+                             ' search should have cookie as empty string.')
+
+        if page_size:
+            pagedresults = ldap.controls.libldap.SimplePagedResultsControl(criticality=True, size=page_size, cookie=cookie)
+            serverctrls = [pagedresults,]
+        else:
+            serverctrls = []
+
+
         #if self._connector._escape_queries:
         #    queryFilter = self._escape_query(queryFilter)
-        
+
         if self._cache:
             # XXX: Consider attrlist and attrsonly in cachekey.
             key = '%s-%s-%s-%i' % (self._connector._bindDN,
@@ -229,11 +248,22 @@ class LDAPCommunicator(object):
                                    queryFilter,
                                    scope)
             key = md5digest(key)
-            args = [baseDN, scope, queryFilter, attrlist, attrsonly]
-            return self._cache.getData(self._con.search_s, key,
+            args = [baseDN, scope, queryFilter, attrlist, attrsonly, serverctrls]
+            return self._cache.getData(self._con.search_ext, key,
                                        force_reload, args)
-        return self._con.search_s(baseDN, scope, queryFilter,
-                                  attrlist, attrsonly)
+
+        # we have to do async search to also retrieve server controls
+        # in case we do pagination of results
+        msgid = self._con.search_ext(baseDN, scope, queryFilter,
+                                         attrlist, attrsonly, serverctrls=serverctrls)
+        rtype, results, rmsgid, rctrls = self._con.result3(msgid)
+        pctrls = [c for c in rctrls
+            if c.controlType == ldap.controls.libldap.SimplePagedResultsControl.controlType
+        ]
+        if pctrls:
+            return results, pctrls[0].cookie
+        else:
+            return results
 
     def add(self, dn, data):
         """Insert an entry into directory.
