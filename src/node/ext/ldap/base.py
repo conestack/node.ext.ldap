@@ -241,29 +241,34 @@ class LDAPCommunicator(object):
         #if self._connector._escape_queries:
         #    queryFilter = self._escape_query(queryFilter)
 
+        def _search(baseDN, scope, queryFilter, attrlist, attrsonly, serverctrls):
+            # we have to do async search to also retrieve server controls
+            # in case we do pagination of results
+            msgid = self._con.search_ext(baseDN, scope, queryFilter,
+                                             attrlist, attrsonly, serverctrls=serverctrls)
+            rtype, results, rmsgid, rctrls = self._con.result3(msgid)
+            pctrls = [c for c in rctrls
+                if c.controlType == ldap.controls.libldap.SimplePagedResultsControl.controlType
+            ]
+            if pctrls:
+                return results, pctrls[0].cookie
+            else:
+                return results
+
+        args = [baseDN, scope, queryFilter, attrlist, attrsonly, serverctrls]
         if self._cache:
             # XXX: Consider attrlist and attrsonly in cachekey.
-            key = '%s-%s-%s-%i' % (self._connector._bindDN,
+            key = '%s-%s-%s-%i-%s-%s' % (self._connector._bindDN,
                                    baseDN,
                                    queryFilter,
-                                   scope)
+                                   scope,
+                                   page_size,
+                                   cookie)
             key = md5digest(key)
-            args = [baseDN, scope, queryFilter, attrlist, attrsonly, serverctrls]
-            return self._cache.getData(self._con.search_ext, key,
+            return self._cache.getData(_search, key,
                                        force_reload, args)
-
-        # we have to do async search to also retrieve server controls
-        # in case we do pagination of results
-        msgid = self._con.search_ext(baseDN, scope, queryFilter,
-                                         attrlist, attrsonly, serverctrls=serverctrls)
-        rtype, results, rmsgid, rctrls = self._con.result3(msgid)
-        pctrls = [c for c in rctrls
-            if c.controlType == ldap.controls.libldap.SimplePagedResultsControl.controlType
-        ]
-        if pctrls:
-            return results, pctrls[0].cookie
         else:
-            return results
+            return _search(*args)
 
     def add(self, dn, data):
         """Insert an entry into directory.

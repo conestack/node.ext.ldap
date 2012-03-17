@@ -55,6 +55,11 @@ class LDAPSession(object):
             queryFilter='(objectClass=*)'
         
         func = self._communicator.search
+
+        # bug in node when using string: https://github.com/bluedynamics/node/issues/5
+        if isinstance(cookie, str):
+            cookie = unicode(cookie)
+
         res = self._perform(func, queryFilter, scope, baseDN,
                             force_reload, attrlist, attrsonly, page_size, cookie)
         

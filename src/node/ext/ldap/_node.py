@@ -507,7 +507,82 @@ class LDAPStorage(OdictStorage):
             else:
                 res.append(key)
         return res
-    
+
+    @default
+    @debug
+    def search_paged(self, queryFilter=None, criteria=None, attrlist=None,
+               relation=None, relation_node=None, exact_match=False,
+               or_search=False, page_size=None, cookie=None):
+        attrset = set(attrlist or [])
+        attrset.discard('dn')
+        # fetch also the key attribute
+        if not self._key_attr == 'rdn':
+            attrset.add(self._key_attr)
+
+        # XXX: Make this work for string queries and move to LDADCommunicator
+        #if self.ldap_session._props.escape_queries:
+        #    if criteria is not None:
+        #        for key, val in criteria.items():
+        #            criteria[key] = escape(val)
+
+        # Create queryFilter from all filter definitions
+        # filter for this search ANDed with the default filters defined on self
+        search_filter = LDAPFilter(queryFilter)
+        search_filter &= LDAPDictFilter(criteria, or_search=or_search)
+        _filter = LDAPFilter(self.search_filter)
+        _filter &= LDAPDictFilter(self.search_criteria)
+        _filter &= search_filter
+
+        # relation filters
+        if relation_node is None:
+            relation_node = self
+        relations = [relation, self.search_relation]
+        for relation in relations:
+            if not relation:
+                continue
+            if isinstance(relation, LDAPRelationFilter):
+                _filter &= relation
+            else:
+                _filter &= LDAPRelationFilter(relation_node, relation)
+
+        # XXX: Is it really good to filter out entries without the key attr or
+        # would it be better to fail? (see also __iter__ secondary key)
+        if self._key_attr != 'rdn' and self._key_attr not in _filter:
+            _filter &= '(%s=*)' % (self._key_attr,)
+
+        # perform the backend search
+        matches, cookie = self.ldap_session.search(
+            str(_filter),
+            self.search_scope,
+            baseDN=self.DN,
+            force_reload=self._reload,
+            attrlist=list(attrset),
+            page_size=page_size,
+            cookie=cookie,
+        )
+
+        # XXX: Is ValueError appropriate?
+        # XXX: why do we need to fail at all? shouldn't this be about
+        # substring vs equality match?
+        if exact_match and len(matches) > 1:
+            raise ValueError(u"Exact match asked but result not unique")
+        if exact_match and len(matches) == 0:
+            raise ValueError(u"Exact match asked but result length is zero")
+
+        # extract key and desired attributes
+        res = []
+        for dn, attrs in matches:
+            key = self._calculate_key(dn, attrs)
+            if attrlist is not None:
+                resattr = dict([(k,v) for k,v in attrs.iteritems()
+                        if k in attrlist])
+                if 'dn' in attrlist:
+                    resattr['dn'] = dn
+                res.append((key, resattr))
+            else:
+                res.append(key)
+        return res, cookie
+
     @default
     def invalidate(self, key=None):
         """Invalidate LDAP node.

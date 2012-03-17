@@ -581,7 +581,25 @@ class LDAPPrincipals(OdictStorage):
         aliased_results = \
             [(uid, self._alias_dict(attrs)) for uid, attrs in results]
         return aliased_results
-    
+
+    @default
+    def search_paged(self, criteria=None, attrlist=None,
+               exact_match=False, or_search=False,
+               page_size=None, cookie=None):
+        results, cookie = self.context.search_paged(
+            criteria=self._unalias_dict(criteria),
+            attrlist=self._unalias_list(attrlist),
+            exact_match=exact_match,
+            or_search=or_search,
+            page_size=page_size,
+            cookie=cookie)
+        if attrlist is None:
+            return results, cookie
+        aliased_results = \
+            [(uid, self._alias_dict(attrs)) for uid, attrs in results]
+        return aliased_results, cookie
+
+
     @default
     @locktree
     def create(self, pid, **kw):
