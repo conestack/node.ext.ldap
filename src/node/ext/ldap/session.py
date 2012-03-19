@@ -44,20 +44,20 @@ class LDAPSession(object):
 
     def search(self, queryFilter='(objectClass=*)', scope=BASE, baseDN=None,
                force_reload=False, attrlist=None, attrsonly=0):
-        
+
         #if self._props.escape_queries and baseDN is not None:
         #    baseDN = escape(baseDN)
-        
+
         if queryFilter in ('', u'', None):
             # It makes no sense to really pass these to LDAP, therefore, we
             # interpret them as "don't filter" which in LDAP terms is
             # '(objectClass=*)'
-            queryFilter='(objectClass=*)'
-        
+            queryFilter = '(objectClass=*)'
+
         func = self._communicator.search
         res = self._perform(func, queryFilter, scope, baseDN,
                             force_reload, attrlist, attrsonly)
-        
+
         # ActiveDirectory returns entries with dn None, which can be ignored
         res = filter(lambda x: x[0] is not None, res)
         return res
@@ -115,14 +115,14 @@ class LDAPSession(object):
         XXX: * Improve retry logic in LDAPSession
              * Extend LDAPSession object to handle Fallback server(s)
         """
-        
+
         # XXX BUG:
         # It is complete wrong to encode/ decode in here every string
         # LDAP handles binary data too and so fetching or setting binary
         # data fails. We need to refactor this part.
-        
+
         args = encode(args)
         kwargs = encode(kwargs)
         if self._communicator._con is None:
-            self._communicator.bind()                
+            self._communicator.bind()
         return decode(function(*args, **kwargs))
