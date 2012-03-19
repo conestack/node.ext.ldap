@@ -66,3 +66,29 @@ CN Attribute::
     
     >>> gof.may
     ('businessCategory', 'seeAlso', 'owner', 'ou', 'o', 'description')
+    
+    >>> pprint(info.attributes_of_objectclass('groupOfNames'))
+    [{'info': <ldap.schema.models.AttributeType instance at ...>,
+      'name': 'member',
+      'required': True},
+     {'info': <ldap.schema.models.AttributeType instance at ...>,
+      'name': 'cn',
+      'required': True},
+     {'info': <ldap.schema.models.AttributeType instance at ...>,
+      'name': 'businessCategory',
+      'required': False},
+     {'info': <ldap.schema.models.AttributeType instance at ...>,
+      'name': 'seeAlso',
+      'required': False},
+     {'info': <ldap.schema.models.AttributeType instance at ...>,
+      'name': 'owner',
+      'required': False},
+     {'info': <ldap.schema.models.AttributeType instance at ...>,
+      'name': 'ou',
+      'required': False},
+     {'info': <ldap.schema.models.AttributeType instance at ...>,
+      'name': 'o',
+      'required': False},
+     {'info': <ldap.schema.models.AttributeType instance at ...>,
+      'name': 'description',
+      'required': False}]        

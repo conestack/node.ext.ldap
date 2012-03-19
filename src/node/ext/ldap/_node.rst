@@ -1349,6 +1349,17 @@ Remove registry::
 
     >>> reg = popGlobalRegistry()
 
+Schema Info
+===========
+
+Get schema information::
+
+    >>> schema_info = root.schema_info
+    >>> schema_info    
+    <node.ext.ldap.schema.LDAPSchemaInfo object at ...>
+    
+    >>> root[u'ou=customers'].schema_info is schema_info
+    True    
 
 Clean
 =====

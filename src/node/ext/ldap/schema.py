@@ -8,8 +8,8 @@ from node.ext.ldap import (
 
 class LDAPSchemaInfo(object):
     
-    def __init__(self, props):
-        connector = LDAPConnector(props=props) 
+    def __init__(self, props=None):
+        connector = LDAPConnector(props=props)
         communicator = LDAPCommunicator(connector)
         communicator.baseDN = 'dc=my-domain,dc=com'
         communicator.bind()
@@ -24,3 +24,20 @@ class LDAPSchemaInfo(object):
     
     def objectclass(self, name):
         return self.subschema.get_obj(ldap.schema.ObjectClass, name)
+
+    def attributes_of_objectclass(self, name):
+        res = list()
+        oc = self.objectclass(name)
+        for at in oc.must:
+            record = dict()
+            record['name'] = at
+            record['required'] = True
+            record['info'] = self.attribute(at)
+            res.append(record)
+        for at in oc.may:
+            record = dict()
+            record['name'] = at
+            record['required'] = False
+            record['info'] = self.attribute(at)
+            res.append(record)
+        return res        

@@ -5,6 +5,9 @@ Changes
 0.9.1dev
 --------
 
+- added schema_info to node.
+  [jensens, 2012-03-19]
+
 - ``shadowInactive`` defaults to ``0``.
   [rnix, 2012-03-06]
 

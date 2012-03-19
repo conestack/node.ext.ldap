@@ -50,6 +50,7 @@ from node.ext.ldap.filter import (
     LDAPDictFilter,
     LDAPRelationFilter,
 )
+from node.ext.ldap.schema import LDAPSchemaInfo
 from ldap.functions import explode_dn
 from ldap import (
     MOD_ADD,
@@ -183,6 +184,7 @@ class LDAPStorage(OdictStorage):
         if props:
             self._ldap_session = LDAPSession(props)
             self._ldap_session.baseDN = self.DN
+            self._ldap_schema_info = LDAPSchemaInfo(props)
             
         
         # XXX: make them public
@@ -688,6 +690,12 @@ class LDAPStorage(OdictStorage):
         del self.parent._keys[self.name]
         self.ldap_session.delete(self.DN)
 
+    @default
+    @property
+    def schema_info(self):
+        if self.parent is not None:
+            return self.root._ldap_schema_info
+        return self._ldap_schema_info
 
 class LDAPNode(object):
     __metaclass__ = plumber
