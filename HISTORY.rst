@@ -5,6 +5,10 @@ Changes
 0.9.1dev
 --------
 
+- added is_multivalued to properties and modified node to use this list instead
+  of the static list. prepare for binary attributes.
+  [jensens, 2012-03-19]
+
 - added schema_info to node.
   [jensens, 2012-03-19]
 

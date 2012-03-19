@@ -105,12 +105,7 @@ class AttributesPart(Part):
         
         attrs = entry[0][1]
         for key, item in attrs.items():
-            # XXX: future: self[key] = item, always!
-            # XXX: maybe we want to keep behaviour, but validate against
-            #      schema?
-            mv = ['member', 'uniqueMember', 'memberUid', 'memberOf']
-            if len(item) == 1 \
-              and key not in mv:
+            if len(item) == 1 and not self.is_multivalued(key):
                 self[key] = item[0]
             else:
                 self[key] = item
@@ -138,6 +133,14 @@ class AttributesPart(Part):
         if self.parent._action not in [ACTION_ADD, ACTION_DELETE]:
             self.parent._action = ACTION_MODIFY
             self.parent.changed = True
+        
+    @default    
+    def is_binary(self, name):
+        return name in self.parent.root._binary_attributes
+
+    @default    
+    def is_multivalued(self, name):
+        return name in self.parent.root._multivalued_attributes
 
 
 class LDAPNodeAttributes(NodeAttributes):
@@ -182,15 +185,17 @@ class LDAPStorage(OdictStorage):
         self._reload = False
         self._init_keys()
         if props:
+            # only at root node
             self._ldap_session = LDAPSession(props)
             self._ldap_session.baseDN = self.DN
             self._ldap_schema_info = LDAPSchemaInfo(props)
-            
-        
+            self._multivalued_attributes = props.multivalued_attributes
+            self._binary_attributes = props.binary_attributes
+
         # XXX: make them public
         self._key_attr = 'rdn'
         self._rdn_attr = None
-        
+
         # search related defaults
         self.search_scope = ONELEVEL
         self.search_filter = None

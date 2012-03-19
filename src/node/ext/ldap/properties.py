@@ -2,6 +2,29 @@
 from zope.interface import implements
 from node.ext.ldap.interfaces import ILDAPProps
 
+MULTIVALUED_DEFAULTS = [
+    'member', 
+    'uniqueMember', 
+    'memberUid', 
+    'memberOf'
+]
+
+BINARY_DEFAULTS = [
+    # core.schema
+    'userCertificate',
+    'cACertificate',
+    'authorityRevocationList',
+    'certificateRevocationList',
+    'crossCertificatePair',
+    'supportedAlgorithms',
+    'deltaRevocationList',
+    # inetOrgPerson
+    'userSMIMECertificate',
+    'userPKCS12',
+    'photo',
+    'jpegPhoto',
+] 
+
 
 class LDAPServerProperties(object):
     """Wrapper Class for LDAP Server connection properties.
@@ -24,6 +47,8 @@ class LDAPServerProperties(object):
                  retry_max=1,
                  retry_delay=10.0,
                  escape_queries=False,
+                 multivalued_attributes=MULTIVALUED_DEFAULTS,
+                 binary_attributes=BINARY_DEFAULTS,
                  ):
         """Take the connection properties as arguments.
 
@@ -86,6 +111,14 @@ class LDAPServerProperties(object):
         
         escape_queries
             Flag whether to escape queries
+            
+        multivalued_attributes
+            List of attributes names considered as multivalued to be returned 
+            as list. 
+
+        binary_attributes
+            List of attributes names considered as binary. 
+            (no unicode conversion)
         """
         if uri is None:
             # old school
@@ -105,5 +138,7 @@ class LDAPServerProperties(object):
         self.retry_max = retry_max
         self.retry_delay = retry_delay
         self.escape_queries = escape_queries
+        self.multivalued_attributes = multivalued_attributes
+        self.binary_attributes = binary_attributes
 
 LDAPProps = LDAPServerProperties
