@@ -115,18 +115,14 @@ class LDAPSession(object):
         XXX: * Improve retry logic in LDAPSession
              * Extend LDAPSession object to handle Fallback server(s)
         """
+        
+        # XXX BUG:
+        # It is complete wrong to encode/ decode in here every string
+        # LDAP handles binary data too and so fetching or setting binary
+        # data fails. We need to refactor this part.
+        
         args = encode(args)
         kwargs = encode(kwargs)
         if self._communicator._con is None:
-            self._communicator.bind()
-        
-        # XXX: it seems except block is never reached, call of
-        #      self._communicator.bind() above already raises error if
-        #      communication fails. And why server down?
-        #try:
-        #    return decode(function(*args, **kwargs))
-        #except ldap.SERVER_DOWN:
-        #    self._communicator.bind()
-        #    return decode(function(*args, **kwargs))
-        
+            self._communicator.bind()                
         return decode(function(*args, **kwargs))
