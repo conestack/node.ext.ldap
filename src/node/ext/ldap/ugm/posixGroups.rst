@@ -131,18 +131,23 @@ Check Account expiration::
     >>> users['uid0'].context.attrs['shadowInactive']
     u'0'
     
-    >>> users['uid0'].context.attrs['shadowInactive'] = u'99999'
+    >>> users.authenticate('uid0', 'secret0')
+    u'uid0'
+
+#### figure out shadowInactive -> PAM and samba seem to ignore -> configuration?
+    >> users['uid0'].context.attrs['shadowInactive'] = u'99999'
     
 Uid0 never expires - or at leas expires in many years and even if, there are
 99999 more days unless account gets disabled::
 
-    >>> users.authenticate('uid0', 'secret0')
+    >> users.authenticate('uid0', 'secret0')
     u'uid0'
 
 Set expires a while ago, leave inactive high, authentication still works::
 
     >>> users['uid0'].context.attrs['shadowExpire'] = '1'
-    >>> users.authenticate('uid0', 'secret0')
+    
+    >> users.authenticate('uid0', 'secret0')
     u'uid0'
 
 Set shadow inactive to 0 days. authentication will fail::

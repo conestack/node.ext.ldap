@@ -639,9 +639,13 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
                         msg = msg % id
                         logger.error(msg)
                         return False
+                    
+                    # XXX: maybe configurable?
                     # shadow account specific
-                    if self.expiresAttr == 'shadowExpire':
-                        expires += int(user.attrs.get('shadowInactive', '0'))
+                    #if self.expiresAttr == 'shadowExpire':
+                    #    expires += int(user.attrs.get('shadowInactive', '0'))
+                    # /XXX
+                    
                     days = time.time()
                     if self.expiresUnit == EXPIRATION_DAYS:
                         # numer of days since epoch
