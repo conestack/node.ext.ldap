@@ -2,8 +2,8 @@
 Changes
 =======
 
-0.9.1dev
---------
+0.9.1
+-----
 
 - added is_multivalued to properties and modified node to use this list instead
   of the static list. prepare for binary attributes.
