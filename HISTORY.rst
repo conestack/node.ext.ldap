@@ -2,6 +2,15 @@
 Changes
 =======
 
+unreleased
+----------
+
+- or_values and or_keys for finer control of filter criteria
+  [iElectric, chaoflow, 2012-03-24]
+
+- support paged searching
+  [iElectric, chaoflow, 2012-03-24]
+
 0.9.1
 -----
 
