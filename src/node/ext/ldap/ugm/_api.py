@@ -585,13 +585,14 @@ class LDAPPrincipals(OdictStorage):
     @default
     def search_paged(self, criteria=None, attrlist=None,
                exact_match=False, or_search=False,
-               page_size=None, cookie=None):
+               page_size=None, cookie=None, only_values=False):
         results, cookie = self.context.search_paged(
             criteria=self._unalias_dict(criteria),
             attrlist=self._unalias_list(attrlist),
             exact_match=exact_match,
             or_search=or_search,
             page_size=page_size,
+            only_values=only_values,
             cookie=cookie)
         if attrlist is None:
             return results, cookie

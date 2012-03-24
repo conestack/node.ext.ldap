@@ -512,7 +512,7 @@ class LDAPStorage(OdictStorage):
     @debug
     def search_paged(self, queryFilter=None, criteria=None, attrlist=None,
                relation=None, relation_node=None, exact_match=False,
-               or_search=False, page_size=None, cookie=None):
+               or_search=False, page_size=None, cookie=None, only_values=False):
         attrset = set(attrlist or [])
         attrset.discard('dn')
         # fetch also the key attribute
@@ -528,7 +528,7 @@ class LDAPStorage(OdictStorage):
         # Create queryFilter from all filter definitions
         # filter for this search ANDed with the default filters defined on self
         search_filter = LDAPFilter(queryFilter)
-        search_filter &= LDAPDictFilter(criteria, or_search=or_search)
+        search_filter &= LDAPDictFilter(criteria, or_search=or_search, only_values=only_values)
         _filter = LDAPFilter(self.search_filter)
         _filter &= LDAPDictFilter(self.search_criteria)
         _filter &= search_filter

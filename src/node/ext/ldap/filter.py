@@ -57,14 +57,15 @@ class LDAPFilter(object):
 
 class LDAPDictFilter(LDAPFilter):
     
-    def __init__(self, criteria, or_search=False):
+    def __init__(self, criteria, or_search=False, only_values=False):
         self.criteria = criteria
         self.or_search = or_search
+        self.only_values = only_values
 
     def __str__(self):
         if not self.criteria:
             return ''
-        return str(dict_to_filter(self.criteria, self.or_search))
+        return str(dict_to_filter(self.criteria, self.or_search, self.only_values))
 
     def __repr__(self):
         return "LDAPDictFilter(criteria=%r)" % (self.criteria,)
@@ -113,7 +114,7 @@ class LDAPRelationFilter(LDAPFilter):
         return "LDAPRelationFilter('%s')" % (str(self),)
 
 
-def dict_to_filter(criteria, or_search):
+def dict_to_filter(criteria, or_search, only_values=False):
     """Turn dictionary criteria into ldap queryFilter string
     """
     _filter = None
@@ -125,9 +126,15 @@ def dict_to_filter(criteria, or_search):
             if isinstance(value, unicode):
                 value = encode_utf8(value)
             if _filter is None:
-                _filter = LDAPFilter('(%s=%s)' % (attr, value))
+                if only_values:
+                    _filter = LDAPFilter('%s' % value)
+                else:
+                    _filter = LDAPFilter('(%s=%s)' % (attr, value))
             else:
-                _next = '(%s=%s)' % (attr, value)
+                if only_values:
+                    _next = '%s' % value
+                else:
+                    _next = '(%s=%s)' % (attr, value)
                 if or_search:
                     _filter |= _next
                 else:
