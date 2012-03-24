@@ -256,10 +256,10 @@ Search for users::
 
 Paginated search for users::
 
-    >>> results, cookie = users.search_paged(page_size=2, cookie='')
+    >>> results, cookie = users.search(page_size=2, cookie='')
     >>> results
     [u'Meier', u'M\xfcller']
-    >>> results, cookie = users.search_paged(page_size=2, cookie=cookie)
+    >>> results, cookie = users.search(page_size=2, cookie=cookie)
     >>> results
     [u'Schmidt', u'Umhauer']
     >>> assert cookie == ''

@@ -798,10 +798,10 @@ for counting entries::
     u'cn=customer99']
 
 Search with pagination::
-    >>> res, cookie = node.search_paged(page_size=5, cookie='')
+    >>> res, cookie = node.search(page_size=5)
     >>> res
     [u'dc=my-domain', u'ou=customers', u'ou=customer1', u'ou=customer2', u'ou=n\xe4sty\\, customer']
-    >>> res, cookie = node.search_paged(page_size=5, cookie=cookie)
+    >>> res, cookie = node.search(page_size=5, cookie=cookie)
     >>> res
     [u'ou=demo', u'ou=customer3', u'cn=customer99']
     >>> assert cookie == ''

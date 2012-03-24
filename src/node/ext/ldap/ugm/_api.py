@@ -570,37 +570,26 @@ class LDAPPrincipals(OdictStorage):
 
     @default
     def search(self, criteria=None, attrlist=None,
-               exact_match=False, or_search=False):
+               exact_match=False, or_search=False, or_keys=None, or_values=None,
+               page_size=None, cookie=None):
         results = self.context.search(
             criteria=self._unalias_dict(criteria),
             attrlist=self._unalias_list(attrlist),
             exact_match=exact_match,
-            or_search=or_search)
-        if attrlist is None:
-            return results
-        aliased_results = \
-            [(uid, self._alias_dict(attrs)) for uid, attrs in results]
-        return aliased_results
-
-    @default
-    def search_paged(self, criteria=None, attrlist=None,
-               exact_match=False, or_search=False,
-               page_size=None, cookie=None, only_values=False):
-        results, cookie = self.context.search_paged(
-            criteria=self._unalias_dict(criteria),
-            attrlist=self._unalias_list(attrlist),
-            exact_match=exact_match,
             or_search=or_search,
+            or_keys=or_keys,
+            or_values=or_values,
             page_size=page_size,
-            only_values=only_values,
-            cookie=cookie)
-        if attrlist is None:
+            cookie=cookie
+            )
+        if type(results) is tuple:
+            results, cookie = results
+        if attrlist is not None:
+            results = [(uid, self._alias_dict(attrs)) for uid, attrs in results]
+        if cookie is not None:
             return results, cookie
-        aliased_results = \
-            [(uid, self._alias_dict(attrs)) for uid, attrs in results]
-        return aliased_results, cookie
-
-
+        return results
+ 
     @default
     @locktree
     def create(self, pid, **kw):
