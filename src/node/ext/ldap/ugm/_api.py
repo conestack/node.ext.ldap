@@ -405,8 +405,8 @@ class LDAPPrincipals(OdictStorage):
         
         context._load_keys()
         
-        self.expiresAttr = cfg.expiresAttr
-        self.expiresUnit = cfg.expiresUnit
+        self.expiresAttr = getattr(cfg, 'expiresAttr', None)
+        self.expiresUnit = getattr(cfg, 'expiresUnit', None)
         self.principal_attrmap = cfg.attrmap
         self.principal_attraliaser = DictAliaser(cfg.attrmap, cfg.strict)
         self.context = context
