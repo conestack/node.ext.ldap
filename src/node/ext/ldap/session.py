@@ -62,16 +62,15 @@ class LDAPSession(object):
 
         res = self._perform(func, queryFilter, scope, baseDN,
                             force_reload, attrlist, attrsonly, page_size, cookie)
-        
-        # ActiveDirectory returns entries with dn None, which can be ignored
         if page_size:
             res, cookie = res
 
+        # ActiveDirectory returns entries with dn None, which can be ignored
         res = filter(lambda x: x[0] is not None, res)
+
         if page_size:
             return res, cookie
-        else:
-            return res
+        return res
 
     def add(self, dn, data):
         func = self._communicator.add
