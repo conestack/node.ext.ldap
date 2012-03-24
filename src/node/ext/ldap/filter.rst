@@ -94,6 +94,28 @@ objects to LDAP filters.::
     >>> str(filter & LDAPFilter('(objectClass=person)'))
     '(&(|(cn=sepp)(sn=meier\xc3\xa4))(objectClass=person))'
 
+fine-grained control with or_keys and or_values::
+
+    >>> from odict import odict
+    >>> criteria = odict((('a', [1, 2]), ('b', [3, 4]), ('c', 5)))
+    >>> str(LDAPDictFilter(criteria))
+    '(&(&(&(a=1)(a=2))(&(b=3)(b=4)))(c=5))'
+
+    >>> str(LDAPDictFilter(criteria, or_keys=True))
+    '(|(|(&(a=1)(a=2))(&(b=3)(b=4)))(c=5))'
+
+    >>> str(LDAPDictFilter(criteria, or_values=True))
+    '(&(&(|(a=1)(a=2))(|(b=3)(b=4)))(c=5))'
+
+    >>> str(LDAPDictFilter(criteria, or_search=True))
+    '(|(|(|(a=1)(a=2))(|(b=3)(b=4)))(c=5))'
+
+    >>> str(LDAPDictFilter(criteria, or_search=True, or_keys=False))
+    '(&(&(|(a=1)(a=2))(|(b=3)(b=4)))(c=5))'
+
+    >>> str(LDAPDictFilter(criteria, or_search=True, or_values=False))
+    '(|(|(&(a=1)(a=2))(&(b=3)(b=4)))(c=5))'
+
 
 LDAPRelationFilter
 ------------------

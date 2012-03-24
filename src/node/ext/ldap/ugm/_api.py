@@ -405,8 +405,8 @@ class LDAPPrincipals(OdictStorage):
         
         context._load_keys()
         
-        self.expiresAttr = cfg.expiresAttr
-        self.expiresUnit = cfg.expiresUnit
+        self.expiresAttr = getattr(cfg, 'expiresAttr', None)
+        self.expiresUnit = getattr(cfg, 'expiresUnit', None)
         self.principal_attrmap = cfg.attrmap
         self.principal_attraliaser = DictAliaser(cfg.attrmap, cfg.strict)
         self.context = context
@@ -570,18 +570,26 @@ class LDAPPrincipals(OdictStorage):
 
     @default
     def search(self, criteria=None, attrlist=None,
-               exact_match=False, or_search=False):
+               exact_match=False, or_search=False, or_keys=None, or_values=None,
+               page_size=None, cookie=None):
         results = self.context.search(
             criteria=self._unalias_dict(criteria),
             attrlist=self._unalias_list(attrlist),
             exact_match=exact_match,
-            or_search=or_search)
-        if attrlist is None:
-            return results
-        aliased_results = \
-            [(uid, self._alias_dict(attrs)) for uid, attrs in results]
-        return aliased_results
-    
+            or_search=or_search,
+            or_keys=or_keys,
+            or_values=or_values,
+            page_size=page_size,
+            cookie=cookie
+            )
+        if type(results) is tuple:
+            results, cookie = results
+        if attrlist is not None:
+            results = [(uid, self._alias_dict(attrs)) for uid, attrs in results]
+        if cookie is not None:
+            return results, cookie
+        return results
+ 
     @default
     @locktree
     def create(self, pid, **kw):

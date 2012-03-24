@@ -43,8 +43,8 @@ class LDAPSession(object):
     baseDN = property(_get_baseDN, _set_baseDN)
 
     def search(self, queryFilter='(objectClass=*)', scope=BASE, baseDN=None,
-               force_reload=False, attrlist=None, attrsonly=0):
-
+               force_reload=False, attrlist=None, attrsonly=0,
+               page_size=None, cookie=None):
         #if self._props.escape_queries and baseDN is not None:
         #    baseDN = escape(baseDN)
 
@@ -55,11 +55,21 @@ class LDAPSession(object):
             queryFilter = '(objectClass=*)'
 
         func = self._communicator.search
+
+        # bug in node when using string: https://github.com/bluedynamics/node/issues/5
+        if isinstance(cookie, str):
+            cookie = unicode(cookie)
+
         res = self._perform(func, queryFilter, scope, baseDN,
-                            force_reload, attrlist, attrsonly)
+                            force_reload, attrlist, attrsonly, page_size, cookie)
+        if page_size:
+            res, cookie = res
 
         # ActiveDirectory returns entries with dn None, which can be ignored
         res = filter(lambda x: x[0] is not None, res)
+
+        if page_size:
+            return res, cookie
         return res
 
     def add(self, dn, data):

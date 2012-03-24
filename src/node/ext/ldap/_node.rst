@@ -797,6 +797,16 @@ for counting entries::
     u'ou=customer3', 
     u'cn=customer99']
 
+Search with pagination::
+    >>> res, cookie = node.search(page_size=5)
+    >>> res
+    [u'dc=my-domain', u'ou=customers', u'ou=customer1', u'ou=customer2', u'ou=n\xe4sty\\, customer']
+    >>> res, cookie = node.search(page_size=5, cookie=cookie)
+    >>> res
+    [u'ou=demo', u'ou=customer3', u'cn=customer99']
+    >>> assert cookie == ''
+
+
 Lets add a default search filter.::
 
     >>> from node.ext.ldap.filter import LDAPFilter
@@ -850,7 +860,7 @@ To get more information by search result, pass an attrlist to search function::
     u'description': [u'customers'], 
     u'businessCategory': [u'customers_container']})]
 
-Test withour defaults, defining search with keyword arguments::
+Test without defaults, defining search with keyword arguments::
 
     >>> node.searcg_filter = None
     >>> node.search_criteria = None

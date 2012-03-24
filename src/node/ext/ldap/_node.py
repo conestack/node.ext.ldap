@@ -446,7 +446,8 @@ class LDAPStorage(OdictStorage):
     @debug
     def search(self, queryFilter=None, criteria=None, attrlist=None, 
                relation=None, relation_node=None, exact_match=False, 
-               or_search=False):
+               or_search=False, or_keys=None, or_values=None,
+               page_size=None, cookie=None):
         attrset = set(attrlist or [])
         attrset.discard('dn')
         # fetch also the key attribute
@@ -462,7 +463,11 @@ class LDAPStorage(OdictStorage):
         # Create queryFilter from all filter definitions
         # filter for this search ANDed with the default filters defined on self
         search_filter = LDAPFilter(queryFilter)
-        search_filter &= LDAPDictFilter(criteria, or_search=or_search)
+        search_filter &= LDAPDictFilter(criteria,
+                                        or_search=or_search,
+                                        or_keys=or_keys,
+                                        or_values=or_values,
+                                        )
         _filter = LDAPFilter(self.search_filter)
         _filter &= LDAPDictFilter(self.search_criteria)
         _filter &= search_filter
@@ -490,9 +495,13 @@ class LDAPStorage(OdictStorage):
             self.search_scope,
             baseDN=self.DN,
             force_reload=self._reload,
-            attrlist=list(attrset)
-        )
-        
+            attrlist=list(attrset),
+            page_size=page_size,
+            cookie=cookie,
+            )
+        if type(matches) is tuple:
+            matches, cookie = matches
+
         # XXX: Is ValueError appropriate?
         # XXX: why do we need to fail at all? shouldn't this be about
         # substring vs equality match?
@@ -513,8 +522,10 @@ class LDAPStorage(OdictStorage):
                 res.append((key, resattr))
             else:
                 res.append(key)
+        if cookie is not None:
+            return (res, cookie)
         return res
-    
+
     @default
     def invalidate(self, key=None):
         """Invalidate LDAP node.

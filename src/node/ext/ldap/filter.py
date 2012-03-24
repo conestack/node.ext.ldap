@@ -57,14 +57,19 @@ class LDAPFilter(object):
 
 class LDAPDictFilter(LDAPFilter):
     
-    def __init__(self, criteria, or_search=False):
+    def __init__(self, criteria, or_search=False, or_keys=None, or_values=None):
         self.criteria = criteria
         self.or_search = or_search
+        self.or_keys = or_keys
+        self.or_values = or_values
 
     def __str__(self):
         if not self.criteria:
             return ''
-        return str(dict_to_filter(self.criteria, self.or_search))
+        return str(dict_to_filter(self.criteria,
+                                  or_search=self.or_search,
+                                  or_keys=self.or_keys,
+                                  or_values=self.or_values))
 
     def __repr__(self):
         return "LDAPDictFilter(criteria=%r)" % (self.criteria,)
@@ -113,25 +118,35 @@ class LDAPRelationFilter(LDAPFilter):
         return "LDAPRelationFilter('%s')" % (str(self),)
 
 
-def dict_to_filter(criteria, or_search):
+def dict_to_filter(criteria, or_search=False, or_keys=None, or_values=None):
     """Turn dictionary criteria into ldap queryFilter string
     """
+    or_keys = (or_keys is None) and or_search or or_keys
+    or_values = (or_values is None) and or_search or or_values
     _filter = None
     for attr, values in criteria.items():
         attr = encode_utf8(attr)
         if not isinstance(values, list):
             values = [values]
+        attrfilter = None
         for value in values:
             if isinstance(value, unicode):
                 value = encode_utf8(value)
-            if _filter is None:
-                _filter = LDAPFilter('(%s=%s)' % (attr, value))
+            valuefilter = LDAPFilter('(%s=%s)' % (attr, value))
+            if attrfilter is None:
+                attrfilter = valuefilter
+                continue
+            if or_values:
+                attrfilter |= valuefilter
             else:
-                _next = '(%s=%s)' % (attr, value)
-                if or_search:
-                    _filter |= _next
-                else:
-                    _filter &= _next
+                attrfilter &= valuefilter
+        if _filter is None:
+            _filter = attrfilter
+            continue
+        if or_keys:
+            _filter |= attrfilter
+        else:
+            _filter &= attrfilter
     if _filter is None:
         _filter = LDAPFilter()
     return _filter

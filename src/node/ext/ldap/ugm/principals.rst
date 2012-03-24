@@ -254,6 +254,16 @@ Search for users::
     >>> users.search(criteria=dict(sn=schmidt.attrs['sn']), attrlist=['login'])
     [(u'Schmidt', {'login': [u'user3']})]
 
+Paginated search for users::
+
+    >>> results, cookie = users.search(page_size=2, cookie='')
+    >>> results
+    [u'Meier', u'M\xfcller']
+    >>> results, cookie = users.search(page_size=2, cookie=cookie)
+    >>> results
+    [u'Schmidt', u'Umhauer']
+    >>> assert cookie == ''
+
 Only attributes defined in attrmap can be queried::
 
     >>> users.search(criteria=dict(sn=schmidt.attrs['sn']),
