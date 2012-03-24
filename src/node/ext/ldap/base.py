@@ -216,7 +216,7 @@ class LDAPCommunicator(object):
             values.
 
         page_size
-            Number of items per paged, when doing pagination.
+            Number of items per page, when doing pagination.
 
         cookie
             Cookie string returned by previous search with pagination.
@@ -226,17 +226,17 @@ class LDAPCommunicator(object):
             if not baseDN:
                 raise ValueError(u"baseDN unset.")
 
-        # check that both parameters are set if at least one is set
-        if (page_size is None and cookie is not None) and (page_size is not None and cookie is None):
-            raise ValueError('For pagination supply page_size and cookie. First'
-                             ' search should have cookie as empty string.')
-
         if page_size:
-            pagedresults = ldap.controls.libldap.SimplePagedResultsControl(criticality=True, size=page_size, cookie=cookie)
+            if cookie is None:
+                cookie = ''
+            pagedresults = ldap.controls.libldap.SimplePagedResultsControl(
+                criticality=True, size=page_size, cookie=cookie
+                )
             serverctrls = [pagedresults,]
         else:
+            if cookie:
+                raise ValueError('cookie passed without page_size')
             serverctrls = []
-
 
         #if self._connector._escape_queries:
         #    queryFilter = self._escape_query(queryFilter)

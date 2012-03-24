@@ -30,7 +30,7 @@ Perform batched search::
 
     >>> session.baseDN = 'dc=my-domain,dc=com'
     >>> from node.ext.ldap import SUBTREE
-    >>> res, cookie = session.search('(objectClass=*)', SUBTREE, page_size=2, cookie='')
+    >>> res, cookie = session.search('(objectClass=*)', SUBTREE, page_size=2)
     >>> assert cookie
     >>> len(res)
     2
