@@ -58,6 +58,9 @@ def read_env(layer):
 slapdconf_template = """\
 %(schema)s
 
+logfile         %(confdir)s/log
+loglevel        256
+
 pidfile		%(confdir)s/slapd.pid
 argsfile	%(confdir)s/slapd.args
 
