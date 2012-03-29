@@ -83,13 +83,13 @@ objects to LDAP filters.::
     >>> criteria = dict(mail='*@example.com', homeDirectory='/home/*')
     >>> other_filter = LDAPDictFilter(criteria)
     >>> str(other_filter)
-    '(&(mail=*@example.com)(homeDirectory=/home/*))'
+    '(&(mail=*@example.com)(homeDirectory=\\2fhome\\2f*))'
     
     >>> str(filter & other_filter)
-    '(&(|(cn=sepp)(sn=meier\xc3\xa4))(&(mail=*@example.com)(homeDirectory=/home/*)))'
+    '(&(|(cn=sepp)(sn=meier\xc3\xa4))(&(mail=*@example.com)(homeDirectory=\\2fhome\\2f*)))'
     
     >>> str(filter | other_filter)
-    '(|(|(cn=sepp)(sn=meier\xc3\xa4))(&(mail=*@example.com)(homeDirectory=/home/*)))'
+    '(|(|(cn=sepp)(sn=meier\xc3\xa4))(&(mail=*@example.com)(homeDirectory=\\2fhome\\2f*)))'
     
     >>> str(filter & LDAPFilter('(objectClass=person)'))
     '(&(|(cn=sepp)(sn=meier\xc3\xa4))(objectClass=person))'
