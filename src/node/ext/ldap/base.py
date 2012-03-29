@@ -261,7 +261,7 @@ class LDAPCommunicator(object):
             # YYY: Considered! Bugger!
             key = '%s-%s-%s-%s-%s-%i-%s-%s' % (self._connector._bindDN,
                                    baseDN,
-                                   sorted(attrlist),
+                                   sorted(attrlist or []),
                                    attrsonly,
                                    queryFilter,
                                    scope,
