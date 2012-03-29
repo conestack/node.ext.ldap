@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from ldap.filter import filter_format
+
 from node.ext.ldap.base import encode_utf8
 
 
@@ -132,7 +134,7 @@ def dict_to_filter(criteria, or_search=False, or_keys=None, or_values=None):
         for value in values:
             if isinstance(value, unicode):
                 value = encode_utf8(value)
-            valuefilter = LDAPFilter('(%s=%s)' % (attr, value))
+            valuefilter = LDAPFilter(filter_format('(%s=%s)', (attr, value)))
             if attrfilter is None:
                 attrfilter = valuefilter
                 continue
