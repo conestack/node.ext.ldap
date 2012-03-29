@@ -258,8 +258,11 @@ class LDAPCommunicator(object):
         args = [baseDN, scope, queryFilter, attrlist, attrsonly, serverctrls]
         if self._cache:
             # XXX: Consider attrlist and attrsonly in cachekey.
-            key = '%s-%s-%s-%i-%s-%s' % (self._connector._bindDN,
+            # YYY: Considered! Bugger!
+            key = '%s-%s-%s-%s-%s-%i-%s-%s' % (self._connector._bindDN,
                                    baseDN,
+                                   sorted(attrlist),
+                                   attrsonly,
                                    queryFilter,
                                    scope,
                                    page_size,
