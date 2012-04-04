@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import ldap
-from node.utils import encode, decode
 from node.ext.ldap import (
     BASE,
     LDAPConnector,
@@ -13,6 +12,10 @@ from node.ext.ldap.base import (
 
 
 class LDAPSession(object):
+    """LDAP Session binds always.
+    
+    all strings must be utf8 encoded!
+    """
 
     def __init__(self, props):
         self._props = props
@@ -30,23 +33,27 @@ class LDAPSession(object):
 
     def _get_baseDN(self):
         baseDN = self._communicator.baseDN
-        baseDN = decode(baseDN)
         return baseDN
 
     def _set_baseDN(self, baseDN):
-        if isinstance(baseDN, str):
-            # make sure its utf8
-            baseDN = decode(baseDN)
-        baseDN = encode(baseDN)
+        """baseDN must be utf8-encoded.        
+        """
         self._communicator.baseDN = baseDN
 
     baseDN = property(_get_baseDN, _set_baseDN)
 
+    def ensure_connection(self):
+        """If LDAP directory is down, bind again and retry given function.
+
+        XXX: * Improve retry logic 
+             * Extend LDAPSession object to handle Fallback server(s)
+        """
+        if self._communicator._con is None:
+            self._communicator.bind()
+
     def search(self, queryFilter='(objectClass=*)', scope=BASE, baseDN=None,
                force_reload=False, attrlist=None, attrsonly=0,
                page_size=None, cookie=None):
-        #if self._props.escape_queries and baseDN is not None:
-        #    baseDN = escape(baseDN)
 
         if queryFilter in ('', u'', None):
             # It makes no sense to really pass these to LDAP, therefore, we
@@ -54,14 +61,15 @@ class LDAPSession(object):
             # '(objectClass=*)'
             queryFilter = '(objectClass=*)'
 
-        func = self._communicator.search
-
         # bug in node when using string: https://github.com/bluedynamics/node/issues/5
         if isinstance(cookie, str):
             cookie = unicode(cookie)
 
-        res = self._perform(func, queryFilter, scope, baseDN,
-                            force_reload, attrlist, attrsonly, page_size, cookie)
+        self.ensure_connection()
+        res = self._communicator.search(queryFilter, scope, baseDN,
+                                        force_reload, attrlist, attrsonly,
+                                        page_size, cookie)
+
         if page_size:
             res, cookie = res
 
@@ -73,8 +81,8 @@ class LDAPSession(object):
         return res
 
     def add(self, dn, data):
-        func = self._communicator.add
-        return self._perform(func, dn, data)
+        self.ensure_connection()
+        self._communicator.add(dn, data)
 
     def authenticate(self, dn, pw):
         """Verify credentials, but don't rebind the session to that user
@@ -103,36 +111,17 @@ class LDAPSession(object):
         replace
             if set to True, replace entry at DN entirely with data.
         """
-        func = self._communicator.modify
-        return self._perform(func, dn, data)
+        self.ensure_connection()
+        result = self._communicator.modify(dn, data)
+        return result
 
     def delete(self, dn):
-        func = self._communicator.delete
-        return self._perform(func, dn)
+        self._communicator.delete(dn)
 
     def passwd(self, userdn, oldpw, newpw):
-        func = self._communicator.passwd
-        self._perform(func, userdn, oldpw, newpw)
+        self.ensure_connection()
+        result = self._communicator.passwd(userdn, oldpw, newpw)
+        return result
 
     def unbind(self):
         self._communicator.unbind()
-
-    def _perform(self, function, *args, **kwargs):
-        """Try to perform the given function with the given argument.
-
-        If LDAP directory is down, bind again and retry given function.
-
-        XXX: * Improve retry logic in LDAPSession
-             * Extend LDAPSession object to handle Fallback server(s)
-        """
-
-        # XXX BUG:
-        # It is complete wrong to encode/ decode in here every string
-        # LDAP handles binary data too and so fetching or setting binary
-        # data fails. We need to refactor this part.
-
-        args = encode(args)
-        kwargs = encode(kwargs)
-        if self._communicator._con is None:
-            self._communicator.bind()
-        return decode(function(*args, **kwargs))

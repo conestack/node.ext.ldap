@@ -11,17 +11,18 @@ from node.ext.ldap import testing
 
 DOCFILES = [
     ('cache.rst', testing.LDIF_data),
+
     ('base.rst', testing.LDIF_data),
     ('session.rst', testing.LDIF_data),
     ('filter.rst', testing.LDIF_data),
     ('_node.rst', testing.LDIF_data),
-    ('schema.rst', testing.LDIF_data),
-    ('ugm/principals.rst', testing.LDIF_principals),
-    ('ugm/groupOfNames.rst', testing.LDIF_groupOfNames),
-    ('ugm/posixGroups.rst', testing.LDIF_posixGroups),
-    ('ugm/sambaUsers.rst', testing.LDIF_sambaUsers),
-    ('ugm/defaults.rst', testing.LDIF_data),
-    ('../../../../README.rst', testing.LDIF_data),
+#    ('schema.rst', testing.LDIF_data),
+#    ('ugm/principals.rst', testing.LDIF_principals),
+#    ('ugm/groupOfNames.rst', testing.LDIF_groupOfNames),
+#    ('ugm/posixGroups.rst', testing.LDIF_posixGroups),
+#    ('ugm/sambaUsers.rst', testing.LDIF_sambaUsers),
+#    ('ugm/defaults.rst', testing.LDIF_data),
+#    ('../../../../README.rst', testing.LDIF_data),
 ]
 
 optionflags = \

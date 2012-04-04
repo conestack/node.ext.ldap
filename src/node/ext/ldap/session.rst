@@ -16,7 +16,7 @@ Create the session with ``LDAPProps`` as argument::
 There's no search base DN set yet:: 
 
     >>> session.baseDN
-    u''
+    ''
     
 Set a baseDN and perform LDAP search::
   
@@ -24,7 +24,7 @@ Set a baseDN and perform LDAP search::
     >>> from node.ext.ldap import SUBTREE
     >>> res = session.search('(objectClass=*)', SUBTREE)
     >>> len(res)
-    6
+    7
 
 Perform batched search::
 
@@ -38,10 +38,10 @@ Perform batched search::
     >>> assert cookie
     >>> len(res)
     2
-    >>> res, cookie = session.search('(objectClass=*)', SUBTREE, page_size=2, cookie=cookie)
+    >>> res, cookie = session.search('(objectClass=*)', SUBTREE, page_size=3, cookie=cookie)
     >>> assert not cookie
     >>> len(res)
-    2
+    3
     >>> res, cookie = session.search('(objectClass=*)', SUBTREE, page_size=2, cookie=cookie)
     >>> len(res)
     2
@@ -60,33 +60,33 @@ Add an entry::
     >>> session.add(dn, entry)
     >>> res = session.search('(objectClass=*)', SUBTREE)
     >>> len(res)
-    7
+    8
 
 Modify this entry and check the result::
 
     >>> res = session.search('(cn=foo)', SUBTREE)
     >>> res
-    [(u'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com', 
-    {u'objectClass': [u'person', u'top'], u'cn': [u'foo'], u'sn': [u'bar']})]
+    [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com', 
+    {'objectClass': ['person', 'top'], 'cn': ['foo'], 'sn': ['bar']})]
 
     >>> from ldap import MOD_REPLACE
     >>> session.modify(res[0][0], [(MOD_REPLACE, 'sn', 'baz')])
     >>> res = session.search('(cn=foo)', SUBTREE)
     >>> res
-    [(u'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com', 
-    {u'objectClass': [u'person', u'top'], u'cn': [u'foo'], u'sn': [u'baz']})]
+     [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
+     {'objectClass': ['person', 'top'], 'cn': ['foo'], 'sn': ['baz']})]
 
 Query only specific attributes::
 
     >>> res = session.search('(cn=foo)', SUBTREE, attrlist=('sn',))
     >>> res
-    [(u'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com', {u'sn': [u'baz']})]
+    [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com', {'sn': ['baz']})]
 
 And only the attributes without the values::
 
     >>> res = session.search('(cn=foo)', SUBTREE, attrlist=('sn',), attrsonly=True)
     >>> res
-    [(u'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com', {u'sn': []})]
+    [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com', {'sn': []})]
 
 Delete this entry and check the result::
 

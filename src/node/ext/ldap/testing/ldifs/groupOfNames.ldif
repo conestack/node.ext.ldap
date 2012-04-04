@@ -17,7 +17,6 @@ cn: cn0
 mail: uid0@groupOfNames.com
 sn: sn0
 userPassword: secret0
-
 dn: uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com
 uid: uid1
 objectClass: inetOrgPerson
