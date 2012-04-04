@@ -123,6 +123,15 @@ Customer has not been changed::
     >>> customers.changed
     False
     
+Access existing binary data::
+w
+    >>> binnode =  root['ou=customers']['uid=binary']
+    >>> binnode.attrs['jpegPhoto'][:20]
+    '\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x01,\x01,\x00\x00'
+
+    >>> len(binnode.attrs['jpegPhoto'])
+
+
 Create New Node
 ---------------
 
