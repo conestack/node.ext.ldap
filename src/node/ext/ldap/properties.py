@@ -2,14 +2,14 @@
 from zope.interface import implements
 from node.ext.ldap.interfaces import ILDAPProps
 
-MULTIVALUED_DEFAULTS = [
+MULTIVALUED_DEFAULTS = set([
     'member', 
     'uniqueMember', 
     'memberUid', 
     'memberOf'
-]
+])
 
-BINARY_DEFAULTS = [
+BINARY_DEFAULTS = set([
     # core.schema
     'userCertificate',
     'cACertificate',
@@ -23,7 +23,7 @@ BINARY_DEFAULTS = [
     'userPKCS12',
     'photo',
     'jpegPhoto',
-] 
+])
 
 
 class LDAPServerProperties(object):
@@ -113,11 +113,11 @@ class LDAPServerProperties(object):
             Flag whether to escape queries
             
         multivalued_attributes
-            List of attributes names considered as multivalued to be returned 
+            Set of attributes names considered as multivalued to be returned
             as list. 
 
         binary_attributes
-            List of attributes names considered as binary. 
+            Set of attributes names considered as binary.
             (no unicode conversion)
         """
         if uri is None:
