@@ -1260,7 +1260,7 @@ We need a different key. As a side-effect a filter will be used: '(cn=*)'::
     >>> node._rdn_attr = 'cn'
     >>> node.child_defaults = {'objectClass': ['top', 'person']}
     >>> node.keys()
-    [u'Max']
+    [u'cn_binary', u'Max']
 
 Again, we can query/change/delete these::
 
@@ -1287,7 +1287,7 @@ New entries in case of scope SUBTREE are added in the ONELEVEL scope::
     >>> del node['Max']
     >>> node()
     >>> node.keys()
-    [u'foo']
+    [u'cn_binary', u'foo']
 
     >>> node = LDAPNode(props=props, name=root.DN)
     >>> node['cn=foo'].attrs['objectClass']
