@@ -93,7 +93,7 @@ Set base dn and check if previously imported entries are present.::
     >>> communicator.baseDN = 'dc=my-domain,dc=com'
     >>> res = communicator.search('(objectClass=*)', SUBTREE)
     >>> len(res)
-    6
+    7
   
 Test inserting entries.::
 
@@ -109,7 +109,7 @@ Now there's one more entry in the directory.::
 
     >>> res = communicator.search('(objectClass=*)', SUBTREE)
     >>> len(res)
-    7
+    8
 
 Query added entry directly.::
 
