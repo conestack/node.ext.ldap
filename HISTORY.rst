@@ -2,8 +2,13 @@
 Changes
 =======
 
-unreleased
-----------
+0.9.2 unreleased
+----------------
+
+- session no longer magically decodes everything and prevents binary data from 
+  being fetched from ldap. LDAP-Node has semantic knowledge to determine binary
+  data LDAP-Node converts all non binary data and all keys to unicode.
+  [jensens, 2012-04-04]
 
 - or_values and or_keys for finer control of filter criteria
   [iElectric, chaoflow, 2012-03-24]
