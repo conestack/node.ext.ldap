@@ -141,7 +141,8 @@ Change binary data::
     >>> binnode()
 
     >>> root = LDAPNode('dc=my-domain,dc=com', props)
-    >>> binnode =  root['ou=customers']['uid=binary']
+    >>> customers = root['ou=customers']
+    >>> binnode =  customers['uid=binary']
     >>> binnode.attrs['jpegPhoto'] == jpegdata
     True
 
