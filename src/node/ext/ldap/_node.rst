@@ -124,13 +124,26 @@ Customer has not been changed::
     False
     
 Access existing binary data::
-w
+
     >>> binnode =  root['ou=customers']['uid=binary']
     >>> binnode.attrs['jpegPhoto'][:20]
     '\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x01,\x01,\x00\x00'
 
     >>> len(binnode.attrs['jpegPhoto'])
+    2155
+       
+Change binary data::
 
+    >>> import os    
+    >>> jpegdata = open(os.path.join(os.path.dirname(__file__), 'testing', 
+    ...                 'data', 'binary.jpg')).read()
+    >>> binnode.attrs['jpegPhoto'] =  jpegdata
+    >>> binnode()
+
+    >>> root = LDAPNode('dc=my-domain,dc=com', props)
+    >>> binnode =  root['ou=customers']['uid=binary']
+    >>> binnode.attrs['jpegPhoto'] == jpegdata
+    True
 
 Create New Node
 ---------------
