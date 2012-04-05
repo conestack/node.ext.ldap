@@ -773,21 +773,19 @@ Remove roles::
 Character Encoding
 ------------------
 
-LDAP (v3 at least, `RFC 2251`_) uses utf8 string encoding. ``LDAPSession`` and 
-``LDAPNode`` do the encoding for you. Consider it a bug, if you receive 
-anything else than unicode from ``LDAPSession`` or ``LDAPNode``. The 
-``LDAPConnector`` and ``LDAPCommunicator`` are encoding-neutral, they do no 
-decoding or encoding.
+LDAP (v3 at least, `RFC 2251`_) uses utf8 string encoding only. 
+``LDAPNode`` does the encoding for you. Consider it a bug, if you receive 
+anything else than unicode from ``LDAPNode``, except attributes configured as 
+binary. The ``LDAPSession``, ``LDAPConnector`` and ``LDAPCommunicator`` are 
+encoding-neutral, they do no decoding or encoding.
 
 Unicode strings you pass to nodes or sessions are automatically encoded as uft8
-for LDAP. If you feed them ordinary strings they are decoded as utf8 and
-reencoded as utf8 to make sure they are utf8 or compatible, e.g. ascii.
-
-If decoding as utf8 fails, the value is assumed to be binary and left 
-unaltered. This is not the final behavior since schema parsing is missing.
+for LDAP, except if configured binary. If you feed them ordinary strings they are 
+decoded as utf8 and reencoded as utf8 to make sure they are utf8 or compatible, 
+e.g. ascii.  
 
 If you have an LDAP server that does not use utf8, monkey-patch
-``node.ext.ldap._node.CHARACTER_ENCODING``.
+``node.ext.ldap._node.CHARACTER_ENCODING``. 
 
 
 Caching Support

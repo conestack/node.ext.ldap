@@ -123,6 +123,9 @@ Customer has not been changed::
     >>> customers.changed
     False
     
+Binary Data
+-----------
+
 Access existing binary data::
 
     >>> binnode =  root['ou=customers']['uid=binary']
@@ -145,7 +148,7 @@ Change binary data::
     >>> binnode =  customers['uid=binary']
     >>> binnode.attrs['jpegPhoto'] == jpegdata
     True
-
+    
 Create New Node
 ---------------
 
@@ -799,6 +802,10 @@ Invalidate changed child fails::
       ...
     RuntimeError: Invalid tree state. Try to invalidate changed child node 'ou=customer2'.
 
+
+Search
+------
+
 Test search function::
 
     >>> from node.ext.ldap.scope import ONELEVEL, SUBTREE
@@ -987,6 +994,22 @@ Test relation filter::
     u'ou=customer2', 
     u'ou=n\xe4sty\\, customer']
 
+
+Search with binary in attrlist::
+
+    >>> node = LDAPNode('dc=my-domain,dc=com', props)
+    >>> node.search_scope = SUBTREE
+    >>> node.search(attrlist=['jpegPhoto'])
+    [(u'dc=my-domain', {}), (u'ou=customers', {}), 
+    (u'ou=customer1', {}), (u'ou=customer2', {}), 
+    (u'ou=n\xe4sty\\, customer', {}), 
+    (u'ou=demo', {}), 
+    (u'uid=binary', {u'jpegPhoto': ['\xff\xd8\xff\xe0\x00\x10JFIF...']}), 
+    (u'ou=customer3', {}), (u'cn=customer99', {})]
+    
+Secondary Keys
+--------------
+
 Secondary keys and child DN's.
 
 Note: Setting the DN as seckey only seem to work because it is returned by LDAP
@@ -1093,9 +1116,8 @@ Note -> if seckey attr is missing on LDAP entry, entry is skipped::
     >>> print tmp._seckeys
     None
 
-###########################
-Experimental features below
-###########################
+Experimental features
+---------------------
 
 Using some other attribute as key, instead of the RDN. Let's first add two
 person's the way we know it::
