@@ -888,9 +888,8 @@ TODO
 
 - check/implement silent sort on only the keys ``LDAPNode.sortonkeys``
 
-- binary attributes: 1. introduce Binary: ``node['cn=foo'].attrs['image']
-  = Binary(stream)``, 2. parse ldap schema to identify binary attributes, also
-  further types like BOOL
+- parse ldap schema to identify binary attributes, also
+  further types like BOOL and multivalued, overrides must be possible.
 
 - node.ext.ldap.filter unicode/utf-8
 
