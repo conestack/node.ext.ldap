@@ -45,9 +45,10 @@ Try to set item by invalid key, fails::
       ...
     KeyError: 'inexistent'
 
+
+
 User keys::
 
-    >>> interact(locals())
     >>> users = ugm.users
     >>> users.keys()
     [u'uid0', u'uid1', u'uid2']
@@ -78,10 +79,11 @@ XXX: LDAPNodeAttributes.items does not return consistent results if attrmap
 
 ::
 
-    >>> user_0.attrs.items()
-    [('cn', u'cn0'), ('sn', u'sn0'), 
-    ('mail', u'uid0@groupOfNames.com'), ('rdn', u'uid0')]
-    
+    >>> sorted(user_0.attrs.items())
+    [('cn', u'cn0'), 
+    ('mail', u'uid0@groupOfNames.com'), 
+    ('rdn', u'uid0'), 
+    ('sn', u'sn0')]    
     
 User is a leaf::
 
