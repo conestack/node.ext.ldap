@@ -47,6 +47,7 @@ Try to set item by invalid key, fails::
 
 User keys::
 
+    >>> interact(locals())
     >>> users = ugm.users
     >>> users.keys()
     [u'uid0', u'uid1', u'uid2']

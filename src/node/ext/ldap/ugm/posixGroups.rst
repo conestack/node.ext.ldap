@@ -77,9 +77,10 @@ XXX: LDAPNodeAttributes.items does not return consistent results if attrmap
 
 ::
 
-    >>> user_0.attrs.items()
-    [('cn', u'cn0'), ('rdn', u'uid0'), ('uidNumber', u'0'), 
-    ('gidNumber', u'0'), ('homeDirectory', u'/home/uid0')]
+    >>> sorted(user_0.attrs.items())
+    [('cn', u'cn0'), ('gidNumber', u'0'), ('homeDirectory', u'/home/uid0'), 
+    ('rdn', u'uid0'), ('uidNumber', u'0')]
+    
     
 User is a leaf::
 
@@ -136,7 +137,7 @@ Check Account expiration::
 
 #### figure out shadowInactive -> PAM and samba seem to ignore -> configuration?
     >> users['uid0'].context.attrs['shadowInactive'] = u'99999'
-    
+
 Uid0 never expires - or at leas expires in many years and even if, there are
 99999 more days unless account gets disabled::
 

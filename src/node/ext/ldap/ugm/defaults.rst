@@ -62,7 +62,7 @@ Posix Account
     >>> user.context.attrs.items()
     [(u'cn', u'posixuser'), 
     (u'uid', u'posixuser'), 
-    (u'objectClass', ['account', 'posixAccount']), 
+    (u'objectClass', [u'account', u'posixAccount']), 
     (u'uidNumber', u'100'), 
     (u'gidNumber', u'100'), 
     (u'homeDirectory', u'/home/posixuser')]
@@ -88,7 +88,7 @@ Posix Account
     >>> user.context.attrs.items()
     [(u'uid', u'posixuser1'), 
     (u'cn', u'posixuser1'), 
-    (u'objectClass', ['account', 'posixAccount']), 
+    (u'objectClass', [u'account', u'posixAccount']), 
     (u'loginShell', u'/bin/false'), 
     (u'uidNumber', u'101'), 
     (u'gidNumber', u'101'), 
@@ -117,9 +117,9 @@ Posix Group
     >>> group = groups.create('posixgroup')
     >>> group()
     >>> group.context.attrs.items()
-    [(u'memberUid', ['nobody']), 
+    [(u'memberUid', [u'nobody']), 
     (u'cn', u'posixgroup'), 
-    (u'objectClass', ['posixGroup']), 
+    (u'objectClass', [u'posixGroup']), 
     (u'gidNumber', u'100')]
 
 
@@ -144,7 +144,7 @@ Shadow Account
     >>> user()
     >>> user.context.attrs.items()
     [(u'uid', u'shadowuser'), 
-    (u'objectClass', ['account', 'shadowAccount'])]
+    (u'objectClass', [u'account', u'shadowAccount'])]
     
     >>> from node.ext.ldap.ugm import shadow
     >>> shadow_d = defaults.creation_defaults['shadowAccount']
@@ -175,7 +175,7 @@ Shadow Account
     (u'shadowFlag', u'0'), 
     (u'shadowMin', u'0'), 
     (u'shadowWarning', u'0'), 
-    (u'objectClass', ['account', 'shadowAccount']), 
+    (u'objectClass', [u'account', u'shadowAccount']), 
     (u'shadowInactive', u'0'), 
     (u'shadowMax', u'99999'), 
     (u'shadowLastChange', u'12011'), 
@@ -211,34 +211,34 @@ Samba Account
     >>> users = Users(props, ucfg)
     >>> user = users.create('sambauser')
     >>> user()
-    >>> user.context.attrs.items()
-    [(u'cn', u'sambauser'), 
-    (u'uid', u'sambauser'), 
-    (u'objectClass', ['account', 'posixAccount', 'sambaSamAccount']), 
-    (u'uidNumber', u'100'), 
-    (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-1202'), 
-    (u'gidNumber', u'100'), 
-    (u'homeDirectory', u'/home/sambauser')]
-    
+    >>> sorted(user.context.attrs.items())
+    [(u'cn', u'sambauser'),
+    (u'gidNumber', u'100'),
+    (u'homeDirectory', u'/home/sambauser'),
+    (u'objectClass', [u'account', u'posixAccount', u'sambaSamAccount']),
+    (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-1202'),
+    (u'uid', u'sambauser'),
+    (u'uidNumber', u'100')]
+
     >>> user.passwd(None, 'secret')
-    >>> user.context.attrs.items()
+    >>> sorted(user.context.attrs.items())
     [(u'cn', u'sambauser'), 
-    (u'objectClass', [u'account', u'posixAccount', u'sambaSamAccount']), 
-    (u'userPassword', u'{SSHA}...'), 
-    (u'uidNumber', u'100'), 
     (u'gidNumber', u'100'), 
-    (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-1202'), 
     (u'homeDirectory', u'/home/sambauser'), 
-    (u'uid', u'sambauser'), 
+    (u'objectClass', [u'account', u'posixAccount', u'sambaSamAccount']), 
+    (u'sambaLMPassword', u'552902031BEDE9EFAAD3B435B51404EE'), 
     (u'sambaNTPassword', u'878D8014606CDA29677A44EFA1353FC7'), 
-    (u'sambaLMPassword', u'552902031BEDE9EFAAD3B435B51404EE')]
-    
+    (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-1202'), 
+    (u'uid', u'sambauser'), 
+    (u'uidNumber', u'100'), 
+    (u'userPassword', u'{SSHA}...')]
+
     >>> from node.ext.ldap.ugm import samba
     >>> samba_d = defaults.creation_defaults['sambaSamAccount']
     >>> samba_d['sambaDomainName'] = samba.sambaDomainName
     >>> samba_d['sambaPrimaryGroupSID'] = samba.sambaPrimaryGroupSID
     >>> samba_d['sambaAcctFlags'] = samba.sambaAcctFlags
-    
+
     >>> ucfg = UsersConfig(
     ...     baseDN='ou=defaults,dc=my-domain,dc=com',
     ...     attrmap={
@@ -255,18 +255,19 @@ Samba Account
     >>> users = Users(props, ucfg)
     >>> user = users.create('sambauser1')
     >>> user()
-    >>> user.context.attrs.items()
+    >>> sorted(user.context.attrs.items())
     [(u'cn', u'sambauser1'), 
-    (u'uid', u'sambauser1'), 
-    (u'objectClass', ['account', 'posixAccount', 'sambaSamAccount']), 
-    (u'uidNumber', u'101'), 
-    (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-1202'), 
-    (u'sambaAcctFlags', u'[U]'), 
-    (u'sambaPrimaryGroupSID', u'S-1-5-21-1234567890-1234567890-1234567890-123'), 
-    (u'sambaDomainName', u'CONE_UGM'), 
     (u'gidNumber', u'101'), 
-    (u'homeDirectory', u'/home/sambauser1')]
+    (u'homeDirectory', u'/home/sambauser1'), 
+    (u'objectClass', [u'account', u'posixAccount', u'sambaSamAccount']), 
+    (u'sambaAcctFlags', u'[U]'), 
+    (u'sambaDomainName', u'CONE_UGM'), 
+    (u'sambaPrimaryGroupSID', u'S-1-5-21-1234567890-1234567890-1234567890-123'), 
+    (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-1202'), 
+    (u'uid', u'sambauser1'), 
+    (u'uidNumber', u'101')]
     
+
     >>> del samba_d['sambaDomainName']
     >>> del samba_d['sambaPrimaryGroupSID']
     >>> del samba_d['sambaAcctFlags']
@@ -291,10 +292,10 @@ Samba Group
     >>> groups = Groups(props, gcfg)
     >>> group = groups.create('sambagroup')
     >>> group()
-    >>> group.context.attrs.items()
-    [(u'memberUid', ['nobody']), 
-    (u'cn', u'sambagroup'), 
-    (u'objectClass', ['posixGroup', 'sambaGroupMapping']), 
-    (u'sambaGroupType', u'2'), 
+    >>> sorted(group.context.attrs.items())
+    [(u'cn', u'sambagroup'), 
     (u'gidNumber', u'100'), 
+    (u'memberUid', [u'nobody']), 
+    (u'objectClass', [u'posixGroup', u'sambaGroupMapping']), 
+    (u'sambaGroupType', u'2'), 
     (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-1202')]

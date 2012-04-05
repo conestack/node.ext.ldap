@@ -1,7 +1,7 @@
 Overview
 ========
 
-``node.ext.ldap`` is a LDAP convenience library for LDAP communication based on 
+``node.ext.ldap`` is a LDAP convenience library for LDAP communication based on
 `python-ldap <http://pypi.python.org/pypi/python-ldap>`_ and
 `node <http://pypi.python.org/pypi/node>`_.
 
@@ -11,7 +11,7 @@ object and a LDAP node based user and group management implementation utilizing
 
 .. _`RFC 2251`: http://www.ietf.org/rfc/rfc2251.txt
 
-This package is the successor of 
+This package is the successor of
 `bda.ldap <http://pypi.python.org/pypi/bda.ldap>`_.
 
 .. contents::
@@ -167,10 +167,10 @@ Set default search DN for session::
 Search in directory::
 
     >>> session.search()
-    [(u'ou=demo,dc=my-domain,dc=com', 
-    {u'objectClass': [u'top', u'organizationalUnit'], 
-    u'ou': [u'demo'], 
-    u'description': [u'Demo organizational unit']})]
+    [('ou=demo,dc=my-domain,dc=com', 
+    {'objectClass': ['top', 'organizationalUnit'], 
+    'ou': ['demo'], 
+    'description': ['Demo organizational unit']})]
 
 Add directory entry::
 
@@ -200,7 +200,7 @@ Modify directory entry::
     >>> session.search('(objectClass=person)',
     ...                node.ext.ldap.SUBTREE,
     ...                attrlist=['cn'])
-    [(u'cn=foo,ou=demo,dc=my-domain,dc=com', {u'cn': [u'foo']})]
+    [('cn=foo,ou=demo,dc=my-domain,dc=com', {'cn': ['foo']})]
 
 Delete directory entry::
 
@@ -399,26 +399,26 @@ Different LDAP filter types can be combined::
 
 The following keyword arguments are accepted by ``LDAPNode.search``. If multiple keywords are
 used, combine search criteria with '&' where appropriate:
-    
+
 queryFilter
     Either a LDAP filter instance or a string. If given argument is string type,
     a ``LDAPFilter`` instance is created.
-    
+
 criteria
     A dictionary containing search criteria. A ``LDAPDictFilter`` instance is
     created.
 
 attrlist
     List of attribute names to return.
- 
+
 relation
     Either ``LDAPRelationFilter`` instance or a string defining the relation.
     If given argument is string type, a ``LDAPRelationFilter`` instance is
     created.
-    
+
 relation_node
     In combination with ``relation`` argument, when given as string, use
-    ``relation_node`` instead of self for filter creation.  
+    ``relation_node`` instead of self for filter creation.
 
 exact_match
     Flag whether 1-length result is expected. Raises an error if empty result
@@ -511,10 +511,10 @@ queryFilter
 objectClasses
     Object classes used for creation of new principals. For some objectClasses
     default value callbacks are registered, which are used to generate default
-    values for mandatory attributes if not already set on principal vessel node. 
-    
+    values for mandatory attributes if not already set on principal vessel node.
+
 defaults
-    Dict like object containing default values for principal creation. A value 
+    Dict like object containing default values for principal creation. A value
     could either be static or a callable accepting the principals node and the
     new principal id as arguments. This defaults take precedence to defaults
     detected via set object classes.
@@ -773,28 +773,28 @@ Remove roles::
 Character Encoding
 ------------------
 
-LDAP (v3 at least, `RFC 2251`_) uses utf8 string encoding only. 
-``LDAPNode`` does the encoding for you. Consider it a bug, if you receive 
-anything else than unicode from ``LDAPNode``, except attributes configured as 
-binary. The ``LDAPSession``, ``LDAPConnector`` and ``LDAPCommunicator`` are 
+LDAP (v3 at least, `RFC 2251`_) uses utf8 string encoding only.
+``LDAPNode`` does the encoding for you. Consider it a bug, if you receive
+anything else than unicode from ``LDAPNode``, except attributes configured as
+binary. The ``LDAPSession``, ``LDAPConnector`` and ``LDAPCommunicator`` are
 encoding-neutral, they do no decoding or encoding.
 
 Unicode strings you pass to nodes or sessions are automatically encoded as uft8
-for LDAP, except if configured binary. If you feed them ordinary strings they are 
-decoded as utf8 and reencoded as utf8 to make sure they are utf8 or compatible, 
-e.g. ascii.  
+for LDAP, except if configured binary. If you feed them ordinary strings they are
+decoded as utf8 and reencoded as utf8 to make sure they are utf8 or compatible,
+e.g. ascii.
 
 If you have an LDAP server that does not use utf8, monkey-patch
-``node.ext.ldap._node.CHARACTER_ENCODING``. 
+``node.ext.ldap._node.CHARACTER_ENCODING``.
 
 
 Caching Support
 ---------------
 
-``node.ext.ldap`` can cache LDAP searches using ``bda.cache``. You need 
+``node.ext.ldap`` can cache LDAP searches using ``bda.cache``. You need
 to provide a cache factory utility in you application in order to make caching
 work. If you don't, ``node.ext.ldap`` falls back to use ``bda.cache.NullCache``,
-which does not cache anything and is just an API placeholder. 
+which does not cache anything and is just an API placeholder.
 
 To provide a cache based on ``Memcached`` install memcached server and
 configure it. Then you need to provide the factory utility::
@@ -877,8 +877,8 @@ TODO
 - define what our retry logic should look like, re-think function of session,
   communicator and connector. (check ldap.ldapobject.ReconnectLDAPObject)
   ideas: more complex retry logic with fallback servers, eg. try immediately
-  again, if that fails use backup server, then start to probe other server 
-  after a timespan, report status of ldap servers, preferred server, 
+  again, if that fails use backup server, then start to probe other server
+  after a timespan, report status of ldap servers, preferred server,
   equal servers, load balancing; Are there ldap load balancers to recommend?
 
 - consider search_st with timeout.

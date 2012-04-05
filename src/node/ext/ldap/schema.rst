@@ -91,4 +91,5 @@ CN Attribute::
       'required': False},
      {'info': <ldap.schema.models.AttributeType instance at ...>,
       'name': 'description',
-      'required': False}]        
+      'required': False}]       
+      

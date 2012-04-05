@@ -38,7 +38,8 @@ unique and therefore suitable as login attr::
     >>> ucfg.attrmap['login'] = 'cn'
     >>> users = Users(props, ucfg)
     >>> users.ids
-    [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
+    [u'sn_binary', u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
+    
 
 Principals idbydn::
 
@@ -87,17 +88,17 @@ And attributes::
 
 Query all user nodes::
 
-    >>> [users[id] for id in users]
-    [<User object 'Meier' at ...>, 
-    <User object 'M?ller' at ...>, 
-    <User object 'Schmidt' at ...>, 
-    <User object 'Umhauer' at ...>]
-    
-    >>> [users[id].context for id in users]
+    >>> [users[id] for id in sorted(users.keys())]
+    [<User object 'Meier' at ...>, <User object 'M?ller' at ...>,
+    <User object 'Schmidt' at ...>, <User object 'Umhauer' at ...>, 
+    <User object 'sn_binary' at ...>]
+
+    >>> [users[id].context for id in sorted(users.keys())]
     [<cn=user1,dc=my-domain,dc=com:Meier - False>,
     <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>,
     <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>,
-    <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>]
+    <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>,
+    <uid=binary,ou=customers,dc=my-domain,dc=com:sn_binary - False>]
 
 Authenticate a user, via the user object. (also see 'via LDAPUsers' below,
 after passwd, this is to make sure, that LDAPUsers.authenticate does not work
@@ -172,8 +173,8 @@ id and returns the desired value.::
     ... )
     >>> users = Users(props, add_ucfg)
 
-    >>> users.ids
-    [u'M\xfcller', u'Schmidt', u'Umhauer']
+    >>> sorted(users.ids)
+    [u'M\xfcller', u'Schmidt', u'Umhauer', u'sn_binary']
 
     >>> users.create('newid')
     Traceback (most recent call last):
@@ -183,8 +184,8 @@ id and returns the desired value.::
     >>> users.create('newid', login='newcn', id='newid')
     <User object 'newid' at ...>
     
-    >>> users.ids
-    [u'M\xfcller', u'Schmidt', u'Umhauer', u'newid']
+    >>> sorted(users.ids)
+    [u'M\xfcller', u'Schmidt', u'Umhauer', u'newid', u'sn_binary']
 
     >>> newuser = users['newid']
     >>> newuser.context
@@ -209,19 +210,19 @@ well, but create is propably the better choice. Test egde cases::
 
 # XXX: there need more attrs to show up::
 
-    >>> newuser.attrs.items()
-    [('login', u'newcn'), ('id', u'newid'), ('telephoneNumber', u'123')]
+    >>> sorted(newuser.attrs.items())
+    [('id', u'newid'), ('login', u'newcn'), ('telephoneNumber', u'123')]
     
-    >>> newuser.context.attrs.items()
+    >>> sorted(newuser.context.attrs.items())
     [(u'cn', u'newcn'), 
+    (u'objectClass', [u'top', u'person']), 
     (u'sn', u'newid'), 
-    (u'objectClass', ['top', 'person']), 
     (u'telephoneNumber', u'123')]
     
     >>> users()
     >>> users.reload = True
 
-    >>> users.items()
+    >>> sorted(users.items())
     [(u'M\xfcller', <User object 'M?ller' at ...>), 
     (u'Schmidt', <User object 'Schmidt' at ...>), 
     (u'Umhauer', <User object 'Umhauer' at ...>), 
@@ -243,10 +244,11 @@ Search for users::
     [u'Schmidt']
 
     >>> users.search()
-    [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
+    [u'sn_binary', u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
 
     >>> users.search(attrlist=['login'])
-    [(u'Meier', {'login': [u'user1']}), 
+    [(u'sn_binary', {'login': [u'cn_binary']}), 
+    (u'Meier', {'login': [u'user1']}), 
     (u'M\xfcller', {'login': [u'user2']}), 
     (u'Schmidt', {'login': [u'user3']}), 
     (u'Umhauer', {'login': [u'n\xe4sty, User']})]
@@ -256,10 +258,10 @@ Search for users::
 
 Paginated search for users::
 
-    >>> results, cookie = users.search(page_size=2, cookie='')
+    >>> results, cookie = users.search(page_size=3, cookie='')
     >>> results
-    [u'Meier', u'M\xfcller']
-    >>> results, cookie = users.search(page_size=2, cookie=cookie)
+    [u'sn_binary', u'Meier', u'M\xfcller']
+    >>> results, cookie = users.search(page_size=3, cookie=cookie)
     >>> results
     [u'Schmidt', u'Umhauer']
     >>> assert cookie == ''
@@ -283,7 +285,7 @@ Only attributes defined in attrmap can be queried::
     # normally set via principals config
     >>> users.context.search_filter = filter
     >>> users.search()
-    [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
+    [u'sn_binary', u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
     
     >>> filter = LDAPFilter('(objectClass=person)')
     >>> filter &= LDAPFilter('(objectClass=some)')
@@ -302,6 +304,7 @@ The changed flag::
     
     >>> users.printtree()
     <class 'node.ext.ldap.ugm._api.Users'>: None
+      <class 'node.ext.ldap.ugm._api.User'>: sn_binary
       <class 'node.ext.ldap.ugm._api.User'>: Meier
       <class 'node.ext.ldap.ugm._api.User'>: M?ller
       <class 'node.ext.ldap.ugm._api.User'>: Schmidt
@@ -309,6 +312,7 @@ The changed flag::
     
     >>> users.context.printtree()
     <dc=my-domain,dc=com - False>
+      <uid=binary,ou=customers,dc=my-domain,dc=com:sn_binary - False>
       <cn=user1,dc=my-domain,dc=com:Meier - False>
       <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
       <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
@@ -326,6 +330,7 @@ The changed flag::
     
     >>> users.context.printtree()
     <dc=my-domain,dc=com - True>
+      <uid=binary,ou=customers,dc=my-domain,dc=com:sn_binary - False>
       <cn=user1,dc=my-domain,dc=com:Meier - True>
       <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
       <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
@@ -343,6 +348,7 @@ The changed flag::
     
     >>> users.context.printtree()
     <dc=my-domain,dc=com - False>
+      <uid=binary,ou=customers,dc=my-domain,dc=com:sn_binary - False>
       <cn=user1,dc=my-domain,dc=com:Meier - False>
       <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
       <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
@@ -390,10 +396,10 @@ Create a LDAPGroups node and configure it::
     
     >>> groups.context.ldap_session.search(queryFilter='cn=group3',
     ...                                    scope=ONELEVEL)
-    [(u'cn=group3,dc=my-domain,dc=com', 
-    {u'member': [u'cn=nobody'], 
-    u'objectClass': [u'groupOfNames'], 
-    u'cn': [u'group3']})]
+    [('cn=group3,dc=my-domain,dc=com', 
+    {'member': ['cn=nobody'], 
+    'objectClass': ['groupOfNames'], 
+    'cn': ['group3']})]
     
     >>> groups['group1']._member_format
     0
@@ -700,6 +706,7 @@ Delete user and check if roles are removed.::
     >>> ugm.printtree()
     <class 'node.ext.ldap.ugm._api.Ugm'>: None
       <class 'node.ext.ldap.ugm._api.Users'>: users
+        <class 'node.ext.ldap.ugm._api.User'>: sn_binary
         <class 'node.ext.ldap.ugm._api.User'>: Meier
         <class 'node.ext.ldap.ugm._api.User'>: M?ller
         <class 'node.ext.ldap.ugm._api.User'>: Schmidt
@@ -711,6 +718,7 @@ Delete user and check if roles are removed.::
         <class 'node.ext.ldap.ugm._api.Group'>: group2
           <class 'node.ext.ldap.ugm._api.User'>: Umhauer
         <class 'node.ext.ldap.ugm._api.Group'>: group3
+
     
     >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
@@ -737,6 +745,7 @@ Delete group and check if roles are removed.::
     >>> ugm.printtree()
     <class 'node.ext.ldap.ugm._api.Ugm'>: None
       <class 'node.ext.ldap.ugm._api.Users'>: users
+        <class 'node.ext.ldap.ugm._api.User'>: sn_binary
         <class 'node.ext.ldap.ugm._api.User'>: M?ller
         <class 'node.ext.ldap.ugm._api.User'>: Schmidt
         <class 'node.ext.ldap.ugm._api.User'>: Umhauer
