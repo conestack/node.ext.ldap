@@ -9,6 +9,8 @@
 /.*.cfg
 /devsrc
 /eggs
+.project
+.pydevproject
 
 # /src/
 src/node.ext.ldap.egg-info
