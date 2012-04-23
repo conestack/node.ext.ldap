@@ -13,7 +13,8 @@ objectClass: organizationalUnit
 dn: uid=uid0,ou=users,ou=posixGroups,dc=my-domain,dc=com
 uid: uid0
 cn: cn0
-objectClass: account
+sn: sn0
+objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: top
 objectClass: shadowAccount
@@ -32,7 +33,8 @@ gidNumber: 0
 dn: uid=uid1,ou=users,ou=posixGroups,dc=my-domain,dc=com
 uid: uid1
 cn: cn1
-objectClass: account
+sn: sn1
+objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: top
 objectClass: shadowAccount
@@ -51,7 +53,8 @@ gidNumber: 1
 dn: uid=uid2,ou=users,ou=posixGroups,dc=my-domain,dc=com
 uid: uid2
 cn: cn2
-objectClass: account
+sn: sn2
+objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: top
 objectClass: shadowAccount

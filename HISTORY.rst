@@ -5,6 +5,10 @@ Changes
 0.9.2 unreleased
 ----------------
 
+- Structural object class ``inetOrgPerson`` instead of ``account`` on posix
+  users and groups related test LDIF's
+  [rnix, 2012-04-23]
+
 - session no longer magically decodes everything and prevents binary data from 
   being fetched from ldap. LDAP-Node has semantic knowledge to determine binary
   data LDAP-Node converts all non binary data and all keys to unicode.
