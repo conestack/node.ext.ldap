@@ -11,7 +11,6 @@ from node.ext.ldap import testing
 
 DOCFILES = [
     ('cache.rst', testing.LDIF_data),
-
     ('base.rst', testing.LDIF_data),
     ('session.rst', testing.LDIF_data),
     ('filter.rst', testing.LDIF_data),
