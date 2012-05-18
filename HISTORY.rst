@@ -5,6 +5,10 @@ Changes
 0.9.2 unreleased
 ----------------
 
+- Remove ``escape_queries`` property from
+  ``node.ext.ldap.properties.LDAPProps``.
+  [rnix, 2012-05-18]
+
 - Use ``zope.interface.implementer`` instead of ``zope.interface.implements``.
   [rnix, 2012-05-18]
 

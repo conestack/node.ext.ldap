@@ -6,6 +6,7 @@ from node.ext.ldap import (
     LDAPCommunicator,
 )
 
+
 class LDAPSchemaInfo(object):
     
     def __init__(self, props=None):

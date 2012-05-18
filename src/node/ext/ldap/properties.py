@@ -2,12 +2,14 @@
 from zope.interface import implementer
 from node.ext.ldap.interfaces import ILDAPProps
 
+
 MULTIVALUED_DEFAULTS = set([
     'member', 
     'uniqueMember', 
     'memberUid', 
     'memberOf'
 ])
+
 
 BINARY_DEFAULTS = set([
     # core.schema
@@ -46,7 +48,6 @@ class LDAPServerProperties(object):
                  #tls_clkeyfile=None,
                  retry_max=1,
                  retry_delay=10.0,
-                 escape_queries=False,
                  multivalued_attributes=MULTIVALUED_DEFAULTS,
                  binary_attributes=BINARY_DEFAULTS,
                  ):
@@ -108,9 +109,6 @@ class LDAPServerProperties(object):
         retry_delay
             Time span to wait between two reconnect trials
             Not yet
-        
-        escape_queries
-            Flag whether to escape queries
             
         multivalued_attributes
             Set of attributes names considered as multivalued to be returned
@@ -137,7 +135,6 @@ class LDAPServerProperties(object):
         #self.tls_clkeyfile = tls_clkeyfile
         self.retry_max = retry_max
         self.retry_delay = retry_delay
-        self.escape_queries = escape_queries
         self.multivalued_attributes = multivalued_attributes
         self.binary_attributes = binary_attributes
 

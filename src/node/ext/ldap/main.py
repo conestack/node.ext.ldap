@@ -6,14 +6,15 @@ import tempfile
 import argparse
 from node.ext.ldap import testing
 
+
 parser = argparse.ArgumentParser(
              description='Controls test LDAP server, loads predefined LDIF.')
-
 parser.add_argument('task', nargs=1, action='store', choices=['start', 'stop'],
                    help='start or stop LDAP server')
 parser.add_argument('ldiflayer', nargs='?', default='base', 
                     choices=testing.ldif_layer.keys(),
                     help='Predefined LDIF Layer to load.')
+
 
 # XXX: could these go into parts/testldap?
 def user_home():
