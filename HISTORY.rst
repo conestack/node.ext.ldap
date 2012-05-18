@@ -5,6 +5,9 @@ Changes
 0.9.2 unreleased
 ----------------
 
+- Use ``zope.interface.implementer`` instead of ``zope.interface.implements``.
+  [rnix, 2012-05-18]
+
 - Structural object class ``inetOrgPerson`` instead of ``account`` on posix
   users and groups related test LDIF's
   [rnix, 2012-04-23]

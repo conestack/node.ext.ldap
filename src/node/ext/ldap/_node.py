@@ -4,7 +4,7 @@ try:
 except ImportError, e:
     from zope.component.event import objectEventNotify
 from odict import odict
-from zope.interface import implements
+from zope.interface import implementer
 from plumber import (
     plumber,
     Part,
@@ -153,13 +153,12 @@ class LDAPNodeAttributes(NodeAttributes):
     )
 
 
+@implementer(ILDAPStorage, IInvalidate)
 class LDAPStorage(OdictStorage):
     """
     XXX: only use ``self.storage`` to store real values, ``self._keys` should
          only contain ``True`` or ``False``
     """
-
-    implements(ILDAPStorage, IInvalidate)
     attributes_factory = finalize(LDAPNodeAttributes)
 
     @finalize

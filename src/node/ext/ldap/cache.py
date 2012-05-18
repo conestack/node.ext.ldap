@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from zope.interface import implements
+from zope.interface import implementer
 from zope.component import provideUtility
 from bda.cache import (
     Memcached,
@@ -16,11 +16,10 @@ def nullcacheProviderFactory():
     return NullCache()
 
 
+@implementer(ICacheProviderFactory)
 class MemcachedProviderFactory(object):
     """Memcached cache provider factory.
     """
-    
-    implements(ICacheProviderFactory)
     
     def __init__(self, servers=['127.0.0.1:11211']):
         self.servers = servers

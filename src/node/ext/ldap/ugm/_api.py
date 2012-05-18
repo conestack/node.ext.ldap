@@ -11,7 +11,7 @@ from plumber import (
     finalize,
     Part,
 )
-from zope.interface import implements
+from zope.interface import implementer
 from node.base import AttributedNode
 from node.locking import locktree
 from node.aliasing import (
@@ -98,16 +98,16 @@ class PrincipalsConfig(object):
         #self.member_relation = member_relation
 
 
+@implementer(IUsersConfig)
 class UsersConfig(PrincipalsConfig):
     """Define how users look and where they are.
     """
-    implements(IUsersConfig)
 
 
+@implementer(IGroupsConfig)
 class GroupsConfig(PrincipalsConfig):
     """Define how groups look and where they are.
     """
-    implements(IGroupsConfig)
 
 
 class RolesConfig(PrincipalsConfig):

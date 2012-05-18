@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from zope.interface import implements
+from zope.interface import implementer
 from node.ext.ldap.interfaces import ILDAPProps
 
 MULTIVALUED_DEFAULTS = set([
@@ -26,11 +26,11 @@ BINARY_DEFAULTS = set([
 ])
 
 
+@implementer(ILDAPProps)
 class LDAPServerProperties(object):
     """Wrapper Class for LDAP Server connection properties.
     """
-    implements(ILDAPProps)
-
+    
     def __init__(self,
                  server=None,
                  port=None,
