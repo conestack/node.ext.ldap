@@ -14,7 +14,7 @@ from plumber import (
 from zope.interface import implementer
 from node.base import AttributedNode
 from node.locking import locktree
-from node.aliasing import (
+from node.parts.alias import (
     AliasedNodespace,
     DictAliaser,
 )
