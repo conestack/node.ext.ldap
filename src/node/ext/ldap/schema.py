@@ -8,21 +8,27 @@ from node.ext.ldap import (
 
 
 class LDAPSchemaInfo(object):
-    
+
     def __init__(self, props=None):
-        connector = LDAPConnector(props=props)
+        self._props = props
+
+    @property
+    def subschema(self):
+        if hasattr(self, '_subschema'):
+            return self._subschema
+        connector = LDAPConnector(props=self._props)
         communicator = LDAPCommunicator(connector)
-        communicator.baseDN = 'dc=my-domain,dc=com'
         communicator.bind()
-        res = communicator.search('(objectclass=*)', ldap.SCOPE_BASE, 
-                                  'cn=subschema', attrlist=['*','+'])                                       
+        res = communicator.search('(objectclass=*)', ldap.SCOPE_BASE,
+                                  'cn=subschema', attrlist=['*', '+'])
         if len(res) != 1:
-            raise ValueError, 'subschema not found'        
-        self.subschema = ldap.schema.SubSchema(ldap.cidict.cidict(res[0][1]))
-        
+            raise ValueError, 'subschema not found'
+        self._subschema = ldap.schema.SubSchema(ldap.cidict.cidict(res[0][1]))
+        return self._subschema
+
     def attribute(self, name):
         return self.subschema.get_obj(ldap.schema.AttributeType, name)
-    
+
     def objectclass(self, name):
         return self.subschema.get_obj(ldap.schema.ObjectClass, name)
 
@@ -41,4 +47,4 @@ class LDAPSchemaInfo(object):
             record['required'] = False
             record['info'] = self.attribute(at)
             res.append(record)
-        return res        
+        return res
