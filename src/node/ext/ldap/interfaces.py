@@ -51,8 +51,9 @@ class ILDAPProps(Interface):
 
     retry_delay = Attribute(u"Retry delay in seconds")
     
-    escape_queries = Attribute(u"Flag whether to escape queries for "
-                               u"ActiveDirectory")
+    multivalued_attributes = Attribute(u"Attributes considered multi valued")
+    
+    binary_attributes = Attribute(u"Attributes considered binary")
 
 
 class ILDAPPrincipalsConfig(Interface):

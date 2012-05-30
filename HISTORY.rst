@@ -2,8 +2,19 @@
 Changes
 =======
 
-0.9.2 unreleased
-----------------
+0.9.2
+-----
+
+- Remove ``escape_queries`` property from
+  ``node.ext.ldap.properties.LDAPProps``.
+  [rnix, 2012-05-18]
+
+- Use ``zope.interface.implementer`` instead of ``zope.interface.implements``.
+  [rnix, 2012-05-18]
+
+- Structural object class ``inetOrgPerson`` instead of ``account`` on posix
+  users and groups related test LDIF's
+  [rnix, 2012-04-23]
 
 - session no longer magically decodes everything and prevents binary data from 
   being fetched from ldap. LDAP-Node has semantic knowledge to determine binary

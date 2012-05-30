@@ -39,7 +39,8 @@ user_template = """\
 dn: uid=uid%(n)s,ou=users,%(base)s
 uid: uid%(n)s
 cn: cn%(n)s
-objectClass: account
+sn: sn%(n)s
+objectClass: person
 objectClass: posixAccount
 objectClass: top
 objectClass: shadowAccount

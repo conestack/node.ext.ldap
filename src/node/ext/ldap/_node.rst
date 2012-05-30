@@ -747,8 +747,7 @@ Reload child attrs and check internal node statem only customer one loaded::
     [<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>]
     
     >>> node._keys.values()
-    [<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>, 
-    None, None, None, None, None]
+    [True, False, False, False, False, False]
 
 Reload all children and check node state::
 
@@ -760,15 +759,10 @@ Reload all children and check node state::
     <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>, 
     <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
     
-    >>> node.storage.values()
-    [<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>, 
-    <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>, 
-    <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>, 
-    <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>,
-    <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>, 
-    <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
-    
     >>> node._keys.values()
+    [True, True, True, True, True, True]
+    
+    >>> node.storage.values()
     [<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>, 
     <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>, 
     <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>, 
@@ -787,12 +781,7 @@ Invalidate with given key invalidates only child::
     <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
     
     >>> node._keys.values()
-    [None, 
-    <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>, 
-    <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>, 
-    <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>,
-    <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>, 
-    <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
+    [False, True, True, True, True, True]
 
 Invalidate changed child fails::
 

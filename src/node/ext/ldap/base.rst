@@ -171,30 +171,3 @@ Delete entry::
     []
     
     >>> communicator.unbind()
-    
-TODO:
------
-
-AD escaping, question -> gogo
-
-from PASGroupsFromLDAP
-
-    #---------------------------------------------------------------------------
-    # helper methods
-    def escapeValue(self, query):
-        """ Escapes a query, note that this is documented for AD queries, but
-            not for OpenLDAP etc; But hopefully they work in the same manner.
-        """
-        config = self.getConfig()
-        if not config['escapevalues']:
-            return query
-        replacements = {'(' :'\\28',
-                        ')' :'\\29',
-                        '\\':'\\5c',
-                        '/' :'\\2f',
-                        }
-                        # don't know how to 'find' NUL = \\0
-                        #'*' :'\\2a',
-        for key, value in replacements.items():
-            query = query.replace(key, value)
-        return query

@@ -69,17 +69,15 @@ Fetch some users::
     >>> user_0.attrs['cn']
     u'cn0'
     
+    >>> user_0.attrs['sn']
+    u'sn0'
+    
     >>> user_0.attrs['login']
     u'cn0'
 
-XXX: LDAPNodeAttributes.items does not return consistent results if attrmap
-     points to same attribute twice ('cn' missing here)
-
-::
-
     >>> sorted(user_0.attrs.items())
     [('cn', u'cn0'), ('gidNumber', u'0'), ('homeDirectory', u'/home/uid0'), 
-    ('rdn', u'uid0'), ('uidNumber', u'0')]
+    ('rdn', u'uid0'), ('sn', u'sn0'), ('uidNumber', u'0')]
     
     
 User is a leaf::
@@ -187,6 +185,7 @@ Add user::
     
     >>> user = users.create('sepp',
     ...                     cn='Sepp',
+    ...                     sn='Unterwurzacher',
     ...                     uidNumber='99',
     ...                     gidNumber='99',
     ...                     homeDirectory='home/sepp')

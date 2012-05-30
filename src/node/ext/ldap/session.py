@@ -5,10 +5,7 @@ from node.ext.ldap import (
     LDAPConnector,
     LDAPCommunicator,
 )
-from node.ext.ldap.base import (
-    testLDAPConnectivity,
-    escape,
-)
+from node.ext.ldap.base import testLDAPConnectivity
 
 
 class LDAPSession(object):
@@ -61,7 +58,8 @@ class LDAPSession(object):
             # '(objectClass=*)'
             queryFilter = '(objectClass=*)'
 
-        # bug in node when using string: https://github.com/bluedynamics/node/issues/5
+        # bug in node when using string:
+        #     https://github.com/bluedynamics/node/issues/5
         if isinstance(cookie, str):
             cookie = unicode(cookie)
 

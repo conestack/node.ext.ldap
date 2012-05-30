@@ -573,6 +573,7 @@ posixGroupsUcfgAttrmap = {
     'login': 'cn',
     'rdn': 'uid',
     'cn': 'cn',
+    'sn': 'sn',
     'uidNumber': 'uidNumber',
     'gidNumber': 'gidNumber',
     'homeDirectory': 'homeDirectory',
@@ -595,7 +596,7 @@ LDIF_posixGroups = Ldif(
         attrmap=posixGroupsUcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=posixAccount)',
-        objectClasses=['account', 'posixAccount'],
+        objectClasses=['inetOrgPerson', 'posixAccount'],
         ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=posixGroups,dc=my-domain,dc=com',
@@ -617,7 +618,7 @@ LDIF_posixGroups_10_10 = Ldif(
         attrmap=posixGroupsUcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=posixAccount)',
-        objectClasses=['account', 'posixAccount'],
+        objectClasses=['inetOrgPerson', 'posixAccount'],
         ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=posixGroups_10_10,dc=my-domain,dc=com',

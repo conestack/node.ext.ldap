@@ -11,20 +11,19 @@ from plumber import (
     finalize,
     Part,
 )
-from zope.interface import implements
+from zope.interface import implementer
 from node.base import AttributedNode
 from node.locking import locktree
-from node.aliasing import (
-    AliasedNodespace,
-    DictAliaser,
-)
+from node.parts.alias import DictAliaser
 from node.parts import (
+    Alias,
     NodeChildValidate,
     Nodespaces,
     Adopt,
     Attributes,
     DefaultInit,
     Nodify,
+    Storage,
     OdictStorage,
 )
 from node.utils import debug
@@ -98,16 +97,16 @@ class PrincipalsConfig(object):
         #self.member_relation = member_relation
 
 
+@implementer(IUsersConfig)
 class UsersConfig(PrincipalsConfig):
     """Define how users look and where they are.
     """
-    implements(IUsersConfig)
 
 
+@implementer(IGroupsConfig)
 class GroupsConfig(PrincipalsConfig):
     """Define how groups look and where they are.
     """
-    implements(IGroupsConfig)
 
 
 class RolesConfig(PrincipalsConfig):
@@ -117,13 +116,40 @@ class RolesConfig(PrincipalsConfig):
     """
 
 
-class PrincipalAliasedAttributes(AliasedNodespace):
-    
+class PrincipalAliasedAttributes(object):
+    __metaclass__ = plumber
+    __plumbing__ = (
+        Alias,
+        NodeChildValidate,
+        Adopt,
+        Nodify,
+        Storage,
+    )
     allow_non_node_childs = True
+    
+    def __init__(self, context, aliaser=None):
+        """
+        context
+            the node whose children to alias
+            
+        aliaser
+            the aliaser to be used
+        """
+        self.__name__ = context.name
+        self.__parent__ = None
+        self.context = context
+        self.aliaser = aliaser
+    
+    @property
+    def storage(self):
+        return self.context
     
     @property
     def changed(self):
         return self.context.changed
+    
+    def __repr__(self):
+        return "Aliased " + self.context.__repr__()
 
 
 class AliasedPrincipal(Part):

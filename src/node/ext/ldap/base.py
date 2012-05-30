@@ -70,23 +70,6 @@ def encode_utf8(value):
     return value
 
 
-def escape(value):
-    """Escapes a value, note that this is documented for AD queries, but 
-    not for OpenLDAP etc, but hopefully they work in the same manner.
-    """
-    # don't know how to 'find' NUL = \\0
-    #'*' :'\\2a',
-    replacements = {
-        '(' :'\\28',
-        ')' :'\\29',
-        '\\':'\\5c',
-        '/' :'\\2f',
-    }
-    for key, val in replacements.items():
-        value = value.replace(key, val)
-    return value
-
-
 class LDAPConnector(object):
     """Object is responsible for the LDAP connection.
 
@@ -131,7 +114,6 @@ class LDAPConnector(object):
             self._cache = props.cache
             self._cachetimeout = props.timeout
             self._start_tls = props.start_tls
-            #self._escape_queries = props.escape_queries
 
     def bind(self):
         """Bind to Server and return the Connection Object.
@@ -238,27 +220,23 @@ class LDAPCommunicator(object):
                 raise ValueError('cookie passed without page_size')
             serverctrls = []
 
-        #if self._connector._escape_queries:
-        #    queryFilter = self._escape_query(queryFilter)
-
-        def _search(baseDN, scope, queryFilter, attrlist, attrsonly, serverctrls):
+        def _search(baseDN, scope, queryFilter,
+                    attrlist, attrsonly, serverctrls):
             # we have to do async search to also retrieve server controls
             # in case we do pagination of results
             msgid = self._con.search_ext(baseDN, scope, queryFilter,
-                                             attrlist, attrsonly, serverctrls=serverctrls)
+                                         attrlist, attrsonly,
+                                         serverctrls=serverctrls)
             rtype, results, rmsgid, rctrls = self._con.result3(msgid)
-            pctrls = [c for c in rctrls
-                if c.controlType == ldap.controls.libldap.SimplePagedResultsControl.controlType
-            ]
+            ctype = ldap.controls.libldap.SimplePagedResultsControl.controlType
+            pctrls = [c for c in rctrls if c.controlType == ctype]
             if pctrls:
                 return results, pctrls[0].cookie
             else:
                 return results
-
+        
         args = [baseDN, scope, queryFilter, attrlist, attrsonly, serverctrls]
         if self._cache:
-            # XXX: Consider attrlist and attrsonly in cachekey.
-            # YYY: Considered! Bugger!
             key = '%s-%s-%s-%s-%s-%i-%s-%s' % (self._connector._bindDN,
                                    baseDN,
                                    sorted(attrlist or []),

@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 from ldap.filter import filter_format
-
 from node.ext.ldap.base import encode_utf8
+
 
 # all special characters except * are escaped, that means * can be
 # used to perform suffix/prefix/contains searches, monkey-patch if you
 # don't like
-ESCAPE_CHARS={
+ESCAPE_CHARS = {
 #    '*': '\\2a',
     '(': '\\28',
     ')': '\\29',
@@ -14,6 +14,7 @@ ESCAPE_CHARS={
     '\\': '\\5c',
     '\x00': '\\00',
 }
+
 
 class LDAPFilter(object):
     

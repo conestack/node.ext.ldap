@@ -4,7 +4,7 @@ try:
 except ImportError, e:
     from zope.component.event import objectEventNotify
 from odict import odict
-from zope.interface import implements
+from zope.interface import implementer
 from plumber import (
     plumber,
     Part,
@@ -36,7 +36,6 @@ from node.ext.ldap import (
     ONELEVEL,
     LDAPSession,
 )
-from node.ext.ldap.base import escape
 from node.ext.ldap.interfaces import ILDAPStorage
 from node.ext.ldap.events import (
     LDAPNodeCreatedEvent,
@@ -153,13 +152,12 @@ class LDAPNodeAttributes(NodeAttributes):
     )
 
 
+@implementer(ILDAPStorage, IInvalidate)
 class LDAPStorage(OdictStorage):
     """
     XXX: only use ``self.storage`` to store real values, ``self._keys` should
          only contain ``True`` or ``False``
     """
-
-    implements(ILDAPStorage, IInvalidate)
     attributes_factory = finalize(LDAPNodeAttributes)
 
     @finalize
@@ -217,13 +215,14 @@ class LDAPStorage(OdictStorage):
             key = decode(key)
         if not self._keys:
             self._load_keys()
-        if self._keys[key] is not None:
+        if self._keys[key]:
             return self.storage[key]
         val = self.child_factory()
         val._ldap_session = self.ldap_session
         val.__name__ = key
         val.__parent__ = self
-        self.storage[key] = self._keys[key] = val
+        self.storage[key] = val
+        self._keys[key] = True
         return val
 
     @finalize
@@ -275,7 +274,7 @@ class LDAPStorage(OdictStorage):
             self.changed = True
 
         self.storage[key] = val
-        self._keys[key] = val
+        self._keys[key] = True
 
         if self._key_attr == 'rdn':
             rdn = key
@@ -342,8 +341,8 @@ class LDAPStorage(OdictStorage):
             self._action = None
         if self._keys is None:
             return
-        for node in self._keys.values() + getattr(self, '_deleted', []):
-            if node is not None and node.changed:
+        for node in self.storage.values() + getattr(self, '_deleted', []):
+            if node.changed:
                 node()
 
     @finalize
@@ -428,8 +427,7 @@ class LDAPStorage(OdictStorage):
                 pass
             childs = getattr(self, '_deleted', [])
             if self._keys is not None:
-                childs.extend(
-                    filter(lambda x: x is not None, self._keys.values()))
+                childs.extend(self.storage.values())
             for child in childs:
                 if child.changed:
                     return
@@ -453,16 +451,11 @@ class LDAPStorage(OdictStorage):
                page_size=None, cookie=None):
         attrset = set(attrlist or [])
         attrset.discard('dn')
+        
         # fetch also the key attribute
         if not self._key_attr == 'rdn':
             attrset.add(self._key_attr)
-
-        # XXX: Make this work for string queries and move to LDADCommunicator
-        #if self.ldap_session._props.escape_queries:
-        #    if criteria is not None:
-        #        for key, val in criteria.items():
-        #            criteria[key] = escape(val)
-
+        
         # Create queryFilter from all filter definitions
         # filter for this search ANDed with the default filters defined on self
         search_filter = LDAPFilter(queryFilter)
@@ -549,7 +542,7 @@ class LDAPStorage(OdictStorage):
             - if child in self._keys, check if child has changed
             - if changed, raise RuntimeError
             - if not changed, remove item from self.storage and set
-              self._keys[key] to None, which forces it to be reloaded.
+              self._keys[key] to False, which forces it to be reloaded.
         """
         if key is None:
             if self.changed:
@@ -561,14 +554,13 @@ class LDAPStorage(OdictStorage):
             self._reload = True
             return
         try:
-            child = self._keys[key]
-            if child is not None:
-                if child.changed:
-                    raise RuntimeError(
-                        u"Invalid tree state. Try to invalidate "
-                        u"changed child node '%s'." % (key,))
-                del self.storage[key]
-                self._keys[key] = None
+            child = self.storage[key]
+            if child.changed:
+                raise RuntimeError(
+                    u"Invalid tree state. Try to invalidate "
+                    u"changed child node '%s'." % (key,))
+            del self.storage[key]
+            self._keys[key] = False
         except KeyError:
             pass
 
@@ -605,7 +597,7 @@ class LDAPStorage(OdictStorage):
             try:
                 self._keys[key]
             except KeyError:
-                self._keys[key] = None
+                self._keys[key] = False
                 self._child_dns[key] = attrs['dn']
                 for seckey_attr, seckey in \
                         self._calculate_seckeys(attrs).items():
@@ -717,7 +709,7 @@ class LDAPStorage(OdictStorage):
     def _ldap_delete(self):
         """delete self from the ldap-directory.
         """
-        self.parent._keys[self.name] = None
+        self.parent._keys[self.name] = False
         del self.parent.storage[self.name]
         del self.parent._keys[self.name]
         self.ldap_session.delete(self.DN)

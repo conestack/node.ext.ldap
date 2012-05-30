@@ -13,7 +13,8 @@ objectClass: organizationalUnit
 dn: uid=uid0,ou=users,ou=posixGroups_10_10,dc=my-domain,dc=com
 uid: uid0
 cn: cn0
-objectClass: account
+sn: sn0
+objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: top
 objectClass: shadowAccount
@@ -32,7 +33,8 @@ gidNumber: 0
 dn: uid=uid1,ou=users,ou=posixGroups_10_10,dc=my-domain,dc=com
 uid: uid1
 cn: cn1
-objectClass: account
+sn: sn1
+objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: top
 objectClass: shadowAccount
@@ -51,7 +53,8 @@ gidNumber: 1
 dn: uid=uid2,ou=users,ou=posixGroups_10_10,dc=my-domain,dc=com
 uid: uid2
 cn: cn2
-objectClass: account
+sn: sn2
+objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: top
 objectClass: shadowAccount
@@ -70,7 +73,8 @@ gidNumber: 2
 dn: uid=uid3,ou=users,ou=posixGroups_10_10,dc=my-domain,dc=com
 uid: uid3
 cn: cn3
-objectClass: account
+sn: sn3
+objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: top
 objectClass: shadowAccount
@@ -89,7 +93,8 @@ gidNumber: 3
 dn: uid=uid4,ou=users,ou=posixGroups_10_10,dc=my-domain,dc=com
 uid: uid4
 cn: cn4
-objectClass: account
+sn: sn4
+objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: top
 objectClass: shadowAccount
@@ -108,7 +113,8 @@ gidNumber: 4
 dn: uid=uid5,ou=users,ou=posixGroups_10_10,dc=my-domain,dc=com
 uid: uid5
 cn: cn5
-objectClass: account
+sn: sn5
+objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: top
 objectClass: shadowAccount
@@ -127,7 +133,8 @@ gidNumber: 5
 dn: uid=uid6,ou=users,ou=posixGroups_10_10,dc=my-domain,dc=com
 uid: uid6
 cn: cn6
-objectClass: account
+sn: sn6
+objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: top
 objectClass: shadowAccount
@@ -146,7 +153,8 @@ gidNumber: 6
 dn: uid=uid7,ou=users,ou=posixGroups_10_10,dc=my-domain,dc=com
 uid: uid7
 cn: cn7
-objectClass: account
+sn: sn7
+objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: top
 objectClass: shadowAccount
@@ -165,7 +173,8 @@ gidNumber: 7
 dn: uid=uid8,ou=users,ou=posixGroups_10_10,dc=my-domain,dc=com
 uid: uid8
 cn: cn8
-objectClass: account
+sn: sn8
+objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: top
 objectClass: shadowAccount
@@ -184,7 +193,8 @@ gidNumber: 8
 dn: uid=uid9,ou=users,ou=posixGroups_10_10,dc=my-domain,dc=com
 uid: uid9
 cn: cn9
-objectClass: account
+sn: sn9
+objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: top
 objectClass: shadowAccount
