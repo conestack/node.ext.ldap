@@ -2,8 +2,8 @@
 Changes
 =======
 
-0.9.3 unreleased
-----------------
+0.9.3
+-----
 
 - Fix schema to not bind to test BaseDN only and make binding deferred.
   [jensens, 30-05-2012]

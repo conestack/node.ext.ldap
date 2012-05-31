@@ -2,8 +2,8 @@ Overview
 ========
 
 ``node.ext.ldap`` is a LDAP convenience library for LDAP communication based on
-`python-ldap <http://pypi.python.org/pypi/python-ldap>`_ and
-`node <http://pypi.python.org/pypi/node>`_.
+`python-ldap <http://pypi.python.org/pypi/python-ldap>`_ (version 2.4 or later)
+and `node <http://pypi.python.org/pypi/node>`_.
 
 The package contains base configuration and communication objects, a LDAP node
 object and a LDAP node based user and group management implementation utilizing
@@ -16,7 +16,7 @@ This package is the successor of
 
 .. contents::
     :depth: 2
-
+    
 
 Usage
 =====
