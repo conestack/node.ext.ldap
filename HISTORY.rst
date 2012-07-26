@@ -2,11 +2,17 @@
 Changes
 =======
 
+0.9.4dev
+--------
+
+- Add ``User.group_ids``
+  [rnix, 2012-07-26]
+
 0.9.3
 -----
 
 - Fix schema to not bind to test BaseDN only and make binding deferred.
-  [jensens, 30-05-2012]
+  [jensens, 2012-05-30]
 
 0.9.2
 -----

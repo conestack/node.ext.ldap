@@ -215,6 +215,12 @@ class LDAPUser(LDAPPrincipal, UgmUser):
     @property
     def groups(self):
         groups = self.parent.parent.groups
+        return [groups[uid] for uid in self.group_ids]
+    
+    @default
+    @property
+    def group_ids(self):
+        groups = self.parent.parent.groups
         if self.parent.parent.ucfg.memberOfSupport:
             res = list()
             for dn in self.member_of_attr:
@@ -237,10 +243,7 @@ class LDAPUser(LDAPPrincipal, UgmUser):
             # role id's as well.
             # XXX: such edge cases should be resolved at UGM init time
             res = groups.context.search(criteria=criteria)
-        ret = list()
-        for uid in res:
-            ret.append(groups[uid])
-        return ret
+        return [uid for uid in res]
 
 
 class User(object):

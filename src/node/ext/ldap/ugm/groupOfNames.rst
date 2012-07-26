@@ -323,6 +323,12 @@ A user knows its groups::
     
     >>> user_2.groups
     [<Group object 'group2' at ...>]
+    
+    >>> user_1.group_ids
+    [u'group1', u'group2']
+    
+    >>> user_2.group_ids
+    [u'group2']
 
 Recreate UGM object::
 
@@ -361,6 +367,9 @@ from all this groups.::
     
     >>> user.groups
     [<Group object 'group0' at ...>, <Group object 'group1' at ...>]
+    
+    >>> user.group_ids
+    [u'group0', u'group1']
 
     >>> ugm.printtree()
     <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
@@ -435,6 +444,9 @@ MemberOf Support::
     >>> users['uid1'].groups
     [<Group object 'group2' at ...>, 
     <Group object 'group1' at ...>]
+    
+    >>> users['uid1'].group_ids
+    [u'group2', u'group1']
     
     >>> groups['group1'].member_ids
     [u'uid1']
