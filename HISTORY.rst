@@ -5,6 +5,11 @@ Changes
 0.9.4dev
 --------
 
+- Do not convert cookie to unicode in ``LDAPSession.search``. Cookie value is 
+  no utf-8 string but octet string as described in 
+  http://tools.ietf.org/html/rfc2696.html.
+  [rnix, 2012-07-27]
+
 - Add ``User.group_ids``
   [rnix, 2012-07-26]
 

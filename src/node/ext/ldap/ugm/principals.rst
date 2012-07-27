@@ -261,6 +261,7 @@ Paginated search for users::
     >>> results, cookie = users.search(page_size=3, cookie='')
     >>> results
     [u'sn_binary', u'Meier', u'M\xfcller']
+    
     >>> results, cookie = users.search(page_size=3, cookie=cookie)
     >>> results
     [u'Schmidt', u'Umhauer']

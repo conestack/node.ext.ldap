@@ -51,29 +51,19 @@ class LDAPSession(object):
     def search(self, queryFilter='(objectClass=*)', scope=BASE, baseDN=None,
                force_reload=False, attrlist=None, attrsonly=0,
                page_size=None, cookie=None):
-
         if queryFilter in ('', u'', None):
             # It makes no sense to really pass these to LDAP, therefore, we
             # interpret them as "don't filter" which in LDAP terms is
             # '(objectClass=*)'
             queryFilter = '(objectClass=*)'
-
-        # bug in node when using string:
-        #     https://github.com/bluedynamics/node/issues/5
-        if isinstance(cookie, str):
-            cookie = unicode(cookie)
-
         self.ensure_connection()
         res = self._communicator.search(queryFilter, scope, baseDN,
                                         force_reload, attrlist, attrsonly,
                                         page_size, cookie)
-
         if page_size:
             res, cookie = res
-
         # ActiveDirectory returns entries with dn None, which can be ignored
         res = filter(lambda x: x[0] is not None, res)
-
         if page_size:
             return res, cookie
         return res
