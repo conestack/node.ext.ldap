@@ -8,6 +8,9 @@ Changes
 - Rename parts to behaviors.
   [rnix, 2012-07-29]
 
+- adopt to ``node`` 0.9.8.
+  [rnix, 2012-07-29]
+
 - Adopt to ``plumber`` 1.2.
   [rnix, 2012-07-29]
 
