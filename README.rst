@@ -845,25 +845,26 @@ Test Coverage
 Summary of the test coverage report::
 
   lines   cov%   module
-    6   100%   node.ext.ldap.__init__
-  455    99%   node.ext.ldap._node
-  154    94%   node.ext.ldap.base
-   13   100%   node.ext.ldap.cache
-   13   100%   node.ext.ldap.events
-  129   100%   node.ext.ldap.filter
-   60   100%   node.ext.ldap.interfaces
-   51   100%   node.ext.ldap.properties
-   34    97%   node.ext.ldap.schema
-    6   100%   node.ext.ldap.scope
-   62   100%   node.ext.ldap.session
-  437    98%   node.ext.ldap.testing.__init__
-   28   100%   node.ext.ldap.tests
-    1   100%   node.ext.ldap.ugm.__init__
-  691    96%   node.ext.ldap.ugm._api
-   21   100%   node.ext.ldap.ugm.defaults
-   35   100%   node.ext.ldap.ugm.posix
-   29    96%   node.ext.ldap.ugm.samba
-   21   100%   node.ext.ldap.ugm.shadow
+      7   100%   node.ext.ldap.__init__
+    457    99%   node.ext.ldap._node
+    146    99%   node.ext.ldap.base
+     13   100%   node.ext.ldap.cache
+     18   100%   node.ext.ldap.events
+    129   100%   node.ext.ldap.filter
+     61   100%   node.ext.ldap.interfaces
+     49   100%   node.ext.ldap.properties
+     38    97%   node.ext.ldap.schema
+      6   100%   node.ext.ldap.scope
+     60   100%   node.ext.ldap.session
+    438    98%   node.ext.ldap.testing.__init__
+     28   100%   node.ext.ldap.tests
+      1   100%   node.ext.ldap.ugm.__init__
+    707    97%   node.ext.ldap.ugm._api
+     21   100%   node.ext.ldap.ugm.defaults
+     35   100%   node.ext.ldap.ugm.posix
+     29    96%   node.ext.ldap.ugm.samba
+     21   100%   node.ext.ldap.ugm.shadow
+
 
 TODO
 ====

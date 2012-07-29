@@ -5,6 +5,12 @@ Changes
 0.9.4dev
 --------
 
+- Rename parts to behaviors.
+  [rnix, 2012-07-29]
+
+- Adopt to ``plumber`` 1.2.
+  [rnix, 2012-07-29]
+
 - Do not convert cookie to unicode in ``LDAPSession.search``. Cookie value is 
   no utf-8 string but octet string as described in 
   http://tools.ietf.org/html/rfc2696.html.

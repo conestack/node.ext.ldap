@@ -7,15 +7,15 @@ from plumber import (
     plumber,
     plumb,
     default,
-    extend,
+    override,
     finalize,
-    Part,
+    Behavior,
 )
 from zope.interface import implementer
 from node.base import AttributedNode
 from node.locking import locktree
-from node.parts.alias import DictAliaser
-from node.parts import (
+from node.behaviors.alias import DictAliaser
+from node.behaviors import (
     Alias,
     NodeChildValidate,
     Nodespaces,
@@ -152,9 +152,9 @@ class PrincipalAliasedAttributes(object):
         return "Aliased " + self.context.__repr__()
 
 
-class AliasedPrincipal(Part):
+class AliasedPrincipal(Behavior):
     
-    @extend
+    @override
     def __init__(self, context, attraliaser):
         self.context = context
         self.attraliaser = attraliaser
@@ -256,16 +256,16 @@ class User(object):
     )
 
 
-class LDAPGroupMapping(Part):
+class LDAPGroupMapping(Behavior):
     
-    @extend
+    @override
     def __getitem__(self, key):
         key = decode_utf8(key)
         if key not in self:
             raise KeyError(key)
         return self.related_principals(key)[key]
     
-    @extend
+    @override
     @locktree
     def __delitem__(self, key):
         key = decode_utf8(key)
@@ -283,11 +283,11 @@ class LDAPGroupMapping(Part):
         # XXX: call here immediately?
         self.context()
     
-    @extend
+    @override
     def __iter__(self):
         return iter(self.member_ids)
     
-    @extend
+    @override
     def __contains__(self, key):
         key = decode_utf8(key)
         for uid in self:
@@ -405,7 +405,7 @@ class LDAPPrincipals(OdictStorage):
     principal_attrmap = default(None)
     principal_attraliaser = default(None)
     
-    @extend
+    @override
     def __init__(self, props, cfg):
         context = LDAPNode(name=cfg.baseDN, props=props)
         context.search_filter = cfg.queryFilter
@@ -476,7 +476,7 @@ class LDAPPrincipals(OdictStorage):
                 raise KeyError(dn)
             return idsbydn[dn]
 
-    @extend
+    @override
     @property
     def ids(self):
         return self.context.keys()
@@ -633,7 +633,7 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
     
     principal_factory = default(User)
 
-    @extend
+    @override
     @locktree
     def __delitem__(self, key):
         key = decode_utf8(key)
@@ -783,7 +783,7 @@ class LDAPGroups(LDAPGroupsMapping):
     
     principal_factory = default(Group)
     
-    @extend
+    @override
     @locktree
     def __delitem__(self, key):
         key = decode_utf8(key)
@@ -864,7 +864,7 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
             ret = key
         return ret
     
-    @extend
+    @override
     @locktree
     def __getitem__(self, key):
         key = decode_utf8(key)
@@ -875,7 +875,7 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
             key = key[6:]
         return principals[key]
     
-    @extend
+    @override
     @locktree
     def __delitem__(self, key):
         key = decode_utf8(key)
@@ -928,7 +928,7 @@ class Roles(object):
 
 class LDAPUgm(UgmBase):
     
-    @extend
+    @override
     def __init__(self, name=None, parent=None, props=None,
                  ucfg=None, gcfg=None, rcfg=None):
         """
@@ -957,7 +957,7 @@ class LDAPUgm(UgmBase):
         self.gcfg = gcfg
         self.rcfg = rcfg
     
-    @extend
+    @override
     @locktree
     def __getitem__(self, key):
         if not key in self.storage:
@@ -967,22 +967,22 @@ class LDAPUgm(UgmBase):
                 self['groups'] = Groups(self.props, self.gcfg)
         return self.storage[key]
     
-    @extend
+    @override
     @locktree
     def __setitem__(self, key, value):
         self._chk_key(key)
         self.storage[key] = value
     
-    @extend
+    @override
     def __delitem__(self, key):
         raise NotImplementedError(u"Operation forbidden on this node.")
     
-    @extend
+    @override
     def __iter__(self):
         for key in ['users', 'groups']:
             yield key
     
-    @extend
+    @override
     @locktree
     def __call__(self):
         self.users()

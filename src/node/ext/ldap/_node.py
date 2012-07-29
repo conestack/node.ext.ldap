@@ -5,14 +5,15 @@ except ImportError, e:
     from zope.component.event import objectEventNotify
 from odict import odict
 from zope.interface import implementer
+from zope.deprecation import deprecated
 from plumber import (
     plumber,
-    Part,
+    Behavior,
     plumb,
     default,
     finalize,
 )
-from node.parts import (
+from node.behaviors import (
     Nodespaces,
     Attributes,
     NodeAttributes,
@@ -62,7 +63,7 @@ ACTION_MODIFY = 1
 ACTION_DELETE = 2
 
 
-class AttributesPart(Part):
+class AttributesBehavior(Behavior):
 
     @plumb
     def __init__(_next, self, name=None, parent=None):
@@ -144,10 +145,17 @@ class AttributesPart(Part):
         return name in self.parent.root._multivalued_attributes
 
 
+AttributesPart = AttributesBehavior # B/C
+deprecated('AttributesPart', """
+``node.ext.ldap._node.AttributesPart`` is deprecated as of node.ext.ldap 0.9.4
+and will be removed in node.ext.ldap 1.0. Use
+``node.ext.ldap._node.AttributesBehavior`` instead.""")
+
+
 class LDAPNodeAttributes(NodeAttributes):
     __metaclass__ = plumber
     __plumbing__ = (
-        AttributesPart,
+        AttributesBehavior,
         AttributesLifecycle,
     )
 
