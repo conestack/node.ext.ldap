@@ -192,7 +192,7 @@ Tree has not changed yet::
       <ou=customers,dc=my-domain,dc=com:ou=customers - False>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
       <ou=demo,dc=my-domain,dc=com:ou=demo - False>
 
@@ -221,11 +221,10 @@ new node::
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
       <ou=demo,dc=my-domain,dc=com:ou=demo - False>
-
 
 New entry has no childs, but was added to the parent. There
 was a bug where iteration tried to load from ldap at this stage. Lets test
@@ -291,7 +290,7 @@ All nodes are flagged unchanged again::
       <ou=customers,dc=my-domain,dc=com:ou=customers - False>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
       <ou=demo,dc=my-domain,dc=com:ou=demo - False>
@@ -332,7 +331,7 @@ changed because of its changed attributes::
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
@@ -346,12 +345,11 @@ Call customer now, whole tree unchanged again::
       <ou=customers,dc=my-domain,dc=com:ou=customers - False>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
       <ou=demo,dc=my-domain,dc=com:ou=demo - False>
-
 
 Change the person and customer again, and discard the attribute change
 of the customer. It must not delete the changed state of the whole tree, as the
@@ -364,7 +362,7 @@ person is still changed::
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - True>
@@ -376,12 +374,11 @@ person is still changed::
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - True>
       <ou=demo,dc=my-domain,dc=com:ou=demo - False>
-
 
 After calling person, whole tree is unchanged again::
 
@@ -391,7 +388,7 @@ After calling person, whole tree is unchanged again::
       <ou=customers,dc=my-domain,dc=com:ou=customers - False>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
@@ -573,7 +570,7 @@ Check deleting of entries::
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
@@ -596,7 +593,7 @@ Check deleting of entries::
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
         <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
@@ -611,7 +608,7 @@ Check deleting of entries::
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
         <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
@@ -626,7 +623,7 @@ Check deleting of entries::
       <ou=customers,dc=my-domain,dc=com:ou=customers - False>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
         <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
@@ -691,8 +688,8 @@ Test invalidation. Initialize node::
     <ou=customers,dc=my-domain,dc=com - False>
       <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
       <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-      <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
-        <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
+      <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+      <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
       <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
       <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
 
@@ -711,7 +708,7 @@ Reload entries::
     <ou=customers,dc=my-domain,dc=com - False>
       <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
       <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-      <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
+      <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
       <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
       <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
       <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
@@ -754,8 +751,8 @@ Reload all children and check node state::
     >>> node.values()
     [<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>, 
     <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>, 
-    <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>, 
-    <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>,
+    <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>, 
+    <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>, 
     <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>, 
     <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
     
@@ -765,7 +762,7 @@ Reload all children and check node state::
     >>> node.storage.values()
     [<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>, 
     <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>, 
-    <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>, 
+    <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>, 
     <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>,
     <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>, 
     <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
@@ -775,7 +772,7 @@ Invalidate with given key invalidates only child::
     >>> node.invalidate('ou=customer1')
     >>> node.storage.values()
     [<ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>, 
-    <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>, 
+    <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>, 
     <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>,
     <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>, 
     <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
@@ -1031,8 +1028,9 @@ Note -> if seckey attr is missing on LDAP entry, entry is skipped::
     {u'ou=customer2,ou=customers,dc=my-domain,dc=com': u'ou=customer2', 
     u'ou=customer1,ou=customers,dc=my-domain,dc=com': u'ou=customer1', 
     u'ou=customer3,ou=customers,dc=my-domain,dc=com': u'ou=customer3', 
-    u'uid=binary,ou=customers,dc=my-domain,dc=com': u'uid=binary', 
-    u'ou=n\xe4sty\\2C customer,ou=Customers,dc=My-Domain,dc=com': u'ou=n\xe4sty\\, customer'}}
+    u'uid=binary,ou=customers,dc=my-domain,dc=com': 
+    u'uid=binary', 
+    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com': u'ou=n\xe4sty\\, customer'}}
     
     >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
     >>> tmp._seckey_attrs = ('description', 'businessCategory')
@@ -1060,7 +1058,7 @@ Note -> if seckey attr is missing on LDAP entry, entry is skipped::
     
     >>> tmp._child_dns
     {u'ou=n\xe4sty\\, customer': 
-    u'ou=n\xe4sty\\2C customer,ou=Customers,dc=My-Domain,dc=com', 
+    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com', 
     u'ou=customer3': 
     u'ou=customer3,ou=customers,dc=my-domain,dc=com', 
     u'ou=customer2': 
@@ -1076,7 +1074,7 @@ Note -> if seckey attr is missing on LDAP entry, entry is skipped::
     u'ou=customer1,ou=customers,dc=my-domain,dc=com': u'ou=customer1',
     u'ou=customer3,ou=customers,dc=my-domain,dc=com': u'ou=customer3',
     u'uid=binary,ou=customers,dc=my-domain,dc=com': u'uid=binary',
-    u'ou=n\xe4sty\\2C customer,ou=Customers,dc=My-Domain,dc=com': u'ou=n\xe4sty\\, customer'},
+    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com': u'ou=n\xe4sty\\, customer'},
     'description':
     {u'customer1': u'ou=customer1',
     u'n\xe4sty': u'ou=n\xe4sty\\, customer',
@@ -1093,7 +1091,7 @@ Note -> if seckey attr is missing on LDAP entry, entry is skipped::
 
     >>> tmp._child_dns
     {u'ou=n\xe4sty\\, customer': 
-    u'ou=n\xe4sty\\2C customer,ou=Customers,dc=My-Domain,dc=com', 
+    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com', 
     u'ou=customer3': 
     u'ou=customer3,ou=customers,dc=my-domain,dc=com', 
     u'ou=customer2': 
@@ -1174,7 +1172,7 @@ We can change attributes::
       <ou=customers,dc=my-domain,dc=com:ou=customers - False>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=Customers,dc=My-Domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>

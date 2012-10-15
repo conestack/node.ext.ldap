@@ -94,10 +94,10 @@ Query all user nodes::
     <User object 'sn_binary' at ...>]
 
     >>> [users[id].context for id in sorted(users.keys())]
-    [<cn=user1,dc=my-domain,dc=com:Meier - False>,
-    <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>,
-    <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>,
-    <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>,
+    [<cn=user1,dc=my-domain,dc=com:Meier - False>, 
+    <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>, 
+    <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>, 
+    <cn=n?sty\2C User,ou=customers,dc=my-domain,dc=com:Umhauer - False>, 
     <uid=binary,ou=customers,dc=my-domain,dc=com:sn_binary - False>]
 
 Authenticate a user, via the user object. (also see 'via LDAPUsers' below,
@@ -317,7 +317,7 @@ The changed flag::
       <cn=user1,dc=my-domain,dc=com:Meier - False>
       <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
       <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
-      <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>
+      <cn=n?sty\2C User,ou=customers,dc=my-domain,dc=com:Umhauer - False>
     
     >>> users['Meier'].attrs['telephoneNumber'] = '12345'
     >>> users['Meier'].attrs.changed
@@ -335,7 +335,7 @@ The changed flag::
       <cn=user1,dc=my-domain,dc=com:Meier - True>
       <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
       <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
-      <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>
+      <cn=n?sty\2C User,ou=customers,dc=my-domain,dc=com:Umhauer - False>
     
     >>> users['Meier'].attrs.context.load()
     >>> users['Meier'].attrs.changed
@@ -353,7 +353,7 @@ The changed flag::
       <cn=user1,dc=my-domain,dc=com:Meier - False>
       <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
       <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
-      <cn=n?sty\2C User,ou=Customers,dc=My-Domain,dc=com:Umhauer - False>
+      <cn=n?sty\2C User,ou=customers,dc=my-domain,dc=com:Umhauer - False>
 
 A user does not know about it's groups if initialized directly::
 
