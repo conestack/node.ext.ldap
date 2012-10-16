@@ -1,6 +1,8 @@
 language: python
 python: "2.7"
 install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq libsasl2-dev libssl-dev libdb-dev build-dep python-ldap
   - python2.7 bootstrap.py 
   - ./bin/buildout -q
 script: ./bin/test
