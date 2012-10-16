@@ -45,7 +45,7 @@ import posix
 import time
 
 
-def sambaNTPassword(passwd):              
+def sambaNTPassword(passwd):
     return smbpasswd.nthash(passwd)
 
 
@@ -65,11 +65,15 @@ def sambaUserSID(node, uid):
 
 
 SAMBA_DEFAULT_DOMAIN = 'CONE_UGM'
+
+
 def sambaDomainName(node, uid):
     return SAMBA_DEFAULT_DOMAIN
 
 
 SAMBA_PRIMARY_GROUP_SID = 'S-1-5-21-1234567890-1234567890-1234567890-123'
+
+
 def sambaPrimaryGroupSID(node, uid):
     return SAMBA_PRIMARY_GROUP_SID
 
@@ -79,6 +83,8 @@ def sambaPwdLastSet(node, uid):
 
 
 SAMBA_DEFAULT_ACCOUNT_FLAGS = '[U]'
+
+
 def sambaAcctFlags(node, uid):
     return SAMBA_DEFAULT_ACCOUNT_FLAGS
 
@@ -91,5 +97,7 @@ def sambaGroupSID(node, uid):
 
 
 SAMBA_DEFAULT_GROUP_TYPE = '2'
+
+
 def sambaGroupType(node, uid):
     return SAMBA_DEFAULT_GROUP_TYPE

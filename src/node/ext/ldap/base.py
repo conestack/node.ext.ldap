@@ -3,15 +3,9 @@ import ldap
 import logging
 from zope.component import queryUtility
 from bda.cache import ICacheManager
-from node.ext.ldap.interfaces import ICacheProviderFactory
-from node.ext.ldap.properties import LDAPProps
-from node.ext.ldap.cache import nullcacheProviderFactory
-from node.ext.ldap.scope import (
-    BASE,
-    ONELEVEL,
-    SUBTREE,
-    SCOPES,
-)
+from .interfaces import ICacheProviderFactory
+from .properties import LDAPProps
+from .cache import nullcacheProviderFactory
 
 
 logger = logging.getLogger('node.ext.ldap')
@@ -212,8 +206,7 @@ class LDAPCommunicator(object):
             if cookie is None:
                 cookie = ''
             pagedresults = ldap.controls.libldap.SimplePagedResultsControl(
-                criticality=True, size=page_size, cookie=cookie
-                )
+                criticality=True, size=page_size, cookie=cookie)
             serverctrls = [pagedresults]
         else:
             if cookie:

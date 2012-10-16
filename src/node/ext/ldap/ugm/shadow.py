@@ -5,7 +5,7 @@ shadowAccount
 
 - uid (must)
 - userPassword -----> no default callback available
-- shadowLastChange 
+- shadowLastChange
     The number of days (since January 1, 1970) since the password was last
     changed.
     NOT CONSIDERED
@@ -34,35 +34,47 @@ shadowAccount
 
 
 SHADOW_DEFAULT_FLAG = '0'
+
+
 def shadowFlag(node, uid):
     return SHADOW_DEFAULT_FLAG
 
 
 SHADOW_DEFAULT_MIN = '0'
-def shadowMin(node, uid): 
+
+
+def shadowMin(node, uid):
     return SHADOW_DEFAULT_MIN
 
 
 SHADOW_DEFAULT_MAX = '99999'
-def shadowMax(node, uid): 
+
+
+def shadowMax(node, uid):
     return SHADOW_DEFAULT_MAX
 
 
 SHADOW_DEFAULT_WARNING = '0'
-def shadowWarning(node, uid): 
+
+
+def shadowWarning(node, uid):
     return SHADOW_DEFAULT_WARNING
 
 
 SHADOW_DEFAULT_INACTIVE = '0'
-def shadowInactive(node, uid): 
+
+
+def shadowInactive(node, uid):
     return SHADOW_DEFAULT_INACTIVE
 
 
-def shadowLastChange(node, uid): 
+def shadowLastChange(node, uid):
     # XXX: compute.
     return '12011'
 
 
 SHADOW_DEFAULT_EXPIRE = '99999'
-def shadowExpire(node, uid): 
+
+
+def shadowExpire(node, uid):
     return SHADOW_DEFAULT_EXPIRE

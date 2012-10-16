@@ -8,12 +8,12 @@ import logging
 from odict import odict
 from plone.testing import Layer, zca
 from pkg_resources import resource_filename
-from node.ext.ldap import (
+from .. import (
     ONELEVEL,
     SUBTREE,
     LDAPProps,
     )
-from node.ext.ldap.ugm import (
+from ..ugm import (
     UsersConfig,
     GroupsConfig,
     )
@@ -26,11 +26,12 @@ try:
     LDAPADDBIN = os.environ['LDAP_ADD_BIN']
     LDAPDELETEBIN = os.environ['LDAP_DELETE_BIN']
     LDAPSUFFIX = os.environ.get('LDAP_SUFFIX', None) or "dc=my-domain,dc=com"
-except KeyError, e:                                          #pragma NO COVERAGE
-    logging.exception(                                       #pragma NO COVERAGE
-        u"Environment variables SLAPD_BIN, SLAPD_URIS, "     #pragma NO COVERAGE
-        u"LDAP_ADD_BIN, LDAP_DELETE_BIN needed.")            #pragma NO COVERAGE 
-    exit(1)                                                  #pragma NO COVERAGE
+except KeyError, e:                                         #pragma NO COVERAGE
+    logging.exception(                                      #pragma NO COVERAGE
+        u"Environment variables SLAPD_BIN, SLAPD_URIS, "    #pragma NO COVERAGE
+        u"LDAP_ADD_BIN, LDAP_DELETE_BIN needed.")           #pragma NO COVERAGE
+    exit(1)                                                 #pragma NO COVERAGE
+
 
 def resource(string):
     return resource_filename(__name__, string)
@@ -79,7 +80,7 @@ overlay memberof
 class SlapdConf(Layer):
     """generate slapd.conf
     """
-    
+
     def __init__(self, schema):
         """
         ``schema``: List of paths to our schema files
@@ -149,7 +150,7 @@ class LDAPLayer(Layer):
 class Slapd(LDAPLayer):
     """Start/Stop an LDAP Server.
     """
-    
+
     def __init__(self, slapdbin=SLAPDBIN, **kws):
         super(Slapd, self).__init__(**kws)
         self.slapdbin = slapdbin
@@ -174,10 +175,10 @@ class Slapd(LDAPLayer):
         read_env(self)
         if self['externalpidfile']:
             # case testldap server started via node.ext.ldap.main.slapd
-            path = os.path.join(                           #pragma NO COVERAGE
-                self['confdir'], 'slapd.pid')              #pragma NO COVERAGE
-            with open(path) as pidfile:                    #pragma NO COVERAGE
-                pid = int(pidfile.read())                  #pragma NO COVERAGE
+            path = os.path.join(                            #pragma NO COVERAGE
+                self['confdir'], 'slapd.pid')               #pragma NO COVERAGE
+            with open(path) as pidfile:                     #pragma NO COVERAGE
+                pid = int(pidfile.read())                   #pragma NO COVERAGE
         else:
             pid = self.slapd.pid
         os.kill(pid, 15)
@@ -225,8 +226,8 @@ class Ldif(LDAPLayer):
         print
         for ldif in self.ldifs:
             print "Adding ldif %s: " % (ldif,),
-            cmd = [self.ldapaddbin, '-f', ldif, '-x', '-D', self['binddn'], '-w',
-                   self['bindpw'], '-c', '-a', '-H', self['uris']]
+            cmd = [self.ldapaddbin, '-f', ldif, '-x', '-D', self['binddn'],
+                   '-w', self['bindpw'], '-c', '-a', '-H', self['uris']]
             retcode = subprocess.call(cmd)
             print "done. %s" % retcode
 
@@ -237,7 +238,7 @@ class Ldif(LDAPLayer):
         for ldif in self.ldifs:
             print "Removing ldif %s recursively: " % (ldif,),
             with open(ldif) as ldif:
-                dns = [x.strip().split(' ',1)[1]  for x in ldif if
+                dns = [x.strip().split(' ', 1)[1] for x in ldif if
                        x.startswith('dn: ')]
             cmd = [self.ldapdeletebin, '-x', '-D', self['binddn'], '-c', '-r',
                    '-w', self['bindpw'], '-H', self['uris']] + dns
@@ -246,7 +247,7 @@ class Ldif(LDAPLayer):
         for key in ('ucfg', 'gcfg'):
             if key in self:
                 del self[key]
-        
+
         if not os.environ.get('node.ext.ldap.testldap.skip_zca_hook'):
             # XXX: fails to pop global registry in Zope 2. Why?
             try:
@@ -261,7 +262,7 @@ class Ldif(LDAPLayer):
 
 
 ldif_layer = odict()
-            
+
 # testing ldap props
 user = 'cn=Manager,dc=my-domain,dc=com'
 pwd = 'secret'

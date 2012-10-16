@@ -1,26 +1,26 @@
 # -*- coding: utf-8 -*-
-from node.ext.ldap.scope import (
+from .scope import (
     BASE,
     ONELEVEL,
     SUBTREE,
 )
-from node.ext.ldap.properties import (
+from .properties import (
     LDAPProps,
-    LDAPServerProperties, # BBB
+    LDAPServerProperties,  # BBB
 )
-from node.ext.ldap.base import (
+from .base import (
     LDAPCommunicator,
     LDAPConnector,
     testLDAPConnectivity,
 )
-from node.ext.ldap.schema import LDAPSchemaInfo
-from node.ext.ldap.session import LDAPSession
-from node.ext.ldap._node import (
+from .schema import LDAPSchemaInfo
+from .session import LDAPSession
+from ._node import (
     LDAPNodeAttributes,
     LDAPStorage,
     LDAPNode,
 )
-from node.ext.ldap.filter import (
+from .filter import (
     LDAPFilter,
     LDAPDictFilter,
     LDAPRelationFilter,

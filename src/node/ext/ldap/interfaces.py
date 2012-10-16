@@ -50,9 +50,9 @@ class ILDAPProps(Interface):
     retry_max = Attribute(u"Retry count")
 
     retry_delay = Attribute(u"Retry delay in seconds")
-    
+
     multivalued_attributes = Attribute(u"Attributes considered multi valued")
-    
+
     binary_attributes = Attribute(u"Attributes considered binary")
 
 
@@ -69,30 +69,31 @@ class ILDAPPrincipalsConfig(Interface):
     queryFilter = Attribute(u"Search Query filter for principals")
 
     # XXX
-    #member_relation = Attribute(u"Optional member relation to be used to speed "
-    #                            u"up groups search, i.e. 'uid:memberUid'")
-    
+    #member_relation = Attribute(u"Optional member relation to be used to "
+    #                            u"speed up groups search, i.e. "
+    #                            u"'uid:memberUid'")
+
     objectClasses = Attribute(u"Object classes for new principals.")
-    
+
     defaults = Attribute(u"Dict like object containing default values for "
                          u"principal creation. A value could either be static "
                          u"or a callable. This defaults take precedence to "
                          u"defaults detected via set object classes.")
-    
+
     strict = Attribute(u"Flag whether to initialize Aliaser for LDAP "
                        u"attributes in strict mode. Defaults to True.")
-    
+
     memberOfSupport = Attribute(u"Flag whether to use 'memberOf' attribute "
                                 u"(AD) or memberOf overlay (openldap) for "
                                 u"Group membership resolution where "
                                 u"appropriate.")
-    
+
     # XXX: currently expiresAttr only gets considered for user authentication
     #      group and role expiration is not implemented yet.
     expiresAttr = Attribute(u"Attribue containing an expiration timestamp "
                             u"from epoch in UTC. If None, entry never "
                             u"expires.")
-    
+
     expiresUnit = Attribute(u"Expiration unit. Either "
                             u"``node.ext.ldap.ugm.EXPIRATION_DAYS`` or "
                             u"``EXPIRATION_SECONDS``. defaults to days.")
@@ -111,31 +112,32 @@ class ILDAPGroupsConfig(ILDAPPrincipalsConfig):
 class ILDAPStorage(IStorage):
     """A LDAP Node.
     """
-    
-    ldap_session = Attribute(u"``node.ext.ldap.session.LDAPSession`` instance.")
-    
+
+    ldap_session = Attribute(u"``node.ext.ldap.session.LDAPSession`` "
+                             u"instance.")
+
     DN = Attribute(u"LDAP object DN.")
-    
+
     rdn_attr = Attribute(u"RDN attribute name.")
-    
+
     changed = Attribute(u"Flag whether node has been modified.")
-    
+
     search_scope = Attribute(u"Default child search scope")
-    
+
     search_filter = Attribute(u"Default child search filter")
-    
+
     search_criteria = Attribute(u"Default child search criteria")
-     
+
     search_relation = Attribute(u"Default child search relation")
-    
+
     child_defaults = Attribute(u"Default child attributes. Will be set to "
                                u"all children attributes on __setitem__ "
                                u"if not present yet.")
-    
+
     def child_dn(key):
         """Return child DN for ``key``.
         """
-    
+
     def search(queryFilter=None, criteria=None, relation=None,
                attrlist=None, exact_match=False, or_search=False):
         """Search the directors.
@@ -144,36 +146,36 @@ class ILDAPStorage(IStorage):
         and ``criteria`` further narrow down the search space defined by
         ``self.search_filter``, ``self.search_criteria`` and
         ``self.search_relation``.
-        
+
         Returns a list of matching keys if ``attrlist`` is None, otherwise a
         list of 2-tuples containing (key, attrdict).
 
         queryFilter
-            ldap queryFilter, e.g. ``(objectClass=foo)``, as string or 
+            ldap queryFilter, e.g. ``(objectClass=foo)``, as string or
             LDAPFilter instance.
-            
+
         criteria
             dictionary of attribute value(s) (string or list of string)
-            
+
         relation
             the nodes we search has a relation to us.  A relation is defined as
             a string of attribute pairs:
             ``<relation> = '<our_attr>:<child_attr>'``.
             The value of these attributes must match for relation to match.
             Multiple pairs can be or-joined with.
-            
+
         attrlist
             Normally a list of keys is returned. By defining attrlist the
             return format will be ``[(key, {attr1: [value1, ...]}), ...]``. To
             get this format without any attributs, i.e. empty dicts in the
             tuples, specify an empty attrlist. In addition to the normal ldap
             attributes you can also the request the DN to be included. DN is
-            also the only value in result set as string instead of list. 
-            
+            also the only value in result set as string instead of list.
+
         exact_match
             raise ValueError if not one match, return format is a single key or
             tuple, if attrlist is specified.
-        
+
         or_search
             flag whether criteria should be ORer or ANDed. defaults to False.
         """
@@ -204,6 +206,6 @@ class ILDAPNodeRemovedEvent(INodeRemovedEvent):
     """
 
 
-class ILDAPNodeDetachedEvent(INodeRemovedEvent):
+class ILDAPNodeDetachedEvent(INodeDetachedEvent):
     """LDAP node has been detached from its parent.
     """

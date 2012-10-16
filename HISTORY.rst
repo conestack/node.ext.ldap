@@ -2,6 +2,7 @@
 Changes
 =======
 
+
 0.9.4dev
 --------
 
@@ -31,11 +32,13 @@ Changes
 - Add ``User.group_ids``.
   [rnix, 2012-07-26]
 
+
 0.9.3
 -----
 
 - Fix schema to not bind to test BaseDN only and make binding deferred.
   [jensens, 2012-05-30]
+
 
 0.9.2
 -----
@@ -61,6 +64,7 @@ Changes
 
 - support paged searching
   [iElectric, chaoflow, 2012-03-24]
+
 
 0.9.1
 -----
@@ -105,9 +109,9 @@ Changes
 - Make testlayer and testldap more flexible for usage outside this package.
   [jensens, 2010-09-30]
 
+
 0.9
 ---
 
 - refactor form ``bda.ldap``.
   [rnix, chaoflow]
-

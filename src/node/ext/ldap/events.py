@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from zope.interface import implementer
 from node.events import (
-    NodeCreatedEvent,                  
+    NodeCreatedEvent,
     NodeAddedEvent,
     NodeModifiedEvent,
     NodeRemovedEvent,
-    NodeDetachedEvent
+    NodeDetachedEvent,
 )
 from .interfaces import (
     ILDAPNodeCreatedEvent,
@@ -32,10 +32,10 @@ class LDAPNodeModifiedEvent(NodeModifiedEvent):
 
 
 @implementer(ILDAPNodeRemovedEvent)
-class LDAPNodeRemovedEvent(NodeRemovedEvent):              
+class LDAPNodeRemovedEvent(NodeRemovedEvent):
     pass
 
 
 @implementer(ILDAPNodeDetachedEvent)
-class LDAPNodeDetachedEvent(NodeRemovedEvent):
+class LDAPNodeDetachedEvent(NodeDetachedEvent):
     pass

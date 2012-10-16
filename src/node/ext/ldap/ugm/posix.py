@@ -34,11 +34,13 @@ def uid(node, uid):
 
 
 UID_NUMBER = ''
+
+
 def uidNumber(node, uid):
     """Default function gets called twice, second time without node.
-    
+
     Bug. fix me.
-    
+
     XXX: gets called by samba defaults
     """
     from node.ext.ldap.ugm import posix
@@ -54,11 +56,13 @@ def uidNumber(node, uid):
 
 
 GID_NUMBER = ''
+
+
 def gidNumber(node, uid):
     """Default function gets called twice, second time without node.
-    
+
     Bug. fix me.
-    
+
     XXX: gets called by samba defaults
     """
     from node.ext.ldap.ugm import posix
@@ -78,6 +82,8 @@ def homeDirectory(node, uid):
 
 
 POSIX_DEFAULT_SHELL = '/bin/false'
+
+
 def loginShell(node, uid):
     return POSIX_DEFAULT_SHELL
 

@@ -4,14 +4,14 @@ import subprocess
 import sys
 import tempfile
 import argparse
-from node.ext.ldap import testing
+from . import testing
 
 
 parser = argparse.ArgumentParser(
              description='Controls test LDAP server, loads predefined LDIF.')
 parser.add_argument('task', nargs=1, action='store', choices=['start', 'stop'],
                    help='start or stop LDAP server')
-parser.add_argument('ldiflayer', nargs='?', default='base', 
+parser.add_argument('ldiflayer', nargs='?', default='base',
                     choices=testing.ldif_layer.keys(),
                     help='Predefined LDIF Layer to load.')
 
@@ -92,7 +92,7 @@ def slapd():
     ns = parser.parse_args()
     task = ns.task[0]
     layer = testing.ldif_layer[ns.ldiflayer]
-    if task == 'start':    
+    if task == 'start':
         # XXX should check for distinct slapd
         checkslapd = 'ps ax| grep slapd| grep -v grep -q'
         if not subprocess.call(checkslapd, shell=True) == 1:

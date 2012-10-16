@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
-try:
-    from zope.app.event.objectevent import objectEventNotify # BBB
-except ImportError, e:
-    from zope.component.event import objectEventNotify
 from odict import odict
+from ldap import (
+    MOD_ADD,
+    MOD_DELETE,
+    MOD_REPLACE,
+)
+from ldap.functions import explode_dn
 from zope.interface import implementer
 from zope.deprecation import deprecated
 from plumber import (
@@ -21,7 +23,6 @@ from node.behaviors import (
     AttributesLifecycle,
     NodeChildValidate,
     Adopt,
-    UnicodeAware,
     Nodify,
     OdictStorage,
 )
@@ -32,31 +33,26 @@ from node.utils import (
     debug,
 )
 from node.interfaces import IInvalidate
-from node.ext.ldap import (
+from . import (
     BASE,
     ONELEVEL,
     LDAPSession,
 )
-from node.ext.ldap.interfaces import ILDAPStorage
-from node.ext.ldap.events import (
+from .interfaces import ILDAPStorage
+from .events import (
     LDAPNodeCreatedEvent,
     LDAPNodeAddedEvent,
     LDAPNodeModifiedEvent,
     LDAPNodeRemovedEvent,
     LDAPNodeDetachedEvent
 )
-from node.ext.ldap.filter import (
+from .filter import (
     LDAPFilter,
     LDAPDictFilter,
     LDAPRelationFilter,
 )
-from node.ext.ldap.schema import LDAPSchemaInfo
-from ldap.functions import explode_dn
-from ldap import (
-    MOD_ADD,
-    MOD_DELETE,
-    MOD_REPLACE,
-)
+from .schema import LDAPSchemaInfo
+
 
 ACTION_ADD = 0
 ACTION_MODIFY = 1
@@ -69,7 +65,6 @@ class AttributesBehavior(Behavior):
     def __init__(_next, self, name=None, parent=None):
         _next(self, name=name, parent=parent)
         self.load()
-
 
     @default
     def load(self):
@@ -99,7 +94,7 @@ class AttributesBehavior(Behavior):
                 )
 
         if len(entry) != 1:
-            raise RuntimeError(#pragma NO COVERAGE
+            raise RuntimeError(                             #pragma NO COVERAGE
                 u"Fatal. Expected entry does not exist or " #pragma NO COVERAGE
                 u"more than one entry found")               #pragma NO COVERAGE
 
@@ -145,7 +140,7 @@ class AttributesBehavior(Behavior):
         return name in self.parent.root._multivalued_attributes
 
 
-AttributesPart = AttributesBehavior # B/C
+AttributesPart = AttributesBehavior  # B/C
 deprecated('AttributesPart', """
 ``node.ext.ldap._node.AttributesPart`` is deprecated as of node.ext.ldap 0.9.4
 and will be removed in node.ext.ldap 1.0. Use
@@ -358,7 +353,7 @@ class LDAPStorage(OdictStorage):
         # Doctest fails if we output utf-8
         try:
             dn = self.DN.encode('ascii', 'replace') or '(dn not set)'
-        except KeyError, e:
+        except KeyError:
             dn = '(dn not available yet)'
         if self.parent is None:
             return "<%s - %s>" % (dn, self.changed)
@@ -459,11 +454,11 @@ class LDAPStorage(OdictStorage):
                page_size=None, cookie=None):
         attrset = set(attrlist or [])
         attrset.discard('dn')
-        
+
         # fetch also the key attribute
         if not self._key_attr == 'rdn':
             attrset.add(self._key_attr)
-        
+
         # Create queryFilter from all filter definitions
         # filter for this search ANDed with the default filters defined on self
         search_filter = LDAPFilter(queryFilter)
@@ -538,14 +533,14 @@ class LDAPStorage(OdictStorage):
     @default
     def invalidate(self, key=None):
         """Invalidate LDAP node.
-        
+
         If key is None:
             - check if self is changed
             - if changed, raise RuntimeError
             - reload self.attrs
             - set self._reload to True. This reloads the keys forcing cache
               reload as well.
-        
+
         If key is given:
             - if child in self._keys, check if child has changed
             - if changed, raise RuntimeError
@@ -729,6 +724,7 @@ class LDAPStorage(OdictStorage):
             return self.root._ldap_schema_info
         return self._ldap_schema_info
 
+
 class LDAPNode(object):
     __metaclass__ = plumber
     __plumbing__ = (
@@ -740,7 +736,6 @@ class LDAPNode(object):
         Nodify,
         LDAPStorage,
     )
-
     events = {
         'created':  LDAPNodeCreatedEvent,
         'added':    LDAPNodeAddedEvent,

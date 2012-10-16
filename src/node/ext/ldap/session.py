@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 import ldap
-from node.ext.ldap import (
+from . import (
     BASE,
     LDAPConnector,
     LDAPCommunicator,
 )
-from node.ext.ldap.base import testLDAPConnectivity
+from .base import testLDAPConnectivity
 
 
 class LDAPSession(object):
     """LDAP Session binds always.
-    
+
     all strings must be utf8 encoded!
     """
 
@@ -33,7 +33,7 @@ class LDAPSession(object):
         return baseDN
 
     def _set_baseDN(self, baseDN):
-        """baseDN must be utf8-encoded.        
+        """baseDN must be utf8-encoded.
         """
         self._communicator.baseDN = baseDN
 
@@ -42,7 +42,7 @@ class LDAPSession(object):
     def ensure_connection(self):
         """If LDAP directory is down, bind again and retry given function.
 
-        XXX: * Improve retry logic 
+        XXX: * Improve retry logic
              * Extend LDAPSession object to handle Fallback server(s)
         """
         if self._communicator._con is None:
@@ -89,13 +89,13 @@ class LDAPSession(object):
 
         dn
             Modification DN
-        
+
         #data
         #    either list of 3 tuples (look at
         #    node.ext.ldap.base.LDAPCommunicator.modify for details), or
         #    a dictionary representing the entry or parts of the entry.
         #    XXX: dicts not yet
-        
+
         replace
             if set to True, replace entry at DN entirely with data.
         """

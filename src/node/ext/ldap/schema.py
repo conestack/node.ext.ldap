@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-import ldapurl
 import ldap
-from node.ext.ldap import (
+from . import (
     LDAPConnector,
     LDAPCommunicator,
 )
@@ -22,7 +21,7 @@ class LDAPSchemaInfo(object):
         res = communicator.search('(objectclass=*)', ldap.SCOPE_BASE,
                                   'cn=subschema', attrlist=['*', '+'])
         if len(res) != 1:
-            raise ValueError, 'subschema not found'
+            raise ValueError('subschema not found')
         self._subschema = ldap.schema.SubSchema(ldap.cidict.cidict(res[0][1]))
         return self._subschema
 

@@ -16,7 +16,7 @@ This package is the successor of
 
 .. contents::
     :depth: 2
-    
+
 
 Usage
 =====
@@ -400,31 +400,31 @@ Different LDAP filter types can be combined::
 The following keyword arguments are accepted by ``LDAPNode.search``. If multiple keywords are
 used, combine search criteria with '&' where appropriate:
 
-queryFilter
+**queryFilter**
     Either a LDAP filter instance or a string. If given argument is string type,
     a ``LDAPFilter`` instance is created.
 
-criteria
+**criteria**
     A dictionary containing search criteria. A ``LDAPDictFilter`` instance is
     created.
 
-attrlist
+**attrlist**
     List of attribute names to return.
 
-relation
+**relation**
     Either ``LDAPRelationFilter`` instance or a string defining the relation.
     If given argument is string type, a ``LDAPRelationFilter`` instance is
     created.
 
-relation_node
+**relation_node**
     In combination with ``relation`` argument, when given as string, use
     ``relation_node`` instead of self for filter creation.
 
-exact_match
+**exact_match**
     Flag whether 1-length result is expected. Raises an error if empty result
     or more than one entry found.
 
-or_search
+**or_search**
     In combination with ``criteria``, this parameter is passed to the creation
     of LDAPDictFilter controlling whether to combine criteria with '&' or '|'.
 
@@ -493,52 +493,52 @@ an API for User and Group management. The API follows the contract of
 Instantiate users, groups and roles configuration. They are based on
 ``PrincipalsConfig`` class and expect this settings:
 
-baseDN
+**baseDN**
     Principals container base DN.
 
-attrmap
+**attrmap**
     Principals Attribute map as ``odict.odict``. This object must contain the
     mapping between reserved keys and the real LDAP attribute, as well as
     mappings to all accessible attributes for principal nodes if instantiated
     in strict mode, see below.
 
-scope
+**scope**
     Search scope for principals.
 
-queryFilter
+**queryFilter**
     Search Query filter for principals
 
-objectClasses
+**objectClasses**
     Object classes used for creation of new principals. For some objectClasses
     default value callbacks are registered, which are used to generate default
     values for mandatory attributes if not already set on principal vessel node.
 
-defaults
+**defaults**
     Dict like object containing default values for principal creation. A value
     could either be static or a callable accepting the principals node and the
     new principal id as arguments. This defaults take precedence to defaults
     detected via set object classes.
 
-strict
+**strict**
     Define whether all available principal attributes must be declared in attmap,
     or only reserved ones. Defaults to True.
 
-memberOfSupport
+**memberOfSupport**
     Flag whether to use 'memberOf' attribute (AD) or memberOf overlay
     (openldap) for Group membership resolution where appropriate.
 
 Reserved attrmap keys for Users, Groups and roles:
 
-id
+**id**
     The attribute containing the user id (mandatory).
 
-rdn
+**rdn**
     The attribute representing the RDN of the node (mandatory)
     XXX: get rid of, should be detected automatically
 
 Reserved attrmap keys for Users:
 
-login
+**login**
     Alternative login name attribute (optional)
 
 Create config objects::
@@ -773,7 +773,7 @@ Remove roles::
 Character Encoding
 ------------------
 
-LDAP (v3 at least, `RFC 2251`_) uses utf8 string encoding only.
+LDAP (v3 at least, `RFC 2251`_) uses ``utf-8`` string encoding only.
 ``LDAPNode`` does the encoding for you. Consider it a bug, if you receive
 anything else than unicode from ``LDAPNode``, except attributes configured as
 binary. The ``LDAPSession``, ``LDAPConnector`` and ``LDAPCommunicator`` are
@@ -883,7 +883,7 @@ TODO
   after a timespan, report status of ldap servers, preferred server,
   equal servers, load balancing; Are there ldap load balancers to recommend?
 
-- consider search_st with timeout.
+- consider ``search_st`` with timeout.
 
 - investigate ``ReconnectLDAPObject.set_cache_options``
 

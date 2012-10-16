@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-from ldap.filter import filter_format
-from node.ext.ldap.base import encode_utf8
+from .base import encode_utf8
 
 
 # all special characters except * are escaped, that means * can be
@@ -17,7 +16,7 @@ ESCAPE_CHARS = {
 
 
 class LDAPFilter(object):
-    
+
     def __init__(self, queryFilter=None):
         if queryFilter is not None \
                 and not isinstance(queryFilter, basestring) \
@@ -70,8 +69,9 @@ class LDAPFilter(object):
 
 
 class LDAPDictFilter(LDAPFilter):
-    
-    def __init__(self, criteria, or_search=False, or_keys=None, or_values=None):
+
+    def __init__(self, criteria, or_search=False,
+                 or_keys=None, or_values=None):
         self.criteria = criteria
         self.or_search = or_search
         self.or_keys = or_keys
@@ -90,7 +90,7 @@ class LDAPDictFilter(LDAPFilter):
 
 
 class LDAPRelationFilter(LDAPFilter):
-    
+
     def __init__(self, node, relation, or_search=True):
         self.relation = relation
         self.gattrs = node.attrs
@@ -101,7 +101,7 @@ class LDAPRelationFilter(LDAPFilter):
         """
         _filter = LDAPFilter()
         dictionary = dict()
-        
+
         parsedRelation = dict()
         for pair in self.relation.split('|'):
             k, _, v = pair.partition(':')
@@ -127,7 +127,7 @@ class LDAPRelationFilter(LDAPFilter):
 
         return self.dictionary and \
             str(dict_to_filter(self.dictionary, self.or_search)) or ''
-    
+
     def __repr__(self):
         return "LDAPRelationFilter('%s')" % (str(self),)
 
