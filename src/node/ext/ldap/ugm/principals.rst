@@ -465,6 +465,9 @@ Fetch users and groups::
     [<User object 'Schmidt' at ...>, 
     <User object 'M?ller' at ...>]
     
+    >>> ugm.groups['group2'].users
+    [<User object 'Umhauer' at ...>]
+    
     >>> ugm.users['Schmidt'].groups
     [<Group object 'group1' at ...>]
 
@@ -719,7 +722,6 @@ Delete user and check if roles are removed.::
         <class 'node.ext.ldap.ugm._api.Group'>: group2
           <class 'node.ext.ldap.ugm._api.User'>: Umhauer
         <class 'node.ext.ldap.ugm._api.Group'>: group3
-
     
     >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles

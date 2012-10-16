@@ -5,6 +5,15 @@ Changes
 0.9.4dev
 --------
 
+- Python 2.7 compatibility.
+  [rnix, 2012-10-16]
+
+- PEP-8.
+  [rnix, 2012-10-16]
+
+- Fix ``LDAPPrincipals.idbydn`` handling UTF-8 DN's properly.
+  [rnix, 2012-10-16]
+
 - Rename parts to behaviors.
   [rnix, 2012-07-29]
 
@@ -19,7 +28,7 @@ Changes
   http://tools.ietf.org/html/rfc2696.html.
   [rnix, 2012-07-27]
 
-- Add ``User.group_ids``
+- Add ``User.group_ids``.
   [rnix, 2012-07-26]
 
 0.9.3

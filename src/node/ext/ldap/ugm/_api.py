@@ -471,10 +471,10 @@ class LDAPPrincipals(OdictStorage):
                 raise KeyError(dn)
             search = self.context.ldap_session.search
             try:
-                dn = search(baseDN=dn)[0][0]
+                dn = search(baseDN=dn.encode('utf-8'))[0][0]
             except ldap.NO_SUCH_OBJECT:
                 raise KeyError(dn)
-            return idsbydn[dn]
+            return idsbydn[dn.decode('utf-8')]
 
     @override
     @property

@@ -1,4 +1,3 @@
-# /
 *.pyc
 /bda.ldap.egg-info
 /coverage
@@ -11,8 +10,6 @@
 /eggs
 .project
 .pydevproject
-
-# /src/
+.settings
 src/node.ext.ldap.egg-info
-
 .mrsd

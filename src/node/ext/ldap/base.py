@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
-try:
-    import ldap
-except ImportError:                                         #pragma NO COVERAGE
-    e =  u"node.ext.ldap requires a working "               #pragma NO COVERAGE
-    e += u"python-ldap installation."                       #pragma NO COVERAGE
-    raise ImportError, e                                    #pragma NO COVERAGE
+import ldap
 import logging
 from zope.component import queryUtility
 from bda.cache import ICacheManager
 from node.ext.ldap.interfaces import ICacheProviderFactory
 from node.ext.ldap.properties import LDAPProps
 from node.ext.ldap.cache import nullcacheProviderFactory
-from node.ext.ldap.scope import BASE, ONELEVEL, SUBTREE, SCOPES
+from node.ext.ldap.scope import (
+    BASE,
+    ONELEVEL,
+    SUBTREE,
+    SCOPES,
+)
 
 
 logger = logging.getLogger('node.ext.ldap')
@@ -19,13 +19,13 @@ logger = logging.getLogger('node.ext.ldap')
 
 def testLDAPConnectivity(server=None, port=None, props=None):
     """Function to test the availability of the LDAP Server.
-    
+
     server
         Server IP or name
-    
+
     port
         LDAP port
-    
+
     props
         LDAPProps object. If given, server and port are ignored.
     """
@@ -76,7 +76,7 @@ class LDAPConnector(object):
     This Object knows about the LDAP Server to connect to, the authentication
     information and the protocol to use.
 
-    TODO: tests for TLS/SSL Support - it should be functional. 
+    TODO: tests for TLS/SSL Support - it should be functional.
     (see also properties.py)
     """
 
@@ -180,19 +180,19 @@ class LDAPCommunicator(object):
 
         queryFilter
             LDAP query filter
-        
+
         scope
             LDAP search scope
-        
+
         baseDN
             Search base. Defaults to ``self.baseDN``
-        
+
         force_reload
             Force reload of result if cache enabled.
-        
+
         attrlist
             LDAP attrlist to query.
-        
+
         attrsonly
             Flag whether to return only attribute names, without corresponding
             values.
@@ -214,7 +214,7 @@ class LDAPCommunicator(object):
             pagedresults = ldap.controls.libldap.SimplePagedResultsControl(
                 criticality=True, size=page_size, cookie=cookie
                 )
-            serverctrls = [pagedresults,]
+            serverctrls = [pagedresults]
         else:
             if cookie:
                 raise ValueError('cookie passed without page_size')
@@ -234,7 +234,7 @@ class LDAPCommunicator(object):
                 return results, pctrls[0].cookie
             else:
                 return results
-        
+
         args = [baseDN, scope, queryFilter, attrlist, attrsonly, serverctrls]
         if self._cache:
             key = '%s-%s-%s-%s-%s-%i-%s-%s' % (self._connector._bindDN,
@@ -253,14 +253,14 @@ class LDAPCommunicator(object):
 
     def add(self, dn, data):
         """Insert an entry into directory.
-        
+
         dn
             adding DN
-        
+
         data
             dict containing key/value pairs of entry attributes
         """
-        attributes = [ (k,v) for k,v in data.items() ]
+        attributes = [(k, v) for k, v in data.items()]
         self._con.add_s(dn, attributes)
 
     def modify(self, dn, modlist):
