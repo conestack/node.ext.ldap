@@ -88,7 +88,7 @@ class AttributesBehavior(Behavior):
         # fetch our node with all attributes
         entry = self.parent.ldap_session.search(
                 scope=BASE,
-                baseDN=self.parent.DN,
+                baseDN=self.parent.DN.encode('utf-8'),
                 force_reload=self.parent._reload,
                 attrlist=attrlist,
                 )

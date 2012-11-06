@@ -6,6 +6,9 @@ Changes
 0.9.4dev
 --------
 
+- Encode ``baseDN`` in ``AttributesBehavior.load``.
+  [rnix, 2012-11-06]
+
 - Python 2.7 compatibility.
   [rnix, 2012-10-16]
 
