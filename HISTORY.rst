@@ -6,6 +6,9 @@ Changes
 0.9.4dev
 --------
 
+- Encode ``baseDN`` in ``LDAPPrincipal.member_of_attr``.
+  [rnix, 2012-11-06]
+
 - Encode ``baseDN`` in ``AttributesBehavior.load``.
   [rnix, 2012-11-06]
 

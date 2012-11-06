@@ -202,7 +202,7 @@ class LDAPPrincipal(AliasedPrincipal):
         """
         entry = self.context.ldap_session.search(
             scope=BASE,
-            baseDN=self.context.DN,
+            baseDN=self.context.DN.encode('utf-8'),
             force_reload=self.context._reload,
             attrlist=['memberOf'])
         return entry[0][1].get('memberOf', list())
