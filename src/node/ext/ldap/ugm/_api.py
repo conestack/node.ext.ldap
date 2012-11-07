@@ -693,8 +693,8 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
                 userdn = self.context.child_dn(id)
         except KeyError:
             return False
-        return self.context.ldap_session.authenticate(userdn, pw) \
-            and id or False
+        session = self.context.ldap_session
+        return session.authenticate(userdn.encode('utf-8'), pw) and id or False
 
     @default
     @debug
