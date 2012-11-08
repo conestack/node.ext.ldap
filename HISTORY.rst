@@ -6,6 +6,12 @@ Changes
 0.9.4dev
 --------
 
+- Encode DN in ``node.ext.ldap._node.LDAPStorage._ldap_modify``.
+  [rnix, 2012-11-08]
+
+- Encode DN in ``node.ext.ldap._node.LDAPStorage._ldap_delete``.
+  [rnix, 2012-11-08]
+
 - Encode DN in ``node.ext.ldap.ugm._api.LDAPUsers.passwd``.
   [rnix, 2012-11-08]
 

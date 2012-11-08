@@ -706,7 +706,7 @@ class LDAPStorage(OdictStorage):
                 moddef = (MOD_REPLACE, encode(key), value)
                 modlist.append(moddef)
         if modlist:
-            self.ldap_session.modify(self.DN, modlist)
+            self.ldap_session.modify(encode(self.DN), modlist)
 
     @default
     def _ldap_delete(self):
@@ -715,7 +715,7 @@ class LDAPStorage(OdictStorage):
         self.parent._keys[self.name] = False
         del self.parent.storage[self.name]
         del self.parent._keys[self.name]
-        self.ldap_session.delete(self.DN)
+        self.ldap_session.delete(encode(self.DN))
 
     @default
     @property
