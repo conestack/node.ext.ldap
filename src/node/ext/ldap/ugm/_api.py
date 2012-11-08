@@ -700,8 +700,8 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
     @debug
     def passwd(self, id, oldpw, newpw):
         id = decode_utf8(id)
-        self.context.ldap_session.passwd(
-            self.context.child_dn(id), oldpw, newpw)
+        userdn = self.context.child_dn(id).encode('utf-8')
+        self.context.ldap_session.passwd(userdn, oldpw, newpw)
         object_classes = self.context.child_defaults['objectClass']
         user_node = self[id].context
         user_node.attrs.load()

@@ -6,6 +6,9 @@ Changes
 0.9.4dev
 --------
 
+- Encode DN in ``node.ext.ldap.ugm._api.LDAPUsers.passwd``.
+  [rnix, 2012-11-08]
+
 - Encode DN in ``node.ext.ldap.ugm._api.LDAPUsers.authenticate``.
   [rnix, 2012-11-07]
 
