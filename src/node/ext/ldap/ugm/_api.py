@@ -662,6 +662,9 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
         id = self.id_for_login(id)
         try:
             if self.expiresAttr:
+                # XXX: This is extremely expensive and should be
+                # replaced with a direct lookup for the specific
+                # user's expiresAttr.
                 user = self.context[id]
                 expires = user.attrs.get(self.expiresAttr)
                 if expires and expires not in ['99999' '-1']:
