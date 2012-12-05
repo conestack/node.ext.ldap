@@ -3,8 +3,8 @@ Changes
 =======
 
 
-0.9.4dev
---------
+0.9.4
+-----
 
 - Encode DN in ``node.ext.ldap._node.LDAPStorage._ldap_modify``.
   [rnix, 2012-11-08]
