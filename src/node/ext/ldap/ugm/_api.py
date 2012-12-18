@@ -244,6 +244,14 @@ class LDAPUser(LDAPPrincipal, UgmUser):
             res = groups.context.search(criteria=criteria)
         return [uid for uid in res]
 
+    @default
+    @property
+    def expired(self):
+        if not self.parent.expiresAttr:
+            return False
+        expires = self.context.attrs.get(self.parent.expiresAttr)
+        return calculate_expired(self.parent.expiresUnit, expires)
+
 
 class User(object):
     __metaclass__ = plumber
@@ -628,6 +636,26 @@ class LDAPPrincipals(OdictStorage):
         return self[pid]
 
 
+def calculate_expired(expiresUnit, expires):
+    """Return bool whether expired.
+    """
+    if expires and expires not in ['99999', '-1']:
+        # check expiration timestamp
+        expires = int(expires)
+        # XXX: maybe configurable?
+        # shadow account specific
+        #if self.expiresAttr == 'shadowExpire':
+        #    expires += int(user.attrs.get('shadowInactive', '0'))
+        # /XXX
+        days = time.time()
+        if expiresUnit == EXPIRATION_DAYS:
+            # numer of days since epoch
+            days /= 86400
+        if days >= expires:
+            return True
+    return False
+
+
 class LDAPUsers(LDAPPrincipals, UgmUsers):
 
     principal_factory = default(User)
@@ -662,39 +690,24 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
         id = self.id_for_login(id)
         try:
             if self.expiresAttr:
-                # XXX: This is extremely expensive and should be
-                # replaced with a direct lookup for the specific
-                # user's expiresAttr.
-                user = self.context[id]
-                expires = user.attrs.get(self.expiresAttr)
-                if expires and expires not in ['99999' '-1']:
-                    # check expiration timestamp
-                    try:
-                        expires = int(expires)
-                    except ValueError:
-                        # unknown expires field data
-                        msg = u"Accound expiration flag for user '%s' " + \
-                              u"contains unknown data"
-                        msg = msg % id
-                        logger.error(msg)
-                        return False
-
-                    # XXX: maybe configurable?
-                    # shadow account specific
-                    #if self.expiresAttr == 'shadowExpire':
-                    #    expires += int(user.attrs.get('shadowInactive', '0'))
-                    # /XXX
-
-                    days = time.time()
-                    if self.expiresUnit == EXPIRATION_DAYS:
-                        # numer of days since epoch
-                        days /= 86400
-                    if days >= expires:
-                        return ACCOUNT_EXPIRED
-                userdn = user.DN
-            else:
-                userdn = self.context.child_dn(id)
-        except KeyError:
+                criteria = {self.context._rdn_attr: id}
+                res = self.context.search(criteria=criteria,
+                                          attrlist=[self.expiresAttr])
+                expires = res[0][1].get(self.expiresAttr)
+                expires = expires and expires[0] or None
+                try:
+                    expired = calculate_expired(self.expiresUnit, expires)
+                except ValueError:
+                    # unknown expires field data
+                    msg = u"Accound expiration flag for user '%s' " + \
+                          u"contains unknown data"
+                    msg = msg % id
+                    logger.error(msg)
+                    return False
+                if expired:
+                    return ACCOUNT_EXPIRED
+            userdn = self.context.child_dn(id)
+        except (KeyError, IndexError):
             return False
         session = self.context.ldap_session
         return session.authenticate(userdn.encode('utf-8'), pw) and id or False

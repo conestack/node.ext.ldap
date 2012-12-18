@@ -1,19 +1,24 @@
-from setuptools import setup, find_packages
 import os
+from setuptools import (
+    setup,
+    find_packages,
+)
 
-version = '0.9.4'
+
+version = '0.9.5dev'
 shortdesc = "Node based LDAP support"
 longdesc = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 longdesc += open(os.path.join(os.path.dirname(__file__), 'HISTORY.rst')).read()
 longdesc += open(os.path.join(os.path.dirname(__file__), 'LICENSE.rst')).read()
+
 
 setup(name='node.ext.ldap',
       version=version,
       description=shortdesc,
       long_description=longdesc,
       classifiers=[
-            'Operating System :: OS Independent',
-            'Programming Language :: Python',
+          'Operating System :: OS Independent',
+          'Programming Language :: Python',
       ],
       keywords='',
       author='BlueDynamics Alliance',

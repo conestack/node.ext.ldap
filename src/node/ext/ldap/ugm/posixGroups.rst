@@ -119,45 +119,74 @@ Authenticate no account expiration configured::
     >>> users.authenticate('foo', 'secret0')
     False
 
-Check Account expiration::
+Check Account expiration.
 
-    
+Note: after changind expires attribute, user must be pesisted in order to take
+expiration effect for authentication. Expires attribute lookup is done against
+LDAP directly in ``users.authenticate``::
+
     >>> users.expiresAttr = 'shadowExpire'
-    
+
+Value 99999 and -1 means no expiration::
+
     >>> users['uid0'].context.attrs['shadowExpire']
     u'99999'
-    
+
     >>> users['uid0'].context.attrs['shadowInactive']
     u'0'
-    
+
     >>> users.authenticate('uid0', 'secret0')
     u'uid0'
 
+    >>> users['uid0'].expired
+    False
+
+Expire a while ago::
+
+    >>> users['uid0'].context.attrs['shadowExpire'] = '1'
+    >>> users['uid0']()
+ 
+    >>> res = users.authenticate('uid0', 'secret0')
+    >>> res
+    ACCOUNT_EXPIRED
+
+    >>> bool(res)
+    False
+
+    >>> users['uid0'].expired
+    True
+
+No expiration far future::
+
+    >>> users['uid0'].context.attrs['shadowExpire'] = '99999'
+    >>> users['uid0']()
+    >>> users.authenticate('uid0', 'secret0')
+    u'uid0'
+
+    >>> users['uid0'].expired
+    False
+
+No expiration by '-1'::
+
+    >>> users['uid0'].context.attrs['shadowExpire'] = '-1'
+    >>> users['uid0']()
+    >>> users.authenticate('uid0', 'secret0')
+    u'uid0'
+
+    >>> users['uid0'].expired
+    False
+
 #### figure out shadowInactive -> PAM and samba seem to ignore -> configuration?
+
     >> users['uid0'].context.attrs['shadowInactive'] = u'99999'
 
 Uid0 never expires - or at leas expires in many years and even if, there are
 99999 more days unless account gets disabled::
 
-    >> users.authenticate('uid0', 'secret0')
-    u'uid0'
+#    >> users.authenticate('uid0', 'secret0')
+#    u'uid0'
 
-Set expires a while ago, leave inactive high, authentication still works::
-
-    >>> users['uid0'].context.attrs['shadowExpire'] = '1'
-    
-    >> users.authenticate('uid0', 'secret0')
-    u'uid0'
-
-Set shadow inactive to 0 days. authentication will fail::
-
-    >>> users['uid0'].context.attrs['shadowInactive'] = '0'
-    >>> res = users.authenticate('uid0', 'secret0')
-    >>> res
-    ACCOUNT_EXPIRED
-    
-    >>> bool(res)
-    False
+#    >> users['uid0'].context.attrs['shadowInactive'] = '0'
 
 Change password::
 

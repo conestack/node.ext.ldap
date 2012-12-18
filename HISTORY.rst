@@ -2,6 +2,19 @@
 Changes
 =======
 
+0.9.5dev
+--------
+
+- Add ``expired`` property to ``node.ext.ldap.ugm._api.LDAPUser``.
+  [rnix, 2012-12-17]
+
+- Introduce ``node.ext.ldap.ugm._api.calculate_expired`` helper function.
+  [rnix, 2012-12-17]
+
+- Lookup ``expired`` attribut from LDAP in
+  ``node.ext.ldap.ugm._api.LDAPUser.authenticate``.
+  [rnix, 2012-12-17]
+
 
 0.9.4
 -----
