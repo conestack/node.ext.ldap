@@ -2,8 +2,13 @@
 Changes
 =======
 
-0.9.5dev
+0.9.6dev
 --------
+
+- nothing yet
+
+0.9.5
+-----
 
 - Add ``expired`` property to ``node.ext.ldap.ugm._api.LDAPUser``.
   [rnix, 2012-12-17]
