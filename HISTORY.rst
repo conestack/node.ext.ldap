@@ -5,7 +5,9 @@ Changes
 0.9.6dev
 --------
 
-- nothing yet
+- ensure attrlist values are strings
+  [rnix, 2013-12-03]
+
 
 0.9.5
 -----
