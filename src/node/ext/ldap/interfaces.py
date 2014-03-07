@@ -55,6 +55,9 @@ class ILDAPProps(Interface):
 
     binary_attributes = Attribute(u"Attributes considered binary")
 
+    check_duplicates = Attribute(u"Boolean to avoid duplicates checking "
+                                 u"in LDAP tree when building nodes.")
+
 
 class ILDAPPrincipalsConfig(Interface):
     """LDAP principals configuration interface.

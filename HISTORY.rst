@@ -1,9 +1,18 @@
-
-Changes
+History
 =======
 
-0.9.6dev
---------
+
+0.9.6 (unreleased)
+------------------
+
+- Add new property to allow disable ``check_duplicates``.
+  This avoids following Exception when connecting ldap servers with
+  non-unique attributes used as keys.  [saily]
+  ::
+
+    Traceback (most recent call last):
+    ...
+    RuntimeError: Key not unique: <key>='<value>'.
 
 - ensure attrlist values are strings
   [rnix, 2013-12-03]
@@ -62,8 +71,8 @@ Changes
 - Adopt to ``plumber`` 1.2.
   [rnix, 2012-07-29]
 
-- Do not convert cookie to unicode in ``LDAPSession.search``. Cookie value is 
-  no utf-8 string but octet string as described in 
+- Do not convert cookie to unicode in ``LDAPSession.search``. Cookie value is
+  no utf-8 string but octet string as described in
   http://tools.ietf.org/html/rfc2696.html.
   [rnix, 2012-07-27]
 
@@ -92,7 +101,7 @@ Changes
   users and groups related test LDIF's
   [rnix, 2012-04-23]
 
-- session no longer magically decodes everything and prevents binary data from 
+- session no longer magically decodes everything and prevents binary data from
   being fetched from ldap. LDAP-Node has semantic knowledge to determine binary
   data LDAP-Node converts all non binary data and all keys to unicode.
   [jensens, 2012-04-04]
@@ -123,7 +132,7 @@ Changes
 
 - Do not throw ``KeyError`` if secondary key set but attribute not found on
   entry. In case, skip entry.
-  [rnix, 2012-02-10] 
+  [rnix, 2012-02-10]
 
 - Force unicode ids and keys in UGM API.
   [rnix, 2012-01-23]

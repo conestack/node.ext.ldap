@@ -46,6 +46,7 @@ class LDAPServerProperties(object):
                  #tls_cacertdir=None,
                  #tls_clcertfile=None,
                  #tls_clkeyfile=None,
+                 check_duplicates=True,
                  retry_max=1,
                  retry_delay=10.0,
                  multivalued_attributes=MULTIVALUED_DEFAULTS,
@@ -117,6 +118,11 @@ class LDAPServerProperties(object):
         binary_attributes
             Set of attributes names considered as binary.
             (no unicode conversion)
+
+        check_duplicates
+            Boolean to avoid duplicates checking in LDAP tree when
+            building nodes.
+
         """
         if uri is None:
             # old school
@@ -129,6 +135,7 @@ class LDAPServerProperties(object):
         self.cache = cache
         self.timeout = timeout
         self.start_tls = start_tls
+        self.check_duplicates = check_duplicates
         #self.tls_cacertfile = tls_cacertfile
         #self.tls_cacertdir = tls_cacertdir
         #self.tls_clcertfile = tls_clcertfile

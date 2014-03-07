@@ -195,6 +195,7 @@ class LDAPStorage(OdictStorage):
             self._ldap_schema_info = LDAPSchemaInfo(props)
             self._multivalued_attributes = props.multivalued_attributes
             self._binary_attributes = props.binary_attributes
+            self._check_duplicates = props.check_duplicates
 
         # XXX: make them public
         self._key_attr = 'rdn'
@@ -613,13 +614,19 @@ class LDAPStorage(OdictStorage):
                     except KeyError:
                         self._seckeys[seckey_attr][seckey] = key
                     else:
-                        # XXX: ever reached?
+                        if not self._check_duplicates:
+                            continue
+
                         raise KeyError(
                             u"Secondary key not unique: %s='%s'." % \
                                     (seckey_attr, seckey))
             else:
-                raise RuntimeError(u"Key not unique: %s='%s'." % \
-                        (self._key_attr, key))
+                if not self._check_duplicates:
+                    continue
+
+                raise RuntimeError(u"Key not unique: %s='%s' (you may want to "
+                                   u"disable check_duplicates)." % (
+                                   self._key_attr, key))
 
     # a keymapper
     @default

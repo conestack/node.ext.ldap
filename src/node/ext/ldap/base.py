@@ -217,7 +217,9 @@ class LDAPCommunicator(object):
                     attrlist, attrsonly, serverctrls):
             # we have to do async search to also retrieve server controls
             # in case we do pagination of results
-            attrlist = [str(_) for _ in attrlist]
+            if type(attrlist) in (list, tuple):
+                attrlist = [str(_) for _ in attrlist]
+
             msgid = self._con.search_ext(baseDN, scope, queryFilter,
                                          attrlist, attrsonly,
                                          serverctrls=serverctrls)
