@@ -1134,7 +1134,13 @@ parent!::
     >>> node.keys()
     Traceback (most recent call last):
     ...
-    RuntimeError: Key not unique: description='Initial Description'.
+    RuntimeError: Key not unique: description='Initial Description' 
+    (you may want to disable check_duplicates).
+
+    >>> props.check_duplicates=False
+    >>> node.keys()
+    [u'Initial Description']
+    >>> props.check_duplicates=True
 
     >>> node = LDAPNode(props=props, name=customer.DN)
     >>> node._key_attr = 'objectClass'
@@ -1282,7 +1288,8 @@ Using filter and scope. Let's first create a collision::
     >>> node.keys()
     Traceback (most recent call last):
     ...
-    RuntimeError: Key not unique: rdn='ou=customer3'.
+    RuntimeError: Key not unique: rdn='ou=customer3'
+    (you may want to disable check_duplicates).
 
 We need a different key. As a side-effect a filter will be used: '(cn=*)'::
 
