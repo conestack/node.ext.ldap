@@ -4,7 +4,16 @@ import subprocess
 import sys
 import tempfile
 import argparse
+from importlib import import_module
 from . import testing
+
+
+# additional LDIF layer containing modules
+additional_layers = os.environ.get('ADDITIONAL_LDIF_LAYERS')
+if additional_layers:
+    modules = [_.strip() for _ in additional_layers.split(' ') if _.strip()]
+    for mod in modules:
+        import_module(mod)
 
 
 parser = argparse.ArgumentParser(

@@ -918,3 +918,5 @@ Contributors
 - Georg Bernhard <g.bernhard [at] akbild [dot] ac [dot] at>
 
 - Johannes Raggam <johannes [at] bluedynamics [dot] com>
+
+- Daniel Widerin <daniel [at] widerin [dot] net>

@@ -1,15 +1,19 @@
 History
 =======
 
-
 0.9.7 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Added possibility to hook external LDIF layer for testldap server via
+  buildout configuration.
+  [rnix]
+
+- Update openldap version in buildout configs.
+  [rnix]
 
 
-0.9.6 (2014-03-13)
-------------------
+0.9.6
+-----
 
 - Add new property to allow disable ``check_duplicates``.
   This avoids following Exception when connecting ldap servers with
