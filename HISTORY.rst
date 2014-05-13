@@ -1,8 +1,8 @@
 History
 =======
 
-0.9.7 (unreleased)
-------------------
+0.9.7
+-----
 
 - Added possibility to hook external LDIF layer for testldap server via
   buildout configuration.
