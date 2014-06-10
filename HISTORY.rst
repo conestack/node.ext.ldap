@@ -172,3 +172,4 @@ History
 
 - refactor form ``bda.ldap``.
   [rnix, chaoflow]
+
