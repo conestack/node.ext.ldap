@@ -20,17 +20,11 @@ from ..ugm import (
 
 
 SCHEMA = os.environ.get('SCHEMA')
-try:
-    SLAPDBIN = os.environ['SLAPD_BIN']
-    SLAPDURIS = os.environ['SLAPD_URIS']
-    LDAPADDBIN = os.environ['LDAP_ADD_BIN']
-    LDAPDELETEBIN = os.environ['LDAP_DELETE_BIN']
-    LDAPSUFFIX = os.environ.get('LDAP_SUFFIX', None) or "dc=my-domain,dc=com"
-except KeyError, e:                                         #pragma NO COVERAGE
-    logging.exception(                                      #pragma NO COVERAGE
-        u"Environment variables SLAPD_BIN, SLAPD_URIS, "    #pragma NO COVERAGE
-        u"LDAP_ADD_BIN, LDAP_DELETE_BIN needed.")           #pragma NO COVERAGE
-    exit(1)                                                 #pragma NO COVERAGE
+SLAPDBIN = os.environ.get('SLAPD_BIN', 'slapd')
+SLAPDURIS = os.environ.get('SLAPD_URIS', 'ldap://127.0.0.1:12345')
+LDAPADDBIN = os.environ.get('LDAP_ADD_BIN', 'ldapadd')
+LDAPDELETEBIN = os.environ.get('LDAP_DELETE_BIN', 'ldapdelete')
+LDAPSUFFIX = os.environ.get('LDAP_SUFFIX', None) or "dc=my-domain,dc=com"
 
 
 def resource(string):
