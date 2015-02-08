@@ -42,6 +42,7 @@ class LDAPServerProperties(object):
                  timeout=43200,
                  uri=None,
                  start_tls=0,
+                 ignore_cert=0,
                  #tls_cacertfile=None,
                  #tls_cacertdir=None,
                  #tls_clcertfile=None,
@@ -91,6 +92,10 @@ class LDAPServerProperties(object):
                 1 - Try StartTLS ext op but proceed when unavailable
                 2 - Try StartTLS ext op and re-raise exception if it fails
 
+        ignore_cert
+            Ignore TLS/SSL certificate errors. Useful for self-signed
+            certificates. Defaults to False
+
         tls_cacertfile
             Not yet
 
@@ -135,6 +140,7 @@ class LDAPServerProperties(object):
         self.cache = cache
         self.timeout = timeout
         self.start_tls = start_tls
+        self.ignore_cert = ignore_cert
         self.check_duplicates = check_duplicates
         #self.tls_cacertfile = tls_cacertfile
         #self.tls_cacertdir = tls_cacertdir

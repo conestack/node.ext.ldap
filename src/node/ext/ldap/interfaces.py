@@ -39,6 +39,8 @@ class ILDAPProps(Interface):
 
     start_tls = Attribute(u"TLS enabled")
 
+    ignore_cert = Attribute(u"Ignore TLS/SSL certificate errors")
+
     tls_cacertfile = Attribute(u"Name of CA Cert file")
 
     tls_cacertdir = Attribute(u"Path to CA Cert directory")
