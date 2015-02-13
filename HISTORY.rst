@@ -1,6 +1,13 @@
 History
 =======
 
+0.9.8 (unreleased)
+------------------
+
+- Housekeeping.
+  [rnix]
+
+
 0.9.7
 -----
 

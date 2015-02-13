@@ -8,7 +8,7 @@ LDAP Nodes
     >>> from node.ext.ldap import LDAPProps
     >>> from node.ext.ldap import LDAPNode
     >>> from node.ext.ldap.testing import props
-    
+
 Root Node
 ---------
 
@@ -33,7 +33,7 @@ The non-unicode name got decoded::
 
     >>> root.name
     u'dc=my-domain,dc=com'
-    
+
     >>> root.rdn_attr
     u'dc'
 
@@ -88,7 +88,7 @@ Access inexistent child::
     Traceback (most recent call last):
     ...
     KeyError: u'foo'
-    
+
 Existent Child Nodes
 --------------------
 
@@ -109,7 +109,7 @@ Access existent child and it's attributes::
 
     >>> customers.name
     u'ou=customers'
-    
+
     >>> customers.rdn_attr
     u'ou'
 
@@ -117,12 +117,12 @@ Customers child keys::
 
     >>> customers.keys()
     [u'ou=customer1', u'ou=customer2', u'ou=n\xe4sty\\, customer', u'uid=binary']
-    
+
 Customer has not been changed::
 
     >>> customers.changed
     False
-    
+
 Binary Data
 -----------
 
@@ -134,10 +134,10 @@ Access existing binary data::
 
     >>> len(binnode.attrs['jpegPhoto'])
     2155
-       
+
 Change binary data::
 
-    >>> import os    
+    >>> import os
     >>> jpegdata = open(os.path.join(os.path.dirname(__file__), 'testing', 
     ...                 'data', 'binary.jpg')).read()
     >>> binnode.attrs['jpegPhoto'] =  jpegdata
@@ -148,7 +148,7 @@ Change binary data::
     >>> binnode =  customers['uid=binary']
     >>> binnode.attrs['jpegPhoto'] == jpegdata
     True
-    
+
 Create New Node
 ---------------
 
@@ -157,7 +157,7 @@ Create new LDAPNode and add it to customers::
     >>> customer = LDAPNode()
     >>> repr(customer)
     '<(dn not set) - False>'
-    
+
     >>> customer.attrs['ou'] = 'customer3'
     >>> customer.attrs['description'] = 'customer3'
     >>> customer.attrs['objectClass'] = ['top', 'organizationalUnit']
@@ -178,10 +178,10 @@ Also no DN and no LDAP session yet::
 
     >>> customer.attrs['ou']
     u'customer3'
-    
+
     >>> customer.attrs['objectClass']
     [u'top', u'organizationalUnit']
-    
+
     >>> customer.keys()
     []
 
@@ -201,7 +201,7 @@ Set already created customer::
     >>> customers['ou=customer3'] = customer
     >>> customer.DN
     u'ou=customer3,ou=customers,dc=my-domain,dc=com'
-    
+
     >>> customer.rdn_attr
     u'ou'
 
@@ -209,7 +209,7 @@ Now it got the LDAP session which is used by the whole tree::
 
     >>> customer.ldap_session
     <node.ext.ldap.session.LDAPSession object at ...>
-    
+
     >>> root.ldap_session is customer.ldap_session
     True
 
@@ -274,7 +274,7 @@ Check the backend state, not added yet::
     4
 
 On call the new entry is written to the directory::
-    
+
     >>> root()
     >>> res = customers.ldap_session.search('(objectClass=*)',
     ...                                     1,
@@ -305,7 +305,7 @@ Add a person for more modification and changed flag tests::
     >>> customer['cn=max'] = person
     >>> customer.keys()
     [u'cn=max']
-    
+
     >>> person.DN
     u'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com'
   
@@ -367,7 +367,7 @@ person is still changed::
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - True>
       <ou=demo,dc=my-domain,dc=com:ou=demo - False>
-    
+
     >>> customer.attrs.load()
     >>> root.printtree()
     <dc=my-domain,dc=com - True>
@@ -408,7 +408,7 @@ Check set child immediately after init time::
     >>> tmp.keys()
     [u'ou=customer1', u'ou=customer2', u'ou=n\xe4sty\\, customer', 
     u'uid=binary', u'ou=customer3', u'cn=child']
-    
+
 Changing the rdn attribute on loaded nodes fails.::
 
     >>> person.attrs['cn'] = 'foo'
@@ -417,7 +417,7 @@ Changing the rdn attribute on loaded nodes fails.::
       ...
     NAMING_VIOLATION: {'info': "value of naming attribute 'cn' 
     is not present in entry", 'desc': 'Naming violation'}
-    
+
     >>> person.attrs.load()
     >>> person.attrs['cn']
     u'Max'
@@ -451,7 +451,7 @@ Modify this person. First look at the changed flags::
     False
 
 Modify and check flags again::
-    
+
     >>> person.attrs['description'] = 'Another description'
     >>> person.attrs.changed
     True
@@ -465,7 +465,7 @@ Modify and check flags again::
 Write changed to directory::
 
     >>> root()
-    
+
 Check the flags::
 
     >>> root.changed, customer.changed, person.changed
@@ -558,7 +558,7 @@ so we test it. Note that rdn attribute is computed from key if not set yet::
     [u'cn']
 
 Add some attributes to make call work::
-    
+
     >>> customerattrempty.attrs['objectClass'] = \
     ...     ['organizationalRole', 'simpleSecurityObject']
     >>> customerattrempty.attrs['userPassword'] = 'fooo'
@@ -584,7 +584,7 @@ Check deleting of entries::
     >>> root.changed, customer.changed, person.changed, \
     ... person.attrs.changed
     (True, True, True, False)
-    
+
     >>> [k for k in customer._keys]
     []
 
@@ -598,7 +598,7 @@ Check deleting of entries::
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
         <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
       <ou=demo,dc=my-domain,dc=com:ou=demo - False>
-    
+
     >>> customer()
     >>> queryPersonDirectly()
     []
@@ -616,7 +616,7 @@ Check deleting of entries::
 
     >>> root.changed, customer.changed
     (True, False)
-    
+
     >>> customerattrempty()
     >>> root.printtree()
     <dc=my-domain,dc=com - False>
@@ -649,7 +649,7 @@ instance if a custom callback context is desired::
     [(u'cn', u'person_with_default1'), (u'objectClass', [u'top', u'person']), 
     (u'sn', u'sn for cn=person_with_default1'), (u'description', 
     u'Description for cn=person_with_default1')]
-    
+
     >>> person()
     >>> del customer['cn=person_with_default1']
     >>> customer()
@@ -663,7 +663,7 @@ node gets created then and attrs are set from original node::
     Traceback (most recent call last):
       ...
     ValueError: No attributes found on vessel, cannot convert
-    
+
     >>> from node.base import AttributedNode
     >>> new = AttributedNode()
     >>> new.attrs['description'] = 'Not from defaults'
@@ -671,13 +671,13 @@ node gets created then and attrs are set from original node::
     >>> customer()
     >>> customer['cn=from_other']
     <cn=from_other,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=from_other - False>
-    
+
     >>> customer['cn=from_other'].attrs.items()
     [(u'description', u'Not from defaults'),  
     (u'cn', u'from_other'),
     (u'objectClass', [u'top', u'person']),
     (u'sn', u'sn for cn=from_other')]
-    
+
     >>> del customer['cn=from_other']
     >>> customer()
 
@@ -698,7 +698,7 @@ Invalidate node, children are invalidated and attrs are loaded::
     >>> node.invalidate()
     >>> node.storage
     odict()
-    
+
     >>> print node._keys
     None
 
@@ -726,7 +726,7 @@ Reload attrs, change child and try to invalidate again, also fails::
     >>> node.attrs.load()
     >>> node.changed
     False
-    
+
     >>> node.invalidate()
     >>> node['ou=customer1'].attrs['description'] = 'changed description'
     >>> node.invalidate()
@@ -739,10 +739,10 @@ Reload child attrs and check internal node statem only customer one loaded::
     >>> node['ou=customer1'].attrs.load()
     >>> node.changed
     False
-    
+
     >>> node.storage.values()
     [<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>]
-    
+
     >>> node._keys.values()
     [True, False, False, False, False, False]
 
@@ -755,10 +755,10 @@ Reload all children and check node state::
     <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>, 
     <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>, 
     <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
-    
+
     >>> node._keys.values()
     [True, True, True, True, True, True]
-    
+
     >>> node.storage.values()
     [<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>, 
     <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>, 
@@ -776,7 +776,7 @@ Invalidate with given key invalidates only child::
     <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>,
     <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>, 
     <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
-    
+
     >>> node._keys.values()
     [False, True, True, True, True, True]
 
@@ -803,13 +803,13 @@ Default search scope is ONELEVEL::
     True
 
 No other default search criteria set::
-    
+
     >>> print node.search_filter
     None
-    
+
     >>> print node.search_criteria
     None
-    
+
     >>> print node.search_relation
     None
 
@@ -870,7 +870,7 @@ The default search filter could also be a string::
     u'ou=customer3']
 
 Its also possible to define default search criteria as dict::
-    
+
     >>> node.search_criteria = {
     ...     'businessCategory': 'customers',
     ... }
@@ -878,7 +878,7 @@ Its also possible to define default search criteria as dict::
     [u'ou=customer1', 
     u'ou=customer2', 
     u'ou=n\xe4sty\\, customer']
-    
+
     >>> node.search_criteria = {
     ...     'businessCategory': 'customers_container',
     ... }
@@ -891,7 +891,7 @@ To get more information by search result, pass an attrlist to search function::
     [(u'ou=customers', 
     {u'dn': u'ou=customers,dc=my-domain,dc=com', 
     u'description': [u'customers']})]
-    
+
     >>> node.search(attrlist=['dn', 'description', 'businessCategory'])
     [(u'ou=customers', 
     {u'dn': u'ou=customers,dc=my-domain,dc=com', 
@@ -914,7 +914,7 @@ Restrict with exact match wotks on 1-length results::
     ...     criteria={'businessCategory': 'customers_container'},
     ...     exact_match=True)
     [u'ou=customers']
-    
+
 Exact match fails on multi search results::
 
     >>> node.search(
@@ -945,34 +945,34 @@ Test relation filter::
     [u'ou=customer1', 
     u'ou=customer2', 
     u'ou=n\xe4sty\\, customer']
-    
+
     >>> node.search(relation='description:description', relation_node=rel_node)
     []
-    
+
     >>> node.search_relation = None
-    
+
     >>> from node.ext.ldap.filter import LDAPRelationFilter
     >>> relation = LDAPRelationFilter(rel_node, 'description:description')
     >>> relation
     LDAPRelationFilter('(description=customers)')
-    
+
     >>> str(relation)
     '(description=customers)'
-    
+
     >>> node.search(relation=relation)
     [u'ou=customers']
-    
+
     >>> relation = LDAPRelationFilter(
     ...     rel_node, 'description:description|description:businessCategory')
     >>> str(relation)
     '(|(description=customers)(businessCategory=customers))'
-    
+
     >>> node.search(relation=relation)
     [u'ou=customers', 
     u'ou=customer1', 
     u'ou=customer2', 
     u'ou=n\xe4sty\\, customer']
-    
+
     >>> node.search_relation = relation
     >>> node.search()
     [u'ou=customers', 
@@ -992,7 +992,7 @@ Search with binary in attrlist::
     (u'ou=demo', {}), 
     (u'uid=binary', {u'jpegPhoto': ['\xff\xd8\xff\xe0\x00\x10JFIF...']}), 
     (u'ou=customer3', {}), (u'cn=customer99', {})]
-    
+
 Secondary Keys
 --------------
 
@@ -1001,7 +1001,7 @@ Secondary keys and child DN's.
 Note: Setting the DN as seckey only seem to work because it is returned by LDAP
 search result and considered (XXX: discuss). Child DN's are always available
 at _child_dns::
-    
+
     >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
     >>> del tmp['cn=customer99']
     >>> tmp()
@@ -1022,7 +1022,7 @@ Note -> if seckey attr is missing on LDAP entry, entry is skipped::
     u'ou=n\xe4sty\\, customer', 
     u'uid=binary', 
     u'ou=customer3']
-    
+
     >>> tmp._seckeys
     {'dn': 
     {u'ou=customer2,ou=customers,dc=my-domain,dc=com': u'ou=customer2', 
@@ -1031,14 +1031,14 @@ Note -> if seckey attr is missing on LDAP entry, entry is skipped::
     u'uid=binary,ou=customers,dc=my-domain,dc=com': 
     u'uid=binary', 
     u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com': u'ou=n\xe4sty\\, customer'}}
-    
+
     >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
     >>> tmp._seckey_attrs = ('description', 'businessCategory')
     >>> tmp.keys()
     Traceback (most recent call last):
       ...
     KeyError: u"Secondary key not unique: businessCategory='customers'."
-    
+
     >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
     >>> tmp._seckey_attrs = ('dn', 'objectClass')
     >>> tmp.keys()
@@ -1055,7 +1055,7 @@ Note -> if seckey attr is missing on LDAP entry, entry is skipped::
     u'ou=n\xe4sty\\, customer', 
     u'uid=binary', 
     u'ou=customer3']
-    
+
     >>> tmp._child_dns
     {u'ou=n\xe4sty\\, customer': 
     u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com', 
@@ -1099,7 +1099,7 @@ Note -> if seckey attr is missing on LDAP entry, entry is skipped::
     u'ou=customer1': u'ou=customer1,ou=customers,dc=my-domain,dc=com', 
     u'uid=binary': 
     u'uid=binary,ou=customers,dc=my-domain,dc=com'}
-    
+
     >>> print tmp._seckeys
     None
 
@@ -1148,7 +1148,7 @@ parent!::
     Traceback (most recent call last):
       ...
     KeyError: u"Expected one value for 'objectClass' not 2: '['top', 'person']'."
-    
+
     >>> node = LDAPNode(props=props, name=customer.DN)
     >>> node._key_attr = 'sn'
     >>> node.keys()
@@ -1185,18 +1185,18 @@ We can change attributes::
           <cn=Moritz,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=Moritz - False>
         <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
       <ou=demo,dc=my-domain,dc=com:ou=demo - False>
-    
+
     >>> node.printtree()
     <ou=customer3,ou=customers,dc=my-domain,dc=com - True>
       <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:Mustermann - True>
       <cn=Moritz,ou=customer3,ou=customers,dc=my-domain,dc=com:Mueller - False>
-    
+
     >>> our_p1()
     >>> node.printtree()
     <ou=customer3,ou=customers,dc=my-domain,dc=com - False>
       <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:Mustermann - False>
       <cn=Moritz,ou=customer3,ou=customers,dc=my-domain,dc=com:Mueller - False>
-    
+
     >>> p1.attrs.load()
     >>> p1.attrs['description']
     u'foo'
@@ -1268,7 +1268,7 @@ And deleting again::
     >>> node()
     >>> node.keys()
     [u'Mustermann']
-    
+
     >>> node()
     >>> customer._reload = True
     >>> customer.keys()
@@ -1316,10 +1316,10 @@ New entries in case of scope SUBTREE are added in the ONELEVEL scope::
     >>> node['foo'] = newnode
     >>> node['foo'] is newnode
     True
-    
+
     >>> newnode.DN
     u'cn=foo,dc=my-domain,dc=com'
-    
+
     >>> node.DN
     u'dc=my-domain,dc=com'
 
@@ -1339,9 +1339,9 @@ Use new registry::
 
     >>> from plone.testing.zca import pushGlobalRegistry, popGlobalRegistry
     >>> reg = pushGlobalRegistry()
-    
+
 Provide a bucnh of printing subscribers for testing::
-    
+
     >>> from zope.component import adapter, provideHandler
     >>> from node.ext.ldap.interfaces import (
     ...     ILDAPNodeCreatedEvent,
@@ -1388,7 +1388,7 @@ Check for each event type in context::
 
     >>> root = LDAPNode('dc=my-domain,dc=com', props)
     Created <dc=my-domain,dc=com - False>
-    
+
     >>> dummy = root.items()
     Created <(dn not set) - False>
     Created <(dn not set) - False>
@@ -1398,13 +1398,13 @@ Check for each event type in context::
 create empty node::
 
     >>> newnode = LDAPNode()
-    Created <(dn not set) - False>    
+    Created <(dn not set) - False>
 
-add new node::    
+add new node::
 
     >>> root['ou=eventtest01'] = newnode
     Added <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>
-    
+
 modify attrs::
 
     >>> newnode.attrs['description'] = 'foobar'
@@ -1417,11 +1417,11 @@ detach::
 
     >>> eventtest = root.detach('ou=eventtest01')
     Detached <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>
-    
+
     >>> root['ou=eventtest01'] = eventtest
     Added <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>
-    
-delete::    
+
+delete::
 
     >>> del root['ou=eventtest01'] 
     Removed <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>
@@ -1436,11 +1436,11 @@ Schema Info
 Get schema information::
 
     >>> schema_info = root.schema_info
-    >>> schema_info    
+    >>> schema_info
     <node.ext.ldap.schema.LDAPSchemaInfo object at ...>
-    
+
     >>> root[u'ou=customers'].schema_info is schema_info
-    True    
+    True
 
 Clean
 =====
@@ -1450,4 +1450,4 @@ Cleanup for following tests::
     >>> root = LDAPNode('dc=my-domain,dc=com', props)
     >>> del root['cn=foo']
     >>> root()
-    
+

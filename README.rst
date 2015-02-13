@@ -28,7 +28,7 @@ LDAP Properties
 To define connection properties for LDAP use ``node.ext.ldap.LDAPProps``
 object::
 
-    >>> from node.ext.ldap import LDAPProps    
+    >>> from node.ext.ldap import LDAPProps
     >>> props = LDAPProps(uri='ldap://localhost:12345/',
     ...                   user='cn=Manager,dc=my-domain,dc=com',
     ...                   password='secret',
@@ -112,7 +112,7 @@ Modify directory entry::
     >>> from ldap import MOD_REPLACE
     >>> communicator.modify('cn=foo,ou=demo,dc=my-domain,dc=com',
     ...                     [(MOD_REPLACE, 'sn', 'Musterfrau')])
-    
+
     >>> communicator.search('(objectClass=person)',
     ...                     node.ext.ldap.SUBTREE,
     ...                     attrlist=['cn'])
@@ -123,7 +123,7 @@ Change the password of a directory entry which represents a user::
 
     >>> communicator.passwd(
     ...     'cn=foo,ou=demo,dc=my-domain,dc=com', 'secret', '12345')
-    
+
     >>> communicator.search('(objectClass=person)',
     ...                     node.ext.ldap.SUBTREE,
     ...                     attrlist=['userPassword'])
@@ -133,7 +133,7 @@ Change the password of a directory entry which represents a user::
 Delete directory entry::
 
     >>> communicator.delete('cn=foo,ou=demo,dc=my-domain,dc=com')
-    
+
     >>> communicator.search('(objectClass=person)', node.ext.ldap.SUBTREE)
     []
 
@@ -193,10 +193,10 @@ Authenticate a specific user::
     True
 
 Modify directory entry::
-    
+
     >>> session.modify('cn=foo,ou=demo,dc=my-domain,dc=com',
     ...                [(MOD_REPLACE, 'sn', 'Musterfrau')])
-    
+
     >>> session.search('(objectClass=person)',
     ...                node.ext.ldap.SUBTREE,
     ...                attrlist=['cn'])
@@ -230,7 +230,7 @@ Every LDAP node has a DN and a RDN::
 
     >>> root.DN
     u'ou=demo,dc=my-domain,dc=com'
-    
+
     >>> root.rdn_attr
     u'ou'
 
@@ -238,17 +238,17 @@ Directory entry has no children yet::
 
     >>> root.keys()
     []
-    
+
 Add children to root node::
 
     >>> person = LDAPNode()
-    >>> person.attrs['objectClass'] = ['person']
+    >>> person.attrs['objectClass'] = ['person', 'inetOrgPerson']
     >>> person.attrs['sn'] = 'Mustermann'
     >>> person.attrs['userPassword'] = 'secret'
     >>> root['cn=person1'] = person
-    
+
     >>> person = LDAPNode()
-    >>> person.attrs['objectClass'] = ['person']
+    >>> person.attrs['objectClass'] = ['person', 'inetOrgPerson']
     >>> person.attrs['sn'] = 'Musterfrau'
     >>> person.attrs['userPassword'] = 'secret'
     >>> root['cn=person2'] = person
@@ -264,7 +264,7 @@ existing children::
 
     >>> root.child_dn('cn=person1')
     u'cn=person1,ou=demo,dc=my-domain,dc=com'
-    
+
     >>> root.child_dn('cn=person99')
     Traceback (most recent call last):
       ...
@@ -285,7 +285,7 @@ children has changed::
 
     >>> root.changed
     True
-    
+
     >>> root()
     >>> root.changed
     False
@@ -324,12 +324,13 @@ Add some users and groups we'll search for::
 
     >>> for i in range(2, 6):
     ...     node = LDAPNode()
-    ...     node.attrs['objectClass'] = ['person']
+    ...     node.attrs['objectClass'] = ['person', 'inetOrgPerson']
     ...     node.attrs['sn'] = 'Surname %s' % i
     ...     node.attrs['userPassword'] = 'secret%s' % i
-    ...     node.attrs['description'] = 'group1'
+    ...     node.attrs['description'] = 'description%s' % i
+    ...     node.attrs['businessCategory'] = 'group1'
     ...     root['cn=person%s' % i] = node
-    
+
     >>> node = LDAPNode()
     >>> node.attrs['objectClass'] = ['groupOfNames']
     >>> node.attrs['member'] = [
@@ -338,7 +339,7 @@ Add some users and groups we'll search for::
     ... ]
     ... node.attrs['description'] = 'IT'
     >>> root['cn=group1'] = node
-    
+
     >>> node = LDAPNode()
     >>> node.attrs['objectClass'] = ['groupOfNames']
     >>> node.attrs['member'] = [
@@ -346,7 +347,7 @@ Add some users and groups we'll search for::
     ...     root.child_dn('cn=person5'),
     ... ]
     >>> root['cn=group2'] = node
-    
+
     >>> root()
     >>> root.printtree()
     <ou=demo,dc=my-domain,dc=com - False>
@@ -381,10 +382,10 @@ Define multiple criteria LDAP filter::
     [u'cn=person1']
 
 Define a relation LDAP filter. In this case we build a relation between group
-'cn' and person 'description'::
+'cn' and person 'businessCategory'::
 
     >>> from node.ext.ldap import LDAPRelationFilter
-    >>> filter = LDAPRelationFilter(root['cn=group1'], 'cn:description')
+    >>> filter = LDAPRelationFilter(root['cn=group1'], 'cn:businessCategory')
     >>> root.search(queryFilter=filter)
     [u'cn=person2', 
     u'cn=person3', 
@@ -395,7 +396,7 @@ Different LDAP filter types can be combined::
 
     >>> filter &= LDAPFilter('(cn=person2)')
     >>> str(filter) 
-    '(&(description=group1)(cn=person2))'
+    '(&(businessCategory=group1)(cn=person2))'
 
 The following keyword arguments are accepted by ``LDAPNode.search``. If multiple keywords are
 used, combine search criteria with '&' where appropriate:
@@ -447,7 +448,7 @@ LDAPRelationFilter or string::
     >>> root.search_filter = None
 
 Define default search criteria as dict::
-    
+
     >>> root.search_criteria = {'objectClass': 'person'}
     >>> root.search()
     [u'cn=person1', 
@@ -459,7 +460,7 @@ Define default search criteria as dict::
 Define default search relation::
 
     >>> root.search_relation = \
-    ...     LDAPRelationFilter(root['cn=group1'], 'cn:description')
+    ...     LDAPRelationFilter(root['cn=group1'], 'cn:businessCategory')
     >>> root.search()
     [u'cn=person2', 
     u'cn=person3', 
@@ -556,7 +557,7 @@ Create config objects::
     ...     defaults={},
     ...     strict=False,
     ... )
-    
+
     >>> gcfg = GroupsConfig(
     ...     baseDN='ou=demo,dc=my-domain,dc=com',
     ...     attrmap={
@@ -601,10 +602,10 @@ attribute::
 
     >>> ugm.keys()
     ['users', 'groups']
-    
+
     >>> ugm.users
     <Users object 'users' at ...>
-    
+
     >>> ugm.groups
     <Groups object 'groups' at ...>
 
@@ -618,7 +619,7 @@ User attributes. Reserved keys are available on user attributes::
 
     >>> user.attrs['id']
     u'person1'
-    
+
     >>> user.attrs['login']
     u'Mustermensch'
 
@@ -654,7 +655,7 @@ Add new User::
 
     >>> user = ugm.users.create('person99', sn='Person 99')
     >>> user()
-    
+
     >>> ugm.users.keys()
     [u'person1', 
     u'person2', 
@@ -682,7 +683,7 @@ Group members::
 
     >>> group.member_ids
     [u'person1', u'person2']
-    
+
     >>> group.users
     [<User object 'person1' at ...>, <User object 'person2' at ...>]  
 
@@ -691,7 +692,7 @@ Add group member::
     >>> group.add('person3')
     >>> group.member_ids
     [u'person1', u'person2', u'person3']
-    
+
 Delete group member::
 
     >>> del group['person3']
@@ -748,16 +749,16 @@ Same with group. Fetch a group::
     >>> group = ugm.groups['group1']
 
 Add roles::
-    
+
     >>> ugm.add_role('viewer', group)
     >>> group.add_role('editor')
-    
+
     >>> ugm.roles(group)
     [u'viewer', u'editor']
-    
+
     >>> group.roles
     [u'viewer', u'editor']
-    
+
     >>> ugm()
 
 Remove roles::
@@ -766,7 +767,7 @@ Remove roles::
     >>> group.remove_role('editor')
     >>> group.roles
     []
-    
+
     >>> ugm()
 
 
@@ -802,17 +803,17 @@ configure it. Then you need to provide the factory utility::
     >>> # Dummy registry.
     >>> from zope.component import registry
     >>> components = registry.Components('comps')
-    
+
     >>> from node.ext.ldap.cache import MemcachedProviderFactory
     >>> cache_factory = MemcachedProviderFactory()
     >>> components.registerUtility(cache_factory)
-    
+
 In case of multiple memcached backends on various IPs and ports initialization
-of the factory looks like this::    
+of the factory looks like this::
 
     >>> # Dummy registry.
     >>> components = registry.Components('comps')
-    
+
     >>> cache_factory = MemcachedProviderFactory(servers=['10.0.0.10:22122',
     ...                                                   '10.0.0.11:22322'])
     >>> components.registerUtility(cache_factory)
@@ -846,20 +847,20 @@ Summary of the test coverage report::
 
   lines   cov%   module
       7   100%   node.ext.ldap.__init__
-    457    99%   node.ext.ldap._node
+    458    98%   node.ext.ldap._node
     146    99%   node.ext.ldap.base
-     13   100%   node.ext.ldap.cache
+     12   100%   node.ext.ldap.cache
      18   100%   node.ext.ldap.events
     129   100%   node.ext.ldap.filter
-     61   100%   node.ext.ldap.interfaces
-     49   100%   node.ext.ldap.properties
-     38    97%   node.ext.ldap.schema
+     62   100%   node.ext.ldap.interfaces
+     51   100%   node.ext.ldap.properties
+     37    97%   node.ext.ldap.schema
       6   100%   node.ext.ldap.scope
      60   100%   node.ext.ldap.session
-    438    98%   node.ext.ldap.testing.__init__
+    437    98%   node.ext.ldap.testing.__init__
      28   100%   node.ext.ldap.tests
       1   100%   node.ext.ldap.ugm.__init__
-    707    97%   node.ext.ldap.ugm._api
+    719    96%   node.ext.ldap.ugm._api
      21   100%   node.ext.ldap.ugm.defaults
      35   100%   node.ext.ldap.ugm.posix
      29    96%   node.ext.ldap.ugm.samba

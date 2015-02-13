@@ -140,7 +140,6 @@ put it there so I can use those entries later on for testing.
    objectClass: user
    memberOf: cn=group3,dc=my-domain,dc=com
 
-
 All have in common that a group can be anywhere in ldap tree. But in general
 they can be uniquely identified by objectClass.
 

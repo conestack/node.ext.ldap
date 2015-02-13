@@ -8,7 +8,7 @@ node.ext.ldap.session
     >>> from node.ext.ldap.testing import props
 
 Create the session with ``LDAPProps`` as argument::
-    
+
     >>> session = LDAPSession(props)
     >>> session.checkServerProperties()
     (True, 'OK')
@@ -17,7 +17,7 @@ There's no search base DN set yet::
 
     >>> session.baseDN
     ''
-    
+
 Set a baseDN and perform LDAP search::
   
     >>> session.baseDN = 'dc=my-domain,dc=com'
@@ -99,7 +99,7 @@ Unbind from Server::
     >>> session.unbind()
 
 Create the session with invalid ``LDAPProps``::
-    
+
     >>> props = LDAPProps()
     >>> session = LDAPSession(props)
     >>> session.checkServerProperties()

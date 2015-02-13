@@ -7,11 +7,11 @@ Ugm root object::
     >>> ucfg = layer['ucfg']
     >>> gcfg = layer['gcfg']
     >>> rcfg = None # XXX: later
-    
+
     >>> from node.ext.ldap.ugm import Ugm
     >>> ugm = Ugm(name='ugm', parent=None, props=props,
     ...           ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
-    
+
     >>> ugm
     <Ugm object 'ugm' at ...>
 
@@ -19,7 +19,7 @@ Users object::
 
     >>> ugm.users
     <Users object 'users' at ...>
-    
+
     >>> ugm['users'] is ugm.users
     True
 
@@ -27,7 +27,7 @@ Groups object::
 
     >>> ugm.groups
     <Groups object 'groups' at ...>
-    
+
     >>> ugm['groups'] is ugm.groups
     True
 
@@ -61,16 +61,16 @@ Fetch some users::
 
     >>> user_0
     <User object 'uid0' at ...>
-    
+
     >>> user_0.__class__
     <class 'node.ext.ldap.ugm._api.User'>
-    
+
     >>> user_0.attrs
     Aliased <LDAPNodeAttributes object 'uid0' at ...>
 
     >>> user_0.attrs['cn']
     u'cn0'
-    
+
     >>> user_0.attrs['login']
     u'cn0'
 
@@ -83,25 +83,25 @@ XXX: LDAPNodeAttributes.items does not return consistent results if attrmap
     [('cn', u'cn0'), 
     ('mail', u'uid0@groupOfNames.com'), 
     ('rdn', u'uid0'), 
-    ('sn', u'sn0')]    
-    
+    ('sn', u'sn0')]
+
 User is a leaf::
 
     >>> user_0['foo'] = object()
     Traceback (most recent call last):
       ...
     NotImplementedError: User does not implement ``__setitem__``
-    
+
     >>> del user_0['foo']
     Traceback (most recent call last):
       ...
     NotImplementedError: User does not implement ``__delitem__``
-    
+
     >>> user_0['foo']
     Traceback (most recent call last):
       ...
     NotImplementedError: User does not implement ``__getitem__``
-    
+
     >>> user_0.keys()
     []
 
@@ -109,16 +109,16 @@ Authenticate::
 
     >>> users.authenticate('uid0', 'secret0')
     u'uid0'
-    
+
     >>> users.authenticate('cn0', 'secret0')
     u'uid0'
-    
+
     >>> users.authenticate('uid0', 'invalid')
     False
-    
+
     >>> users.authenticate('cn0', 'invalid')
     False
-    
+
     >>> users.authenticate('foo', 'secret0')
     False
 
@@ -128,12 +128,12 @@ Change password::
     Traceback (most recent call last):
       ...
     UNWILLING_TO_PERFORM: ...
-    
+
     >>> users.passwd('foo', 'secret0', 'bar')
     Traceback (most recent call last):
       ...
     KeyError: u'foo'
-    
+
     >>> users.passwd('uid0', 'secret0', 'bar')
     >>> users.authenticate('uid0', 'bar')
     u'uid0'
@@ -145,12 +145,12 @@ Add user::
       <class 'node.ext.ldap.ugm._api.User'>: uid0
       <class 'node.ext.ldap.ugm._api.User'>: uid1
       <class 'node.ext.ldap.ugm._api.User'>: uid2
-    
+
     >>> user = users.create('sepp',
     ...                     cn='Sepp',
     ...                     sn='Bla',
     ...                     mail='baz@bar.com')
-    
+
     >>> user
     <User object 'sepp' at ...>
 
@@ -176,7 +176,7 @@ not persisted to LDAP yet::
 
     >>> users.authenticate('sepp', 'secret')
     False
-    
+
     >>> ugm.users.passwd('sepp', None, 'secret')
     Traceback (most recent call last):
       ...
@@ -188,7 +188,7 @@ After calling, new user is available in LDAP::
     >>> ugm.users.passwd('sepp', None, 'secret')
     >>> users.authenticate('sepp', 'secret')
     u'sepp'
-    
+
 Groups object::
 
     >>> groups = ugm.groups
@@ -201,16 +201,16 @@ Groups object::
 
     >>> group_0
     <Group object 'group0' at ...>
-    
+
     >>> group_0.__class__
     <class 'node.ext.ldap.ugm._api.Group'>
-    
+
     >>> group_0.attrs
     Aliased <LDAPNodeAttributes object 'group0' at ...>
-    
+
     >>> group_0.attrs.items()
     [('member', [u'cn=nobody']), ('rdn', u'group0')]
-    
+
     >>> group_1.attrs.items()
     [('member', [u'cn=nobody', u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com']), 
     ('rdn', u'group1')]
@@ -220,7 +220,7 @@ Add a group::
     >>> group = groups.create('group99', id='group99')
     >>> group
     <Group object 'group99' at ...>
-    
+
     >>> ugm()
     >>> ugm.printtree()
     <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
@@ -237,18 +237,18 @@ Add a group::
           <class 'node.ext.ldap.ugm._api.User'>: uid1
           <class 'node.ext.ldap.ugm._api.User'>: uid2
         <class 'node.ext.ldap.ugm._api.Group'>: group99
-    
+
     >>> ugm.groups['group99']
     <Group object 'group99' at ...>
 
-A group returns the members ids as keys::     
+A group returns the members ids as keys::
 
     >>> group_0.member_ids
     []
-    
+
     >> group_1.member_ids
     [u'uid1']
-    
+
     >> group_2.member_ids
     [u'uid1', u'uid2']
 
@@ -282,20 +282,20 @@ Deleting inexistend member from group fails::
     NotImplementedError: Group does not implement ``__setitem__``
 
 Members are added via ``add``::
-    
+
     >>> group_1.add('uid0')
     >>> group_1.keys()
     [u'uid1', u'uid0']
-    
+
     >>> group_1.member_ids
     [u'uid1', u'uid0']
 
     >>> group_1['uid0']
     <User object 'uid0' at ...>
-    
+
     >>> group_1.users
     [<User object 'uid1' at ...>, <User object 'uid0' at ...>]
-    
+
     >>> group_1()
 
 Let's take a fresh view on ldap whether this really happened::
@@ -317,16 +317,16 @@ A user knows its groups::
 
     >>> user_0.groups
     []
-    
+
     >>> user_1.groups
     [<Group object 'group1' at ...>, <Group object 'group2' at ...>]
-    
+
     >>> user_2.groups
     [<Group object 'group2' at ...>]
-    
+
     >>> user_1.group_ids
     [u'group1', u'group2']
-    
+
     >>> user_2.group_ids
     [u'group2']
 
@@ -349,7 +349,7 @@ There's an ids property on principals base class::
 
     >>> users.ids
     [u'uid0', u'uid1', u'uid2', u'sepp']
-    
+
     >>> groups.ids
     [u'group0', u'group1', u'group2', u'group99']
 
@@ -360,14 +360,14 @@ from all this groups.::
     ...           ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
     >>> users = ugm.users
     >>> groups = ugm.groups
-    
+
     >>> groups['group0'].add('sepp')
     >>> groups['group1'].add('sepp')
     >>> ugm()
-    
+
     >>> user.groups
     [<Group object 'group0' at ...>, <Group object 'group1' at ...>]
-    
+
     >>> user.group_ids
     [u'group0', u'group1']
 
@@ -388,7 +388,7 @@ from all this groups.::
           <class 'node.ext.ldap.ugm._api.User'>: uid1
           <class 'node.ext.ldap.ugm._api.User'>: uid2
         <class 'node.ext.ldap.ugm._api.Group'>: group99
-    
+
     >>> del users['sepp']
     >>> ugm()
     >>> ugm.printtree()
@@ -429,7 +429,7 @@ MemberOf Support::
     >>> users = ugm.users
     >>> users.context.search(queryFilter='(memberOf=*)')
     [u'uid1', u'uid2']
-    
+
     >>> users.context.search(attrlist=['memberOf'])
     [(u'uid0', {}), 
     (u'uid1', {u'memberOf': 
@@ -437,22 +437,22 @@ MemberOf Support::
     u'cn=group1,ou=groups,ou=groupOfNames,dc=my-domain,dc=com']}), 
     (u'uid2', {u'memberOf': 
     [u'cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com']})]
-    
+
     >>> ugm.ucfg.memberOfSupport = True
     >>> ugm.gcfg.memberOfSupport = True
-    
+
     >>> users['uid1'].groups
     [<Group object 'group2' at ...>, 
     <Group object 'group1' at ...>]
-    
+
     >>> users['uid1'].group_ids
     [u'group2', u'group1']
-    
+
     >>> groups['group1'].member_ids
     [u'uid1']
-    
+
     >>> groups['group2'].member_ids
     [u'uid1', u'uid2']
-    
+
     >>> ugm.ucfg.memberOfSupport = False
     >>> ugm.gcfg.memberOfSupport = False

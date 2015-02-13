@@ -38,17 +38,16 @@ unique and therefore suitable as login attr::
     >>> ucfg.attrmap['login'] = 'cn'
     >>> users = Users(props, ucfg)
     >>> users.ids
-    [u'sn_binary', u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
-    
+    [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
 
 Principals idbydn::
 
     >>> users.idbydn('cn=user3,ou=customers,dc=my-domain,dc=com')
     u'Schmidt'
-    
+
     >>> users.idbydn('cN=user3, ou=customers,dc=MY-domain,dc= com')
     u'Schmidt'
-    
+
     >>> users.idbydn('cN=inexistent, ou=customers,dc=MY-domain,dc= com')
     Traceback (most recent call last):
       ...
@@ -82,7 +81,7 @@ And attributes::
 
     >>> mueller.attrs
     Aliased <LDAPNodeAttributes object 'M?ller' at ...>
-    
+
     >>> mueller.attrs.items()
     [('telephoneNumber', u'1234'), ('login', u'user2'), ('id', u'M\xfcller')]
 
@@ -90,15 +89,13 @@ Query all user nodes::
 
     >>> [users[id] for id in sorted(users.keys())]
     [<User object 'Meier' at ...>, <User object 'M?ller' at ...>,
-    <User object 'Schmidt' at ...>, <User object 'Umhauer' at ...>, 
-    <User object 'sn_binary' at ...>]
+    <User object 'Schmidt' at ...>, <User object 'Umhauer' at ...>]
 
     >>> [users[id].context for id in sorted(users.keys())]
     [<cn=user1,dc=my-domain,dc=com:Meier - False>, 
     <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>, 
     <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>, 
-    <cn=n?sty\2C User,ou=customers,dc=my-domain,dc=com:Umhauer - False>, 
-    <uid=binary,ou=customers,dc=my-domain,dc=com:sn_binary - False>]
+    <cn=n?sty\2C User,ou=customers,dc=my-domain,dc=com:Umhauer - False>]
 
 Authenticate a user, via the user object. (also see 'via LDAPUsers' below,
 after passwd, this is to make sure, that LDAPUsers.authenticate does not work
@@ -106,7 +103,7 @@ on a cached copy)::
 
     >>> mueller.authenticate('foo2')
     True
-    
+
     >>> mueller.authenticate('bar')
     False
 
@@ -117,7 +114,7 @@ Change a users password, supplying the old password, via the user object::
     >>> mueller.passwd(oldpw, newpw)
     >>> mueller.authenticate('foo2')
     False
-    
+
     >>> mueller.authenticate('new')
     True
 
@@ -138,10 +135,10 @@ id is returned if sucessful, otherwise None::
 
     >>> print users.authenticate(id='wrong', pw='cresd')
     False
-    
+
     >>> print users.authenticate(id=mueller.id, pw='bar')
     False
-    
+
     >>> users.authenticate(id=mueller.id, pw='newer')
     u'M\xfcller'
 
@@ -149,11 +146,10 @@ Create new User. Provide some user defaults in user configuration. A default
 is either the desired value or a callback accepting the principals node and the
 id and returns the desired value.::
 
-    >>> from node.ext.ldap import ONELEVEL
     >>> def telephoneNumberDefault(node, id):
     ...     # default value callback function
     ...     return '123'
-    
+
     >>> add_ucfg = UsersConfig(
     ...     baseDN='ou=customers,dc=my-domain,dc=com',
     ...     attrmap={
@@ -183,7 +179,7 @@ id and returns the desired value.::
 
     >>> users.create('newid', login='newcn', id='newid')
     <User object 'newid' at ...>
-    
+
     >>> sorted(users.ids)
     [u'M\xfcller', u'Schmidt', u'Umhauer', u'newid', u'sn_binary']
 
@@ -200,7 +196,7 @@ well, but create is propably the better choice. Test egde cases::
     Traceback (most recent call last):
       ...
     ValueError: no attributes found, cannot convert.
-    
+
     >>> from node.base import AttributedNode
     >>> node = AttributedNode()
     >>> users['newid'] = node
@@ -212,13 +208,13 @@ well, but create is propably the better choice. Test egde cases::
 
     >>> sorted(newuser.attrs.items())
     [('id', u'newid'), ('login', u'newcn'), ('telephoneNumber', u'123')]
-    
+
     >>> sorted(newuser.context.attrs.items())
     [(u'cn', u'newcn'), 
     (u'objectClass', [u'top', u'person']), 
     (u'sn', u'newid'), 
     (u'telephoneNumber', u'123')]
-    
+
     >>> users()
     >>> users.reload = True
 
@@ -244,15 +240,14 @@ Search for users::
     [u'Schmidt']
 
     >>> users.search()
-    [u'sn_binary', u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
+    [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
 
     >>> users.search(attrlist=['login'])
-    [(u'sn_binary', {'login': [u'cn_binary']}), 
-    (u'Meier', {'login': [u'user1']}), 
+    [(u'Meier', {'login': [u'user1']}), 
     (u'M\xfcller', {'login': [u'user2']}), 
     (u'Schmidt', {'login': [u'user3']}), 
     (u'Umhauer', {'login': [u'n\xe4sty, User']})]
-    
+
     >>> users.search(criteria=dict(sn=schmidt.attrs['sn']), attrlist=['login'])
     [(u'Schmidt', {'login': [u'user3']})]
 
@@ -260,11 +255,11 @@ Paginated search for users::
 
     >>> results, cookie = users.search(page_size=3, cookie='')
     >>> results
-    [u'sn_binary', u'Meier', u'M\xfcller']
-    
+    [u'Meier', u'M\xfcller', u'Schmidt']
+
     >>> results, cookie = users.search(page_size=3, cookie=cookie)
     >>> results
-    [u'Schmidt', u'Umhauer']
+    [u'Umhauer']
     >>> assert cookie == ''
 
 Only attributes defined in attrmap can be queried::
@@ -274,82 +269,79 @@ Only attributes defined in attrmap can be queried::
     Traceback (most recent call last):
     ...
     KeyError: 'description'
-    
+
     >>> users.search(criteria=dict(sn=schmidt.attrs['sn']),
     ...                            attrlist=['telephoneNumber'])
     [(u'Schmidt', {'telephoneNumber': [u'1234']})]
 
     >>> from node.ext.ldap.filter import LDAPFilter
     >>> filter = LDAPFilter('(objectClass=person)')
+    >>> filter &= LDAPFilter('(!(objectClass=inetOrgPerson))')
     >>> filter |= LDAPFilter('(objectClass=some)')
-    
+
     # normally set via principals config
     >>> users.context.search_filter = filter
     >>> users.search()
-    [u'sn_binary', u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
-    
+    [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
+
     >>> filter = LDAPFilter('(objectClass=person)')
     >>> filter &= LDAPFilter('(objectClass=some)')
-    
+
     # normally set via principals config
     >>> users.context.search_filter = filter
     >>> users.search()
     []
-    
+
     >>> users.context.search_filter = None
 
 The changed flag::
 
     >>> users.changed
     False
-    
+
     >>> users.printtree()
     <class 'node.ext.ldap.ugm._api.Users'>: None
-      <class 'node.ext.ldap.ugm._api.User'>: sn_binary
       <class 'node.ext.ldap.ugm._api.User'>: Meier
       <class 'node.ext.ldap.ugm._api.User'>: M?ller
       <class 'node.ext.ldap.ugm._api.User'>: Schmidt
       <class 'node.ext.ldap.ugm._api.User'>: Umhauer
-    
+
     >>> users.context.printtree()
     <dc=my-domain,dc=com - False>
-      <uid=binary,ou=customers,dc=my-domain,dc=com:sn_binary - False>
       <cn=user1,dc=my-domain,dc=com:Meier - False>
       <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
       <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
       <cn=n?sty\2C User,ou=customers,dc=my-domain,dc=com:Umhauer - False>
-    
+
     >>> users['Meier'].attrs['telephoneNumber'] = '12345'
     >>> users['Meier'].attrs.changed
     True
-    
+
     >>> users['Meier'].changed
     True
-    
+
     >>> users.changed
     True
-    
+
     >>> users.context.printtree()
     <dc=my-domain,dc=com - True>
-      <uid=binary,ou=customers,dc=my-domain,dc=com:sn_binary - False>
       <cn=user1,dc=my-domain,dc=com:Meier - True>
       <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
       <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
       <cn=n?sty\2C User,ou=customers,dc=my-domain,dc=com:Umhauer - False>
-    
+
     >>> users['Meier'].attrs.context.load()
     >>> users['Meier'].attrs.changed
     False
-    
+
     >>> users['Meier'].changed
     False
-    
+
     >>> users.changed
     False
-    
+
     >>> users.context.printtree()
     <dc=my-domain,dc=com - False>
-      <uid=binary,ou=customers,dc=my-domain,dc=com:sn_binary - False>
       <cn=user1,dc=my-domain,dc=com:Meier - False>
       <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
       <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
@@ -379,32 +371,32 @@ Create a LDAPGroups node and configure it::
     >>> groups = Groups(props, gcfg)
     >>> groups.keys()
     [u'group1', u'group2']
-    
+
     >>> groups.ids
     [u'group1', u'group2']
-    
+
     >>> group = groups['group1']
     >>> group
     <Group object 'group1' at ...>
-    
+
     >>> group = groups.create('group3')
     >>> groups()
     >>> groups.ids
     [u'group1', u'group2', u'group3']
-    
+
     # XXX: dummy member should be created by default value callback, currently
     #      a __setitem__ plumbing on groups object
-    
+
     >>> groups.context.ldap_session.search(queryFilter='cn=group3',
     ...                                    scope=ONELEVEL)
     [('cn=group3,dc=my-domain,dc=com', 
     {'member': ['cn=nobody'], 
     'objectClass': ['groupOfNames'], 
     'cn': ['group3']})]
-    
+
     >>> groups['group1']._member_format
     0
-    
+
     >>> groups['group1']._member_attribute
     'member'
 
@@ -427,27 +419,27 @@ This will propably change in future. Right now 'posigGroup',
     >>> from node.ext.ldap.ugm._api import member_format, member_attribute
     >>> member_format('groupOfUniqueNames')
     0
-    
+
     >>> member_attribute('groupOfUniqueNames')
     'uniqueMember'
-    
+
     >>> member_format('groupOfNames')
     0
-    
+
     >>> member_attribute('groupOfNames')
     'member'
-    
+
     >>> member_format('posixGroup')
     1
-    
+
     >>> member_attribute('posixGroup')
     'memberUid'
-    
+
     >>> member_format('foo')
     Traceback (most recent call last):
       ...
     Exception: Unknown format
-    
+
     >>> member_attribute('foo')
     Traceback (most recent call last):
       ...
@@ -457,17 +449,17 @@ Fetch users and groups::
 
     >>> ugm.users
     <Users object 'users' at ...>
-    
+
     >>> ugm.groups
     <Groups object 'groups' at ...>
-    
+
     >>> ugm.groups['group1'].users
     [<User object 'Schmidt' at ...>, 
     <User object 'M?ller' at ...>]
-    
+
     >>> ugm.groups['group2'].users
     [<User object 'Umhauer' at ...>]
-    
+
     >>> ugm.users['Schmidt'].groups
     [<Group object 'group1' at ...>]
 
@@ -485,12 +477,12 @@ Test accessing unconfigured roles.::
     >>> user = ugm.users['Meier']
     >>> ugm.roles(user)
     []
-    
+
     >>> ugm.add_role('viewer', user)
     Traceback (most recent call last):
       ...
     ValueError: Role support not configured properly
-    
+
     >>> ugm.remove_role('viewer', user)
     Traceback (most recent call last):
       ...
@@ -510,7 +502,7 @@ Configure role config represented by object class 'groupOfNames'::
     ...     objectClasses=['groupOfNames'],
     ...     defaults={},
     ... )
-    
+
     >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
 
     >>> roles = ugm._roles
@@ -535,7 +527,7 @@ Add role for user, role gets created if not exists.::
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
-    
+
     >>> ugm.roles_storage()
 
 Query roles for principal via ugm object.::
@@ -553,7 +545,7 @@ Add some roles for 'Schmidt'.::
     >>> user = ugm.users['Schmidt']
     >>> user.add_role('viewer')
     >>> user.add_role('editor')
-    
+
     >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
@@ -561,10 +553,10 @@ Add some roles for 'Schmidt'.::
         <class 'node.ext.ldap.ugm._api.User'>: Schmidt
       <class 'node.ext.ldap.ugm._api.Role'>: editor
         <class 'node.ext.ldap.ugm._api.User'>: Schmidt
-    
+
     >>> user.roles
     [u'viewer', u'editor']
-    
+
     >>> ugm.roles_storage()
 
 Remove role 'viewer'.::
@@ -584,7 +576,7 @@ Remove role 'editor', No other principal left, remove role as well.::
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
-    
+
     >>> ugm.roles_storage()
 
 Test roles for group.::
@@ -592,7 +584,7 @@ Test roles for group.::
     >>> group = ugm.groups['group1']
     >>> ugm.roles(group)
     []
-    
+
     >>> ugm.add_role('viewer', group)
     >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
@@ -601,17 +593,17 @@ Test roles for group.::
         <class 'node.ext.ldap.ugm._api.Group'>: group1
           <class 'node.ext.ldap.ugm._api.User'>: Schmidt
           <class 'node.ext.ldap.ugm._api.User'>: M?ller
-    
+
     >>> ugm.roles(group)
     [u'viewer']
-    
+
     >>> group.roles
     [u'viewer']
-    
+
     >>> group = ugm.groups['group3']
     >>> group.add_role('viewer')
     >>> group.add_role('editor')
-    
+
     >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
@@ -622,19 +614,19 @@ Test roles for group.::
         <class 'node.ext.ldap.ugm._api.Group'>: group3
       <class 'node.ext.ldap.ugm._api.Role'>: editor
         <class 'node.ext.ldap.ugm._api.Group'>: group3
-    
+
     >>> ugm.roles_storage()
-    
+
 If role already granted, an error is raised.::
 
     >>> group.add_role('editor')
     Traceback (most recent call last):
       ...
     ValueError: Principal already has role 'editor'
-    
+
     >>> group.roles
     [u'viewer', u'editor']
-    
+
     >>> ugm.remove_role('viewer', group)
     >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
@@ -645,7 +637,7 @@ If role already granted, an error is raised.::
           <class 'node.ext.ldap.ugm._api.User'>: M?ller
       <class 'node.ext.ldap.ugm._api.Role'>: editor
         <class 'node.ext.ldap.ugm._api.Group'>: group3
-    
+
     >>> group.remove_role('editor')
     >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
@@ -654,7 +646,7 @@ If role already granted, an error is raised.::
         <class 'node.ext.ldap.ugm._api.Group'>: group1
           <class 'node.ext.ldap.ugm._api.User'>: Schmidt
           <class 'node.ext.ldap.ugm._api.User'>: M?ller
-    
+
     >>> ugm.roles_storage()
 
 If role not exists, an error is raised.::
@@ -687,7 +679,7 @@ on key.::
 
     >>> role['Meier']
     <User object 'Meier' at ...>
-    
+
     >>> role['group:group1']
     <Group object 'group1' at ...>
 
@@ -710,7 +702,6 @@ Delete user and check if roles are removed.::
     >>> ugm.printtree()
     <class 'node.ext.ldap.ugm._api.Ugm'>: None
       <class 'node.ext.ldap.ugm._api.Users'>: users
-        <class 'node.ext.ldap.ugm._api.User'>: sn_binary
         <class 'node.ext.ldap.ugm._api.User'>: Meier
         <class 'node.ext.ldap.ugm._api.User'>: M?ller
         <class 'node.ext.ldap.ugm._api.User'>: Schmidt
@@ -722,7 +713,7 @@ Delete user and check if roles are removed.::
         <class 'node.ext.ldap.ugm._api.Group'>: group2
           <class 'node.ext.ldap.ugm._api.User'>: Umhauer
         <class 'node.ext.ldap.ugm._api.Group'>: group3
-    
+
     >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
@@ -730,7 +721,7 @@ Delete user and check if roles are removed.::
         <class 'node.ext.ldap.ugm._api.Group'>: group1
           <class 'node.ext.ldap.ugm._api.User'>: Schmidt
           <class 'node.ext.ldap.ugm._api.User'>: M?ller
-    
+
     >>> del ugm.users['Meier']
     >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
@@ -748,7 +739,6 @@ Delete group and check if roles are removed.::
     >>> ugm.printtree()
     <class 'node.ext.ldap.ugm._api.Ugm'>: None
       <class 'node.ext.ldap.ugm._api.Users'>: users
-        <class 'node.ext.ldap.ugm._api.User'>: sn_binary
         <class 'node.ext.ldap.ugm._api.User'>: M?ller
         <class 'node.ext.ldap.ugm._api.User'>: Schmidt
         <class 'node.ext.ldap.ugm._api.User'>: Umhauer
@@ -756,5 +746,5 @@ Delete group and check if roles are removed.::
         <class 'node.ext.ldap.ugm._api.Group'>: group2
           <class 'node.ext.ldap.ugm._api.User'>: Umhauer
         <class 'node.ext.ldap.ugm._api.Group'>: group3
-    
+
     >>> ugm()

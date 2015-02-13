@@ -9,7 +9,7 @@ Default value callbacks testing
     >>> root['ou=defaults'] = LDAPNode()
     >>> root['ou=defaults'].attrs['objectClass'] = ['organizationalUnit']
     >>> root()
-    
+
     >>> from node.ext.ldap.scope import SUBTREE
     >>> from node.ext.ldap.ugm import (
     ...     UsersConfig,
@@ -18,7 +18,7 @@ Default value callbacks testing
     ...     Groups,
     ...     Ugm,
     ... )
-    
+
     >>> from node.ext.ldap.ugm import defaults
     >>> defaults.creation_defaults
     {'shadowAccount': 
@@ -66,11 +66,11 @@ Posix Account
     (u'uidNumber', u'100'), 
     (u'gidNumber', u'100'), 
     (u'homeDirectory', u'/home/posixuser')]
-    
+
     >>> from node.ext.ldap.ugm import posix
     >>> defaults.creation_defaults['posixAccount']['loginShell'] = \
     ...     posix.loginShell
-    
+
     >>> ucfg = UsersConfig(
     ...     baseDN='ou=defaults,dc=my-domain,dc=com',
     ...     attrmap={
@@ -93,7 +93,7 @@ Posix Account
     (u'uidNumber', u'101'), 
     (u'gidNumber', u'101'), 
     (u'homeDirectory', u'/home/posixuser1')]
-    
+
     >>> del defaults.creation_defaults['posixAccount']['loginShell']
 
 
@@ -145,7 +145,7 @@ Shadow Account
     >>> user.context.attrs.items()
     [(u'uid', u'shadowuser'), 
     (u'objectClass', [u'account', u'shadowAccount'])]
-    
+
     >>> from node.ext.ldap.ugm import shadow
     >>> shadow_d = defaults.creation_defaults['shadowAccount']
     >>> shadow_d['shadowFlag'] = shadow.shadowFlag
@@ -155,7 +155,7 @@ Shadow Account
     >>> shadow_d['shadowInactive'] = shadow.shadowInactive
     >>> shadow_d['shadowLastChange'] = shadow.shadowLastChange
     >>> shadow_d['shadowExpire'] = shadow.shadowExpire
-    
+
     >>> ucfg = UsersConfig(
     ...     baseDN='ou=defaults,dc=my-domain,dc=com',
     ...     attrmap={
@@ -180,7 +180,7 @@ Shadow Account
     (u'shadowMax', u'99999'), 
     (u'shadowLastChange', u'12011'), 
     (u'shadowExpire', u'99999')]
-    
+
     >>> del shadow_d['shadowFlag']
     >>> del shadow_d['shadowMin']
     >>> del shadow_d['shadowMax']
@@ -266,7 +266,6 @@ Samba Account
     (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-1202'), 
     (u'uid', u'sambauser1'), 
     (u'uidNumber', u'101')]
-    
 
     >>> del samba_d['sambaDomainName']
     >>> del samba_d['sambaPrimaryGroupSID']

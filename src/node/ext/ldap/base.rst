@@ -10,7 +10,7 @@ LDAP credentials::
     >>> port = 12345
     >>> binddn = "cn=Manager,dc=my-domain,dc=com"
     >>> bindpw = "secret"
-    
+
     >>> from node.ext.ldap import LDAPProps
     >>> props = LDAPProps(
     ...     server=host,
@@ -28,15 +28,15 @@ Test main script, could be used by command line with
     >>> sys.argv = ['base.py', '127.0.0.1', '12345']
     >>> main()
     success
-    
+
     >>> sys.argv[-1] = '12346'
     >>> main()
     {'desc': "Can't contact LDAP server"}
-    
+
     >>> sys.argv = []
     >>> main()
     usage: python base.py [server] [port]
-    
+
     >>> sys.argv = old_argv
 
 Test node.ext.ldap base objects.::
@@ -50,7 +50,7 @@ Test LDAP connectivity::
     >>> from node.ext.ldap.base import testLDAPConnectivity
     >>> testLDAPConnectivity('127.0.0.1', 12345)
     'success'
-    
+
     >>> testLDAPConnectivity('127.0.0.1', 12346)
     SERVER_DOWN({'desc': "Can't contact LDAP server"},)
 
@@ -82,7 +82,7 @@ Search fails if baseDN is not set and not given to search function::
 
     >>> communicator.baseDN
     ''
-    
+
     >>> res = communicator.search('(objectClass=*)', SUBTREE)
     Traceback (most recent call last):
       ...
@@ -138,13 +138,13 @@ Unbind from server.::
     >>> communicator.unbind()
 
 Connector using cache.::
-    
+
     >>> connector = LDAPConnector(host, port, binddn, bindpw)
     >>> communicator = LDAPCommunicator(connector)
     >>> communicator.bind()
 
 Add entry::
-    
+
     >>> entry = {
     ...     'cn':'foo',
     ...     'sn':'bar',
@@ -169,5 +169,5 @@ Delete entry::
     >>> res = communicator.search('(cn=foo)', SUBTREE, force_reload=True)
     >>> res
     []
-    
+
     >>> communicator.unbind()

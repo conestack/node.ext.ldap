@@ -280,7 +280,7 @@ ucfg = UsersConfig(
         'sn': 'sn',
         },
     scope=SUBTREE,
-    queryFilter='(objectClass=person)',
+    queryFilter='(&(objectClass=person)(!(objectClass=inetOrgPerson)))',
     objectClasses=['person'])
 
 

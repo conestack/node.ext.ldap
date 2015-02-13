@@ -15,16 +15,16 @@ caching backend. For providing other backends, read documentation of
 
     >>> from node.ext.ldap.cache import MemcachedProviderFactory
     >>> cache_factory = MemcachedProviderFactory()
-    
+
     >>> from zope.component import registry
     >>> components = registry.Components('comps')
     >>> components.registerUtility(cache_factory)
-    
+
     >>> from node.ext.ldap.interfaces import ICacheProviderFactory
     >>> factory = components.queryUtility(ICacheProviderFactory)
     >>> factory
     <node.ext.ldap.cache.MemcachedProviderFactory object at ...>
-    
+
     >>> factory()
     <bda.cache.memcached.Memcached object at ...>
 
