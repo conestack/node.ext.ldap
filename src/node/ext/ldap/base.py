@@ -122,7 +122,10 @@ class LDAPConnector(object):
             # ignore in tests for now. nevertheless provide a test environment
             # for TLS and SSL later
             self._con.start_tls_s()                         #pragma NO COVERAGE
-        self._con.simple_bind_s(self._bindDN, self._bindPW)
+        if self._bindDN:
+            self._con.simple_bind_s(self._bindDN, self._bindPW)
+        else:
+            self._con.simple_bind_s()
         return self._con
 
     def unbind(self):
