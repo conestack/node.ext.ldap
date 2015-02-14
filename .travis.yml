@@ -3,6 +3,6 @@ python: "2.7"
 install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq libsasl2-dev libssl-dev libdb-dev
-  - python2.7 bootstrap.py 
+  - python2.7 bootstrap.py --setuptools-version=11.3.1
   - ./bin/buildout -q
 script: ./bin/test
