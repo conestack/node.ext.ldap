@@ -11,6 +11,10 @@ History
 0.9.7
 -----
 
+- Add ``ignore_cert`` option to ignore TLS/SSL certificate errors for self
+  signed certificates when using the ``ldaps`` uri schema.
+  [thet]
+
 - Added possibility to hook external LDIF layer for testldap server via
   buildout configuration.
   [rnix]
