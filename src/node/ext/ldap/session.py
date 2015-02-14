@@ -82,9 +82,10 @@ class LDAPSession(object):
         try:
             con.simple_bind_s(dn, pw)
         except (ldap.INVALID_CREDENTIALS, ldap.UNWILLING_TO_PERFORM) as e:  # noqa
-            # unwilling to perform can happen, if you quert a local user named
-            # ``admin`` to the LDAP server, but it is configured to disallow
-            # queries for the admin
+            # The UNWILLING_TO_PERFORM event might be thrown, if you query a
+            # local user named ``admin``, but the LDAP server is configured to
+            # deny such queries. Instead of raising an exception, just ignore
+            # this.
             return False
         else:
             return True

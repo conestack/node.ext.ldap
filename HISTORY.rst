@@ -4,6 +4,11 @@ History
 0.9.8 (unreleased)
 ------------------
 
+- Don't fail on ``UNWILLING_TO_PERFORM`` exceptions when authenticating. That
+  might be thrown, if the LDAP server disallows us to authenticate an ``admin``
+  user, while we are interested in the local ``admin`` user.
+  [thet]
+
 - Add ``ignore_cert`` option to ignore TLS/SSL certificate errors for self
   signed certificates when using the ``ldaps`` uri schema.
   [thet]
