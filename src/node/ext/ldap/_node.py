@@ -78,11 +78,11 @@ class AttributesBehavior(Behavior):
         attrlist = ['*']
 
         # XXX: operational attributes
-        #if self.session._props.operationalAttributes:
+        # if self.session._props.operationalAttributes:
         #    attrlist.append('+')
 
         # XXX: if memberOf support enabled
-        #if self.session._props.memberOfSupport:
+        # if self.session._props.memberOfSupport:
         #    attrlist.append('memberOf')
 
         # fetch our node with all attributes
@@ -94,9 +94,9 @@ class AttributesBehavior(Behavior):
                 )
 
         if len(entry) != 1:
-            raise RuntimeError(                             #pragma NO COVERAGE
-                u"Fatal. Expected entry does not exist or " #pragma NO COVERAGE
-                u"more than one entry found")               #pragma NO COVERAGE
+            raise RuntimeError(                            # pragma NO COVERAGE
+                u"Fatal. Expected entry does not exist "   # pragma NO COVERAGE
+                u"or more than one entry found")           # pragma NO COVERAGE
 
         attrs = entry[0][1]
         for key, item in attrs.items():
@@ -234,12 +234,6 @@ class LDAPStorage(OdictStorage):
         if isinstance(key, str):
             key = decode(key)
 
-        # XXX: scope is search scope, why not add children?
-        #      feels like trying to add security the wrong place
-        #if self.search_scope is BASE:
-        #    raise NotImplementedError(
-        #        u"Seriously? Adding with scope == BASE?")
-
         if self._key_attr != 'rdn' and self._rdn_attr is None:
             raise RuntimeError(
                 u"Adding with key != rdn needs _rdn_attr to be set.")
@@ -252,12 +246,14 @@ class LDAPStorage(OdictStorage):
             val.attrs[self._key_attr] = key
             if val.attrs.get(self._rdn_attr) is None:
                 raise ValueError(
-                    u"'%s' needed in node attributes for rdn." % \
-                        (self._rdn_attr,))
+                    u"'{0}' needed in node attributes for rdn.".format(
+                        self._rdn_attr
+                    )
+                )
         else:
             # set rdn attr if not present
             rdn, rdn_val = key.split('=')
-            if not rdn in val.attrs:
+            if rdn not in val.attrs:
                 val._notify_suppress = True
                 val.attrs[rdn] = rdn_val
                 val._notify_suppress = False
@@ -568,18 +564,6 @@ class LDAPStorage(OdictStorage):
         except KeyError:
             pass
 
-    #@finalize
-    #def sort(self, cmp=None, key=None, reverse=False):
-    #    # XXX: a sort working only on the keys could work without wakeup -->
-    #    # sortonkeys()
-    #    #  first wake up all entries
-    #    dummy = self.items()
-    #    if not dummy:
-    #        return
-    #    # second sort them
-    #    import pdb;pdb.set_trace()
-    #    self._keys.sort(cmp=cmp, key=key, reverse=reverse)
-
     @default
     def _init_keys(self):
         # the _keys is None or an odict.
@@ -618,15 +602,20 @@ class LDAPStorage(OdictStorage):
                             continue
 
                         raise KeyError(
-                            u"Secondary key not unique: %s='%s'." % \
-                                    (seckey_attr, seckey))
+                            u"Secondary key not unique: {0}='{1}'.".format(
+                                seckey_attr, seckey
+                            )
+                        )
             else:
                 if not self._check_duplicates:
                     continue
 
-                raise RuntimeError(u"Key not unique: %s='%s' (you may want to "
-                                   u"disable check_duplicates)." % (
-                                   self._key_attr, key))
+                raise RuntimeError(
+                    u"Key not unique: {0}='{1}' (you may want to disable "
+                    u"check_duplicates)".format(
+                        self._key_attr, key
+                    )
+                )
 
     # a keymapper
     @default
@@ -697,7 +686,7 @@ class LDAPStorage(OdictStorage):
 
         for key in orgin:
             # MOD_DELETE
-            if not key in self.attrs:
+            if key not in self.attrs:
                 moddef = (MOD_DELETE, encode(key), None)
                 modlist.append(moddef)
         for key in self.attrs:
