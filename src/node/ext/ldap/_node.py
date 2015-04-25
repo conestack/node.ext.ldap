@@ -97,10 +97,10 @@ class LDAPAttributesBehavior(Behavior):
         )
         # result length must be 1
         if len(entry) != 1:
-            raise RuntimeError(                            # pragma NO COVERAGE
-                u"Fatal. Expected entry does not exist "   # pragma NO COVERAGE
-                u"or more than one entry found"            # pragma NO COVERAGE
-            )                                              # pragma NO COVERAGE
+            raise RuntimeError(                            #pragma NO COVERAGE
+                u"Fatal. Expected entry does not exist "   #pragma NO COVERAGE
+                u"or more than one entry found"            #pragma NO COVERAGE
+            )                                              #pragma NO COVERAGE
         # read attributes from result and set to self
         attrs = entry[0][1]
         for key, item in attrs.items():
@@ -197,7 +197,7 @@ class LDAPStorage(OdictStorage):
         self._added_children = set()
         self._modified_children = set()
         self._deleted_children = set()
-        self._seckey_attrs = None
+        #self._seckey_attrs = None
         self._reload = False
         self._multivalued_attributes = {}
         self._binary_attributes = {}
@@ -211,8 +211,8 @@ class LDAPStorage(OdictStorage):
             self._check_duplicates = props.check_duplicates
 
         # XXX: make them public
-        self._key_attr = 'rdn'
-        self._rdn_attr = None
+        #self._key_attr = 'rdn'
+        #self._rdn_attr = None
 
         # search related defaults
         self.search_scope = ONELEVEL
@@ -254,9 +254,10 @@ class LDAPStorage(OdictStorage):
         if isinstance(key, str):
             key = decode(key)
 
-        if self._key_attr != 'rdn' and self._rdn_attr is None:
-            raise RuntimeError(
-                u"Adding with key != rdn needs _rdn_attr to be set.")
+        #if self._key_attr != 'rdn' and self._rdn_attr is None:
+        #    raise RuntimeError(
+        #        u"Adding with key != rdn needs _rdn_attr to be set.")
+
         if not isinstance(val, LDAPNode):
             # create one from whatever we got
             val = self._create_suitable_node(val)
@@ -285,22 +286,30 @@ class LDAPStorage(OdictStorage):
             self.changed = True
             self._added_children.add(key)
 
-        # at this point we need to have an LDAPNode as val
-        if self._key_attr != 'rdn':
-            val.attrs[self._key_attr] = key
-            if val.attrs.get(self._rdn_attr) is None:
-                raise ValueError(
-                    u"'{0}' needed in node attributes for rdn.".format(
-                        self._rdn_attr
-                    )
-                )
-        else:
-            # set rdn attr if not present
-            rdn, rdn_val = key.split('=')
-            if rdn not in val.attrs:
-                val._notify_suppress = True
-                val.attrs[rdn] = rdn_val
-                val._notify_suppress = False
+#         # at this point we need to have an LDAPNode as val
+#         if self._key_attr != 'rdn':
+#             val.attrs[self._key_attr] = key
+#             if val.attrs.get(self._rdn_attr) is None:
+#                 raise ValueError(
+#                     u"'{0}' needed in node attributes for rdn.".format(
+#                         self._rdn_attr
+#                     )
+#                 )
+#         else:
+#             # set rdn attr if not present
+#             rdn, rdn_val = key.split('=')
+#             if rdn not in val.attrs:
+#                 val._notify_suppress = True
+#                 val.attrs[rdn] = rdn_val
+#                 val._notify_suppress = False
+
+        rdn, rdn_val = key.split('=')
+        if rdn not in val.attrs:
+            val._notify_suppress = True
+            val.attrs[rdn] = rdn_val
+            val._notify_suppress = False
+
+        # XXX: _notify_suppress needed any longer?
 
         self.storage[key] = val
 
@@ -318,6 +327,12 @@ class LDAPStorage(OdictStorage):
         # do not delete immediately. Just mark LDAPNode to be deleted.
         if isinstance(key, str):
             key = decode(key)
+        # value not persistent yet, remove from storage and add list
+        if key in self._added_children:
+            del self.storage[key]
+            self._added_children.remove(key)
+            self.changed = False
+            return
         val = self[key]
         val._action = ACTION_DELETE
         # this will also trigger the changed chain
@@ -377,10 +392,12 @@ class LDAPStorage(OdictStorage):
             elif self._action == ACTION_DELETE:
                 self.parent._deleted_children.remove(self.name)
                 self._ldap_delete()
-            try:
-                self.nodespaces['__attrs__'].changed = False
-            except KeyError:
-                pass
+            # XXX: probably not possible to provoke KeyError here
+            #try:
+            #    self.nodespaces['__attrs__'].changed = False
+            #except KeyError:
+            #    pass
+            self.nodespaces['__attrs__'].changed = False
             self.changed = False
             self._action = None
         deleted = [self[key] for key in self._deleted_children]
@@ -390,11 +407,12 @@ class LDAPStorage(OdictStorage):
 
     @finalize
     def __repr__(self):
-        # Doctest fails if we output utf-8
-        try:
-            dn = self.DN.encode('ascii', 'replace') or '(dn not set)'
-        except KeyError:
-            dn = '(dn not available yet)'
+        # XXX: probably not possible to provoke KeyError here
+        #try:
+        #    dn = self.DN.encode('ascii', 'replace') or '(dn not set)'
+        #except KeyError:
+        #    dn = '(dn not available yet)'
+        dn = self.DN.encode('ascii', 'replace') or '(dn not set)'
         if self.parent is None:
             return "<%s - %s>" % (dn, self.changed)
         name = self.name.encode('ascii', 'replace')
@@ -496,8 +514,8 @@ class LDAPStorage(OdictStorage):
         attrset.discard('dn')
 
         # fetch also the key attribute
-        if not self._key_attr == 'rdn':
-            attrset.add(self._key_attr)
+        #if not self._key_attr == 'rdn':
+        #    attrset.add(self._key_attr)
 
         # Create queryFilter from all filter definitions
         # filter for this search ANDed with the default filters defined on self
@@ -525,8 +543,8 @@ class LDAPStorage(OdictStorage):
 
         # XXX: Is it really good to filter out entries without the key attr or
         # would it be better to fail? (see also __iter__ secondary key)
-        if self._key_attr != 'rdn' and self._key_attr not in _filter:
-            _filter &= '(%s=*)' % (self._key_attr,)
+        #if self._key_attr != 'rdn' and self._key_attr not in _filter:
+        #    _filter &= '(%s=*)' % (self._key_attr,)
 
         # perform the backend search
         matches = self.ldap_session.search(
@@ -659,19 +677,22 @@ class LDAPStorage(OdictStorage):
 
     @default
     def _calculate_key(self, dn, attrs):
-        # a keymapper
-        if self._key_attr == 'rdn':
-            # explode_dn is ldap world
-            key = explode_dn(encode(dn))[0]
-        else:
-            key = attrs[self._key_attr]
-            if isinstance(key, list):
-                if len(key) != 1:
-                    msg = u"Expected one value for '%s' " % (self._key_attr,)
-                    msg += u"not %s: '%s'." % (len(key), key)
-                    raise KeyError(msg)
-                key = key[0]
+        key = explode_dn(encode(dn))[0]
         return decode(key)
+
+#         # a keymapper
+#         if self._key_attr == 'rdn':
+#             # explode_dn is ldap world
+#             key = explode_dn(encode(dn))[0]
+#         else:
+#             key = attrs[self._key_attr]
+#             if isinstance(key, list):
+#                 if len(key) != 1:
+#                     msg = u"Expected one value for '%s' " % (self._key_attr,)
+#                     msg += u"not %s: '%s'." % (len(key), key)
+#                     raise KeyError(msg)
+#                 key = key[0]
+#         return decode(key)
 
 #     @default
 #     def _calculate_seckeys(self, attrs):
