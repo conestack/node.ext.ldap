@@ -15,10 +15,13 @@ ids() the first time::
     'id': 'sn', 
     'sn': 'sn'}
 
+
+#############
+
 Query all user ids. ``description`` is set as login attribute, which is not
 unique::
 
-    >>> users = Users(props, ucfg)
+    >> users = Users(props, ucfg)
     Traceback (most recent call last):
     ...
     KeyError: u"Secondary key not unique: description='foo'."
@@ -26,11 +29,13 @@ unique::
 Query all user ids. Set ``telephoneNumber`` as login attribute, which is not
 unique::
 
-    >>> ucfg.attrmap['login'] = 'telephoneNumber'
-    >>> users = Users(props, ucfg)
+    >> ucfg.attrmap['login'] = 'telephoneNumber'
+    >> users = Users(props, ucfg)
     Traceback (most recent call last):
     ...
     KeyError: u"Secondary key not unique: telephoneNumber='1234'."
+
+################
 
 Query all user ids. Set ``cn`` as login attribute. In this case, values are
 unique and therefore suitable as login attr::
@@ -65,7 +70,7 @@ Get a user by id (utf-8 or unicode)::
 The real LDAP node is on ``context``::
 
     >>> mueller.context
-    <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
+    <cn=user2,ou=customers,dc=my-domain,dc=com - False>
 
 The '?' is just ``__repr__`` going to ascii, the id is in proper unicode::
 
@@ -80,7 +85,14 @@ A user has a login::
 And attributes::
 
     >>> mueller.attrs
-    Aliased <LDAPNodeAttributes object 'M?ller' at ...>
+    Aliased <LDAPNodeAttributes object 'cn=user2,ou=customers,dc=my-domain,dc=com' at ...>
+
+    >>> mueller.attrs.context.items()
+    [(u'objectClass', [u'top', u'person']), 
+    (u'telephoneNumber', u'1234'), 
+    (u'userPassword', u'foo2'), 
+    (u'cn', u'user2'), 
+    (u'sn', u'M\xfcller')]
 
     >>> mueller.attrs.items()
     [('telephoneNumber', u'1234'), ('login', u'user2'), ('id', u'M\xfcller')]
@@ -92,10 +104,10 @@ Query all user nodes::
     <User object 'Schmidt' at ...>, <User object 'Umhauer' at ...>]
 
     >>> [users[id].context for id in sorted(users.keys())]
-    [<cn=user1,dc=my-domain,dc=com:Meier - False>, 
-    <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>, 
-    <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>, 
-    <cn=n?sty\2C User,ou=customers,dc=my-domain,dc=com:Umhauer - False>]
+    [<cn=user1,dc=my-domain,dc=com - False>, 
+    <cn=user2,ou=customers,dc=my-domain,dc=com - False>, 
+    <cn=user3,ou=customers,dc=my-domain,dc=com - False>, 
+    <cn=n?sty\2C User,ou=customers,dc=my-domain,dc=com - False>]
 
 Authenticate a user, via the user object. (also see 'via LDAPUsers' below,
 after passwd, this is to make sure, that LDAPUsers.authenticate does not work
@@ -158,7 +170,7 @@ id and returns the desired value.::
     ...         'rdn': 'cn',
     ...         'telephoneNumber': 'telephoneNumber',
     ...         'sn': 'sn',
-    ...      },
+    ...     },
     ...     scope=ONELEVEL,
     ...     queryFilter='(objectClass=person)',
     ...     objectClasses=['top', 'person'],
