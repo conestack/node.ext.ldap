@@ -261,22 +261,11 @@ class LDAPStorage(OdictStorage):
             # create one from whatever we got
             val = self._create_suitable_node(val)
 
-        # at this point we need to have an LDAPNode as val
-        if self._key_attr != 'rdn':
-            val.attrs[self._key_attr] = key
-            if val.attrs.get(self._rdn_attr) is None:
-                raise ValueError(
-                    u"'{0}' needed in node attributes for rdn.".format(
-                        self._rdn_attr
-                    )
-                )
-        else:
-            # set rdn attr if not present
-            rdn, rdn_val = key.split('=')
-            if rdn not in val.attrs:
-                val._notify_suppress = True
-                val.attrs[rdn] = rdn_val
-                val._notify_suppress = False
+        # if self._key_attr == 'rdn':
+        #     rdn = key
+        # else:
+        #     rdn = '%s=%s' % (self._rdn_attr, val.attrs[self._rdn_attr])
+        # self._child_dns[key] = ','.join((rdn, self.DN))
 
         val.__name__ = key
         val.__parent__ = self
@@ -296,13 +285,24 @@ class LDAPStorage(OdictStorage):
             self.changed = True
             self._added_children.add(key)
 
-        self.storage[key] = val
+        # at this point we need to have an LDAPNode as val
+        if self._key_attr != 'rdn':
+            val.attrs[self._key_attr] = key
+            if val.attrs.get(self._rdn_attr) is None:
+                raise ValueError(
+                    u"'{0}' needed in node attributes for rdn.".format(
+                        self._rdn_attr
+                    )
+                )
+        else:
+            # set rdn attr if not present
+            rdn, rdn_val = key.split('=')
+            if rdn not in val.attrs:
+                val._notify_suppress = True
+                val.attrs[rdn] = rdn_val
+                val._notify_suppress = False
 
-        # if self._key_attr == 'rdn':
-        #     rdn = key
-        # else:
-        #     rdn = '%s=%s' % (self._rdn_attr, val.attrs[self._rdn_attr])
-        # self._child_dns[key] = ','.join((rdn, self.DN))
+        self.storage[key] = val
 
         if self.child_defaults:
             for k, v in self.child_defaults.items():
@@ -338,7 +338,6 @@ class LDAPStorage(OdictStorage):
         except NO_SUCH_OBJECT:
             res = list()
         for key, attrs in res:
-#             self._keys[key] = False
 #             self._child_dns[key] = attrs['dn']
 #             for seckey_attr, seckey in self._calculate_seckeys(attrs).items():
 #                 try:
