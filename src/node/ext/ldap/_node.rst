@@ -624,10 +624,29 @@ Attribute with non-ascii str (utf8) returns as unicode::
 Check access to attributes on a fresh but added-to-parent node. There was a bug
 so we test it. Note that rdn attribute is computed from key if not set yet::
 
+    >>> customers._added_children
+    set([])
+
+    >>> customers._modified_children
+    set([])
+
     >>> customerattrempty = LDAPNode()
+    >>> customerattrempty._action is None
+    True
+
     >>> customers['cn=customer99'] = customerattrempty
+
+    >>> customers._added_children
+    set([u'cn=customer99'])
+
+    >>> customers._modified_children
+    set([])
+
     >>> customerattrempty.attrs.keys()
     [u'cn']
+
+    >>> customerattrempty._action == ACTION_ADD
+    True
 
 Add some attributes to make call work::
 
@@ -678,6 +697,13 @@ Check deleting of entries::
       <ou=demo,dc=my-domain,dc=com:ou=demo - False>
 
     >>> customer()
+
+    >>> [k for k in customer.storage.keys()]
+    []
+
+    >>> customer._deleted_children
+    set([])
+
     >>> queryPersonDirectly()
     []
 
@@ -692,10 +718,24 @@ Check deleting of entries::
         <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
       <ou=demo,dc=my-domain,dc=com:ou=demo - False>
 
-    >>> root.changed, customer.changed
-    (True, False)
+    >>> root.changed, customers.changed, customer.changed, \
+    ...     customerattrempty.changed
+    (True, True, False, True)
+
+    >>> customerattrempty.parent is customers
+    True
+
+    >>> customers._added_children
+    set([u'cn=customer99'])
+
+    >>> customers._modified_children
+    set([])
 
     >>> customerattrempty()
+
+    >>> root.changed, customers.changed, customerattrempty.changed
+    (False, False, False)
+
     >>> root.printtree()
     <dc=my-domain,dc=com - False>
       <ou=customers,dc=my-domain,dc=com:ou=customers - False>
@@ -766,7 +806,7 @@ Test invalidation. Initialize node::
     <ou=customers,dc=my-domain,dc=com - False>
       <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
       <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-      <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+      <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
       <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
       <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
       <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
@@ -777,16 +817,13 @@ Invalidate node, children are invalidated and attrs are loaded::
     >>> node.storage
     odict()
 
-    >>> print node._keys
-    None
-
 Reload entries::
 
     >>> node.printtree()
     <ou=customers,dc=my-domain,dc=com - False>
       <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
       <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-      <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+      <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
       <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
       <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
       <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
@@ -812,7 +849,7 @@ Reload attrs, change child and try to invalidate again, also fails::
       ...
     RuntimeError: Invalid tree state. Try to invalidate changed node.
 
-Reload child attrs and check internal node statem only customer one loaded::
+Reload child attrs and check internal node state only customer one loaded::
 
     >>> node['ou=customer1'].attrs.load()
     >>> node.changed
@@ -821,26 +858,20 @@ Reload child attrs and check internal node statem only customer one loaded::
     >>> node.storage.values()
     [<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>]
 
-    >>> node._keys.values()
-    [True, False, False, False, False, False]
-
 Reload all children and check node state::
 
     >>> node.values()
     [<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>,
     <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>,
-    <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>,
+    <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>,
     <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>,
     <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>,
     <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
 
-    >>> node._keys.values()
-    [True, True, True, True, True, True]
-
     >>> node.storage.values()
     [<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>,
     <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>,
-    <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>,
+    <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>,
     <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>,
     <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>,
     <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
@@ -850,13 +881,10 @@ Invalidate with given key invalidates only child::
     >>> node.invalidate('ou=customer1')
     >>> node.storage.values()
     [<ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>,
-    <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>,
+    <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>,
     <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>,
     <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>,
     <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
-
-    >>> node._keys.values()
-    [False, True, True, True, True, True]
 
 Invalidate changed child fails::
 
