@@ -128,7 +128,9 @@ Binary Data
 
 Access existing binary data::
 
-    >>> binnode =  root['ou=customers']['uid=binary']
+    >>> customers = root['ou=customers']
+    >>> binnode = customers['uid=binary']
+
     >>> binnode.attrs['jpegPhoto'][:20]
     '\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x01,\x01,\x00\x00'
 
@@ -140,14 +142,47 @@ Change binary data::
     >>> import os
     >>> jpegdata = open(os.path.join(os.path.dirname(__file__), 'testing',
     ...                 'data', 'binary.jpg')).read()
-    >>> binnode.attrs['jpegPhoto'] =  jpegdata
+
+    >>> customers is binnode.parent
+    True
+
+    >>> from node.ext.ldap._node import ACTION_MODIFY
+    >>> binnode._action == ACTION_MODIFY
+    False
+
+    >>> customers._modified_children
+    set([])
+
+    >>> binnode.parent._modified_children
+    set([])
+
+    >>> customers._modified_children is binnode.parent._modified_children
+    True
+
+    >>> binnode.attrs['jpegPhoto'] = jpegdata
+
+    >>> binnode._action == ACTION_MODIFY
+    True
+
+    >>> customers._modified_children is binnode.parent._modified_children
+    True
+
+    >>> customers._modified_children
+    set([u'uid=binary'])
+
+    >>> binnode.parent._modified_children
+    set([u'uid=binary'])
+
     >>> binnode()
+
+Reload::
 
     >>> root = LDAPNode('dc=my-domain,dc=com', props)
     >>> customers = root['ou=customers']
-    >>> binnode =  customers['uid=binary']
+    >>> binnode = customers['uid=binary']
     >>> binnode.attrs['jpegPhoto'] == jpegdata
     True
+
 
 Create New Node
 ---------------
@@ -192,7 +227,7 @@ Tree has not changed yet::
       <ou=customers,dc=my-domain,dc=com:ou=customers - False>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
       <ou=demo,dc=my-domain,dc=com:ou=demo - False>
 
@@ -213,6 +248,20 @@ Now it got the LDAP session which is used by the whole tree::
     >>> root.ldap_session is customer.ldap_session
     True
 
+Check added node internal DN::
+
+    >>> customer._dn
+    u'ou=customer3,ou=customers,dc=my-domain,dc=com'
+
+Data has changed in memory, but not persisted yet to LDAP::
+
+    >>> customers.keys()
+    [u'ou=customer1', 
+    u'ou=customer2', 
+    u'ou=n\xe4sty\\, customer', 
+    u'uid=binary', 
+    u'ou=customer3']
+
 Now tree nodes from customer up to root are flagged changed after adding the
 new node::
 
@@ -221,7 +270,7 @@ new node::
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
       <ou=demo,dc=my-domain,dc=com:ou=demo - False>
@@ -232,11 +281,6 @@ if this works::
 
     >>> customer.keys()
     []
-
-Data has changed in memory, but not persisted yet to LDAP::
-
-    >>> customers.keys()
-    [u'ou=customer1', u'ou=customer2', u'ou=n\xe4sty\\, customer', u'uid=binary', u'ou=customer3']
 
 The Container has changed...::
 
@@ -290,7 +334,7 @@ All nodes are flagged unchanged again::
       <ou=customers,dc=my-domain,dc=com:ou=customers - False>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
       <ou=demo,dc=my-domain,dc=com:ou=demo - False>
@@ -325,13 +369,20 @@ Change the container of the person::
 Tell the person to commit its changes. The container (customer3) is still
 changed because of its changed attributes::
 
+    >>> customer._added_children
+    set([u'cn=max'])
+
     >>> person()
+
+    >>> customer._added_children
+    set([])
+
     >>> root.printtree()
     <dc=my-domain,dc=com - True>
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
@@ -345,7 +396,7 @@ Call customer now, whole tree unchanged again::
       <ou=customers,dc=my-domain,dc=com:ou=customers - False>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
@@ -362,19 +413,40 @@ person is still changed::
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - True>
       <ou=demo,dc=my-domain,dc=com:ou=demo - False>
 
+    >>> person.nodespaces['__attrs__'].changed
+    True
+    >>> person._changed
+    True
+
+    >>> customer.nodespaces['__attrs__'].changed
+    True
+    >>> customer._changed
+    True
+
     >>> customer.attrs.load()
+
+    >>> person.nodespaces['__attrs__'].changed
+    True
+    >>> person._changed
+    True
+
+    >>> customer.nodespaces['__attrs__'].changed
+    False
+    >>> customer._changed
+    True
+
     >>> root.printtree()
     <dc=my-domain,dc=com - True>
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - True>
@@ -388,7 +460,7 @@ After calling person, whole tree is unchanged again::
       <ou=customers,dc=my-domain,dc=com:ou=customers - False>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
@@ -570,14 +642,14 @@ Check deleting of entries::
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
         <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
       <ou=demo,dc=my-domain,dc=com:ou=demo - False>
 
-    >>> [k for k in customer._keys]
+    >>> [k for k in customer.storage.keys()]
     [u'cn=max']
 
     >>> del customer['cn=max']
@@ -585,7 +657,13 @@ Check deleting of entries::
     ... person.attrs.changed
     (True, True, True, False)
 
-    >>> [k for k in customer._keys]
+    >>> [k for k in customer.storage.keys()]
+    [u'cn=max']
+
+    >>> customer._deleted_children
+    set([u'cn=max'])
+
+    >>> customer.keys()
     []
 
     >>> root.printtree()
@@ -593,7 +671,7 @@ Check deleting of entries::
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
         <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
@@ -608,7 +686,7 @@ Check deleting of entries::
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
         <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
@@ -623,7 +701,7 @@ Check deleting of entries::
       <ou=customers,dc=my-domain,dc=com:ou=customers - False>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\2C customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
         <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
