@@ -203,6 +203,7 @@ class LDAPStorage(OdictStorage):
         self._binary_attributes = {}
         if props:
             # only at root node
+            self._props = props
             self._ldap_session = LDAPSession(props)
             self._ldap_session.baseDN = self.DN
             self._ldap_schema_info = LDAPSchemaInfo(props)

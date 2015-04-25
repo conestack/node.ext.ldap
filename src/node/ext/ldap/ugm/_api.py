@@ -93,7 +93,7 @@ class PrincipalsConfig(object):
         self.expiresAttr = expiresAttr
         self.expiresUnit = expiresUnit
         # XXX: member_relation
-        #self.member_relation = member_relation
+        # self.member_relation = member_relation
 
 
 @implementer(IUsersConfig)
@@ -306,14 +306,14 @@ class LDAPGroupMapping(Behavior):
     @locktree
     def add(self, key):
         key = decode_utf8(key)
-        if not key in self.member_ids:
+        if key not in self.member_ids:
             val = self.translate_key(key)
             # self.context.attrs[self._member_attribute].append won't work here
             # issue in LDAPNodeAttributes, does not recognize changed this way.
             old = self.context.attrs.get(self._member_attribute, list())
             self.context.attrs[self._member_attribute] = old + [val]
             # XXX: call here immediately?
-            #self.context()
+            # self.context()
 
     @default
     @property
@@ -424,22 +424,24 @@ class LDAPPrincipals(OdictStorage):
             context.child_defaults.update(cfg.defaults)
         for oc in cfg.objectClasses:
             for key, val in creation_defaults.get(oc, dict()).items():
-                if not key in context.child_defaults:
+                if key not in context.child_defaults:
                     context.child_defaults[key] = val
 
-        # XXX: make these attrs public
-        context._key_attr = cfg.attrmap['id']
-        context._rdn_attr = cfg.attrmap['rdn']
+        # if cfg.member_relation:
+        #     context.search_relation = cfg.member_relation
 
-        #if cfg.member_relation:
-        #    context.search_relation = cfg.member_relation
+        # context._key_attr = cfg.attrmap['id']
+        # context._rdn_attr = cfg.attrmap['rdn']
+        # context._seckey_attrs = ('dn',)
 
-        context._seckey_attrs = ('dn',)
+        self._key_attr = cfg.attrmap['id']
+        self._rdn_attr = cfg.attrmap['rdn']
+        self._login_attr = None
         if cfg.attrmap.get('login') \
-          and cfg.attrmap['login'] != cfg.attrmap['id']:
-            context._seckey_attrs += (cfg.attrmap['login'],)
+                and cfg.attrmap['login'] != cfg.attrmap['id']:
+            self._login_attr = cfg.attrmap['login']
 
-        context._load_keys()
+        # context._load_keys()
 
         self.expiresAttr = getattr(cfg, 'expiresAttr', None)
         self.expiresUnit = getattr(cfg, 'expiresUnit', None)
@@ -453,40 +455,19 @@ class LDAPPrincipals(OdictStorage):
 
         Raise KeyError if not enlisted.
         """
-        self.context.keys()
-        idsbydn = self.context._seckeys['dn']
+        #if strict:
+        #    raise KeyError(dn)
         try:
-            return idsbydn[dn]
-        except KeyError:
-            # It's possible that we got a different string resulting
-            # in the same DN, as every components can have individual
-            # comparison rules (see also node.ext.ldap._node.LDAPNode.DN).
-            # We leave the job to LDAP and try again with the resulting DN.
-            #
-            # This was introduced because a customer has group
-            # member attributes where the DN string differs.
-            #
-            # This would not be necessary, if an LDAP directory
-            # is consistent, i.e does not use different strings to
-            # talk about the same.
-            #
-            # Normalization of DN in python would also be a
-            # solution, but requires implementation of all comparison
-            # rules defined in schemas. Maybe we can retrieve them
-            # from LDAP.
-            if strict:
-                raise KeyError(dn)
             search = self.context.ldap_session.search
-            try:
-                dn = search(baseDN=dn.encode('utf-8'))[0][0]
-            except ldap.NO_SUCH_OBJECT:
-                raise KeyError(dn)
-            return idsbydn[dn.decode('utf-8')]
+            res = search(baseDN=dn.encode('utf-8'))[0]
+            return res[1][self._key_attr][0].decode('utf-8')
+        except ldap.NO_SUCH_OBJECT:
+            raise KeyError(dn)
 
     @override
     @property
     def ids(self):
-        return self.context.keys()
+        return list(self.__iter__())
 
     @default
     @locktree
@@ -505,10 +486,19 @@ class LDAPPrincipals(OdictStorage):
         try:
             return self.storage[key]
         except KeyError:
+            criteria = {self._key_attr: key}
+            attrlist = ['dn', self._key_attr]
+            res = self.context.search(criteria=criteria, attrlist=attrlist)
+            if not res:
+                raise KeyError(key)
+            if len(res) > 1:
+                msg = u'More than one principal with id "{0}" found.'
+                logger.warning(msg.format(key))
+            principal_dn = res[0][1]['dn']
             principal = self.principal_factory(
-                self.context[key],
+                LDAPNode(principal_dn, self.context._props),
                 attraliaser=self.principal_attraliaser)
-            principal.__name__ = self.context[key].name
+            principal.__name__ = key
             principal.__parent__ = self
             self.storage[key] = principal
             return principal
@@ -516,20 +506,37 @@ class LDAPPrincipals(OdictStorage):
     @default
     @locktree
     def __iter__(self):
-        return self.context.__iter__()
+        attrlist = [self._key_attr]
+        res = self.context.search(attrlist=attrlist)
+        for principal in res:
+            yield principal[1][self._key_attr][0]
 
     @default
     @locktree
     def __setitem__(self, name, vessel):
-        """XXX: mechanism for defining a target container if search scope is
-                SUBTREE
-        """
+        # XXX: mechanism for defining a target container if search scope is
+        #      SUBTREE
         try:
             attrs = vessel.attrs
         except AttributeError:
             raise ValueError(u"no attributes found, cannot convert.")
-        if name in self:
-            raise KeyError(u"Key already exists: '%s'." % (name,))
+        try:
+            self[name]
+            raise KeyError(u"Key already exists: '{0}'.".format(name))
+        except KeyError:
+            pass
+
+        #if vessel.attrs.get('id'):
+        #    vessel.attrs[self._key_attr] = vessel.attrs['id']
+        #if self._login_attr and vessel.attrs.get('login'):
+        #    vessel.attrs[self._login_attr] = vessel.attrs['login']
+        #if not vessel.attrs.get(self._rdn_attr):
+        #    msg = "'{0}' needed in node attributes for rdn."
+        #    raise ValueError(msg.format(self._rdn_attr))
+
+        rdn = u'{0}={1}'.format(self._rdn_attr, name)
+        self.context[rdn] = nextvessel
+
         nextvessel = AttributedNode()
         nextvessel.__name__ = name
         nextvessel.attribute_access_for_attrs = False
@@ -541,7 +548,7 @@ class LDAPPrincipals(OdictStorage):
         # XXX: cache
         for key, val in attrs.iteritems():
             principal.attrs[key] = val
-        self.context[name] = nextvessel
+        self.storage[name] = principal
 
     @default
     @property
@@ -679,47 +686,69 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
 
     @default
     def id_for_login(self, login):
-        return self.context._seckeys.get(
-            self.principal_attrmap.get('login'), {}).get(login, login)
+        if not self._login_attr:
+            return login
+        criteria = {self._login_attr: login}
+        attrlist = [self._key_attr]
+        res = self.context.search(criteria=criteria, attrlist=attrlist)
+        if not res:
+            return login
+        if len(res) > 1:
+            msg = u'More than one principal with login "{0}" found.'
+            logger.warning(msg.format(login))
+        return res[0][1][self._key_attr][0]
 
     @default
     @debug
     def authenticate(self, id=None, pw=None):
         # XXX: rename 'id' kw arg to 'login'
-        id = decode_utf8(id)
-        id = self.id_for_login(id)
-        try:
-            if self.expiresAttr:
-                criteria = {self.context._rdn_attr: id}
-                res = self.context.search(criteria=criteria,
-                                          attrlist=[self.expiresAttr])
-                expires = res[0][1].get(self.expiresAttr)
-                expires = expires and expires[0] or None
-                try:
-                    expired = calculate_expired(self.expiresUnit, expires)
-                except ValueError:
-                    # unknown expires field data
-                    msg = u"Accound expiration flag for user '%s' " + \
-                          u"contains unknown data"
-                    msg = msg % id
-                    logger.error(msg)
-                    return False
-                if expired:
-                    return ACCOUNT_EXPIRED
-            userdn = self.context.child_dn(id)
-        except (KeyError, IndexError):
+        user_id = self.id_for_login(decode_utf8(id))
+        criteria = {self._key_attr: user_id}
+        attrlist = ['dn']
+        if self.expiresAttr:
+            attrlist.append(self.expiresAttr)
+        res = self.context.search(criteria=criteria, attrlist=attrlist)
+        if not res:
             return False
+        if len(res) > 1:
+            msg = u'More than one principal with login "{0}" found.'
+            logger.warning(msg.format(user_id))
+        if self.expiresAttr:
+            expires = res[0][1].get(self.expiresAttr)
+            expires = expires and expires[0] or None
+            try:
+                expired = calculate_expired(self.expiresUnit, expires)
+            except ValueError:
+                # unknown expires field data
+                msg = u"Accound expiration flag for user '{0}' " + \
+                      u"contains unknown data"
+                logger.error(msg.format(id))
+                return False
+            if expired:
+                return ACCOUNT_EXPIRED
+        user_dn = res[0][1]['dn']
         session = self.context.ldap_session
-        return session.authenticate(userdn.encode('utf-8'), pw) and id or False
+        authenticated = session.authenticate(user_dn.encode('utf-8'), pw)
+        return authenticated and user_id or False
 
     @default
     @debug
     def passwd(self, id, oldpw, newpw):
-        id = decode_utf8(id)
-        userdn = self.context.child_dn(id).encode('utf-8')
-        self.context.ldap_session.passwd(userdn, oldpw, newpw)
+        user_id = self.id_for_login(decode_utf8(id))
+        criteria = {self._key_attr: user_id}
+        attrlist = ['dn']
+        if self.expiresAttr:
+            attrlist.append(self.expiresAttr)
+        res = self.context.search(criteria=criteria, attrlist=attrlist)
+        if not res:
+            return
+        if len(res) > 1:
+            msg = u'More than one principal with login "{0}" found.'
+            logger.warning(msg.format(user_id))
+        user_dn = res[0][1]['dn']
+        self.context.ldap_session.passwd(user_dn, oldpw, newpw)
         object_classes = self.context.child_defaults['objectClass']
-        user_node = self[id].context
+        user_node = self[user_id].context
         user_node.attrs.load()
         if 'sambaSamAccount' in object_classes:
             user_node.attrs['sambaNTPassword'] = sambaNTPassword(newpw)
