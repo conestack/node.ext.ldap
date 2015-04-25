@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from odict import odict
 from ldap import (
     MOD_ADD,
     MOD_DELETE,
     MOD_REPLACE,
     NO_SUCH_OBJECT,
+    INVALID_DN_SYNTAX,
 )
 from ldap.functions import explode_dn
 from zope.interface import implementer
@@ -60,7 +60,7 @@ ACTION_MODIFY = 1
 ACTION_DELETE = 2
 
 
-class AttributesBehavior(Behavior):
+class LDAPAttributesBehavior(Behavior):
 
     @plumb
     def __init__(_next, self, name=None, parent=None):
@@ -69,13 +69,15 @@ class AttributesBehavior(Behavior):
 
     @default
     def load(self):
-        if not self.parent.name \
-          or not self.parent.ldap_session \
-          or self.parent._action == ACTION_ADD:
+        ldap_node = self.parent
+        # nothong to load
+        if not ldap_node.name \
+                or not ldap_node.ldap_session \
+                or ldap_node._action == ACTION_ADD:
             return
-
+        # clear in case reload
         self.clear()
-
+        # query all attributes
         attrlist = ['*']
 
         # XXX: operational attributes
@@ -86,31 +88,39 @@ class AttributesBehavior(Behavior):
         # if self.session._props.memberOfSupport:
         #    attrlist.append('memberOf')
 
-        # fetch our node with all attributes
-        entry = self.parent.ldap_session.search(
-                scope=BASE,
-                baseDN=self.parent.DN.encode('utf-8'),
-                force_reload=self.parent._reload,
-                attrlist=attrlist,
-                )
-
+        # fetch attributes for ldap_node
+        entry = ldap_node.ldap_session.search(
+            scope=BASE,
+            baseDN=ldap_node.DN.encode('utf-8'),
+            force_reload=ldap_node._reload,
+            attrlist=attrlist,
+        )
+        # result length must be 1
         if len(entry) != 1:
             raise RuntimeError(                            # pragma NO COVERAGE
                 u"Fatal. Expected entry does not exist "   # pragma NO COVERAGE
-                u"or more than one entry found")           # pragma NO COVERAGE
-
+                u"or more than one entry found"            # pragma NO COVERAGE
+            )                                              # pragma NO COVERAGE
+        # read attributes from result and set to self
         attrs = entry[0][1]
         for key, item in attrs.items():
             if len(item) == 1 and not self.is_multivalued(key):
                 self[key] = item[0]
             else:
                 self[key] = item
-        # superclass' __setitem__ set our changed flag. We just loaded from
-        # ldap and are not changed.
+        # __setitem__ has set our changed flag. We just loaded from LDAP, so
+        # unset it
         self.changed = False
-        if self.parent._action not in [ACTION_ADD, ACTION_DELETE]:
-            self.parent._action = None
-            self.parent.changed = False
+        # node has been modified prior to (re)loading attributes, so unset
+        # markers there too
+        if ldap_node._action not in [ACTION_ADD, ACTION_DELETE]:
+            # remove ldap node key from parent modified list if present
+            # need to do this before setting changed to false, otherwise
+            # setting changed flag gets ignored.
+            if ldap_node.parent:
+                ldap_node.parent._modified_children.remove(ldap_node.name)
+            ldap_node._action = None
+            ldap_node.changed = False
 
     @plumb
     def __setitem__(_next, self, key, val):
@@ -127,10 +137,13 @@ class AttributesBehavior(Behavior):
 
     @default
     def _set_attrs_modified(self):
+        ldap_node = self.parent
         self.changed = True
-        if self.parent._action not in [ACTION_ADD, ACTION_DELETE]:
-            self.parent._action = ACTION_MODIFY
-            self.parent.changed = True
+        if ldap_node._action not in [ACTION_ADD, ACTION_DELETE]:
+            ldap_node._action = ACTION_MODIFY
+            ldap_node.changed = True
+            if ldap_node.parent:
+                ldap_node.parent._modified_children.add(ldap_node.name)
 
     @default
     def is_binary(self, name):
@@ -141,18 +154,18 @@ class AttributesBehavior(Behavior):
         return name in self.parent.root._multivalued_attributes
 
 
-AttributesPart = AttributesBehavior  # B/C
+AttributesPart = LDAPAttributesBehavior  # B/C
 deprecated('AttributesPart', """
 ``node.ext.ldap._node.AttributesPart`` is deprecated as of node.ext.ldap 0.9.4
 and will be removed in node.ext.ldap 1.0. Use
-``node.ext.ldap._node.AttributesBehavior`` instead.""")
+``node.ext.ldap._node.LDAPAttributesBehavior`` instead.""")
 
 
 @plumbing(
-    AttributesBehavior,
+    LDAPAttributesBehavior,
     AttributesLifecycle)
 class LDAPNodeAttributes(NodeAttributes):
-    """
+    """Attributes for LDAPNode.
     """
 
 
@@ -177,12 +190,15 @@ class LDAPStorage(OdictStorage):
             name = name.decode(CHARACTER_ENCODING)
         self.__name__ = name
         self.__parent__ = None
+        self._dn = None
         self._ldap_session = None
         self._changed = False
         self._action = None
+        self._added_children = set()
+        self._modified_children = set()
+        self._deleted_children = set()
         self._seckey_attrs = None
         self._reload = False
-        self._init_keys()
         self._multivalued_attributes = {}
         self._binary_attributes = {}
         if props:
@@ -210,8 +226,7 @@ class LDAPStorage(OdictStorage):
 
     @finalize
     def __getitem__(self, key):
-        """Here nodes are created for keys, if they do not exist already
-        """
+        # nodes are created for keys, if they do not already exist in memory
         if isinstance(key, str):
             key = decode(key)
         try:
@@ -221,15 +236,18 @@ class LDAPStorage(OdictStorage):
             val.__name__ = key
             val.__parent__ = self
             try:
-                self.ldap_session.search(
+                res = self.ldap_session.search(
                     scope=BASE,
-                    baseDN=val.DN.encode('utf-8')
+                    baseDN=val.DN.encode('utf-8'),
+                    attrlist=[''],  # no need for attrs
                 )
-            except NO_SUCH_OBJECT:
+                # remember DN
+                val._dn = res[0][0]
+                val._ldap_session = self.ldap_session
+                self.storage[key] = val
+                return val
+            except (NO_SUCH_OBJECT, INVALID_DN_SYNTAX):
                 raise KeyError(key)
-            val._ldap_session = self.ldap_session
-            self.storage[key] = val
-            return val
 
     @finalize
     def __setitem__(self, key, val):
@@ -243,7 +261,7 @@ class LDAPStorage(OdictStorage):
             # create one from whatever we got
             val = self._create_suitable_node(val)
 
-        # At this point we need to have an LDAPNode as val
+        # at this point we need to have an LDAPNode as val
         if self._key_attr != 'rdn':
             val.attrs[self._key_attr] = key
             if val.attrs.get(self._rdn_attr) is None:
@@ -262,27 +280,29 @@ class LDAPStorage(OdictStorage):
 
         val.__name__ = key
         val.__parent__ = self
+        val._dn = self.child_dn(key)
         val._ldap_session = self.ldap_session
 
-        if self._keys is None:
-            self._load_keys()
         try:
-            # a value with key is already in the directory
-            self._keys[key]
-        except KeyError:
+            self.ldap_session.search(
+                scope=BASE,
+                baseDN=val.DN.encode('utf-8'),
+                attrlist=[''],  # no need for attrs
+            )
+        except (NO_SUCH_OBJECT, INVALID_DN_SYNTAX):
             # the value is not yet in the directory
             val._action = ACTION_ADD
             val.changed = True
             self.changed = True
+            self._added_children.add(key)
 
         self.storage[key] = val
-        self._keys[key] = True
 
-        if self._key_attr == 'rdn':
-            rdn = key
-        else:
-            rdn = '%s=%s' % (self._rdn_attr, val.attrs[self._rdn_attr])
-        self._child_dns[key] = ','.join((rdn, self.DN))
+        # if self._key_attr == 'rdn':
+        #     rdn = key
+        # else:
+        #     rdn = '%s=%s' % (self._rdn_attr, val.attrs[self._rdn_attr])
+        # self._child_dns[key] = ','.join((rdn, self.DN))
 
         if self.child_defaults:
             for k, v in self.child_defaults.items():
@@ -295,45 +315,68 @@ class LDAPStorage(OdictStorage):
 
     @finalize
     def __delitem__(self, key):
-        """Do not delete immediately. Just mark LDAPNode to be deleted and
-        remove key from self._keys.
-        """
+        # do not delete immediately. Just mark LDAPNode to be deleted.
         if isinstance(key, str):
             key = decode(key)
         val = self[key]
         val._action = ACTION_DELETE
         # this will also trigger the changed chain
         val.changed = True
-        del self._keys[key]
-        try:
-            self._deleted.append(val)
-        except AttributeError:
-            self._deleted = list()
-            self._deleted.append(val)
+        self._deleted_children.add(key)
 
     @finalize
     def __iter__(self):
-        """This is where keys are retrieved from ldap
-        """
         if self.name is None:
-            return iter(list())
-        if self._reload:
-            self._init_keys()
-        if self._keys is None and self._action != ACTION_ADD:
-            self._load_keys()
+            return
+        attrlist = ['dn']
+#         if self._seckey_attrs:
+#             self._seckeys = dict()
+#             attrlist.extend(self._seckey_attrs)
         try:
-            return self._keys.__iter__()
-        except Exception:
-            return iter(list())
+            res = self.search(attrlist=attrlist)
+        # happens if not persisted yet
+        except NO_SUCH_OBJECT:
+            res = list()
+        for key, attrs in res:
+#             self._keys[key] = False
+#             self._child_dns[key] = attrs['dn']
+#             for seckey_attr, seckey in self._calculate_seckeys(attrs).items():
+#                 try:
+#                     self._seckeys[seckey_attr]
+#                 except KeyError:
+#                     self._seckeys[seckey_attr] = {}
+#                 try:
+#                     self._seckeys[seckey_attr][seckey]
+#                 except KeyError:
+#                     self._seckeys[seckey_attr][seckey] = key
+#                 else:
+#                     if not self._check_duplicates:
+#                         continue
+# 
+#                     raise KeyError(
+#                         u"Secondary key not unique: {0}='{1}'.".format(
+#                             seckey_attr, seckey
+#                         )
+#                     )
+            # do not yield if node is supposed to be deleted
+            if key not in self._deleted_children:
+                yield key
+        # also yield keys of children not persisted yet.
+        for key in self._added_children:
+            yield key
 
     @finalize
     def __call__(self):
         if self.changed and self._action is not None:
             if self._action == ACTION_ADD:
+                self.parent._added_children.remove(self.name)
                 self._ldap_add()
             elif self._action == ACTION_MODIFY:
+                if self.parent:
+                    self.parent._modified_children.remove(self.name)
                 self._ldap_modify()
             elif self._action == ACTION_DELETE:
+                self.parent._deleted_children.remove(self.name)
                 self._ldap_delete()
             try:
                 self.nodespaces['__attrs__'].changed = False
@@ -341,9 +384,8 @@ class LDAPStorage(OdictStorage):
                 pass
             self.changed = False
             self._action = None
-        if self._keys is None:
-            return
-        for node in self.storage.values() + getattr(self, '_deleted', []):
+        deleted = [self[key] for key in self._deleted_children]
+        for node in self.storage.values() + deleted:
             if node.changed:
                 node()
 
@@ -371,30 +413,25 @@ class LDAPStorage(OdictStorage):
     def ldap_session(self):
         return self._ldap_session
 
-    # This is really ldap
     @default
     @property
     def DN(self):
-        """
-        ATTENTION: For one and the same entry, ldap will always return
-        the same DN. However, depending on the individual syntax
-        definition of the DN's components there might be a multitude
-        of strings that equal the same DN, e.g. for cn:
-           'cn=foo bar' == 'cn=foo   bar' -> True
-        """
-        if self.parent is not None:
+        # ATTENTION: For one and the same entry, ldap will always return
+        # the same DN. However, depending on the individual syntax
+        # definition of the DN's components there might be a multitude
+        # of strings that equal the same DN, e.g. for cn:
+        #    'cn=foo bar' == 'cn=foo   bar' -> True
+        if self.parent:
             return self.parent.child_dn(self.name)
-        elif self.name is not None:
+        if self.name:
             # We should not have a name if we are not a root node.
             return decode(self.name)
-        else:
-            return u''
+        return u''
 
     @default
     @property
     def rdn_attr(self):
-        """XXX: only tested on LDAPNode, might not work in UGM
-        """
+        # XXX: only tested on LDAPNode, might not work in UGM
         return self.name and self.name.split('=')[0] or None
 
     def _get_changed(self):
@@ -416,34 +453,39 @@ class LDAPStorage(OdictStorage):
         oldval = self._changed
         if value is oldval:
             return
+        # setting is easy
         if value:
-            # Setting is easy
             self._changed = True
+        # unsetting needs more checks
         else:
-            # Unsetting needs more checks
+            # check whether children are added, modified or deleted, cannot
+            # unset changed state if so
+            if len(self._added_children) \
+                    or len(self._modified_children) \
+                    or len(self._deleted_children):
+                return
+            # check whether attributes has changed, cannot unset changed if so
             try:
+                # access attrs nodespace directly to avoid recursion error
                 if self.nodespaces['__attrs__'].changed:
                     return
+            # No attributes loaded yet, ignore
             except KeyError:
-                # No attributes loaded, yet - cannot be changed
                 pass
-            childs = getattr(self, '_deleted', [])
-            if self._keys is not None:
-                childs.extend(self.storage.values())
-            for child in childs:
-                if child.changed:
-                    return
+            # finally unset changed flag
             self._changed = False
-        # And propagate to parent
+        # propagate to parent
         if self._changed is not oldval and self.parent is not None:
             self.parent.changed = self._changed
 
     changed = default(property(_get_changed, _set_changed))
 
-    # This is really ldap
     @default
     def child_dn(self, key):
-        return decode(self._child_dns[key])
+        # return child DN for key
+        if self._dn:
+            return u','.join([decode(key), decode(self._dn)])
+        return u','.join([decode(key), decode(self.name)])
 
     @default
     @debug
@@ -541,10 +583,8 @@ class LDAPStorage(OdictStorage):
               reload as well.
 
         If key is given:
-            - if child in self._keys, check if child has changed
             - if changed, raise RuntimeError
-            - if not changed, remove item from self.storage and set
-              self._keys[key] to False, which forces it to be reloaded.
+            - if not changed, remove item from self.storage.
         """
         if key is None:
             if self.changed:
@@ -552,7 +592,7 @@ class LDAPStorage(OdictStorage):
                                    u"changed node.")
             self.storage.clear()
             self.attrs.load()
-            self._init_keys()
+            # XXX: needs to get unset again somwhere
             self._reload = True
             return
         try:
@@ -562,7 +602,6 @@ class LDAPStorage(OdictStorage):
                     u"Invalid tree state. Try to invalidate "
                     u"changed child node '%s'." % (key,))
             del self.storage[key]
-            self._keys[key] = False
         except KeyError:
             pass
 
@@ -619,9 +658,9 @@ class LDAPStorage(OdictStorage):
 #                     )
 #                 )
 
-    # a keymapper
     @default
     def _calculate_key(self, dn, attrs):
+        # a keymapper
         if self._key_attr == 'rdn':
             # explode_dn is ldap world
             key = explode_dn(encode(dn))[0]
@@ -635,10 +674,9 @@ class LDAPStorage(OdictStorage):
                 key = key[0]
         return decode(key)
 
-# XXX: move to UGM
-#     # secondary keys
 #     @default
 #     def _calculate_seckeys(self, attrs):
+#         # secondary keys
 #         if not self._seckey_attrs:
 #             return {}
 #         seckeys = {}
@@ -660,6 +698,7 @@ class LDAPStorage(OdictStorage):
 
     @default
     def _create_suitable_node(self, vessel):
+        # convert vessel node to LDAPNode
         try:
             attrs = vessel.attrs
         except AttributeError:
@@ -671,8 +710,7 @@ class LDAPStorage(OdictStorage):
 
     @default
     def _ldap_add(self):
-        """adds self to the ldap directory.
-        """
+        # adds self to the ldap directory.
         attrs = {}
         for key, value in self.attrs.items():
             if not self.attrs.is_binary(key):
@@ -682,8 +720,7 @@ class LDAPStorage(OdictStorage):
 
     @default
     def _ldap_modify(self):
-        """modifies attributs of self on the ldap directory.
-        """
+        # modifies attributs of self on the ldap directory.
         modlist = list()
         orgin = self.attributes_factory(name='__attrs__', parent=self)
 
@@ -709,11 +746,8 @@ class LDAPStorage(OdictStorage):
 
     @default
     def _ldap_delete(self):
-        """delete self from the ldap-directory.
-        """
-        self.parent._keys[self.name] = False
+        # delete self from the ldap-directory.
         del self.parent.storage[self.name]
-        del self.parent._keys[self.name]
         self.ldap_session.delete(encode(self.DN))
 
     @default
