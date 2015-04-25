@@ -4,12 +4,13 @@ from ldap import (
     MOD_ADD,
     MOD_DELETE,
     MOD_REPLACE,
+    NO_SUCH_OBJECT,
 )
 from ldap.functions import explode_dn
 from zope.interface import implementer
 from zope.deprecation import deprecated
 from plumber import (
-    plumber,
+    plumbing,
     Behavior,
     plumb,
     default,
@@ -147,20 +148,16 @@ and will be removed in node.ext.ldap 1.0. Use
 ``node.ext.ldap._node.AttributesBehavior`` instead.""")
 
 
+@plumbing(
+    AttributesBehavior,
+    AttributesLifecycle)
 class LDAPNodeAttributes(NodeAttributes):
-    __metaclass__ = plumber
-    __plumbing__ = (
-        AttributesBehavior,
-        AttributesLifecycle,
-    )
+    """
+    """
 
 
 @implementer(ILDAPStorage, IInvalidate)
 class LDAPStorage(OdictStorage):
-    """
-    XXX: only use ``self.storage`` to store real values, ``self._keys` should
-         only contain ``True`` or ``False``
-    """
     attributes_factory = finalize(LDAPNodeAttributes)
 
     @finalize
@@ -217,17 +214,22 @@ class LDAPStorage(OdictStorage):
         """
         if isinstance(key, str):
             key = decode(key)
-        if not self._keys:
-            self._load_keys()
-        if self._keys[key]:
+        try:
             return self.storage[key]
-        val = self.child_factory()
-        val._ldap_session = self.ldap_session
-        val.__name__ = key
-        val.__parent__ = self
-        self.storage[key] = val
-        self._keys[key] = True
-        return val
+        except KeyError:
+            val = self.child_factory()
+            val.__name__ = key
+            val.__parent__ = self
+            try:
+                self.ldap_session.search(
+                    scope=BASE,
+                    baseDN=val.DN.encode('utf-8')
+                )
+            except NO_SUCH_OBJECT:
+                raise KeyError(key)
+            val._ldap_session = self.ldap_session
+            self.storage[key] = val
+            return val
 
     @finalize
     def __setitem__(self, key, val):
@@ -564,58 +566,58 @@ class LDAPStorage(OdictStorage):
         except KeyError:
             pass
 
-    @default
-    def _init_keys(self):
-        # the _keys is None or an odict.
-        # if an odict, the value is either None or the value
-        # None means, the value wasnt loaded
-        self._keys = None
-        self._seckeys = None
-        self._child_dns = None
-
-    @default
-    def _load_keys(self):
-        self._keys = odict()
-        self._child_dns = {}
-        attrlist = ['dn']
-        if self._seckey_attrs:
-            self._seckeys = dict()
-            attrlist.extend(self._seckey_attrs)
-        for key, attrs in self.search(attrlist=attrlist):
-            try:
-                self._keys[key]
-            except KeyError:
-                self._keys[key] = False
-                self._child_dns[key] = attrs['dn']
-                for seckey_attr, seckey in \
-                        self._calculate_seckeys(attrs).items():
-                    try:
-                        self._seckeys[seckey_attr]
-                    except KeyError:
-                        self._seckeys[seckey_attr] = {}
-                    try:
-                        self._seckeys[seckey_attr][seckey]
-                    except KeyError:
-                        self._seckeys[seckey_attr][seckey] = key
-                    else:
-                        if not self._check_duplicates:
-                            continue
-
-                        raise KeyError(
-                            u"Secondary key not unique: {0}='{1}'.".format(
-                                seckey_attr, seckey
-                            )
-                        )
-            else:
-                if not self._check_duplicates:
-                    continue
-
-                raise RuntimeError(
-                    u"Key not unique: {0}='{1}' (you may want to disable "
-                    u"check_duplicates)".format(
-                        self._key_attr, key
-                    )
-                )
+#     @default
+#     def _init_keys(self):
+#         # the _keys is None or an odict.
+#         # if an odict, the value is either None or the value
+#         # None means, the value wasnt loaded
+#         self._keys = None
+#         self._seckeys = None
+#         self._child_dns = None
+# 
+#     @default
+#     def _load_keys(self):
+#         self._keys = odict()
+#         self._child_dns = {}
+#         attrlist = ['dn']
+#         if self._seckey_attrs:
+#             self._seckeys = dict()
+#             attrlist.extend(self._seckey_attrs)
+#         for key, attrs in self.search(attrlist=attrlist):
+#             try:
+#                 self._keys[key]
+#             except KeyError:
+#                 self._keys[key] = False
+#                 self._child_dns[key] = attrs['dn']
+#                 for seckey_attr, seckey in \
+#                         self._calculate_seckeys(attrs).items():
+#                     try:
+#                         self._seckeys[seckey_attr]
+#                     except KeyError:
+#                         self._seckeys[seckey_attr] = {}
+#                     try:
+#                         self._seckeys[seckey_attr][seckey]
+#                     except KeyError:
+#                         self._seckeys[seckey_attr][seckey] = key
+#                     else:
+#                         if not self._check_duplicates:
+#                             continue
+# 
+#                         raise KeyError(
+#                             u"Secondary key not unique: {0}='{1}'.".format(
+#                                 seckey_attr, seckey
+#                             )
+#                         )
+#             else:
+#                 if not self._check_duplicates:
+#                     continue
+# 
+#                 raise RuntimeError(
+#                     u"Key not unique: {0}='{1}' (you may want to disable "
+#                     u"check_duplicates)".format(
+#                         self._key_attr, key
+#                     )
+#                 )
 
     # a keymapper
     @default
@@ -633,27 +635,28 @@ class LDAPStorage(OdictStorage):
                 key = key[0]
         return decode(key)
 
-    # secondary keys
-    @default
-    def _calculate_seckeys(self, attrs):
-        if not self._seckey_attrs:
-            return {}
-        seckeys = {}
-        for seckey_attr in self._seckey_attrs:
-            try:
-                seckey = attrs[seckey_attr]
-            except KeyError:
-                # no sec key found, skip
-                continue
-            else:
-                if isinstance(seckey, list):
-                    if len(seckey) != 1:
-                        msg = u"Expected one value for '%s' " % (seckey_attr,)
-                        msg += "not %s: '%s'." % (len(seckey), seckey)
-                        raise KeyError(msg)
-                    seckey = seckey[0]
-                seckeys[seckey_attr] = seckey
-        return seckeys
+# XXX: move to UGM
+#     # secondary keys
+#     @default
+#     def _calculate_seckeys(self, attrs):
+#         if not self._seckey_attrs:
+#             return {}
+#         seckeys = {}
+#         for seckey_attr in self._seckey_attrs:
+#             try:
+#                 seckey = attrs[seckey_attr]
+#             except KeyError:
+#                 # no sec key found, skip
+#                 continue
+#             else:
+#                 if isinstance(seckey, list):
+#                     if len(seckey) != 1:
+#                         msg = u"Expected one value for '%s' " % (seckey_attr,)
+#                         msg += "not %s: '%s'." % (len(seckey), seckey)
+#                         raise KeyError(msg)
+#                     seckey = seckey[0]
+#                 seckeys[seckey_attr] = seckey
+#         return seckeys
 
     @default
     def _create_suitable_node(self, vessel):
@@ -721,17 +724,15 @@ class LDAPStorage(OdictStorage):
         return self._ldap_schema_info
 
 
+@plumbing(
+    Nodespaces,
+    Attributes,
+    Lifecycle,
+    NodeChildValidate,
+    Adopt,
+    Nodify,
+    LDAPStorage)
 class LDAPNode(object):
-    __metaclass__ = plumber
-    __plumbing__ = (
-        Nodespaces,
-        Attributes,
-        Lifecycle,
-        NodeChildValidate,
-        Adopt,
-        Nodify,
-        LDAPStorage,
-    )
     events = {
         'created':  LDAPNodeCreatedEvent,
         'added':    LDAPNodeAddedEvent,
