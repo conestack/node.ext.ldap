@@ -123,7 +123,7 @@ class ILDAPStorage(IStorage):
 
     DN = Attribute(u"LDAP object DN.")
 
-    rdn_attr = Attribute(u"RDN attribute name.")
+    #rdn_attr = Attribute(u"RDN attribute name.")
 
     changed = Attribute(u"Flag whether node has been modified.")
 
