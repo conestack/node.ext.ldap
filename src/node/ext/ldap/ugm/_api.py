@@ -233,13 +233,18 @@ class LDAPUser(LDAPPrincipal, UgmUser):
                 criteria = {attribute: self.context.DN}
             elif member_format == FORMAT_UID:
                 criteria = {attribute: self.context.attrs['uid']}
+            attrlist = [groups._key_attr]
             # if roles configuration points to child of groups container, and
             # group configuration has search scope SUBTREE, and groups are
             # specified by the same criteria as roles, the search returns the
             # role id's as well.
             # XXX: such edge cases should be resolved at UGM init time
-            res = groups.context.search(criteria=criteria)
-        return [uid for uid in res]
+            matches = groups.context.search(
+                criteria=criteria,
+                attrlist=attrlist
+            )
+            res = [att[groups._key_attr][0] for _, att in matches]
+        return res
 
     @default
     @property
@@ -275,7 +280,7 @@ class LDAPGroupMapping(Behavior):
         if key not in self:
             raise KeyError(key)
         if self._member_format == FORMAT_DN:
-            val = self.related_principals(key).context.child_dn(key)
+            val = self.related_principals(key)[key].context.DN
         elif self._member_format == FORMAT_UID:
             val = key
         # self.context.attrs[self._member_attribute].remove won't work here
@@ -386,8 +391,8 @@ class LDAPGroup(LDAPGroupMapping, LDAPPrincipal, UgmGroup):
         if self._member_format == FORMAT_DN:
             principals = self.related_principals()
             # make sure principal is loaded
-            principals[key]
-            ret = principals.context.child_dn(key)
+            principal = principals[key]
+            ret = principal.context.DN
         elif self._member_format == FORMAT_UID:
             ret = key
         return ret
@@ -820,7 +825,6 @@ class LDAPGroupsMapping(LDAPPrincipals, UgmGroups):
 
 
 class LDAPGroups(LDAPGroupsMapping):
-
     principal_factory = default(Group)
 
     @override
@@ -832,7 +836,9 @@ class LDAPGroups(LDAPGroupsMapping):
         if parent and parent.rcfg is not None:
             for role in group.roles:
                 group.remove_role(role)
-        del self.context[key]
+        context = group.context
+        del context.parent[context.name]
+        del self.storage[key]
 
 
 @plumbing(
@@ -897,8 +903,8 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
             else:
                 principals = self.parent.parent.users
             # make sure principal is loaded
-            principals[key]
-            ret = principals.context.child_dn(key)
+            principal = principals[key]
+            ret = principal.context.DN
         elif self._member_format == FORMAT_UID:
             ret = key
         return ret
@@ -925,7 +931,7 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
             real_key = key
             if key.startswith('group:'):
                 real_key = key[6:]
-            val = principals.context.child_dn(real_key)
+            val = principals[real_key].context.DN
         elif self._member_format == FORMAT_UID:
             val = key
         # self.context.attrs[self._member_attribute].remove won't work here
