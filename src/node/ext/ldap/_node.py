@@ -154,10 +154,10 @@ class LDAPAttributesBehavior(Behavior):
         return name in self.parent.root._multivalued_attributes
 
 
-AttributesPart = LDAPAttributesBehavior  # B/C
-deprecated('AttributesPart', """
-``node.ext.ldap._node.AttributesPart`` is deprecated as of node.ext.ldap 0.9.4
-and will be removed in node.ext.ldap 1.0. Use
+AttributesBehavior = LDAPAttributesBehavior  # B/C
+deprecated('AttributesBehavior', """
+``node.ext.ldap._node.AttributesBehavior`` is deprecated as of node.ext.ldap
+1.0 and will be removed in node.ext.ldap 1.1. Use
 ``node.ext.ldap._node.LDAPAttributesBehavior`` instead.""")
 
 
@@ -203,7 +203,7 @@ class LDAPStorage(OdictStorage):
         self._binary_attributes = {}
         if props:
             # only at root node
-            self._props = props
+            #self._props = props
             self._ldap_session = LDAPSession(props)
             self._ldap_session.baseDN = self.DN
             self._ldap_schema_info = LDAPSchemaInfo(props)
@@ -434,11 +434,11 @@ class LDAPStorage(OdictStorage):
     @default
     @property
     def DN(self):
-        # ATTENTION: For one and the same entry, ldap will always return
-        # the same DN. However, depending on the individual syntax
-        # definition of the DN's components there might be a multitude
-        # of strings that equal the same DN, e.g. for cn:
-        #    'cn=foo bar' == 'cn=foo   bar' -> True
+        # For one and the same entry, ldap will always return the same DN.
+        # However, depending on the individual syntax definition of the DN's
+        # components there might be a multitude of strings that equal the same
+        # DN, e.g. for cn:
+        #     'cn=foo bar' == 'cn=foo   bar' -> True
         if self.parent:
             return self.parent.child_dn(self.name)
         if self.name:
@@ -449,14 +449,13 @@ class LDAPStorage(OdictStorage):
     @default
     @property
     def rdn_attr(self):
-        # XXX: only tested on LDAPNode, might not work in UGM
         return self.name and self.name.split('=')[0] or None
 
     def _get_changed(self):
         return self._changed
 
     def _set_changed(self, value):
-        """Set/Unset the changed flag
+        """Set the changed flag
 
         Set:
             - if self.attrs are changed (attrs set us)

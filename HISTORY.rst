@@ -1,6 +1,31 @@
 History
 =======
 
+1.0b0 (unreleased)
+------------------
+
+- Overhaul LDAP UGM implementation.
+  [rnix]
+
+- LDAPNode keys cannot be aliased any longer. Removed ``_key_attr`` and
+  ``_rdn_attr``.
+  child.
+
+- LDAPNode does not provide secondary keys any longer. Removed
+  ``_seckey_attrs``.
+  [rnix]
+
+- Overhaul LDAP Node.
+  [rnix]
+
+- Deprecate ``node.ext.ldap._node.AttributesBehavior`` in favor of
+  ``node.ext.ldap._node.LDAPAttributesBehavior``.
+  [rnix]
+
+- Remove deprecated ``node.ext.ldap._node.AttributesPart``.
+  [rnix]
+
+
 0.9.8 (unreleased)
 ------------------
 
