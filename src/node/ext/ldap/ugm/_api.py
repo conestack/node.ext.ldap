@@ -3,7 +3,7 @@ import ldap
 import time
 import logging
 from plumber import (
-    plumber,
+    plumbing,
     plumb,
     default,
     override,
@@ -11,7 +11,6 @@ from plumber import (
     Behavior,
 )
 from zope.interface import implementer
-from node.base import AttributedNode
 from node.locking import locktree
 from node.behaviors.alias import DictAliaser
 from node.behaviors import (
@@ -115,15 +114,13 @@ class RolesConfig(PrincipalsConfig):
     """
 
 
+@plumbing(
+    Alias,
+    NodeChildValidate,
+    Adopt,
+    Nodify,
+    Storage)
 class PrincipalAliasedAttributes(object):
-    __metaclass__ = plumber
-    __plumbing__ = (
-        Alias,
-        NodeChildValidate,
-        Adopt,
-        Nodify,
-        Storage,
-    )
     allow_non_node_childs = True
 
     def __init__(self, context, aliaser=None):
@@ -253,14 +250,13 @@ class LDAPUser(LDAPPrincipal, UgmUser):
         return calculate_expired(self.parent.expiresUnit, expires)
 
 
+@plumbing(
+    LDAPUser,
+    Nodespaces,
+    Attributes,
+    Nodify)
 class User(object):
-    __metaclass__ = plumber
-    __plumbing__ = (
-        LDAPUser,
-        Nodespaces,
-        Attributes,
-        Nodify,
-    )
+    pass
 
 
 class LDAPGroupMapping(Behavior):
@@ -397,15 +393,14 @@ class LDAPGroup(LDAPGroupMapping, LDAPPrincipal, UgmGroup):
         return ret
 
 
+@plumbing(
+    LDAPGroup,
+    NodeChildValidate,
+    Nodespaces,
+    Attributes,
+    Nodify)
 class Group(object):
-    __metaclass__ = plumber
-    __plumbing__ = (
-        LDAPGroup,
-        NodeChildValidate,
-        Nodespaces,
-        Attributes,
-        Nodify,
-    )
+    pass
 
 
 class LDAPPrincipals(OdictStorage):
@@ -417,26 +412,21 @@ class LDAPPrincipals(OdictStorage):
         context = LDAPNode(name=cfg.baseDN, props=props)
         context.search_filter = cfg.queryFilter
         context.search_scope = int(cfg.scope)
-
         context.child_defaults = dict()
         context.child_defaults['objectClass'] = cfg.objectClasses
-        if hasattr(cfg, 'defaults'):
-            context.child_defaults.update(cfg.defaults)
+        context.child_defaults.update(cfg.defaults)
         for oc in cfg.objectClasses:
             for key, val in creation_defaults.get(oc, dict()).items():
                 if key not in context.child_defaults:
                     context.child_defaults[key] = val
-
         # if cfg.member_relation:
         #     context.search_relation = cfg.member_relation
-
         self._key_attr = cfg.attrmap['id']
         self._rdn_attr = cfg.attrmap['rdn']
         self._login_attr = None
         if cfg.attrmap.get('login') \
                 and cfg.attrmap['login'] != cfg.attrmap['id']:
             self._login_attr = cfg.attrmap['login']
-
         self.expiresAttr = getattr(cfg, 'expiresAttr', None)
         self.expiresUnit = getattr(cfg, 'expiresUnit', None)
         self.principal_attrmap = cfg.attrmap
@@ -487,6 +477,7 @@ class LDAPPrincipals(OdictStorage):
                 msg = u'More than one principal with id "{0}" found.'
                 logger.warning(msg.format(key))
             dn = res[0][1]['dn']
+            # XXX: use explode_dn
             path = dn.split(',')[:len(self.context.DN.split(',')) * -1]
             context = self.context
             for rdn in reversed(path):
@@ -657,9 +648,8 @@ def calculate_expired(expiresUnit, expires):
         expires = int(expires)
         # XXX: maybe configurable?
         # shadow account specific
-        #if self.expiresAttr == 'shadowExpire':
-        #    expires += int(user.attrs.get('shadowInactive', '0'))
-        # /XXX
+        # if self.expiresAttr == 'shadowExpire':
+        #     expires += int(user.attrs.get('shadowInactive', '0'))
         days = time.time()
         if expiresUnit == EXPIRATION_DAYS:
             # numer of days since epoch
@@ -763,16 +753,15 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
             user_node()
 
 
+@plumbing(
+    LDAPUsers,
+    NodeChildValidate,
+    Nodespaces,
+    Adopt,
+    Attributes,
+    Nodify)
 class Users(object):
-    __metaclass__ = plumber
-    __plumbing__ = (
-        LDAPUsers,
-        NodeChildValidate,
-        Nodespaces,
-        Adopt,
-        Attributes,
-        Nodify,
-    )
+    pass
 
 
 def member_format(obj_cl):
@@ -818,16 +807,16 @@ class LDAPGroupsMapping(LDAPPrincipals, UgmGroups):
         _next(self, props, cfg)
 
     @plumb
-    def __setitem__(_next, self, key, vessel):
+    def __setitem__(_next, self, key, value):
         # XXX: kick this, dummy member should be created by default value
         #      callback
+        if self._member_attribute not in value.attrs:
+            value.attrs[self._member_attribute] = []
         if self._member_format is FORMAT_UID:
-            vessel.attrs.setdefault(
-                self._member_attribute, []).insert(0, 'nobody')
+            value.attrs[self._member_attribute].insert(0, 'nobody')
         else:
-            vessel.attrs.setdefault(
-                self._member_attribute, []).insert(0, 'cn=nobody')
-        _next(self, key, vessel)
+            value.attrs[self._member_attribute].insert(0, 'cn=nobody')
+        _next(self, key, value)
 
 
 class LDAPGroups(LDAPGroupsMapping):
@@ -846,16 +835,15 @@ class LDAPGroups(LDAPGroupsMapping):
         del self.context[key]
 
 
+@plumbing(
+    LDAPGroups,
+    NodeChildValidate,
+    Nodespaces,
+    Adopt,
+    Attributes,
+    Nodify)
 class Groups(object):
-    __metaclass__ = plumber
-    __plumbing__ = (
-        LDAPGroups,
-        NodeChildValidate,
-        Nodespaces,
-        Adopt,
-        Attributes,
-        Nodify,
-    )
+    pass
 
 
 class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
@@ -949,32 +937,29 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
         self.context()
 
 
+@plumbing(
+    LDAPRole,
+    NodeChildValidate,
+    Nodespaces,
+    Attributes,
+    Nodify)
 class Role(object):
-    __metaclass__ = plumber
-    __plumbing__ = (
-        LDAPRole,
-        NodeChildValidate,
-        Nodespaces,
-        Attributes,
-        Nodify,
-    )
+    pass
 
 
 class LDAPRoles(LDAPGroupsMapping):
-
     principal_factory = default(Role)
 
 
+@plumbing(
+    LDAPRoles,
+    NodeChildValidate,
+    Nodespaces,
+    Adopt,
+    Attributes,
+    Nodify)
 class Roles(object):
-    __metaclass__ = plumber
-    __plumbing__ = (
-        LDAPRoles,
-        NodeChildValidate,
-        Nodespaces,
-        Adopt,
-        Attributes,
-        Nodify,
-    )
+    pass
 
 
 class LDAPUgm(UgmBase):
@@ -1011,7 +996,7 @@ class LDAPUgm(UgmBase):
     @override
     @locktree
     def __getitem__(self, key):
-        if not key in self.storage:
+        if key not in self.storage:
             if key == 'users':
                 self['users'] = Users(self.props, self.ucfg)
             elif key == 'groups':
@@ -1112,7 +1097,7 @@ class LDAPUgm(UgmBase):
         role = roles.get(rolename)
         if role is None:
             raise ValueError(u"Role not exists '%s'" % rolename)
-        if not uid in role.member_ids:
+        if uid not in role.member_ids:
             raise ValueError(u"Principal does not has role '%s'" % rolename)
         del role[uid]
         if not role.member_ids:
@@ -1122,7 +1107,7 @@ class LDAPUgm(UgmBase):
     @default
     @property
     def _roles(self):
-        if not 'roles' in self.storage:
+        if 'roles' not in self.storage:
             try:
                 roles = Roles(self.props, self.rcfg)
             except Exception:
@@ -1142,19 +1127,18 @@ class LDAPUgm(UgmBase):
 
     @default
     def _chk_key(self, key):
-        if not key in ['users', 'groups']:
+        if key not in ['users', 'groups']:
             raise KeyError(key)
 
 
+@plumbing(
+    LDAPUgm,
+    NodeChildValidate,
+    Nodespaces,
+    Adopt,
+    Attributes,
+    DefaultInit,
+    Nodify,
+    OdictStorage)
 class Ugm(object):
-    __metaclass__ = plumber
-    __plumbing__ = (
-        LDAPUgm,
-        NodeChildValidate,
-        Nodespaces,
-        Adopt,
-        Attributes,
-        DefaultInit,
-        Nodify,
-        OdictStorage,
-    )
+    pass
