@@ -455,8 +455,8 @@ class LDAPPrincipals(OdictStorage):
 
         Raise KeyError if not enlisted.
         """
-        #if strict:
-        #    raise KeyError(dn)
+        # if strict:
+        #     raise KeyError(dn)
         try:
             search = self.context.ldap_session.search
             res = search(baseDN=dn.encode('utf-8'))[0]
@@ -494,9 +494,13 @@ class LDAPPrincipals(OdictStorage):
             if len(res) > 1:
                 msg = u'More than one principal with id "{0}" found.'
                 logger.warning(msg.format(key))
-            principal_dn = res[0][1]['dn']
+            dn = res[0][1]['dn']
+            path = dn.split(',')[:len(self.context.DN.split(',')) * -1]
+            context = self.context
+            for rdn in reversed(path):
+                context = context[rdn]
             principal = self.principal_factory(
-                LDAPNode(principal_dn, self.context._props),
+                context,
                 attraliaser=self.principal_attraliaser)
             principal.__name__ = key
             principal.__parent__ = self
@@ -510,45 +514,29 @@ class LDAPPrincipals(OdictStorage):
         res = self.context.search(attrlist=attrlist)
         for principal in res:
             yield principal[1][self._key_attr][0]
+        for principal in self.context._added_children:
+            yield self.context[principal].attrs[self._key_attr]
 
     @default
     @locktree
-    def __setitem__(self, name, vessel):
-        # XXX: mechanism for defining a target container if search scope is
-        #      SUBTREE
-        try:
-            attrs = vessel.attrs
-        except AttributeError:
-            raise ValueError(u"no attributes found, cannot convert.")
+    def __setitem__(self, name, value):
+        if not isinstance(value, self.principal_factory):
+            raise ValueError(u"Given value not instance of '{0}'".format(
+                self.principal_factory.__name__
+            ))
+        exists = False
         try:
             self[name]
-            raise KeyError(u"Key already exists: '{0}'.".format(name))
+            exists = True
         except KeyError:
             pass
-
-        #if vessel.attrs.get('id'):
-        #    vessel.attrs[self._key_attr] = vessel.attrs['id']
-        #if self._login_attr and vessel.attrs.get('login'):
-        #    vessel.attrs[self._login_attr] = vessel.attrs['login']
-        #if not vessel.attrs.get(self._rdn_attr):
-        #    msg = "'{0}' needed in node attributes for rdn."
-        #    raise ValueError(msg.format(self._rdn_attr))
-
-        rdn = u'{0}={1}'.format(self._rdn_attr, name)
-        self.context[rdn] = nextvessel
-
-        nextvessel = AttributedNode()
-        nextvessel.__name__ = name
-        nextvessel.attribute_access_for_attrs = False
-        principal = self.principal_factory(
-            nextvessel,
-            attraliaser=self.principal_attraliaser)
-        principal.__name__ = name
-        principal.__parent__ = self
-        # XXX: cache
-        for key, val in attrs.iteritems():
-            principal.attrs[key] = val
-        self.storage[name] = principal
+        if exists:
+            raise KeyError(
+                u"Principal with id '{0}' already exists.".format(name)
+            )
+        value.__name__ = name
+        value.__parent__ = self
+        self.storage[name] = value
 
     @default
     @property
@@ -636,10 +624,16 @@ class LDAPPrincipals(OdictStorage):
     @default
     @locktree
     def create(self, pid, **kw):
-        vessel = AttributedNode()
+        # XXX: mechanism for defining a target container if search scope is
+        #      SUBTREE
+        context = LDAPNode()
+        self.context[u'{0}={1}'.format(self._rdn_attr, pid)] = context
+        principal = self.principal_factory(
+            context,
+            attraliaser=self.principal_attraliaser)
         for k, v in kw.items():
-            vessel.attrs[k] = v
-        self[pid] = vessel
+            principal.attrs[k] = v
+        self[pid] = principal
         return self[pid]
 
 

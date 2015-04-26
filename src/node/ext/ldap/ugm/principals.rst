@@ -15,28 +15,6 @@ ids() the first time::
     'id': 'sn', 
     'sn': 'sn'}
 
-
-#############
-
-Query all user ids. ``description`` is set as login attribute, which is not
-unique::
-
-    >> users = Users(props, ucfg)
-    Traceback (most recent call last):
-    ...
-    KeyError: u"Secondary key not unique: description='foo'."
-
-Query all user ids. Set ``telephoneNumber`` as login attribute, which is not
-unique::
-
-    >> ucfg.attrmap['login'] = 'telephoneNumber'
-    >> users = Users(props, ucfg)
-    Traceback (most recent call last):
-    ...
-    KeyError: u"Secondary key not unique: telephoneNumber='1234'."
-
-################
-
 Query all user ids. Set ``cn`` as login attribute. In this case, values are
 unique and therefore suitable as login attr::
 
@@ -70,7 +48,7 @@ Get a user by id (utf-8 or unicode)::
 The real LDAP node is on ``context``::
 
     >>> mueller.context
-    <cn=user2,ou=customers,dc=my-domain,dc=com - False>
+    <cn=user2,ou=customers,dc=my-domain,dc=com:cn=user2 - False>
 
 The '?' is just ``__repr__`` going to ascii, the id is in proper unicode::
 
@@ -85,7 +63,7 @@ A user has a login::
 And attributes::
 
     >>> mueller.attrs
-    Aliased <LDAPNodeAttributes object 'cn=user2,ou=customers,dc=my-domain,dc=com' at ...>
+    Aliased <LDAPNodeAttributes object 'cn=user2' at ...>
 
     >>> mueller.attrs.context.items()
     [(u'objectClass', [u'top', u'person']), 
@@ -100,14 +78,16 @@ And attributes::
 Query all user nodes::
 
     >>> [users[id] for id in sorted(users.keys())]
-    [<User object 'Meier' at ...>, <User object 'M?ller' at ...>,
-    <User object 'Schmidt' at ...>, <User object 'Umhauer' at ...>]
+    [<User object 'Meier' at ...>, 
+    <User object 'M?ller' at ...>,
+    <User object 'Schmidt' at ...>, 
+    <User object 'Umhauer' at ...>]
 
     >>> [users[id].context for id in sorted(users.keys())]
-    [<cn=user1,dc=my-domain,dc=com - False>, 
-    <cn=user2,ou=customers,dc=my-domain,dc=com - False>, 
-    <cn=user3,ou=customers,dc=my-domain,dc=com - False>, 
-    <cn=n?sty\2C User,ou=customers,dc=my-domain,dc=com - False>]
+    [<cn=user1,dc=my-domain,dc=com:cn=user1 - False>, 
+    <cn=user2,ou=customers,dc=my-domain,dc=com:cn=user2 - False>, 
+    <cn=user3,ou=customers,dc=my-domain,dc=com:cn=user3 - False>, 
+    <cn=n?sty\2C User,ou=customers,dc=my-domain,dc=com:cn=n?sty\2C User - False>]
 
 Authenticate a user, via the user object. (also see 'via LDAPUsers' below,
 after passwd, this is to make sure, that LDAPUsers.authenticate does not work
@@ -181,51 +161,43 @@ id and returns the desired value.::
     ... )
     >>> users = Users(props, add_ucfg)
 
-    >>> sorted(users.ids)
-    [u'M\xfcller', u'Schmidt', u'Umhauer', u'sn_binary']
-
-    >>> users.create('newid')
-    Traceback (most recent call last):
-      ...
-    ValueError: 'cn' needed in node attributes for rdn.
-
-    >>> users.create('newid', login='newcn', id='newid')
-    <User object 'newid' at ...>
-
-    >>> sorted(users.ids)
-    [u'M\xfcller', u'Schmidt', u'Umhauer', u'newid', u'sn_binary']
-
-    >>> newuser = users['newid']
-    >>> newuser.context
-    <cn=newcn,ou=customers,dc=my-domain,dc=com:newid - True>
-
-Create function uses __setitem__ for adding new members. You can use this as
-well, but create is propably the better choice. Test egde cases::
-
     >>> from node.base import BaseNode
     >>> node = BaseNode()
     >>> users['foo'] = node
     Traceback (most recent call last):
       ...
-    ValueError: no attributes found, cannot convert.
+    ValueError: Given value not instance of 'User'
 
-    >>> from node.base import AttributedNode
-    >>> node = AttributedNode()
-    >>> users['newid'] = node
+    >>> sorted(users.ids)
+    [u'M\xfcller', u'Schmidt', u'Umhauer', u'sn_binary']
+
+    >>> user = users.create('newid')
+    >>> user
+    <User object 'newid' at ...>
+
+    >>> user.context
+    <cn=newid,ou=customers,dc=my-domain,dc=com:cn=newid - True>
+
+    >>> user.attrs.items()
+    [('login', u'newid'), 
+    ('telephoneNumber', u'123'), 
+    ('id', u'Surname')]
+
+    >>> user.context.attrs.items()
+    [(u'cn', u'newid'), 
+    (u'objectClass', [u'top', u'person']), 
+    (u'telephoneNumber', u'123'), 
+    (u'sn', u'Surname')]
+
+    >>> user = users.create('newid', login='newcn', id='newid')
     Traceback (most recent call last):
       ...
-    KeyError: u"Key already exists: 'newid'."
+    KeyError: u"Principal with id 'newid' already exists."
 
-# XXX: there need more attrs to show up::
+    >>> sorted(users.ids)
+    [u'M\xfcller', u'Schmidt', u'Umhauer', u'newid', u'sn_binary']
 
-    >>> sorted(newuser.attrs.items())
-    [('id', u'newid'), ('login', u'newcn'), ('telephoneNumber', u'123')]
-
-    >>> sorted(newuser.context.attrs.items())
-    [(u'cn', u'newcn'), 
-    (u'objectClass', [u'top', u'person']), 
-    (u'sn', u'newid'), 
-    (u'telephoneNumber', u'123')]
+Persist and reload::
 
     >>> users()
     >>> users.reload = True
@@ -237,7 +209,7 @@ well, but create is propably the better choice. Test egde cases::
     (u'newid', <User object 'newid' at ...>)]
 
     >>> users['newid'].context
-    <cn=newcn,ou=customers,dc=my-domain,dc=com:newid - False>
+    <cn=newid,ou=customers,dc=my-domain,dc=com:cn=newid - True>
 
 Delete User::
 
