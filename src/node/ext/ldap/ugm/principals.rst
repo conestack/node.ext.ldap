@@ -495,8 +495,66 @@ Fetch users and groups::
     >>> ugm.groups['group2'].users
     [<User object 'Umhauer' at ...>]
 
+    >>> ugm.groups._key_attr
+    'cn'
+
+    >>> ugm.users['Schmidt'].group_ids
+    [u'group1']
+
     >>> ugm.users['Schmidt'].groups
     [<Group object 'group1' at ...>]
+
+Add and remove user from group::
+
+    >>> group = ugm.groups['group1']
+    >>> group
+    <Group object 'group1' at ...>
+
+    >>> group.member_ids
+    [u'Schmidt', u'M\xfcller']
+
+    >>> group.translate_key('Umhauer')
+    u'cn=n\xe4sty\\2C User,ou=customers,dc=my-domain,dc=com'
+
+    >>> group.add('Umhauer')
+    >>> group.attrs.items()
+    [('member', 
+    [u'cn=user3,ou=customers,dc=my-domain,dc=com', 
+    u'cn=user2,ou=customers,dc=my-domain,dc=com', 
+    u'cn=n\xe4sty\\2C User,ou=customers,dc=my-domain,dc=com']), 
+    ('rdn', u'group1')]
+
+    >>> group.member_ids
+    [u'Schmidt', u'M\xfcller', u'Umhauer']
+
+    >>> group()
+
+    >>> del group['Umhauer']
+    >>> group.member_ids
+    [u'Schmidt', u'M\xfcller']
+
+Delete Group::
+
+    >>> groups.keys()
+    [u'group1', u'group2', u'group3']
+
+    >>> groups.values()
+    [<Group object 'group1' at ...>, 
+    <Group object 'group2' at ...>, 
+    <Group object 'group3' at ...>]
+
+    >>> ugm.users['Schmidt'].groups
+    [<Group object 'group1' at ...>]
+
+    >>> del groups['group1']
+    >>> groups()
+
+    >>> groups.values()
+    [<Group object 'group2' at ...>, 
+    <Group object 'group3' at ...>]
+
+    >>> ugm.users['Schmidt'].groups
+    []
 
 Test role mappings. Create container for roles.::
 
@@ -558,6 +616,17 @@ Test roles for users.::
 Add role for user, role gets created if not exists.::
 
     >>> ugm.add_role('viewer', user)
+
+    >>> roles.keys()
+    [u'viewer']
+
+    >>> role = roles[u'viewer']
+    >>> role
+    <Role object 'viewer' at ...>
+
+    >>> role.member_ids
+    [u'Meier']
+
     >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
@@ -568,12 +637,12 @@ Add role for user, role gets created if not exists.::
 Query roles for principal via ugm object.::
 
     >>> ugm.roles(user)
-    [u'viewer']
+    ['viewer']
 
 Query roles for principal directly.::
 
     >>> user.roles
-    [u'viewer']
+    ['viewer']
 
 Add some roles for 'Schmidt'.::
 
@@ -590,7 +659,7 @@ Add some roles for 'Schmidt'.::
         <class 'node.ext.ldap.ugm._api.User'>: Schmidt
 
     >>> user.roles
-    [u'viewer', u'editor']
+    ['viewer', 'editor']
 
     >>> ugm.roles_storage()
 
