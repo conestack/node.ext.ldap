@@ -276,6 +276,10 @@ Only attributes defined in attrmap can be queried::
     >>> filter |= LDAPFilter('(objectClass=some)')
 
     # normally set via principals config
+    >>> original_search_filter = users.context.search_filter
+    >>> original_search_filter
+    '(&(objectClass=person)(!(objectClass=inetOrgPerson)))'
+
     >>> users.context.search_filter = filter
     >>> users.search()
     [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
@@ -288,7 +292,7 @@ Only attributes defined in attrmap can be queried::
     >>> users.search()
     []
 
-    >>> users.context.search_filter = None
+    >>> users.context.search_filter = original_search_filter
 
 The changed flag::
 
