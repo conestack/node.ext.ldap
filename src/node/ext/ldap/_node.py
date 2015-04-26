@@ -197,30 +197,22 @@ class LDAPStorage(OdictStorage):
         self._added_children = set()
         self._modified_children = set()
         self._deleted_children = set()
-        #self._seckey_attrs = None
         self._reload = False
         self._multivalued_attributes = {}
         self._binary_attributes = {}
         if props:
             # only at root node
-            #self._props = props
             self._ldap_session = LDAPSession(props)
             self._ldap_session.baseDN = self.DN
             self._ldap_schema_info = LDAPSchemaInfo(props)
             self._multivalued_attributes = props.multivalued_attributes
             self._binary_attributes = props.binary_attributes
             self._check_duplicates = props.check_duplicates
-
-        # XXX: make them public
-        #self._key_attr = 'rdn'
-        #self._rdn_attr = None
-
         # search related defaults
         self.search_scope = ONELEVEL
         self.search_filter = None
         self.search_criteria = None
         self.search_relation = None
-
         # creation related default
         self.child_factory = LDAPNode
         self.child_defaults = None
@@ -254,26 +246,14 @@ class LDAPStorage(OdictStorage):
     def __setitem__(self, key, val):
         if isinstance(key, str):
             key = decode(key)
-
-        #if self._key_attr != 'rdn' and self._rdn_attr is None:
-        #    raise RuntimeError(
-        #        u"Adding with key != rdn needs _rdn_attr to be set.")
-
+        # XXX: remove, expect LDAPNode
         if not isinstance(val, LDAPNode):
             # create one from whatever we got
             val = self._create_suitable_node(val)
-
-        # if self._key_attr == 'rdn':
-        #     rdn = key
-        # else:
-        #     rdn = '%s=%s' % (self._rdn_attr, val.attrs[self._rdn_attr])
-        # self._child_dns[key] = ','.join((rdn, self.DN))
-
         val.__name__ = key
         val.__parent__ = self
         val._dn = self.child_dn(key)
         val._ldap_session = self.ldap_session
-
         try:
             self.ldap_session.search(
                 scope=BASE,
@@ -286,34 +266,12 @@ class LDAPStorage(OdictStorage):
             val.changed = True
             self.changed = True
             self._added_children.add(key)
-
-#         # at this point we need to have an LDAPNode as val
-#         if self._key_attr != 'rdn':
-#             val.attrs[self._key_attr] = key
-#             if val.attrs.get(self._rdn_attr) is None:
-#                 raise ValueError(
-#                     u"'{0}' needed in node attributes for rdn.".format(
-#                         self._rdn_attr
-#                     )
-#                 )
-#         else:
-#             # set rdn attr if not present
-#             rdn, rdn_val = key.split('=')
-#             if rdn not in val.attrs:
-#                 val._notify_suppress = True
-#                 val.attrs[rdn] = rdn_val
-#                 val._notify_suppress = False
-
         rdn, rdn_val = key.split('=')
         if rdn not in val.attrs:
             val._notify_suppress = True
             val.attrs[rdn] = rdn_val
             val._notify_suppress = False
-
-        # XXX: _notify_suppress needed any longer?
-
         self.storage[key] = val
-
         if self.child_defaults:
             for k, v in self.child_defaults.items():
                 if k in val.attrs:
@@ -345,34 +303,23 @@ class LDAPStorage(OdictStorage):
         if self.name is None:
             return
         attrlist = ['dn']
-#         if self._seckey_attrs:
-#             self._seckeys = dict()
-#             attrlist.extend(self._seckey_attrs)
         try:
+            # XXX: page size, cookie
+            # XXX: only search onelevel of self
+            #      do not use self.search for this
+            #      otherwise __getitem__ and printtree fails if scope subtree
             res = self.search(attrlist=attrlist)
+            # res = self.ldap_session.search(
+            #     '(objectClass=*)',
+            #     ONELEVEL,
+            #     baseDN=encode(self.DN),
+            #     attrlist=attrlist,
+            # )
+            # print res
         # happens if not persisted yet
         except NO_SUCH_OBJECT:
             res = list()
         for key, attrs in res:
-#             self._child_dns[key] = attrs['dn']
-#             for seckey_attr, seckey in self._calculate_seckeys(attrs).items():
-#                 try:
-#                     self._seckeys[seckey_attr]
-#                 except KeyError:
-#                     self._seckeys[seckey_attr] = {}
-#                 try:
-#                     self._seckeys[seckey_attr][seckey]
-#                 except KeyError:
-#                     self._seckeys[seckey_attr][seckey] = key
-#                 else:
-#                     if not self._check_duplicates:
-#                         continue
-# 
-#                     raise KeyError(
-#                         u"Secondary key not unique: {0}='{1}'.".format(
-#                             seckey_attr, seckey
-#                         )
-#                     )
             # do not yield if node is supposed to be deleted
             if key not in self._deleted_children:
                 yield key
@@ -393,11 +340,6 @@ class LDAPStorage(OdictStorage):
             elif self._action == ACTION_DELETE:
                 self.parent._deleted_children.remove(self.name)
                 self._ldap_delete()
-            # XXX: probably not possible to provoke KeyError here
-            #try:
-            #    self.nodespaces['__attrs__'].changed = False
-            #except KeyError:
-            #    pass
             self.nodespaces['__attrs__'].changed = False
             self.changed = False
             self._action = None
@@ -408,11 +350,6 @@ class LDAPStorage(OdictStorage):
 
     @finalize
     def __repr__(self):
-        # XXX: probably not possible to provoke KeyError here
-        #try:
-        #    dn = self.DN.encode('ascii', 'replace') or '(dn not set)'
-        #except KeyError:
-        #    dn = '(dn not available yet)'
         dn = self.DN.encode('ascii', 'replace') or '(dn not set)'
         if self.parent is None:
             return "<%s - %s>" % (dn, self.changed)
@@ -512,11 +449,6 @@ class LDAPStorage(OdictStorage):
                page_size=None, cookie=None):
         attrset = set(attrlist or [])
         attrset.discard('dn')
-
-        # fetch also the key attribute
-        #if not self._key_attr == 'rdn':
-        #    attrset.add(self._key_attr)
-
         # Create queryFilter from all filter definitions
         # filter for this search ANDed with the default filters defined on self
         search_filter = LDAPFilter(queryFilter)
@@ -528,7 +460,6 @@ class LDAPStorage(OdictStorage):
         _filter = LDAPFilter(self.search_filter)
         _filter &= LDAPDictFilter(self.search_criteria)
         _filter &= search_filter
-
         # relation filters
         if relation_node is None:
             relation_node = self
@@ -540,12 +471,6 @@ class LDAPStorage(OdictStorage):
                 _filter &= relation
             else:
                 _filter &= LDAPRelationFilter(relation_node, relation)
-
-        # XXX: Is it really good to filter out entries without the key attr or
-        # would it be better to fail? (see also __iter__ secondary key)
-        #if self._key_attr != 'rdn' and self._key_attr not in _filter:
-        #    _filter &= '(%s=*)' % (self._key_attr,)
-
         # perform the backend search
         matches = self.ldap_session.search(
             str(_filter),
@@ -555,18 +480,16 @@ class LDAPStorage(OdictStorage):
             attrlist=list(attrset),
             page_size=page_size,
             cookie=cookie,
-            )
+        )
         if type(matches) is tuple:
             matches, cookie = matches
-
         # XXX: Is ValueError appropriate?
         # XXX: why do we need to fail at all? shouldn't this be about
-        # substring vs equality match?
+        #      substring vs equality match?
         if exact_match and len(matches) > 1:
             raise ValueError(u"Exact match asked but result not unique")
         if exact_match and len(matches) == 0:
             raise ValueError(u"Exact match asked but result length is zero")
-
         # extract key and desired attributes
         res = []
         for dn, attrs in matches:
@@ -622,99 +545,10 @@ class LDAPStorage(OdictStorage):
         except KeyError:
             pass
 
-#     @default
-#     def _init_keys(self):
-#         # the _keys is None or an odict.
-#         # if an odict, the value is either None or the value
-#         # None means, the value wasnt loaded
-#         self._keys = None
-#         self._seckeys = None
-#         self._child_dns = None
-# 
-#     @default
-#     def _load_keys(self):
-#         self._keys = odict()
-#         self._child_dns = {}
-#         attrlist = ['dn']
-#         if self._seckey_attrs:
-#             self._seckeys = dict()
-#             attrlist.extend(self._seckey_attrs)
-#         for key, attrs in self.search(attrlist=attrlist):
-#             try:
-#                 self._keys[key]
-#             except KeyError:
-#                 self._keys[key] = False
-#                 self._child_dns[key] = attrs['dn']
-#                 for seckey_attr, seckey in \
-#                         self._calculate_seckeys(attrs).items():
-#                     try:
-#                         self._seckeys[seckey_attr]
-#                     except KeyError:
-#                         self._seckeys[seckey_attr] = {}
-#                     try:
-#                         self._seckeys[seckey_attr][seckey]
-#                     except KeyError:
-#                         self._seckeys[seckey_attr][seckey] = key
-#                     else:
-#                         if not self._check_duplicates:
-#                             continue
-# 
-#                         raise KeyError(
-#                             u"Secondary key not unique: {0}='{1}'.".format(
-#                                 seckey_attr, seckey
-#                             )
-#                         )
-#             else:
-#                 if not self._check_duplicates:
-#                     continue
-# 
-#                 raise RuntimeError(
-#                     u"Key not unique: {0}='{1}' (you may want to disable "
-#                     u"check_duplicates)".format(
-#                         self._key_attr, key
-#                     )
-#                 )
-
     @default
     def _calculate_key(self, dn, attrs):
         key = explode_dn(encode(dn))[0]
         return decode(key)
-
-#         # a keymapper
-#         if self._key_attr == 'rdn':
-#             # explode_dn is ldap world
-#             key = explode_dn(encode(dn))[0]
-#         else:
-#             key = attrs[self._key_attr]
-#             if isinstance(key, list):
-#                 if len(key) != 1:
-#                     msg = u"Expected one value for '%s' " % (self._key_attr,)
-#                     msg += u"not %s: '%s'." % (len(key), key)
-#                     raise KeyError(msg)
-#                 key = key[0]
-#         return decode(key)
-
-#     @default
-#     def _calculate_seckeys(self, attrs):
-#         # secondary keys
-#         if not self._seckey_attrs:
-#             return {}
-#         seckeys = {}
-#         for seckey_attr in self._seckey_attrs:
-#             try:
-#                 seckey = attrs[seckey_attr]
-#             except KeyError:
-#                 # no sec key found, skip
-#                 continue
-#             else:
-#                 if isinstance(seckey, list):
-#                     if len(seckey) != 1:
-#                         msg = u"Expected one value for '%s' " % (seckey_attr,)
-#                         msg += "not %s: '%s'." % (len(seckey), seckey)
-#                         raise KeyError(msg)
-#                     seckey = seckey[0]
-#                 seckeys[seckey_attr] = seckey
-#         return seckeys
 
     @default
     def _create_suitable_node(self, vessel):
