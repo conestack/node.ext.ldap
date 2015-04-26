@@ -161,6 +161,43 @@ id and returns the desired value.::
     ... )
     >>> users = Users(props, add_ucfg)
 
+    >>> sorted(users.ids)
+    [u'M\xfcller', u'Schmidt', u'Umhauer', u'sn_binary']
+
+    >>> user = users.create(
+    ...     'newid',
+    ...     login='newcn',
+    ...     id='ID Ignored', # gets ignored, id is taken from pid arg
+    ...     sn='Surname Ignored' # gets ignored, id maps to sn, thus id rules
+    ... )
+    >>> user
+    <User object 'newid' at ...>
+
+    >>> user.context
+    <cn=newcn,ou=customers,dc=my-domain,dc=com:cn=newcn - True>
+
+    >>> user.attrs.items()
+    [('login', u'newcn'), 
+    ('id', u'newid'), 
+    ('telephoneNumber', u'123')]
+
+    >>> user.context.attrs.items()
+    [(u'cn', u'newcn'), 
+    (u'sn', u'newid'), 
+    (u'objectClass', [u'top', u'person']), 
+    (u'telephoneNumber', u'123')]
+
+    >>> sorted(users.ids)
+    [u'M\xfcller', u'Schmidt', u'Umhauer', u'newid', u'sn_binary']
+
+    >>> user = users.create('newid')
+    Traceback (most recent call last):
+      ...
+    KeyError: u"Principal with id 'newid' already exists."
+
+    >>> sorted(users.ids)
+    [u'M\xfcller', u'Schmidt', u'Umhauer', u'newid', u'sn_binary']
+
     >>> from node.base import BaseNode
     >>> node = BaseNode()
     >>> users['foo'] = node
@@ -168,34 +205,8 @@ id and returns the desired value.::
       ...
     ValueError: Given value not instance of 'User'
 
-    >>> sorted(users.ids)
-    [u'M\xfcller', u'Schmidt', u'Umhauer', u'sn_binary']
-
-    >>> user = users.create('newid')
-    >>> user
-    <User object 'newid' at ...>
-
-    >>> user.context
-    <cn=newid,ou=customers,dc=my-domain,dc=com:cn=newid - True>
-
-    >>> user.attrs.items()
-    [('login', u'newid'), 
-    ('telephoneNumber', u'123'), 
-    ('id', u'Surname')]
-
-    >>> user.context.attrs.items()
-    [(u'cn', u'newid'), 
-    (u'objectClass', [u'top', u'person']), 
-    (u'telephoneNumber', u'123'), 
-    (u'sn', u'Surname')]
-
-    >>> user = users.create('newid', login='newcn', id='newid')
-    Traceback (most recent call last):
-      ...
-    KeyError: u"Principal with id 'newid' already exists."
-
-    >>> sorted(users.ids)
-    [u'M\xfcller', u'Schmidt', u'Umhauer', u'newid', u'sn_binary']
+    >>> users['newid'].context
+    <cn=newcn,ou=customers,dc=my-domain,dc=com:cn=newcn - True>
 
 Persist and reload::
 
@@ -206,10 +217,11 @@ Persist and reload::
     [(u'M\xfcller', <User object 'M?ller' at ...>), 
     (u'Schmidt', <User object 'Schmidt' at ...>), 
     (u'Umhauer', <User object 'Umhauer' at ...>), 
-    (u'newid', <User object 'newid' at ...>)]
+    (u'newid', <User object 'newid' at ...>), 
+    (u'sn_binary', <User object 'sn_binary' at ...>)]
 
     >>> users['newid'].context
-    <cn=newid,ou=customers,dc=my-domain,dc=com:cn=newid - True>
+    <cn=newcn,ou=customers,dc=my-domain,dc=com:cn=newcn - False>
 
 Delete User::
 

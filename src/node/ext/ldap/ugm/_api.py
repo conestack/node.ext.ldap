@@ -430,18 +430,12 @@ class LDAPPrincipals(OdictStorage):
         # if cfg.member_relation:
         #     context.search_relation = cfg.member_relation
 
-        # context._key_attr = cfg.attrmap['id']
-        # context._rdn_attr = cfg.attrmap['rdn']
-        # context._seckey_attrs = ('dn',)
-
         self._key_attr = cfg.attrmap['id']
         self._rdn_attr = cfg.attrmap['rdn']
         self._login_attr = None
         if cfg.attrmap.get('login') \
                 and cfg.attrmap['login'] != cfg.attrmap['id']:
             self._login_attr = cfg.attrmap['login']
-
-        # context._load_keys()
 
         self.expiresAttr = getattr(cfg, 'expiresAttr', None)
         self.expiresUnit = getattr(cfg, 'expiresUnit', None)
@@ -501,7 +495,8 @@ class LDAPPrincipals(OdictStorage):
                 context = context[rdn]
             principal = self.principal_factory(
                 context,
-                attraliaser=self.principal_attraliaser)
+                attraliaser=self.principal_attraliaser
+            )
             principal.__name__ = key
             principal.__parent__ = self
             self.storage[key] = principal
@@ -524,6 +519,7 @@ class LDAPPrincipals(OdictStorage):
             raise ValueError(u"Given value not instance of '{0}'".format(
                 self.principal_factory.__name__
             ))
+        # XXX: check if there is valid user context
         exists = False
         try:
             self[name]
@@ -612,7 +608,7 @@ class LDAPPrincipals(OdictStorage):
             or_values=or_values,
             page_size=page_size,
             cookie=cookie
-            )
+        )
         if type(results) is tuple:
             results, cookie = results
         if attrlist is not None:
@@ -624,16 +620,31 @@ class LDAPPrincipals(OdictStorage):
     @default
     @locktree
     def create(self, pid, **kw):
-        # XXX: mechanism for defining a target container if search scope is
-        #      SUBTREE
+        # XXX: mechanism for defining a target container if scope is SUBTREE
+        # create principal with LDAPNode as context
         context = LDAPNode()
-        self.context[u'{0}={1}'.format(self._rdn_attr, pid)] = context
         principal = self.principal_factory(
             context,
-            attraliaser=self.principal_attraliaser)
+            attraliaser=self.principal_attraliaser
+        )
+        # ensure id on attributes
+        kw['id'] = pid
+        # avoid overwriting key attribute if given in kw
+        if self._key_attr in kw:
+            del kw[self._key_attr]
+        # set additional attributes on principal
         for k, v in kw.items():
             principal.attrs[k] = v
+        # set principal to self
         self[pid] = principal
+        # if setting principal has been successful, hook up principal context
+        # to ldap tree
+        rdn = u'{0}={1}'.format(
+            self._rdn_attr,
+            principal.context.attrs[self._rdn_attr]
+        )
+        self.context[rdn] = context
+        # return newly created principal
         return self[pid]
 
 
