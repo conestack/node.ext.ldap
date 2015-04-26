@@ -309,16 +309,15 @@ The changed flag::
     >>> users[users.values()[1].name].context
     <cn=user2,ou=customers,dc=my-domain,dc=com:cn=user2 - False>
 
-XXX
-
-    >> users.context.printtree()
+    >>> users.context.printtree()
     <dc=my-domain,dc=com - False>
-      <cn=user1,dc=my-domain,dc=com:Meier - False>
-      <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
-      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
-      <cn=n?sty\2C User,ou=customers,dc=my-domain,dc=com:Umhauer - False>
-
-/XXX::
+      ...
+        <cn=user2,ou=customers,dc=my-domain,dc=com:cn=user2 - False>
+        <cn=user3,ou=customers,dc=my-domain,dc=com:cn=user3 - False>
+        <cn=n?sty\, User,ou=customers,dc=my-domain,dc=com:cn=n?sty\, User - False>
+      ...
+      <cn=user1,dc=my-domain,dc=com:cn=user1 - False>
+      ...
 
     >>> users['Meier'].attrs['telephoneNumber'] = '12345'
     >>> users['Meier'].attrs.changed
@@ -330,16 +329,15 @@ XXX
     >>> users.changed
     True
 
-XXX
-
-    >> users.context.printtree()
+    >>> users.context.printtree()
     <dc=my-domain,dc=com - True>
-      <cn=user1,dc=my-domain,dc=com:Meier - True>
-      <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
-      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
-      <cn=n?sty\2C User,ou=customers,dc=my-domain,dc=com:Umhauer - False>
-
-/XXX::
+      ...
+        <cn=user2,ou=customers,dc=my-domain,dc=com:cn=user2 - False>
+        <cn=user3,ou=customers,dc=my-domain,dc=com:cn=user3 - False>
+        <cn=n?sty\, User,ou=customers,dc=my-domain,dc=com:cn=n?sty\, User - False>
+      ...
+      <cn=user1,dc=my-domain,dc=com:cn=user1 - True>
+      ...
 
     >>> users['Meier'].attrs.context.load()
     >>> users['Meier'].attrs.changed
@@ -351,16 +349,15 @@ XXX
     >>> users.changed
     False
 
-XXX
-
-    >> users.context.printtree()
+    >>> users.context.printtree()
     <dc=my-domain,dc=com - False>
-      <cn=user1,dc=my-domain,dc=com:Meier - False>
-      <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
-      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
-      <cn=n?sty\2C User,ou=customers,dc=my-domain,dc=com:Umhauer - False>
-
-/XXX::
+      ...
+        <cn=user2,ou=customers,dc=my-domain,dc=com:cn=user2 - False>
+        <cn=user3,ou=customers,dc=my-domain,dc=com:cn=user3 - False>
+        <cn=n?sty\, User,ou=customers,dc=my-domain,dc=com:cn=n?sty\, User - False>
+      ...
+      <cn=user1,dc=my-domain,dc=com:cn=user1 - False>
+      ...
 
 A user does not know about it's groups if initialized directly::
 

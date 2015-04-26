@@ -950,14 +950,23 @@ for counting entries::
     u'cn=customer99']
 
 Search with pagination::
+
     >>> res, cookie = node.search(page_size=5)
     >>> res
-    [u'dc=my-domain', u'ou=customers', u'ou=customer1', u'ou=customer2', u'ou=n\xe4sty\\, customer']
+    [u'dc=my-domain', 
+    u'ou=customers', 
+    u'ou=customer1', 
+    u'ou=customer2', 
+    u'ou=n\xe4sty\\, customer']
+
     >>> res, cookie = node.search(page_size=5, cookie=cookie)
     >>> res
-    [u'ou=demo', u'uid=binary', u'ou=customer3', u'cn=customer99']
-    >>> assert cookie == ''
+    [u'ou=demo', 
+    u'uid=binary', 
+    u'ou=customer3', 
+    u'cn=customer99']
 
+    >>> assert cookie == ''
 
 Lets add a default search filter.::
 
@@ -1093,7 +1102,6 @@ Test relation filter::
     u'ou=customer1',
     u'ou=customer2',
     u'ou=n\xe4sty\\, customer']
-
 
 Search with binary in attrlist::
 

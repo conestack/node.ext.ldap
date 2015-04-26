@@ -302,24 +302,23 @@ class LDAPStorage(OdictStorage):
     def __iter__(self):
         if self.name is None:
             return
-        attrlist = ['dn']
+        #attrlist = ['dn']
         try:
             # XXX: page size, cookie
             # XXX: only search onelevel of self
             #      do not use self.search for this
             #      otherwise __getitem__ and printtree fails if scope subtree
-            res = self.search(attrlist=attrlist)
-            # res = self.ldap_session.search(
-            #     '(objectClass=*)',
-            #     ONELEVEL,
-            #     baseDN=encode(self.DN),
-            #     attrlist=attrlist,
-            # )
-            # print res
+            # res = self.search(attrlist=attrlist)
+            res = self.ldap_session.search(
+                scope=ONELEVEL,
+                baseDN=encode(self.DN),
+                attrlist=[''],
+            )
         # happens if not persisted yet
         except NO_SUCH_OBJECT:
             res = list()
-        for key, attrs in res:
+        for dn, _ in res:
+            key = decode(explode_dn(dn)[0])
             # do not yield if node is supposed to be deleted
             if key not in self._deleted_children:
                 yield key
@@ -483,9 +482,7 @@ class LDAPStorage(OdictStorage):
         )
         if type(matches) is tuple:
             matches, cookie = matches
-        # XXX: Is ValueError appropriate?
-        # XXX: why do we need to fail at all? shouldn't this be about
-        #      substring vs equality match?
+        # check exact match
         if exact_match and len(matches) > 1:
             raise ValueError(u"Exact match asked but result not unique")
         if exact_match and len(matches) == 0:
@@ -506,6 +503,7 @@ class LDAPStorage(OdictStorage):
                     resattr[u'dn'] = decode(dn)
                 res.append((key, resattr))
             else:
+                # XXX: return dn instead of key
                 res.append(key)
         if cookie is not None:
             return (res, cookie)
