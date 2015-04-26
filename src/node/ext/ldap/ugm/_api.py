@@ -466,12 +466,10 @@ class LDAPPrincipals(OdictStorage):
     @default
     @locktree
     def __delitem__(self, key):
-        key = decode_utf8(key)
-        del self.context[key]
-        try:
-            del self.storage[key]
-        except KeyError:
-            pass
+        principal = self[key]
+        context = principal.context
+        del context.parent[context.name]
+        del self.storage[key]
 
     @default
     @locktree
@@ -561,17 +559,6 @@ class LDAPPrincipals(OdictStorage):
 
     @default
     def _alias_dict(self, dct):
-        # XXX: seem to be not reached at all
-        #if dct is None:
-        #    return None
-
-        # XXX: this code does not work if multiple keys map to same value
-        #alias = self.principal_attraliaser.alias
-        #aliased_dct = dict(
-        #    [(alias(key), val) for key, val in dct.iteritems()])
-        #return aliased_dct
-
-        # XXX: generalization in aliaser needed
         ret = dict()
         for key, val in self.principal_attraliaser.iteritems():
             for k, v in dct.iteritems():
@@ -599,9 +586,12 @@ class LDAPPrincipals(OdictStorage):
     def search(self, criteria=None, attrlist=None,
                exact_match=False, or_search=False, or_keys=None,
                or_values=None, page_size=None, cookie=None):
+        search_attrlist = [self._key_attr]
+        if attrlist is not None and self._key_attr not in attrlist:
+            search_attrlist += attrlist
         results = self.context.search(
             criteria=self._unalias_dict(criteria),
-            attrlist=self._unalias_list(attrlist),
+            attrlist=self._unalias_list(search_attrlist),
             exact_match=exact_match,
             or_search=or_search,
             or_keys=or_keys,
@@ -612,7 +602,18 @@ class LDAPPrincipals(OdictStorage):
         if type(results) is tuple:
             results, cookie = results
         if attrlist is not None:
-            results = [(uid, self._alias_dict(att)) for uid, att in results]
+            _results = list()
+            for _, att in results:
+                user_id = att[self._key_attr][0]
+                aliased = self._alias_dict(att)
+                keys = aliased.keys()
+                for key in keys:
+                    if key not in attrlist:
+                        del aliased[key]
+                _results.append((user_id, aliased))
+            results = _results
+        else:
+            results = [att[self._key_attr][0] for _, att in results]
         if cookie is not None:
             return results, cookie
         return results
@@ -675,7 +676,6 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
     @override
     @locktree
     def __delitem__(self, key):
-        key = decode_utf8(key)
         user = self[key]
         try:
             groups = user.groups
@@ -687,7 +687,9 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
         if parent and parent.rcfg is not None:
             for role in user.roles:
                 user.remove_role(role)
-        del self.context[key]
+        context = user.context
+        del context.parent[context.name]
+        del self.storage[key]
 
     @default
     def id_for_login(self, login):
