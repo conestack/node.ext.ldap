@@ -391,7 +391,30 @@ Create a LDAPGroups node and configure it::
     >>> group
     <Group object 'group1' at ...>
 
+    >>> group.attrs.items()
+    [('member', 
+    [u'cn=user3,ou=customers,dc=my-domain,dc=com', 
+    u'cn=user2,ou=customers,dc=my-domain,dc=com']), 
+    ('rdn', u'group1')]
+
+    >>> group.attrs.context.items()
+    [(u'objectClass', [u'top', u'groupOfNames']), 
+    (u'member', [u'cn=user3,ou=customers,dc=my-domain,dc=com', 
+    u'cn=user2,ou=customers,dc=my-domain,dc=com']), 
+    (u'cn', u'group1')]
+
+    >>> groups.context.child_defaults
+    {'objectClass': ['groupOfNames']}
+
     >>> group = groups.create('group3')
+    >>> group.attrs.items()
+    [('rdn', u'group3'), ('member', ['cn=nobody'])]
+
+    >>> group.attrs.context.items()
+    [(u'cn', u'group3'), 
+    (u'member', ['cn=nobody']), 
+    (u'objectClass', [u'groupOfNames'])]
+
     >>> groups()
     >>> groups.ids
     [u'group1', u'group2', u'group3']

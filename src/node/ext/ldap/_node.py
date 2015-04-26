@@ -246,9 +246,9 @@ class LDAPStorage(OdictStorage):
     def __setitem__(self, key, val):
         if isinstance(key, str):
             key = decode(key)
-        # XXX: remove, expect LDAPNode
         if not isinstance(val, LDAPNode):
             # create one from whatever we got
+            # XXX: raise KeyError instead of trying to create node
             val = self._create_suitable_node(val)
         val.__name__ = key
         val.__parent__ = self
@@ -302,13 +302,7 @@ class LDAPStorage(OdictStorage):
     def __iter__(self):
         if self.name is None:
             return
-        #attrlist = ['dn']
         try:
-            # XXX: page size, cookie
-            # XXX: only search onelevel of self
-            #      do not use self.search for this
-            #      otherwise __getitem__ and printtree fails if scope subtree
-            # res = self.search(attrlist=attrlist)
             res = self.ldap_session.search(
                 scope=ONELEVEL,
                 baseDN=encode(self.DN),
