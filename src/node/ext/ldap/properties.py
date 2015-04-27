@@ -43,7 +43,7 @@ class LDAPServerProperties(object):
                  uri=None,
                  start_tls=0,
                  ignore_cert=0,
-                 #tls_cacertfile=None,
+                 tls_cacertfile=None,
                  #tls_cacertdir=None,
                  #tls_clcertfile=None,
                  #tls_clkeyfile=None,
@@ -97,7 +97,10 @@ class LDAPServerProperties(object):
             certificates. Defaults to False
 
         tls_cacertfile
-            Not yet
+            Provide a specific CA Certifcate file. This is needed if the
+            CA is not in the default CA keyring (i.e. with self-signed
+            certificates). Under Windows its possible that python-ldap lib does
+            recognize the system keyring.
 
         tls_cacertdir
             Not yet
@@ -140,9 +143,9 @@ class LDAPServerProperties(object):
         self.cache = cache
         self.timeout = timeout
         self.start_tls = start_tls
-        self.ignore_cert = ignore_cert
         self.check_duplicates = check_duplicates
-        #self.tls_cacertfile = tls_cacertfile
+        self.ignore_cert = ignore_cert
+        self.tls_cacertfile = tls_cacertfile
         #self.tls_cacertdir = tls_cacertdir
         #self.tls_clcertfile = tls_clcertfile
         #self.tls_clkeyfile = tls_clkeyfile
