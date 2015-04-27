@@ -69,7 +69,6 @@ class LDAPConnector(object):
 
     def __init__(self, props=None):
         """Initialize LDAPConnector.
-
         """
         self.protocol = ldap.VERSION3
         self._uri = props.uri
@@ -90,7 +89,7 @@ class LDAPConnector(object):
         if self._start_tls:
             # ignore in tests for now. nevertheless provide a test environment
             # for TLS and SSL later
-            self._con.start_tls_s()                        # pragma NO COVERAGE
+            self._con.start_tls_s()                         #pragma NO COVERAGE
         self._con.simple_bind_s(self._bindDN, self._bindPW)
         return self._con
 
