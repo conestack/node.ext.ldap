@@ -535,8 +535,30 @@ Add and remove user from group::
 
 Delete Group::
 
+    >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg)
+
+    >>> groups = ugm.groups
+    >>> group = groups.create('group4')
+    >>> group.add('Schmidt')
+    >>> groups()
+
     >>> groups.keys()
-    [u'group1', u'group2', u'group3']
+    [u'group1', u'group2', u'group3', u'group4']
+
+    >>> groups.values()
+    [<Group object 'group1' at ...>, 
+    <Group object 'group2' at ...>, 
+    <Group object 'group3' at ...>, 
+    <Group object 'group4' at ...>]
+
+    >>> ugm.users['Schmidt'].groups
+    [<Group object 'group1' at ...>, <Group object 'group4' at ...>]
+
+    >>> group.member_ids
+    [u'Schmidt']
+
+    >>> del groups['group4']
+    >>> groups()
 
     >>> groups.values()
     [<Group object 'group1' at ...>, 
@@ -545,16 +567,6 @@ Delete Group::
 
     >>> ugm.users['Schmidt'].groups
     [<Group object 'group1' at ...>]
-
-    >>> del groups['group1']
-    >>> groups()
-
-    >>> groups.values()
-    [<Group object 'group2' at ...>, 
-    <Group object 'group3' at ...>]
-
-    >>> ugm.users['Schmidt'].groups
-    []
 
 Test role mappings. Create container for roles.::
 
@@ -676,6 +688,16 @@ Remove role 'viewer'.::
 Remove role 'editor', No other principal left, remove role as well.::
 
     >>> user.remove_role('editor')
+
+    >>> roles.storage.keys()
+    ['viewer']
+
+    >>> roles.context._deleted_children
+    set([u'cn=editor'])
+
+    >>> roles.keys()
+    [u'viewer']
+
     >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
@@ -699,10 +721,10 @@ Test roles for group.::
           <class 'node.ext.ldap.ugm._api.User'>: M?ller
 
     >>> ugm.roles(group)
-    [u'viewer']
+    ['viewer']
 
     >>> group.roles
-    [u'viewer']
+    ['viewer']
 
     >>> group = ugm.groups['group3']
     >>> group.add_role('viewer')
@@ -729,7 +751,7 @@ If role already granted, an error is raised.::
     ValueError: Principal already has role 'editor'
 
     >>> group.roles
-    [u'viewer', u'editor']
+    ['viewer', 'editor']
 
     >>> ugm.remove_role('viewer', group)
     >>> roles.printtree()
@@ -826,13 +848,26 @@ Delete user and check if roles are removed.::
           <class 'node.ext.ldap.ugm._api.User'>: Schmidt
           <class 'node.ext.ldap.ugm._api.User'>: M?ller
 
-    >>> del ugm.users['Meier']
+    >>> users = ugm.users
+    >>> del users['Meier']
     >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.Group'>: group1
           <class 'node.ext.ldap.ugm._api.User'>: Schmidt
           <class 'node.ext.ldap.ugm._api.User'>: M?ller
+
+    >>> users.storage.keys()
+    [u'Schmidt', u'M\xfcller', u'Umhauer']
+
+    >>> users.keys()
+    [u'M\xfcller', u'Schmidt', u'Umhauer']
+
+    >>> users.printtree()
+    <class 'node.ext.ldap.ugm._api.Users'>: users
+      <class 'node.ext.ldap.ugm._api.User'>: M?ller
+      <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+      <class 'node.ext.ldap.ugm._api.User'>: Umhauer
 
 Delete group and check if roles are removed.::
 
