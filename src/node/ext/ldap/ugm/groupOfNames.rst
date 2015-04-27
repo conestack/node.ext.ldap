@@ -45,8 +45,6 @@ Try to set item by invalid key, fails::
       ...
     KeyError: 'inexistent'
 
-
-
 User keys::
 
     >>> users = ugm.users
@@ -66,7 +64,7 @@ Fetch some users::
     <class 'node.ext.ldap.ugm._api.User'>
 
     >>> user_0.attrs
-    Aliased <LDAPNodeAttributes object 'uid0' at ...>
+    Aliased <LDAPNodeAttributes object 'uid=uid0' at ...>
 
     >>> user_0.attrs['cn']
     u'cn0'
@@ -132,7 +130,7 @@ Change password::
     >>> users.passwd('foo', 'secret0', 'bar')
     Traceback (most recent call last):
       ...
-    KeyError: u'foo'
+    KeyError: 'foo'
 
     >>> users.passwd('uid0', 'secret0', 'bar')
     >>> users.authenticate('uid0', 'bar')
@@ -180,7 +178,7 @@ not persisted to LDAP yet::
     >>> ugm.users.passwd('sepp', None, 'secret')
     Traceback (most recent call last):
       ...
-    NO_SUCH_OBJECT: {'desc': 'No such object'}
+    KeyError: 'sepp'
 
 After calling, new user is available in LDAP::
 
@@ -206,7 +204,7 @@ Groups object::
     <class 'node.ext.ldap.ugm._api.Group'>
 
     >>> group_0.attrs
-    Aliased <LDAPNodeAttributes object 'group0' at ...>
+    Aliased <LDAPNodeAttributes object 'cn=group0' at ...>
 
     >>> group_0.attrs.items()
     [('member', [u'cn=nobody']), ('rdn', u'group0')]
@@ -428,14 +426,14 @@ MemberOf Support::
 
     >>> users = ugm.users
     >>> users.context.search(queryFilter='(memberOf=*)')
-    [u'uid1', u'uid2']
+    [u'uid=uid1', u'uid=uid2']
 
     >>> users.context.search(attrlist=['memberOf'])
-    [(u'uid0', {}), 
-    (u'uid1', {u'memberOf': 
+    [(u'uid=uid0', {}), 
+    (u'uid=uid1', {u'memberOf': 
     [u'cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com', 
     u'cn=group1,ou=groups,ou=groupOfNames,dc=my-domain,dc=com']}), 
-    (u'uid2', {u'memberOf': 
+    (u'uid=uid2', {u'memberOf': 
     [u'cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com']})]
 
     >>> ugm.ucfg.memberOfSupport = True
