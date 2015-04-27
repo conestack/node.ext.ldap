@@ -19,8 +19,8 @@ DOCFILES = [
     ('ugm/principals.rst', testing.LDIF_principals),
     ('ugm/groupOfNames.rst', testing.LDIF_groupOfNames),
     ('ugm/posixGroups.rst', testing.LDIF_posixGroups),
-    #('ugm/sambaUsers.rst', testing.LDIF_sambaUsers),
-    #('ugm/defaults.rst', testing.LDIF_data),
+    ('ugm/sambaUsers.rst', testing.LDIF_sambaUsers),
+    ('ugm/defaults.rst', testing.LDIF_data),
     #('../../../../README.rst', testing.LDIF_data),
 ]
 
