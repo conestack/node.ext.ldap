@@ -325,14 +325,13 @@ class LDAPGroupMapping(Behavior):
             gcfg = ugm.gcfg
             if gcfg and gcfg.memberOfSupport:
                 users = ugm.users
-                criteria = {
-                    'memberOf': self.context.DN,
-                }
-                # XXX: use users instead of users.context.
-                #      Problem: Aliaed Attributes in strict mode do not know
-                #               about memberOf by default. Check for related
-                #               configuration flag and set transparently
-                return users.context.search(criteria=criteria)
+                criteria = {'memberOf': self.context.DN}
+                attrlist = [users._key_attr]
+                res = users.context.search(
+                    criteria=criteria,
+                    attrlist=attrlist
+                )
+                return [att[users._key_attr][0] for _, att in res]
         ret = list()
         members = self.context.attrs.get(self._member_attribute, list())
         for member in members:
@@ -426,8 +425,10 @@ class LDAPPrincipals(OdictStorage):
                     context.child_defaults[key] = val
         # if cfg.member_relation:
         #     context.search_relation = cfg.member_relation
-        self._key_attr = cfg.attrmap['id']
         self._rdn_attr = cfg.attrmap['rdn']
+        self._key_attr = cfg.attrmap['id']
+        if self._key_attr not in cfg.attrmap:
+            cfg.attrmap[self._key_attr] = self._key_attr
         self._login_attr = None
         if cfg.attrmap.get('login') \
                 and cfg.attrmap['login'] != cfg.attrmap['id']:
@@ -444,6 +445,7 @@ class LDAPPrincipals(OdictStorage):
 
         Raise KeyError if not enlisted.
         """
+        # XXX: what was strict good for? remove
         # if strict:
         #     raise KeyError(dn)
         try:
@@ -747,7 +749,7 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
             attrlist.append(self.expiresAttr)
         res = self.context.search(criteria=criteria, attrlist=attrlist)
         if not res:
-            return
+            raise KeyError(id)
         if len(res) > 1:
             msg = u'More than one principal with login "{0}" found.'
             logger.warning(msg.format(user_id))
