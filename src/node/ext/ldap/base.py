@@ -78,12 +78,15 @@ class LDAPConnector(object):
         self._cachetimeout = props.timeout
         self._start_tls = props.start_tls
         self._ignore_cert = props.ignore_cert
+        self._tls_cacert_file = props.tls_cacertfile
 
     def bind(self):
         """Bind to Server and return the Connection Object.
         """
         if self._ignore_cert:
             ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
+        elif self._tls_cacert_file:
+            ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, self._tls_cacert_file)
         self._con = ldap.initialize(self._uri)
         self._con.protocol_version = self.protocol
         if self._start_tls:
