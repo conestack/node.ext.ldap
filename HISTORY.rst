@@ -4,6 +4,10 @@ History
 1.0b0 (unreleased)
 ------------------
 
+- remove bbb code: no python 2.4 support (2.7+ now), usage of LDAPProperties
+  mandatory now.
+  [jensens]
+
 - Overhaul LDAP UGM implementation.
   [rnix]
 

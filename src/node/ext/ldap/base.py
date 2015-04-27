@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
+from bda.cache import ICacheManager
+from bda.cache.interfaces import INullCacheProvider
+from node.ext.ldap.cache import nullcacheProviderFactory
+from node.ext.ldap.interfaces import ICacheProviderFactory
+from node.ext.ldap.properties import LDAPProps
+from zope.component import queryUtility
+import hashlib
 import ldap
 import logging
-from zope.component import queryUtility
-from bda.cache import ICacheManager
-from .interfaces import ICacheProviderFactory
-from .properties import LDAPProps
-from .cache import nullcacheProviderFactory
 
 
 logger = logging.getLogger('node.ext.ldap')
@@ -36,17 +38,8 @@ def testLDAPConnectivity(server=None, port=None, props=None):
 
 
 def md5digest(key):
-    """Needed to support both, python 2.4 and python >=2.5
-
-    Will be remove when python 2.4 support is dropped.
+    """abbrev to create a md5 hex digest
     """
-    try:
-        # in python >=2.5
-        import hashlib
-    except ImportError:                                     #pragma NO COVERAGE
-        # fallback if python 2.4
-        import md5                                          #pragma NO COVERAGE
-        return md5.new(key).hexdigest()                     #pragma NO COVERAGE
     m = hashlib.md5()
     m.update(key)
     return m.hexdigest()
@@ -74,42 +67,18 @@ class LDAPConnector(object):
     (see also properties.py)
     """
 
-    def __init__(self,
-                 server=None,
-                 port=None,
-                 bindDN=None,
-                 bindPW=None,
-                 cache=True,
-                 cachetimeout=43200,
-                 props=None):
+    def __init__(self, props=None):
         """Initialize LDAPConnector.
 
-        Signature Deprecated: Signature will take ``LDAPProps``
-                              object only instead of current kwargs in future.
-                              This will be changed in Version 1.0.
         """
         self.protocol = ldap.VERSION3
-        if props is None:
-            # old
-            logging.warn(u"Deprecated usage of ``LDAPConnector.__init__``. "
-                         u"please pass ``LDAPProps`` object instead of "
-                         u"separate settings.")
-            self._uri = "ldap://%s:%d/" % (server, port)
-            self._bindDN = bindDN
-            self._bindPW = bindPW
-            self._cache = cache
-            self._cachetimeout = cachetimeout
-            self._start_tls = 0
-            self._ignore_cert = 0
-        else:
-            # new
-            self._uri = props.uri
-            self._bindDN = props.user
-            self._bindPW = props.password
-            self._cache = props.cache
-            self._cachetimeout = props.timeout
-            self._start_tls = props.start_tls
-            self._ignore_cert = props.ignore_cert
+        self._uri = props.uri
+        self._bindDN = props.user
+        self._bindPW = props.password
+        self._cache = props.cache
+        self._cachetimeout = props.timeout
+        self._start_tls = props.start_tls
+        self._ignore_cert = props.ignore_cert
 
     def bind(self):
         """Bind to Server and return the Connection Object.
@@ -121,7 +90,7 @@ class LDAPConnector(object):
         if self._start_tls:
             # ignore in tests for now. nevertheless provide a test environment
             # for TLS and SSL later
-            self._con.start_tls_s()                         #pragma NO COVERAGE
+            self._con.start_tls_s()                        # pragma NO COVERAGE
         self._con.simple_bind_s(self._bindDN, self._bindPW)
         return self._con
 
@@ -156,9 +125,20 @@ class LDAPCommunicator(object):
             cacheprovider = cachefactory()
             self._cache = ICacheManager(cacheprovider)
             self._cache.setTimeout(connector._cachetimeout)
-            logger.debug(u"LDAP Caching activated for instance '%s'. Use '%s' "
-                          "as cache provider" % (repr(self._cache),
-                                                 repr(cacheprovider)))
+            if not INullCacheProvider.providedBy(self._cache):
+                logger.debug(
+                    u"LDAP Caching activated for instance '{0:s}'. "
+                    u"Use '{1:s}' as cache provider".format(
+                        repr(self._cache),
+                        repr(cacheprovider)
+                    )
+                )
+            else:
+                logger.debug(
+                    u"LDAP Caching activated for instance '{0:s}'.".format(
+                        repr(self._cache),
+                    )
+                )
 
     def bind(self):
         """Bind to LDAP Server.
@@ -224,9 +204,14 @@ class LDAPCommunicator(object):
             if type(attrlist) in (list, tuple):
                 attrlist = [str(_) for _ in attrlist]
 
-            msgid = self._con.search_ext(baseDN, scope, queryFilter,
-                                         attrlist, attrsonly,
-                                         serverctrls=serverctrls)
+            msgid = self._con.search_ext(
+                baseDN,
+                scope,
+                queryFilter,
+                attrlist,
+                attrsonly,
+                serverctrls=serverctrls
+            )
             rtype, results, rmsgid, rctrls = self._con.result3(msgid)
             ctype = ldap.controls.libldap.SimplePagedResultsControl.controlType
             pctrls = [c for c in rctrls if c.controlType == ctype]
@@ -237,19 +222,25 @@ class LDAPCommunicator(object):
 
         args = [baseDN, scope, queryFilter, attrlist, attrsonly, serverctrls]
         if self._cache:
-            key = '%s-%s-%s-%s-%s-%i-%s-%s' % (self._connector._bindDN,
-                                   baseDN,
-                                   sorted(attrlist or []),
-                                   attrsonly,
-                                   queryFilter,
-                                   scope,
-                                   page_size,
-                                   cookie)
+            key_items = [
+                self._connector._bindDN,
+                baseDN,
+                sorted(attrlist or []),
+                attrsonly,
+                queryFilter,
+                scope,
+                page_size,
+                cookie
+            ]
+            key = '-'.join([str(_) for _ in key_items])
             key = md5digest(key)
-            return self._cache.getData(_search, key,
-                                       force_reload, args)
-        else:
-            return _search(*args)
+            return self._cache.getData(
+                _search,
+                key,
+                force_reload,
+                args
+            )
+        return _search(*args)
 
     def add(self, dn, data):
         """Insert an entry into directory.
