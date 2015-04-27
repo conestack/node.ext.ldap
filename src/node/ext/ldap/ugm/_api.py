@@ -483,6 +483,11 @@ class LDAPPrincipals(OdictStorage):
             if len(res) > 1:
                 msg = u'More than one principal with id "{0}" found.'
                 logger.warning(msg.format(key))
+            # XXX: as soon as LDAPNode.search result format has been changed,
+            #      this needs to be adopted
+            prdn = res[0][0]
+            if prdn in self.context._deleted_children:
+                raise KeyError(key)
             dn = res[0][1]['dn']
             # XXX: use explode_dn
             path = dn.split(',')[:len(self.context.DN.split(',')) * -1]
