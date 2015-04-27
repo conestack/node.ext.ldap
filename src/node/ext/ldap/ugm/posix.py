@@ -26,11 +26,11 @@ posixGroup
 
 
 def cn(node, uid):
-    return uid
+    return uid.split('=')[1]
 
 
 def uid(node, uid):
-    return uid
+    return uid.split('=')[1]
 
 
 UID_NUMBER = ''
@@ -78,7 +78,7 @@ def gidNumber(node, uid):
 
 
 def homeDirectory(node, uid):
-    return '/home/%s' % uid
+    return '/home/%s' % uid.split('=')[1]
 
 
 POSIX_DEFAULT_SHELL = '/bin/false'

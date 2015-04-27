@@ -117,8 +117,8 @@ Posix Group
     >>> group = groups.create('posixgroup')
     >>> group()
     >>> group.context.attrs.items()
-    [(u'memberUid', [u'nobody']), 
-    (u'cn', u'posixgroup'), 
+    [(u'cn', u'posixgroup'), 
+    (u'memberUid', ['nobody']), 
     (u'objectClass', [u'posixGroup']), 
     (u'gidNumber', u'100')]
 
@@ -294,7 +294,7 @@ Samba Group
     >>> sorted(group.context.attrs.items())
     [(u'cn', u'sambagroup'), 
     (u'gidNumber', u'100'), 
-    (u'memberUid', [u'nobody']), 
+    (u'memberUid', ['nobody']), 
     (u'objectClass', [u'posixGroup', u'sambaGroupMapping']), 
     (u'sambaGroupType', u'2'), 
     (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-1202')]
