@@ -56,14 +56,6 @@ Test LDAP connectivity::
 
 Create connector.
 
-Old signature. To be remove in 1.0::
-
-    >>> connector = LDAPConnector(host, port, binddn, bindpw, cache=False)
-    >>> connector
-    <node.ext.ldap.base.LDAPConnector object at ...>
-
-New signature, use this one::
-
     >>> connector = LDAPConnector(props=props)
     >>> connector
     <node.ext.ldap.base.LDAPConnector object at ...>
@@ -94,7 +86,7 @@ Set base dn and check if previously imported entries are present.::
     >>> res = communicator.search('(objectClass=*)', SUBTREE)
     >>> len(res)
     7
-  
+
 Test inserting entries.::
 
     >>> entry = {
@@ -115,7 +107,7 @@ Query added entry directly.::
 
     >>> res = communicator.search('(cn=foo)', SUBTREE)
     >>> res
-    [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com', 
+    [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
     {'objectClass': ['person', 'top'], 'cn': ['foo'], 'sn': ['bar']})]
 
 Modify this entry and check the result.::
@@ -124,7 +116,7 @@ Modify this entry and check the result.::
     >>> communicator.modify(res[0][0], [(MOD_REPLACE, 'sn', 'baz')])
     >>> res = communicator.search('(cn=foo)', SUBTREE)
     >>> res
-    [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com', 
+    [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
     {'objectClass': ['person', 'top'], 'cn': ['foo'], 'sn': ['baz']})]
 
 Finally delete this entry and check the result.::
@@ -139,7 +131,7 @@ Unbind from server.::
 
 Connector using cache.::
 
-    >>> connector = LDAPConnector(host, port, binddn, bindpw)
+    >>> connector = LDAPConnector(props)
     >>> communicator = LDAPCommunicator(connector)
     >>> communicator.bind()
 
@@ -160,7 +152,7 @@ anyways::
 
     >>> res = communicator.search('(cn=foo)', SUBTREE)
     >>> res
-    [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com', 
+    [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
     {'objectClass': ['person', 'top'], 'cn': ['foo'], 'sn': ['bar']})]
 
 Delete entry::
