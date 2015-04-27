@@ -333,7 +333,10 @@ class LDAPStorage(OdictStorage):
             elif self._action == ACTION_DELETE:
                 self.parent._deleted_children.remove(self.name)
                 self._ldap_delete()
-            self.nodespaces['__attrs__'].changed = False
+            try:
+                self.nodespaces['__attrs__'].changed = False
+            except KeyError:
+                pass
             self.changed = False
             self._action = None
         deleted = [self[key] for key in self._deleted_children]
@@ -495,9 +498,10 @@ class LDAPStorage(OdictStorage):
                             resattr[decode(k)] = decode(v)
                 if 'dn' in attrlist:
                     resattr[u'dn'] = decode(dn)
+                # XXX: optional RDN, DN instead of key
                 res.append((key, resattr))
             else:
-                # XXX: return dn instead of key
+                # XXX: return DN instead of key
                 res.append(key)
         if cookie is not None:
             return (res, cookie)

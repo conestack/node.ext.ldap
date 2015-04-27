@@ -499,9 +499,14 @@ class LDAPPrincipals(OdictStorage):
     @default
     @locktree
     def __iter__(self):
-        attrlist = [self._key_attr]
+        attrlist = [self._key_attr]  # XXX: include RDN
         res = self.context.search(attrlist=attrlist)
         for principal in res:
+            # XXX: as soon as LDAPNode.search result format has been changed,
+            #      this needs to be adopted
+            prdn = principal[0]
+            if prdn in self.context._deleted_children:
+                continue
             yield principal[1][self._key_attr][0]
         for principal in self.context._added_children:
             yield self.context[principal].attrs[self._key_attr]
@@ -665,7 +670,6 @@ def calculate_expired(expiresUnit, expires):
 
 
 class LDAPUsers(LDAPPrincipals, UgmUsers):
-
     principal_factory = default(User)
 
     @override
