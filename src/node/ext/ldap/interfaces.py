@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
-from zope.interface import (
-    Interface,
-    Attribute,
-)
-from node.interfaces import (
-    IStorage,
-    INodeCreatedEvent,
-    INodeAddedEvent,
-    INodeModifiedEvent,
-    INodeRemovedEvent,
-    INodeDetachedEvent,
-)
+from node.interfaces import INodeAddedEvent
+from node.interfaces import INodeCreatedEvent
+from node.interfaces import INodeDetachedEvent
+from node.interfaces import INodeModifiedEvent
+from node.interfaces import INodeRemovedEvent
+from node.interfaces import IStorage
+from zope.interface import Attribute
+from zope.interface import Interface
 
 
 class ICacheProviderFactory(Interface):
@@ -43,11 +39,11 @@ class ILDAPProps(Interface):
 
     tls_cacertfile = Attribute(u"Name of CA Cert file")
 
-    tls_cacertdir = Attribute(u"Path to CA Cert directory")
+    tls_cacertdir = Attribute(u"Path to CA Cert directory")  # unused
 
-    tls_clcertfile = Attribute(u"Name of CL Cert file")
+    tls_clcertfile = Attribute(u"Name of CL Cert file")  # unused
 
-    tls_clkeyfile = Attribute(u"Path to CL key file")
+    tls_clkeyfile = Attribute(u"Path to CL key file")  # unused
 
     retry_max = Attribute(u"Retry count")
 
@@ -57,8 +53,9 @@ class ILDAPProps(Interface):
 
     binary_attributes = Attribute(u"Attributes considered binary")
 
-    check_duplicates = Attribute(u"Boolean to avoid duplicates checking "
-                                 u"in LDAP tree when building nodes.")
+    check_duplicates = Attribute(
+        u"Avoids duplicates checking in LDAP tree when building nodes (bool)."
+    )
 
 
 class ILDAPPrincipalsConfig(Interface):
@@ -74,34 +71,39 @@ class ILDAPPrincipalsConfig(Interface):
     queryFilter = Attribute(u"Search Query filter for principals")
 
     # XXX
-    #member_relation = Attribute(u"Optional member relation to be used to "
-    #                            u"speed up groups search, i.e. "
-    #                            u"'uid:memberUid'")
+    # member_relation = Attribute(u"Optional member relation to be used to "
+    #                             u"speed up groups search, i.e. "
+    #                             u"'uid:memberUid'")
 
     objectClasses = Attribute(u"Object classes for new principals.")
 
-    defaults = Attribute(u"Dict like object containing default values for "
-                         u"principal creation. A value could either be static "
-                         u"or a callable. This defaults take precedence to "
-                         u"defaults detected via set object classes.")
+    defaults = Attribute(
+        u"Dict like object containing default values for principal creation."
+        u"A value could either be static or a callable. This defaults take"
+        u"precedence to defaults detected via set object classes."
+    )
 
-    strict = Attribute(u"Flag whether to initialize Aliaser for LDAP "
-                       u"attributes in strict mode. Defaults to True.")
+    strict = Attribute(
+        u"Flag whether to initialize Aliaser for LDAP attributes in strict "
+        u"mode. Defaults to True."
+    )
 
-    memberOfSupport = Attribute(u"Flag whether to use 'memberOf' attribute "
-                                u"(AD) or memberOf overlay (openldap) for "
-                                u"Group membership resolution where "
-                                u"appropriate.")
+    memberOfSupport = Attribute(
+        u"Flag whether to use 'memberOf' attribute (AD) or memberOf overlay "
+        u"(openldap) for Group membership resolution where appropriate."
+    )
 
     # XXX: currently expiresAttr only gets considered for user authentication
     #      group and role expiration is not implemented yet.
-    expiresAttr = Attribute(u"Attribue containing an expiration timestamp "
-                            u"from epoch in UTC. If None, entry never "
-                            u"expires.")
+    expiresAttr = Attribute(
+        u"Attribute containing an expiration timestamp from epoch in UTC. "
+        u"If None, entry never expires."
+    )
 
-    expiresUnit = Attribute(u"Expiration unit. Either "
-                            u"``node.ext.ldap.ugm.EXPIRATION_DAYS`` or "
-                            u"``EXPIRATION_SECONDS``. defaults to days.")
+    expiresUnit = Attribute(
+        u"Expiration unit. Either ``node.ext.ldap.ugm.EXPIRATION_DAYS`` or "
+        u"``EXPIRATION_SECONDS``. defaults to days."
+    )
 
 
 class ILDAPUsersConfig(ILDAPPrincipalsConfig):
@@ -118,12 +120,13 @@ class ILDAPStorage(IStorage):
     """A LDAP Node.
     """
 
-    ldap_session = Attribute(u"``node.ext.ldap.session.LDAPSession`` "
-                             u"instance.")
+    ldap_session = Attribute(
+        u"``node.ext.ldap.session.LDAPSession`` instance."
+    )
 
     DN = Attribute(u"LDAP object DN.")
 
-    #rdn_attr = Attribute(u"RDN attribute name.")
+    # rdn_attr = Attribute(u"RDN attribute name.")
 
     changed = Attribute(u"Flag whether node has been modified.")
 
@@ -135,9 +138,10 @@ class ILDAPStorage(IStorage):
 
     search_relation = Attribute(u"Default child search relation")
 
-    child_defaults = Attribute(u"Default child attributes. Will be set to "
-                               u"all children attributes on __setitem__ "
-                               u"if not present yet.")
+    child_defaults = Attribute(
+        u"Default child attributes. Will be set to all children attributes"
+        u"on __setitem__ if not present yet."
+    )
 
     def child_dn(key):
         """Return child DN for ``key``.

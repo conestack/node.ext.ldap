@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from zope.interface import implementer
-from .interfaces import ILDAPProps
+from node.ext.ldap.interfaces import ILDAPProps
 
 
 MULTIVALUED_DEFAULTS = set([
@@ -44,9 +44,9 @@ class LDAPServerProperties(object):
                  start_tls=0,
                  ignore_cert=0,
                  tls_cacertfile=None,
-                 #tls_cacertdir=None,
-                 #tls_clcertfile=None,
-                 #tls_clkeyfile=None,
+                 # tls_cacertdir=None,
+                 # tls_clcertfile=None,
+                 # tls_clkeyfile=None,
                  check_duplicates=True,
                  retry_max=1,
                  retry_delay=10.0,
