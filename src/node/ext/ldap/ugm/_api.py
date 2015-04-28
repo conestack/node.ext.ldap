@@ -1,53 +1,41 @@
 # -*- coding: utf-8 -*-
-import ldap
-import time
-import logging
-from plumber import (
-    plumbing,
-    plumb,
-    default,
-    override,
-    finalize,
-    Behavior,
-)
-from zope.interface import implementer
-from node.locking import locktree
+from node.behaviors import Adopt
+from node.behaviors import Alias
+from node.behaviors import Attributes
+from node.behaviors import DefaultInit
+from node.behaviors import NodeChildValidate
+from node.behaviors import Nodespaces
+from node.behaviors import Nodify
+from node.behaviors import OdictStorage
+from node.behaviors import Storage
 from node.behaviors.alias import DictAliaser
-from node.behaviors import (
-    Alias,
-    NodeChildValidate,
-    Nodespaces,
-    Adopt,
-    Attributes,
-    DefaultInit,
-    Nodify,
-    Storage,
-    OdictStorage,
-)
+from node.ext.ldap._node import LDAPNode
+from node.ext.ldap.base import decode_utf8
+from node.ext.ldap.interfaces import ILDAPGroupsConfig as IGroupsConfig
+from node.ext.ldap.interfaces import ILDAPUsersConfig as IUsersConfig
+from node.ext.ldap.scope import BASE
+from node.ext.ldap.scope import ONELEVEL
+from node.ext.ldap.ugm.defaults import creation_defaults
+from node.ext.ldap.ugm.samba import sambaLMPassword
+from node.ext.ldap.ugm.samba import sambaNTPassword
+from node.ext.ugm import Group as UgmGroup
+from node.ext.ugm import Groups as UgmGroups
+from node.ext.ugm import Ugm as UgmBase
+from node.ext.ugm import User as UgmUser
+from node.ext.ugm import Users as UgmUsers
+from node.locking import locktree
 from node.utils import debug
-from node.ext.ugm import (
-    User as UgmUser,
-    Group as UgmGroup,
-    Users as UgmUsers,
-    Groups as UgmGroups,
-    Ugm as UgmBase,
-)
-from ..interfaces import (
-    ILDAPGroupsConfig as IGroupsConfig,
-    ILDAPUsersConfig as IUsersConfig,
-)
-from ..scope import (
-    BASE,
-    ONELEVEL,
-)
-from ..base import decode_utf8
-from .._node import LDAPNode
-from .defaults import creation_defaults
-from .samba import (
-    sambaNTPassword,
-    sambaLMPassword,
-)
+from plumber import Behavior
+from plumber import default
+from plumber import finalize
+from plumber import override
+from plumber import plumb
+from plumber import plumbing
+from zope.interface import implementer
 
+import ldap
+import logging
+import time
 
 logger = logging.getLogger('node.ext.ldap')
 
@@ -119,7 +107,8 @@ class RolesConfig(PrincipalsConfig):
     NodeChildValidate,
     Adopt,
     Nodify,
-    Storage)
+    Storage,
+)
 class PrincipalAliasedAttributes(object):
     allow_non_node_childs = True
 
@@ -259,7 +248,8 @@ class LDAPUser(LDAPPrincipal, UgmUser):
     LDAPUser,
     Nodespaces,
     Attributes,
-    Nodify)
+    Nodify,
+)
 class User(object):
     pass
 
@@ -402,7 +392,8 @@ class LDAPGroup(LDAPGroupMapping, LDAPPrincipal, UgmGroup):
     NodeChildValidate,
     Nodespaces,
     Attributes,
-    Nodify)
+    Nodify,
+)
 class Group(object):
     pass
 
@@ -597,16 +588,19 @@ class LDAPPrincipals(OdictStorage):
         search_attrlist = [self._key_attr]
         if attrlist is not None and self._key_attr not in attrlist:
             search_attrlist += attrlist
-        results = self.context.search(
-            criteria=self._unalias_dict(criteria),
-            attrlist=self._unalias_list(search_attrlist),
-            exact_match=exact_match,
-            or_search=or_search,
-            or_keys=or_keys,
-            or_values=or_values,
-            page_size=page_size,
-            cookie=cookie
-        )
+        try:
+            results = self.context.search(
+                criteria=self._unalias_dict(criteria),
+                attrlist=self._unalias_list(search_attrlist),
+                exact_match=exact_match,
+                or_search=or_search,
+                or_keys=or_keys,
+                or_values=or_values,
+                page_size=page_size,
+                cookie=cookie
+            )
+        except ldap.NO_SUCH_OBJECT:
+            return []
         if type(results) is tuple:
             results, cookie = results
         if attrlist is not None:
@@ -713,14 +707,19 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
 
     @default
     @debug
-    def authenticate(self, id=None, pw=None):
-        # XXX: rename 'id' kw arg to 'login'
-        user_id = self.id_for_login(decode_utf8(id))
+    def authenticate(self, login=None, pw=None, id=None):
+        if id is not None:
+            # bbb. deprecated usage
+            login = id
+        user_id = self.id_for_login(decode_utf8(login))
         criteria = {self._key_attr: user_id}
         attrlist = ['dn']
         if self.expiresAttr:
             attrlist.append(self.expiresAttr)
-        res = self.context.search(criteria=criteria, attrlist=attrlist)
+        try:
+            res = self.context.search(criteria=criteria, attrlist=attrlist)
+        except ldap.NO_SUCH_OBJECT:
+            return False
         if not res:
             return False
         if len(res) > 1:
@@ -775,7 +774,8 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
     Nodespaces,
     Adopt,
     Attributes,
-    Nodify)
+    Nodify,
+)
 class Users(object):
     pass
 
@@ -858,7 +858,8 @@ class LDAPGroups(LDAPGroupsMapping):
     Nodespaces,
     Adopt,
     Attributes,
-    Nodify)
+    Nodify,
+)
 class Groups(object):
     pass
 
@@ -959,7 +960,8 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
     NodeChildValidate,
     Nodespaces,
     Attributes,
-    Nodify)
+    Nodify,
+)
 class Role(object):
     pass
 
@@ -974,7 +976,8 @@ class LDAPRoles(LDAPGroupsMapping):
     Nodespaces,
     Adopt,
     Attributes,
-    Nodify)
+    Nodify,
+)
 class Roles(object):
     pass
 
@@ -1156,6 +1159,7 @@ class LDAPUgm(UgmBase):
     Attributes,
     DefaultInit,
     Nodify,
-    OdictStorage)
+    OdictStorage,
+)
 class Ugm(object):
     pass
