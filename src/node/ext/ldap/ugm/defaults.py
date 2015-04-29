@@ -26,6 +26,8 @@ creation_defaults['shadowAccount']['uid'] = posix.uid
 
 creation_defaults['sambaSamAccount'] = dict()
 creation_defaults['sambaSamAccount']['sambaSID'] = samba.sambaUserSID
+creation_defaults['sambaGroupMapping']['sambaGroupType'] = samba.sambaGroupType
+
 
 
 creation_defaults['sambaGroupMapping'] = dict()
