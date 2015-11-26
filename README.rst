@@ -1,3 +1,9 @@
+.. image:: https://travis-ci.org/bluedynamics/node.ext.ldap.svg?branch=master
+    :target: https://travis-ci.org/bluedynamics/node.ext.ldap
+
+.. image:: https://coveralls.io/repos/bluedynamics/node.ext.ldap/badge.svg?branch=master&service=github
+    :target: https://coveralls.io/github/bluedynamics/node.ext.ldap?branch=master
+
 Overview
 ========
 
@@ -259,23 +265,17 @@ node key and set automatically::
     >>> person.attrs['cn']
     u'person2'
 
-Some might fetch children DN's by key from LDAP node. This only works for
-existing children::
+Fetch children DN by key from LDAP node::
 
     >>> root.child_dn('cn=person1')
     u'cn=person1,ou=demo,dc=my-domain,dc=com'
-
-    >>> root.child_dn('cn=person99')
-    Traceback (most recent call last):
-      ...
-    KeyError: 'cn=person99'
 
 Have a look at the tree::
 
     >>> root.printtree()
     <ou=demo,dc=my-domain,dc=com - True>
-      <cn=person1,ou=demo,dc=my-domain,dc=com:cn=person1 - True>
       <cn=person2,ou=demo,dc=my-domain,dc=com:cn=person2 - True>
+      <cn=person1,ou=demo,dc=my-domain,dc=com:cn=person1 - True>
 
 The entries have not been written to the directory yet. When modifying a LDAP
 node tree, everything happens im memory. Persisting is done by calling the
@@ -716,13 +716,13 @@ Add role for user directly::
 
 Query roles for user via ugm::
 
-    >>> ugm.roles(user)
-    [u'viewer', u'editor']
+    >>> sorted(ugm.roles(user))
+    ['editor', 'viewer']
 
 Query roles directly::
 
-    >>> user.roles
-    [u'viewer', u'editor']
+    >>> sorted(user.roles)
+    ['editor', 'viewer']
 
 Call UGM to persist roles::
 
@@ -732,7 +732,7 @@ Delete role via ugm::
 
     >>> ugm.remove_role('viewer', user)
     >>> user.roles
-    [u'editor']
+    ['editor']
 
 Delete role directly::
 
@@ -753,11 +753,11 @@ Add roles::
     >>> ugm.add_role('viewer', group)
     >>> group.add_role('editor')
 
-    >>> ugm.roles(group)
-    [u'viewer', u'editor']
+    >>> sorted(ugm.roles(group))
+    ['editor', 'viewer']
 
-    >>> group.roles
-    [u'viewer', u'editor']
+    >>> sorted(group.roles)
+    ['editor', 'viewer']
 
     >>> ugm()
 
@@ -838,33 +838,6 @@ There are different compile issues on different platforms. If you experience
 problems with ``python-ldap``, make sure it is available in the python
 environment you run buildout in, so it won't be fetched and built by buildout
 itself.
-
-
-Test Coverage
--------------
-
-Summary of the test coverage report::
-
-  lines   cov%   module
-      7   100%   node.ext.ldap.__init__
-    458    98%   node.ext.ldap._node
-    146    99%   node.ext.ldap.base
-     12   100%   node.ext.ldap.cache
-     18   100%   node.ext.ldap.events
-    129   100%   node.ext.ldap.filter
-     62   100%   node.ext.ldap.interfaces
-     51   100%   node.ext.ldap.properties
-     37    97%   node.ext.ldap.schema
-      6   100%   node.ext.ldap.scope
-     60   100%   node.ext.ldap.session
-    437    98%   node.ext.ldap.testing.__init__
-     28   100%   node.ext.ldap.tests
-      1   100%   node.ext.ldap.ugm.__init__
-    719    96%   node.ext.ldap.ugm._api
-     21   100%   node.ext.ldap.ugm.defaults
-     35   100%   node.ext.ldap.ugm.posix
-     29    96%   node.ext.ldap.ugm.samba
-     21   100%   node.ext.ldap.ugm.shadow
 
 
 TODO

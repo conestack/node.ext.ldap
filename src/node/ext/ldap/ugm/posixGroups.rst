@@ -64,7 +64,7 @@ Fetch some users::
     <class 'node.ext.ldap.ugm._api.User'>
 
     >>> user_0.attrs
-    Aliased <LDAPNodeAttributes object 'uid0' at ...>
+    Aliased <LDAPNodeAttributes object 'uid=uid0' at ...>
 
     >>> user_0.attrs['cn']
     u'cn0'
@@ -76,9 +76,12 @@ Fetch some users::
     u'cn0'
 
     >>> sorted(user_0.attrs.items())
-    [('cn', u'cn0'), ('gidNumber', u'0'), ('homeDirectory', u'/home/uid0'), 
-    ('rdn', u'uid0'), ('sn', u'sn0'), ('uidNumber', u'0')]
-
+    [('cn', u'cn0'), 
+    ('gidNumber', u'0'), 
+    ('homeDirectory', u'/home/uid0'), 
+    ('sn', u'sn0'), 
+    ('uid', u'uid0'), 
+    ('uidNumber', u'0')]
 
 User is a leaf::
 
@@ -198,7 +201,7 @@ Change password::
     >>> users.passwd('foo', 'secret0', 'bar')
     Traceback (most recent call last):
       ...
-    KeyError: u'foo'
+    KeyError: 'foo'
 
     >>> users.passwd('uid0', 'secret0', 'bar')
     >>> users.authenticate('uid0', 'bar')
@@ -250,7 +253,7 @@ not persisted to LDAP yet::
     >>> ugm.users.passwd('sepp', None, 'secret')
     Traceback (most recent call last):
       ...
-    NO_SUCH_OBJECT: {'desc': 'No such object'}
+    KeyError: 'sepp'
 
 After calling, new user is available in LDAP::
 
@@ -276,7 +279,7 @@ Groups object::
     <class 'node.ext.ldap.ugm._api.Group'>
 
     >>> group_0.attrs
-    Aliased <LDAPNodeAttributes object 'group0' at ...>
+    Aliased <LDAPNodeAttributes object 'cn=group0' at ...>
 
     >>> group_0.attrs.items()
     [('memberUid', [u'nobody', u'uid0']), 
@@ -586,16 +589,16 @@ Role Management. Create container for roles.::
 
     >>> ugm.add_role('viewer', user)
     >>> ugm.roles(user)
-    [u'viewer']
+    ['viewer']
 
     >>> user.roles
-    [u'viewer']
+    ['viewer']
 
     >>> user = ugm.users['uid2']
     >>> user.add_role('viewer')
     >>> user.add_role('editor')
     >>> user.roles
-    [u'viewer', u'editor']
+    ['editor', 'viewer']
 
     >>> ugm.roles_storage()
 
@@ -613,17 +616,17 @@ Role Management. Create container for roles.::
     >>> ugm.add_role('viewer', group)
 
     >>> ugm.roles(group)
-    [u'viewer']
+    ['viewer']
 
     >>> group.roles
-    [u'viewer']
+    ['viewer']
 
     >>> group = ugm.groups['group0']
     >>> group.add_role('viewer')
     >>> group.add_role('editor')
 
     >>> group.roles
-    [u'viewer', u'editor']
+    ['viewer', 'editor']
 
     >>> ugm.roles_storage()
 
@@ -633,7 +636,22 @@ Role Management. Create container for roles.::
     ValueError: Principal already has role 'editor'
 
     >>> ugm.remove_role('viewer', group)
+
+    >>> ugm.roles_storage.keys()
+    [u'viewer', u'editor']
+
     >>> group.remove_role('editor')
+
+    >>> ugm.roles_storage.keys()
+    [u'viewer']
+
+    >>> ugm.roles_storage.storage.keys()
+    ['viewer']
+
+    >>> ugm.roles_storage['editor']
+    Traceback (most recent call last):
+      ...
+    KeyError: u'editor'
 
     >>> group.remove_role('editor')
     Traceback (most recent call last):
