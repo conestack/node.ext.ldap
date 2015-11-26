@@ -265,23 +265,17 @@ node key and set automatically::
     >>> person.attrs['cn']
     u'person2'
 
-Some might fetch children DN's by key from LDAP node. This only works for
-existing children::
+Fetch children DN by key from LDAP node::
 
     >>> root.child_dn('cn=person1')
     u'cn=person1,ou=demo,dc=my-domain,dc=com'
-
-    >>> root.child_dn('cn=person99')
-    Traceback (most recent call last):
-      ...
-    KeyError: 'cn=person99'
 
 Have a look at the tree::
 
     >>> root.printtree()
     <ou=demo,dc=my-domain,dc=com - True>
-      <cn=person1,ou=demo,dc=my-domain,dc=com:cn=person1 - True>
       <cn=person2,ou=demo,dc=my-domain,dc=com:cn=person2 - True>
+      <cn=person1,ou=demo,dc=my-domain,dc=com:cn=person1 - True>
 
 The entries have not been written to the directory yet. When modifying a LDAP
 node tree, everything happens im memory. Persisting is done by calling the
@@ -722,13 +716,13 @@ Add role for user directly::
 
 Query roles for user via ugm::
 
-    >>> ugm.roles(user)
-    [u'viewer', u'editor']
+    >>> sorted(ugm.roles(user))
+    ['editor', 'viewer']
 
 Query roles directly::
 
-    >>> user.roles
-    [u'viewer', u'editor']
+    >>> sorted(user.roles)
+    ['editor', 'viewer']
 
 Call UGM to persist roles::
 
@@ -738,7 +732,7 @@ Delete role via ugm::
 
     >>> ugm.remove_role('viewer', user)
     >>> user.roles
-    [u'editor']
+    ['editor']
 
 Delete role directly::
 
@@ -759,11 +753,11 @@ Add roles::
     >>> ugm.add_role('viewer', group)
     >>> group.add_role('editor')
 
-    >>> ugm.roles(group)
-    [u'viewer', u'editor']
+    >>> sorted(ugm.roles(group))
+    ['editor', 'viewer']
 
-    >>> group.roles
-    [u'viewer', u'editor']
+    >>> sorted(group.roles)
+    ['editor', 'viewer']
 
     >>> ugm()
 
