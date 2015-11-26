@@ -14,7 +14,7 @@ addons:
     - libdb-dev
 before_install:
   - mkdir -p $HOME/buildout-cache/{eggs,downloads,parts}
-  - touch $HOME/buildout-cache/.installed.cfg
+  - ( [ ! -e "$HOME/buildout-cache/.installed.cfg" ] && echo "[buildout]" > $HOME/buildout-cache/.installed.cfg )
   - mkdir $HOME/.buildout
   - echo "[buildout]" > $HOME/.buildout/default.cfg
   - echo "download-cache = $HOME/buildout-cache/downloads" >> $HOME/.buildout/default.cfg
