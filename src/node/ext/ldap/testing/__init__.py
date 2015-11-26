@@ -35,12 +35,11 @@ def read_env(layer):
     if layer.get('confdir', None) is not None:
         return
     tmpdir = os.environ.get('node.ext.ldap.testldap.env', None)
+    layer['externalpidfile'] = True
     if tmpdir is None:
+        # case testldap server not started via node.ext.ldap.main.slapd
         tmpdir = tempfile.mkdtemp()
         layer['externalpidfile'] = False
-    else:
-        # case testldap server started via node.ext.ldap.main.slapd
-        layer['externalpidfile'] = True                     #pragma NO COVERAGE
     layer['confdir'] = tmpdir
     layer['dbdir'] = "%s/openldap-data" % (layer['confdir'],)
     layer['slapdconf'] = "%s/slapd.conf" % (layer['confdir'],)
@@ -332,7 +331,7 @@ ucfg2000 = UsersConfig(
 
 
 # base groups config
-#gcfg_openldap = GroupsConfig(
+# gcfg_openldap = GroupsConfig(
 #        baseDN='dc=my-domain,dc=com',
 #        id_attr='cn',
 #        scope=SUBTREE,
