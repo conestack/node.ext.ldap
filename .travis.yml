@@ -21,7 +21,7 @@ before_install:
   - virtualenv .
   - bin/pip install --upgrade pip setuptools zc.buildout coveralls createcoverage
 install:
-  - ./bin/buildout -c travis.cfg
+  - ./bin/buildout -N -t 3 -c travis.cfg
 script:
   - ./bin/test
 after_success:
