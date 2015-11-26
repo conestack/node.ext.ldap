@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
+from node.ext.ldap.properties import LDAPProps
+from node.ext.ldap.scope import ONELEVEL
+from node.ext.ldap.scope import SUBTREE
+from node.ext.ldap.ugm import GroupsConfig
+from node.ext.ldap.ugm import UsersConfig
+from odict import odict
+from pkg_resources import resource_filename
+from plone.testing import Layer
+from plone.testing import zca
 import os
 import shutil
 import subprocess
 import tempfile
 import time
-from odict import odict
-from plone.testing import zca
-from plone.testing import Layer
-from pkg_resources import resource_filename
-from node.ext.ldap.scope import ONELEVEL
-from node.ext.ldap.scope import SUBTREE
-from node.ext.ldap.properties import LDAPProps
-from node.ext.ldap.ugm import UsersConfig
-from node.ext.ldap.ugm import  GroupsConfig
 
 
 SCHEMA = os.environ.get('SCHEMA')
