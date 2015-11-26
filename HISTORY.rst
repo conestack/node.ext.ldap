@@ -1,6 +1,36 @@
 History
 =======
 
+1.0b0 (unreleased)
+------------------
+
+- remove bbb code: no python 2.4 support (2.7+ now), usage of LDAPProperties
+  mandatory now.
+  [jensens]
+
+- Overhaul LDAP UGM implementation.
+  [rnix]
+
+- LDAP Node only returns direct children in ``__iter__``, even if search
+  scope subtree.
+  [rnix]
+
+- LDAPNode keys cannot be aliased any longer. Removed ``_key_attr`` and
+  ``_rdn_attr``.
+  child.
+
+- LDAPNode does not provide secondary keys any longer. Removed
+  ``_seckey_attrs``.
+  [rnix]
+
+- Deprecate ``node.ext.ldap._node.AttributesBehavior`` in favor of
+  ``node.ext.ldap._node.LDAPAttributesBehavior``.
+  [rnix]
+
+- Remove deprecated ``node.ext.ldap._node.AttributesPart``.
+  [rnix]
+
+
 0.9.8 (unreleased)
 ------------------
 

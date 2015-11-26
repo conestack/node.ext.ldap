@@ -21,7 +21,7 @@ DOCFILES = [
     ('ugm/posixGroups.rst', testing.LDIF_posixGroups),
     ('ugm/sambaUsers.rst', testing.LDIF_sambaUsers),
     ('ugm/defaults.rst', testing.LDIF_data),
-    ('../../../../README.rst', testing.LDIF_data),
+    #('../../../../README.rst', testing.LDIF_data),
 ]
 
 optionflags = \

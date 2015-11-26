@@ -15,23 +15,6 @@ ids() the first time::
     'id': 'sn', 
     'sn': 'sn'}
 
-Query all user ids. ``description`` is set as login attribute, which is not
-unique::
-
-    >>> users = Users(props, ucfg)
-    Traceback (most recent call last):
-    ...
-    KeyError: u"Secondary key not unique: description='foo'."
-
-Query all user ids. Set ``telephoneNumber`` as login attribute, which is not
-unique::
-
-    >>> ucfg.attrmap['login'] = 'telephoneNumber'
-    >>> users = Users(props, ucfg)
-    Traceback (most recent call last):
-    ...
-    KeyError: u"Secondary key not unique: telephoneNumber='1234'."
-
 Query all user ids. Set ``cn`` as login attribute. In this case, values are
 unique and therefore suitable as login attr::
 
@@ -65,7 +48,7 @@ Get a user by id (utf-8 or unicode)::
 The real LDAP node is on ``context``::
 
     >>> mueller.context
-    <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
+    <cn=user2,ou=customers,dc=my-domain,dc=com:cn=user2 - False>
 
 The '?' is just ``__repr__`` going to ascii, the id is in proper unicode::
 
@@ -80,7 +63,14 @@ A user has a login::
 And attributes::
 
     >>> mueller.attrs
-    Aliased <LDAPNodeAttributes object 'M?ller' at ...>
+    Aliased <LDAPNodeAttributes object 'cn=user2' at ...>
+
+    >>> mueller.attrs.context.items()
+    [(u'objectClass', [u'top', u'person']), 
+    (u'telephoneNumber', u'1234'), 
+    (u'userPassword', u'foo2'), 
+    (u'cn', u'user2'), 
+    (u'sn', u'M\xfcller')]
 
     >>> mueller.attrs.items()
     [('telephoneNumber', u'1234'), ('login', u'user2'), ('id', u'M\xfcller')]
@@ -88,14 +78,16 @@ And attributes::
 Query all user nodes::
 
     >>> [users[id] for id in sorted(users.keys())]
-    [<User object 'Meier' at ...>, <User object 'M?ller' at ...>,
-    <User object 'Schmidt' at ...>, <User object 'Umhauer' at ...>]
+    [<User object 'Meier' at ...>, 
+    <User object 'M?ller' at ...>,
+    <User object 'Schmidt' at ...>, 
+    <User object 'Umhauer' at ...>]
 
     >>> [users[id].context for id in sorted(users.keys())]
-    [<cn=user1,dc=my-domain,dc=com:Meier - False>, 
-    <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>, 
-    <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>, 
-    <cn=n?sty\2C User,ou=customers,dc=my-domain,dc=com:Umhauer - False>]
+    [<cn=user1,dc=my-domain,dc=com:cn=user1 - False>, 
+    <cn=user2,ou=customers,dc=my-domain,dc=com:cn=user2 - False>, 
+    <cn=user3,ou=customers,dc=my-domain,dc=com:cn=user3 - False>, 
+    <cn=n?sty\2C User,ou=customers,dc=my-domain,dc=com:cn=n?sty\2C User - False>]
 
 Authenticate a user, via the user object. (also see 'via LDAPUsers' below,
 after passwd, this is to make sure, that LDAPUsers.authenticate does not work
@@ -158,7 +150,7 @@ id and returns the desired value.::
     ...         'rdn': 'cn',
     ...         'telephoneNumber': 'telephoneNumber',
     ...         'sn': 'sn',
-    ...      },
+    ...     },
     ...     scope=ONELEVEL,
     ...     queryFilter='(objectClass=person)',
     ...     objectClasses=['top', 'person'],
@@ -172,48 +164,51 @@ id and returns the desired value.::
     >>> sorted(users.ids)
     [u'M\xfcller', u'Schmidt', u'Umhauer', u'sn_binary']
 
-    >>> users.create('newid')
-    Traceback (most recent call last):
-      ...
-    ValueError: 'cn' needed in node attributes for rdn.
-
-    >>> users.create('newid', login='newcn', id='newid')
+    >>> user = users.create(
+    ...     'newid',
+    ...     login='newcn',
+    ...     id='ID Ignored', # gets ignored, id is taken from pid arg
+    ...     sn='Surname Ignored' # gets ignored, id maps to sn, thus id rules
+    ... )
+    >>> user
     <User object 'newid' at ...>
+
+    >>> user.context
+    <cn=newcn,ou=customers,dc=my-domain,dc=com:cn=newcn - True>
+
+    >>> user.attrs.items()
+    [('login', u'newcn'), 
+    ('id', u'newid'), 
+    ('telephoneNumber', u'123')]
+
+    >>> user.context.attrs.items()
+    [(u'cn', u'newcn'), 
+    (u'sn', u'newid'), 
+    (u'objectClass', [u'top', u'person']), 
+    (u'telephoneNumber', u'123')]
 
     >>> sorted(users.ids)
     [u'M\xfcller', u'Schmidt', u'Umhauer', u'newid', u'sn_binary']
 
-    >>> newuser = users['newid']
-    >>> newuser.context
-    <cn=newcn,ou=customers,dc=my-domain,dc=com:newid - True>
+    >>> user = users.create('newid')
+    Traceback (most recent call last):
+      ...
+    KeyError: u"Principal with id 'newid' already exists."
 
-Create function uses __setitem__ for adding new members. You can use this as
-well, but create is propably the better choice. Test egde cases::
+    >>> sorted(users.ids)
+    [u'M\xfcller', u'Schmidt', u'Umhauer', u'newid', u'sn_binary']
 
     >>> from node.base import BaseNode
     >>> node = BaseNode()
     >>> users['foo'] = node
     Traceback (most recent call last):
       ...
-    ValueError: no attributes found, cannot convert.
+    ValueError: Given value not instance of 'User'
 
-    >>> from node.base import AttributedNode
-    >>> node = AttributedNode()
-    >>> users['newid'] = node
-    Traceback (most recent call last):
-      ...
-    KeyError: u"Key already exists: 'newid'."
+    >>> users['newid'].context
+    <cn=newcn,ou=customers,dc=my-domain,dc=com:cn=newcn - True>
 
-# XXX: there need more attrs to show up::
-
-    >>> sorted(newuser.attrs.items())
-    [('id', u'newid'), ('login', u'newcn'), ('telephoneNumber', u'123')]
-
-    >>> sorted(newuser.context.attrs.items())
-    [(u'cn', u'newcn'), 
-    (u'objectClass', [u'top', u'person']), 
-    (u'sn', u'newid'), 
-    (u'telephoneNumber', u'123')]
+Persist and reload::
 
     >>> users()
     >>> users.reload = True
@@ -222,10 +217,11 @@ well, but create is propably the better choice. Test egde cases::
     [(u'M\xfcller', <User object 'M?ller' at ...>), 
     (u'Schmidt', <User object 'Schmidt' at ...>), 
     (u'Umhauer', <User object 'Umhauer' at ...>), 
-    (u'newid', <User object 'newid' at ...>)]
+    (u'newid', <User object 'newid' at ...>), 
+    (u'sn_binary', <User object 'sn_binary' at ...>)]
 
     >>> users['newid'].context
-    <cn=newcn,ou=customers,dc=my-domain,dc=com:newid - False>
+    <cn=newcn,ou=customers,dc=my-domain,dc=com:cn=newcn - False>
 
 Delete User::
 
@@ -280,6 +276,10 @@ Only attributes defined in attrmap can be queried::
     >>> filter |= LDAPFilter('(objectClass=some)')
 
     # normally set via principals config
+    >>> original_search_filter = users.context.search_filter
+    >>> original_search_filter
+    '(&(objectClass=person)(!(objectClass=inetOrgPerson)))'
+
     >>> users.context.search_filter = filter
     >>> users.search()
     [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
@@ -292,7 +292,7 @@ Only attributes defined in attrmap can be queried::
     >>> users.search()
     []
 
-    >>> users.context.search_filter = None
+    >>> users.context.search_filter = original_search_filter
 
 The changed flag::
 
@@ -306,12 +306,18 @@ The changed flag::
       <class 'node.ext.ldap.ugm._api.User'>: Schmidt
       <class 'node.ext.ldap.ugm._api.User'>: Umhauer
 
+    >>> users[users.values()[1].name].context
+    <cn=user2,ou=customers,dc=my-domain,dc=com:cn=user2 - False>
+
     >>> users.context.printtree()
     <dc=my-domain,dc=com - False>
-      <cn=user1,dc=my-domain,dc=com:Meier - False>
-      <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
-      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
-      <cn=n?sty\2C User,ou=customers,dc=my-domain,dc=com:Umhauer - False>
+      ...
+        <cn=user2,ou=customers,dc=my-domain,dc=com:cn=user2 - False>
+        <cn=user3,ou=customers,dc=my-domain,dc=com:cn=user3 - False>
+        <cn=n?sty\, User,ou=customers,dc=my-domain,dc=com:cn=n?sty\, User - False>
+      ...
+      <cn=user1,dc=my-domain,dc=com:cn=user1 - False>
+      ...
 
     >>> users['Meier'].attrs['telephoneNumber'] = '12345'
     >>> users['Meier'].attrs.changed
@@ -325,10 +331,13 @@ The changed flag::
 
     >>> users.context.printtree()
     <dc=my-domain,dc=com - True>
-      <cn=user1,dc=my-domain,dc=com:Meier - True>
-      <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
-      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
-      <cn=n?sty\2C User,ou=customers,dc=my-domain,dc=com:Umhauer - False>
+      ...
+        <cn=user2,ou=customers,dc=my-domain,dc=com:cn=user2 - False>
+        <cn=user3,ou=customers,dc=my-domain,dc=com:cn=user3 - False>
+        <cn=n?sty\, User,ou=customers,dc=my-domain,dc=com:cn=n?sty\, User - False>
+      ...
+      <cn=user1,dc=my-domain,dc=com:cn=user1 - True>
+      ...
 
     >>> users['Meier'].attrs.context.load()
     >>> users['Meier'].attrs.changed
@@ -342,10 +351,13 @@ The changed flag::
 
     >>> users.context.printtree()
     <dc=my-domain,dc=com - False>
-      <cn=user1,dc=my-domain,dc=com:Meier - False>
-      <cn=user2,ou=customers,dc=my-domain,dc=com:M?ller - False>
-      <cn=user3,ou=customers,dc=my-domain,dc=com:Schmidt - False>
-      <cn=n?sty\2C User,ou=customers,dc=my-domain,dc=com:Umhauer - False>
+      ...
+        <cn=user2,ou=customers,dc=my-domain,dc=com:cn=user2 - False>
+        <cn=user3,ou=customers,dc=my-domain,dc=com:cn=user3 - False>
+        <cn=n?sty\, User,ou=customers,dc=my-domain,dc=com:cn=n?sty\, User - False>
+      ...
+      <cn=user1,dc=my-domain,dc=com:cn=user1 - False>
+      ...
 
 A user does not know about it's groups if initialized directly::
 
@@ -379,7 +391,30 @@ Create a LDAPGroups node and configure it::
     >>> group
     <Group object 'group1' at ...>
 
+    >>> group.attrs.items()
+    [('member', 
+    [u'cn=user3,ou=customers,dc=my-domain,dc=com', 
+    u'cn=user2,ou=customers,dc=my-domain,dc=com']), 
+    ('rdn', u'group1')]
+
+    >>> group.attrs.context.items()
+    [(u'objectClass', [u'top', u'groupOfNames']), 
+    (u'member', [u'cn=user3,ou=customers,dc=my-domain,dc=com', 
+    u'cn=user2,ou=customers,dc=my-domain,dc=com']), 
+    (u'cn', u'group1')]
+
+    >>> groups.context.child_defaults
+    {'objectClass': ['groupOfNames']}
+
     >>> group = groups.create('group3')
+    >>> group.attrs.items()
+    [('rdn', u'group3'), ('member', ['cn=nobody'])]
+
+    >>> group.attrs.context.items()
+    [(u'cn', u'group3'), 
+    (u'member', ['cn=nobody']), 
+    (u'objectClass', [u'groupOfNames'])]
+
     >>> groups()
     >>> groups.ids
     [u'group1', u'group2', u'group3']
@@ -460,6 +495,76 @@ Fetch users and groups::
     >>> ugm.groups['group2'].users
     [<User object 'Umhauer' at ...>]
 
+    >>> ugm.groups._key_attr
+    'cn'
+
+    >>> ugm.users['Schmidt'].group_ids
+    [u'group1']
+
+    >>> ugm.users['Schmidt'].groups
+    [<Group object 'group1' at ...>]
+
+Add and remove user from group::
+
+    >>> group = ugm.groups['group1']
+    >>> group
+    <Group object 'group1' at ...>
+
+    >>> group.member_ids
+    [u'Schmidt', u'M\xfcller']
+
+    >>> group.translate_key('Umhauer')
+    u'cn=n\xe4sty\\2C User,ou=customers,dc=my-domain,dc=com'
+
+    >>> group.add('Umhauer')
+    >>> group.attrs.items()
+    [('member', 
+    [u'cn=user3,ou=customers,dc=my-domain,dc=com', 
+    u'cn=user2,ou=customers,dc=my-domain,dc=com', 
+    u'cn=n\xe4sty\\2C User,ou=customers,dc=my-domain,dc=com']), 
+    ('rdn', u'group1')]
+
+    >>> group.member_ids
+    [u'Schmidt', u'M\xfcller', u'Umhauer']
+
+    >>> group()
+
+    >>> del group['Umhauer']
+    >>> group.member_ids
+    [u'Schmidt', u'M\xfcller']
+
+Delete Group::
+
+    >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg)
+
+    >>> groups = ugm.groups
+    >>> group = groups.create('group4')
+    >>> group.add('Schmidt')
+    >>> groups()
+
+    >>> groups.keys()
+    [u'group1', u'group2', u'group3', u'group4']
+
+    >>> groups.values()
+    [<Group object 'group1' at ...>, 
+    <Group object 'group2' at ...>, 
+    <Group object 'group3' at ...>, 
+    <Group object 'group4' at ...>]
+
+    >>> ugm.users['Schmidt'].groups
+    [<Group object 'group1' at ...>, <Group object 'group4' at ...>]
+
+    >>> group.member_ids
+    [u'Schmidt']
+
+    >>> del groups['group4']
+    >>> groups()
+
+    >>> groups.values()
+    [<Group object 'group1' at ...>, 
+    <Group object 'group2' at ...>, 
+    <Group object 'group3' at ...>]
+
     >>> ugm.users['Schmidt'].groups
     [<Group object 'group1' at ...>]
 
@@ -523,6 +628,17 @@ Test roles for users.::
 Add role for user, role gets created if not exists.::
 
     >>> ugm.add_role('viewer', user)
+
+    >>> roles.keys()
+    [u'viewer']
+
+    >>> role = roles[u'viewer']
+    >>> role
+    <Role object 'viewer' at ...>
+
+    >>> role.member_ids
+    [u'Meier']
+
     >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
@@ -533,12 +649,12 @@ Add role for user, role gets created if not exists.::
 Query roles for principal via ugm object.::
 
     >>> ugm.roles(user)
-    [u'viewer']
+    ['viewer']
 
 Query roles for principal directly.::
 
     >>> user.roles
-    [u'viewer']
+    ['viewer']
 
 Add some roles for 'Schmidt'.::
 
@@ -555,7 +671,7 @@ Add some roles for 'Schmidt'.::
         <class 'node.ext.ldap.ugm._api.User'>: Schmidt
 
     >>> user.roles
-    [u'viewer', u'editor']
+    ['viewer', 'editor']
 
     >>> ugm.roles_storage()
 
@@ -572,6 +688,16 @@ Remove role 'viewer'.::
 Remove role 'editor', No other principal left, remove role as well.::
 
     >>> user.remove_role('editor')
+
+    >>> roles.storage.keys()
+    ['viewer']
+
+    >>> roles.context._deleted_children
+    set([u'cn=editor'])
+
+    >>> roles.keys()
+    [u'viewer']
+
     >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
@@ -595,10 +721,10 @@ Test roles for group.::
           <class 'node.ext.ldap.ugm._api.User'>: M?ller
 
     >>> ugm.roles(group)
-    [u'viewer']
+    ['viewer']
 
     >>> group.roles
-    [u'viewer']
+    ['viewer']
 
     >>> group = ugm.groups['group3']
     >>> group.add_role('viewer')
@@ -625,7 +751,7 @@ If role already granted, an error is raised.::
     ValueError: Principal already has role 'editor'
 
     >>> group.roles
-    [u'viewer', u'editor']
+    ['viewer', 'editor']
 
     >>> ugm.remove_role('viewer', group)
     >>> roles.printtree()
@@ -722,13 +848,26 @@ Delete user and check if roles are removed.::
           <class 'node.ext.ldap.ugm._api.User'>: Schmidt
           <class 'node.ext.ldap.ugm._api.User'>: M?ller
 
-    >>> del ugm.users['Meier']
+    >>> users = ugm.users
+    >>> del users['Meier']
     >>> roles.printtree()
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.Group'>: group1
           <class 'node.ext.ldap.ugm._api.User'>: Schmidt
           <class 'node.ext.ldap.ugm._api.User'>: M?ller
+
+    >>> users.storage.keys()
+    [u'Schmidt', u'M\xfcller', u'Umhauer']
+
+    >>> users.keys()
+    [u'M\xfcller', u'Schmidt', u'Umhauer']
+
+    >>> users.printtree()
+    <class 'node.ext.ldap.ugm._api.Users'>: users
+      <class 'node.ext.ldap.ugm._api.User'>: M?ller
+      <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+      <class 'node.ext.ldap.ugm._api.User'>: Umhauer
 
 Delete group and check if roles are removed.::
 
