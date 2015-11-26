@@ -13,19 +13,15 @@ addons:
     - libssl-dev
     - libdb-dev
 before_install:
-  - mkdir -p $HOME/buildout-cache/{eggs,downloads,parts}
-  - ( [ ! -e "$HOME/buildout-cache/.installed.cfg" ] && echo "[buildout]" > $HOME/buildout-cache/.installed.cfg && echo "parts=" >> $HOME/buildout-cache/.installed.cfg ) || echo "exists"
+  - mkdir -p $HOME/buildout-cache/{eggs,downloads}
   - mkdir $HOME/.buildout
   - echo "[buildout]" > $HOME/.buildout/default.cfg
   - echo "download-cache = $HOME/buildout-cache/downloads" >> $HOME/.buildout/default.cfg
   - echo "eggs-directory = $HOME/buildout-cache/eggs" >> $HOME/.buildout/default.cfg
-  - echo "parts-directory = $HOME/buildout-cache/parts" >> $HOME/.buildout/default.cfg
   - virtualenv .
   - bin/pip install --upgrade pip setuptools zc.buildout coveralls createcoverage
 install:
-  - cp $HOME/buildout-cache/.installed.cfg .
   - ./bin/buildout -c travis.cfg
-  - cp .installed.cfg $HOME/buildout-cache/
 script:
   - ./bin/test
 after_success:
