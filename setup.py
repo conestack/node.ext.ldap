@@ -5,7 +5,7 @@ from setuptools import (
     find_packages,
 )
 
-version = '1.0b1.dev0'
+version = '1.0a1.dev0'
 shortdesc = "Node based LDAP support"
 longdesc = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 longdesc += open(os.path.join(os.path.dirname(__file__), 'CHANGES.rst')).read()
