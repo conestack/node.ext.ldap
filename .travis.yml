@@ -13,11 +13,12 @@ addons:
     - libssl-dev
     - libdb-dev
 before_install:
-  - mkdir -p $HOME/buildout-cache/{eggs,downloads}
+  - mkdir -p $HOME/buildout-cache/{eggs,downloads,parts}
   - mkdir $HOME/.buildout
   - echo "[buildout]" > $HOME/.buildout/default.cfg
   - echo "download-cache = $HOME/buildout-cache/downloads" >> $HOME/.buildout/default.cfg
   - echo "eggs-directory = $HOME/buildout-cache/eggs" >> $HOME/.buildout/default.cfg
+  - echo "parts-directory = $HOME/buildout-cache/parts" >> $HOME/.buildout/default.cfg
   - virtualenv .
   - bin/pip install --upgrade pip setuptools zc.buildout coveralls createcoverage
 install:
