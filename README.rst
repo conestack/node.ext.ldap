@@ -101,10 +101,10 @@ Search in directory::
 
     >>> import node.ext.ldap
     >>> communicator.search('(objectClass=person)', node.ext.ldap.SUBTREE)
-    [('cn=foo,ou=demo,dc=my-domain,dc=com', 
-    {'objectClass': ['person'], 
-    'userPassword': ['secret'], 
-    'cn': ['foo'], 
+    [('cn=foo,ou=demo,dc=my-domain,dc=com',
+    {'objectClass': ['person'],
+    'userPassword': ['secret'],
+    'cn': ['foo'],
     'sn': ['Mustermann']})]
 
 Modify directory entry::
@@ -116,7 +116,7 @@ Modify directory entry::
     >>> communicator.search('(objectClass=person)',
     ...                     node.ext.ldap.SUBTREE,
     ...                     attrlist=['cn'])
-    [('cn=foo,ou=demo,dc=my-domain,dc=com', 
+    [('cn=foo,ou=demo,dc=my-domain,dc=com',
     {'cn': ['foo']})]
 
 Change the password of a directory entry which represents a user::
@@ -127,7 +127,7 @@ Change the password of a directory entry which represents a user::
     >>> communicator.search('(objectClass=person)',
     ...                     node.ext.ldap.SUBTREE,
     ...                     attrlist=['userPassword'])
-    [('cn=foo,ou=demo,dc=my-domain,dc=com', 
+    [('cn=foo,ou=demo,dc=my-domain,dc=com',
     {'userPassword': ['{SSHA}...']})]
 
 Delete directory entry::
@@ -167,9 +167,9 @@ Set default search DN for session::
 Search in directory::
 
     >>> session.search()
-    [('ou=demo,dc=my-domain,dc=com', 
-    {'objectClass': ['top', 'organizationalUnit'], 
-    'ou': ['demo'], 
+    [('ou=demo,dc=my-domain,dc=com',
+    {'objectClass': ['top', 'organizationalUnit'],
+    'ou': ['demo'],
     'description': ['Demo organizational unit']})]
 
 Add directory entry::
@@ -366,12 +366,12 @@ bool operators '&' and '|'::
     >>> filter = LDAPFilter('(objectClass=person)')
     >>> filter |= LDAPFilter('(objectClass=groupOfNames)')
     >>> root.search(queryFilter=filter)
-    [u'cn=person1', 
-    u'cn=person2', 
-    u'cn=person3', 
-    u'cn=person4', 
-    u'cn=person5', 
-    u'cn=group1', 
+    [u'cn=person1',
+    u'cn=person2',
+    u'cn=person3',
+    u'cn=person4',
+    u'cn=person5',
+    u'cn=group1',
     u'cn=group2']
 
 Define multiple criteria LDAP filter::
@@ -387,15 +387,15 @@ Define a relation LDAP filter. In this case we build a relation between group
     >>> from node.ext.ldap import LDAPRelationFilter
     >>> filter = LDAPRelationFilter(root['cn=group1'], 'cn:businessCategory')
     >>> root.search(queryFilter=filter)
-    [u'cn=person2', 
-    u'cn=person3', 
-    u'cn=person4', 
+    [u'cn=person2',
+    u'cn=person3',
+    u'cn=person4',
     u'cn=person5']
 
 Different LDAP filter types can be combined::
 
     >>> filter &= LDAPFilter('(cn=person2)')
-    >>> str(filter) 
+    >>> str(filter)
     '(&(businessCategory=group1)(cn=person2))'
 
 The following keyword arguments are accepted by ``LDAPNode.search``. If multiple keywords are
@@ -451,10 +451,10 @@ Define default search criteria as dict::
 
     >>> root.search_criteria = {'objectClass': 'person'}
     >>> root.search()
-    [u'cn=person1', 
-    u'cn=person2', 
-    u'cn=person3', 
-    u'cn=person4', 
+    [u'cn=person1',
+    u'cn=person2',
+    u'cn=person3',
+    u'cn=person4',
     u'cn=person5']
 
 Define default search relation::
@@ -462,15 +462,15 @@ Define default search relation::
     >>> root.search_relation = \
     ...     LDAPRelationFilter(root['cn=group1'], 'cn:businessCategory')
     >>> root.search()
-    [u'cn=person2', 
-    u'cn=person3', 
-    u'cn=person4', 
+    [u'cn=person2',
+    u'cn=person3',
+    u'cn=person4',
     u'cn=person5']
 
 Again, like with the keyword arguments, multiple defined defaults are '&'
 combined::
 
-    # empty result, there are no groups with group 'cn' as 'description' 
+    # empty result, there are no groups with group 'cn' as 'description'
     >>> root.search_criteria = {'objectClass': 'group'}
     >>> root.search()
     []
@@ -657,11 +657,11 @@ Add new User::
     >>> user()
 
     >>> ugm.users.keys()
-    [u'person1', 
-    u'person2', 
-    u'person3', 
-    u'person4', 
-    u'person5', 
+    [u'person1',
+    u'person2',
+    u'person3',
+    u'person4',
+    u'person5',
     u'person99']
 
 Delete User::
@@ -669,10 +669,10 @@ Delete User::
     >>> del ugm.users['person99']
     >>> ugm.users()
     >>> ugm.users.keys()
-    [u'person1', 
-    u'person2', 
-    u'person3', 
-    u'person4', 
+    [u'person1',
+    u'person2',
+    u'person3',
+    u'person4',
     u'person5']
 
 Fetch Group::
@@ -685,7 +685,7 @@ Group members::
     [u'person1', u'person2']
 
     >>> group.users
-    [<User object 'person1' at ...>, <User object 'person2' at ...>]  
+    [<User object 'person1' at ...>, <User object 'person2' at ...>]
 
 Add group member::
 
