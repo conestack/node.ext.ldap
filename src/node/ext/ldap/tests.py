@@ -21,7 +21,7 @@ DOCFILES = [
     ('ugm/posixGroups.rst', testing.LDIF_posixGroups),
     ('ugm/sambaUsers.rst', testing.LDIF_sambaUsers),
     ('ugm/defaults.rst', testing.LDIF_data),
-    #('../../../../README.rst', testing.LDIF_data),
+    ('../../../../README.rst', testing.LDIF_data),
 ]
 
 optionflags = \
@@ -36,6 +36,7 @@ If testing while development fails, please check if memcached is installed and
 stop it if running.
 *******************************************************************************
 """
+
 
 def test_suite():
     suite = unittest.TestSuite()
