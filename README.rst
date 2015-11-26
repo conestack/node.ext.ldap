@@ -1,3 +1,9 @@
+.. image:: https://travis-ci.org/bluedynamics/node.ext.ldap.svg?branch=master
+    :target: https://travis-ci.org/bluedynamics/node.ext.ldap
+
+.. image:: https://coveralls.io/repos/bluedynamics/node.ext.ldap/badge.svg?branch=master&service=github
+    :target: https://coveralls.io/github/bluedynamics/node.ext.ldap?branch=master
+
 Overview
 ========
 
@@ -101,10 +107,10 @@ Search in directory::
 
     >>> import node.ext.ldap
     >>> communicator.search('(objectClass=person)', node.ext.ldap.SUBTREE)
-    [('cn=foo,ou=demo,dc=my-domain,dc=com', 
-    {'objectClass': ['person'], 
-    'userPassword': ['secret'], 
-    'cn': ['foo'], 
+    [('cn=foo,ou=demo,dc=my-domain,dc=com',
+    {'objectClass': ['person'],
+    'userPassword': ['secret'],
+    'cn': ['foo'],
     'sn': ['Mustermann']})]
 
 Modify directory entry::
@@ -116,7 +122,7 @@ Modify directory entry::
     >>> communicator.search('(objectClass=person)',
     ...                     node.ext.ldap.SUBTREE,
     ...                     attrlist=['cn'])
-    [('cn=foo,ou=demo,dc=my-domain,dc=com', 
+    [('cn=foo,ou=demo,dc=my-domain,dc=com',
     {'cn': ['foo']})]
 
 Change the password of a directory entry which represents a user::
@@ -127,7 +133,7 @@ Change the password of a directory entry which represents a user::
     >>> communicator.search('(objectClass=person)',
     ...                     node.ext.ldap.SUBTREE,
     ...                     attrlist=['userPassword'])
-    [('cn=foo,ou=demo,dc=my-domain,dc=com', 
+    [('cn=foo,ou=demo,dc=my-domain,dc=com',
     {'userPassword': ['{SSHA}...']})]
 
 Delete directory entry::
@@ -167,9 +173,9 @@ Set default search DN for session::
 Search in directory::
 
     >>> session.search()
-    [('ou=demo,dc=my-domain,dc=com', 
-    {'objectClass': ['top', 'organizationalUnit'], 
-    'ou': ['demo'], 
+    [('ou=demo,dc=my-domain,dc=com',
+    {'objectClass': ['top', 'organizationalUnit'],
+    'ou': ['demo'],
     'description': ['Demo organizational unit']})]
 
 Add directory entry::
@@ -366,12 +372,12 @@ bool operators '&' and '|'::
     >>> filter = LDAPFilter('(objectClass=person)')
     >>> filter |= LDAPFilter('(objectClass=groupOfNames)')
     >>> root.search(queryFilter=filter)
-    [u'cn=person1', 
-    u'cn=person2', 
-    u'cn=person3', 
-    u'cn=person4', 
-    u'cn=person5', 
-    u'cn=group1', 
+    [u'cn=person1',
+    u'cn=person2',
+    u'cn=person3',
+    u'cn=person4',
+    u'cn=person5',
+    u'cn=group1',
     u'cn=group2']
 
 Define multiple criteria LDAP filter::
@@ -387,15 +393,15 @@ Define a relation LDAP filter. In this case we build a relation between group
     >>> from node.ext.ldap import LDAPRelationFilter
     >>> filter = LDAPRelationFilter(root['cn=group1'], 'cn:businessCategory')
     >>> root.search(queryFilter=filter)
-    [u'cn=person2', 
-    u'cn=person3', 
-    u'cn=person4', 
+    [u'cn=person2',
+    u'cn=person3',
+    u'cn=person4',
     u'cn=person5']
 
 Different LDAP filter types can be combined::
 
     >>> filter &= LDAPFilter('(cn=person2)')
-    >>> str(filter) 
+    >>> str(filter)
     '(&(businessCategory=group1)(cn=person2))'
 
 The following keyword arguments are accepted by ``LDAPNode.search``. If multiple keywords are
@@ -451,10 +457,10 @@ Define default search criteria as dict::
 
     >>> root.search_criteria = {'objectClass': 'person'}
     >>> root.search()
-    [u'cn=person1', 
-    u'cn=person2', 
-    u'cn=person3', 
-    u'cn=person4', 
+    [u'cn=person1',
+    u'cn=person2',
+    u'cn=person3',
+    u'cn=person4',
     u'cn=person5']
 
 Define default search relation::
@@ -462,15 +468,15 @@ Define default search relation::
     >>> root.search_relation = \
     ...     LDAPRelationFilter(root['cn=group1'], 'cn:businessCategory')
     >>> root.search()
-    [u'cn=person2', 
-    u'cn=person3', 
-    u'cn=person4', 
+    [u'cn=person2',
+    u'cn=person3',
+    u'cn=person4',
     u'cn=person5']
 
 Again, like with the keyword arguments, multiple defined defaults are '&'
 combined::
 
-    # empty result, there are no groups with group 'cn' as 'description' 
+    # empty result, there are no groups with group 'cn' as 'description'
     >>> root.search_criteria = {'objectClass': 'group'}
     >>> root.search()
     []
@@ -657,11 +663,11 @@ Add new User::
     >>> user()
 
     >>> ugm.users.keys()
-    [u'person1', 
-    u'person2', 
-    u'person3', 
-    u'person4', 
-    u'person5', 
+    [u'person1',
+    u'person2',
+    u'person3',
+    u'person4',
+    u'person5',
     u'person99']
 
 Delete User::
@@ -669,10 +675,10 @@ Delete User::
     >>> del ugm.users['person99']
     >>> ugm.users()
     >>> ugm.users.keys()
-    [u'person1', 
-    u'person2', 
-    u'person3', 
-    u'person4', 
+    [u'person1',
+    u'person2',
+    u'person3',
+    u'person4',
     u'person5']
 
 Fetch Group::
@@ -685,7 +691,7 @@ Group members::
     [u'person1', u'person2']
 
     >>> group.users
-    [<User object 'person1' at ...>, <User object 'person2' at ...>]  
+    [<User object 'person1' at ...>, <User object 'person2' at ...>]
 
 Add group member::
 
@@ -838,33 +844,6 @@ There are different compile issues on different platforms. If you experience
 problems with ``python-ldap``, make sure it is available in the python
 environment you run buildout in, so it won't be fetched and built by buildout
 itself.
-
-
-Test Coverage
--------------
-
-Summary of the test coverage report::
-
-  lines   cov%   module
-      7   100%   node.ext.ldap.__init__
-    458    98%   node.ext.ldap._node
-    146    99%   node.ext.ldap.base
-     12   100%   node.ext.ldap.cache
-     18   100%   node.ext.ldap.events
-    129   100%   node.ext.ldap.filter
-     62   100%   node.ext.ldap.interfaces
-     51   100%   node.ext.ldap.properties
-     37    97%   node.ext.ldap.schema
-      6   100%   node.ext.ldap.scope
-     60   100%   node.ext.ldap.session
-    437    98%   node.ext.ldap.testing.__init__
-     28   100%   node.ext.ldap.tests
-      1   100%   node.ext.ldap.ugm.__init__
-    719    96%   node.ext.ldap.ugm._api
-     21   100%   node.ext.ldap.ugm.defaults
-     35   100%   node.ext.ldap.ugm.posix
-     29    96%   node.ext.ldap.ugm.samba
-     21   100%   node.ext.ldap.ugm.shadow
 
 
 TODO
