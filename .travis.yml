@@ -24,7 +24,7 @@ before_install:
   - bin/pip install --upgrade pip setuptools zc.buildout coveralls createcoverage
 install:
   - cp $HOME/buildout-cache/.installed.cfg .
-  - ./bin/buildout
+  - ./bin/buildout -c travis.cfg
   - cp .installed.cfg $HOME/buildout-cache/
 script:
   - ./bin/test
