@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
+from node.ext.ldap import testing
+from plone.testing import layered
 import doctest
 import interlude
 import pprint
 import unittest2 as unittest
-
-from plone.testing import layered
-
-from node.ext.ldap import testing
 
 
 DOCFILES = [

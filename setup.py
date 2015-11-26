@@ -43,7 +43,6 @@ setup(
         'test': [
             'interlude',
             'plone.testing',
-            'unittest2',
             'zope.configuration',
             'zope.testing',
         ]
