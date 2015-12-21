@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from zope.interface import implementer
 from node.ext.ldap.interfaces import ILDAPProps
+from zope.interface import implementer
 
 
 MULTIVALUED_DEFAULTS = set([

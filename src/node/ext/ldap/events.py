@@ -1,19 +1,15 @@
 # -*- coding: utf-8 -*-
+from node.events import NodeAddedEvent
+from node.events import NodeCreatedEvent
+from node.events import NodeDetachedEvent
+from node.events import NodeModifiedEvent
+from node.events import NodeRemovedEvent
+from node.ext.ldap.interfaces import ILDAPNodeAddedEvent
+from node.ext.ldap.interfaces import ILDAPNodeCreatedEvent
+from node.ext.ldap.interfaces import ILDAPNodeDetachedEvent
+from node.ext.ldap.interfaces import ILDAPNodeModifiedEvent
+from node.ext.ldap.interfaces import ILDAPNodeRemovedEvent
 from zope.interface import implementer
-from node.events import (
-    NodeCreatedEvent,
-    NodeAddedEvent,
-    NodeModifiedEvent,
-    NodeRemovedEvent,
-    NodeDetachedEvent,
-)
-from .interfaces import (
-    ILDAPNodeCreatedEvent,
-    ILDAPNodeAddedEvent,
-    ILDAPNodeModifiedEvent,
-    ILDAPNodeRemovedEvent,
-    ILDAPNodeDetachedEvent,
-)
 
 
 @implementer(ILDAPNodeCreatedEvent)

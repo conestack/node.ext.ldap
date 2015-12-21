@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
+from importlib import import_module
+from node.ext.ldap import testing
+import argparse
 import os
 import subprocess
 import sys
 import tempfile
-import argparse
-from importlib import import_module
-from . import testing
 
 
 # additional LDIF layer containing modules
