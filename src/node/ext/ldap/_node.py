@@ -1,58 +1,44 @@
 # -*- coding: utf-8 -*-
-from ldap import (
-    MOD_ADD,
-    MOD_DELETE,
-    MOD_REPLACE,
-    NO_SUCH_OBJECT,
-    INVALID_DN_SYNTAX,
-)
+from ldap import INVALID_DN_SYNTAX
+from ldap import MOD_ADD
+from ldap import MOD_DELETE
+from ldap import MOD_REPLACE
+from ldap import NO_SUCH_OBJECT
 from ldap.functions import explode_dn
-from zope.interface import implementer
-from zope.deprecation import deprecated
-from plumber import (
-    plumbing,
-    Behavior,
-    plumb,
-    default,
-    finalize,
-)
-from node.behaviors import (
-    Nodespaces,
-    Attributes,
-    NodeAttributes,
-    Lifecycle,
-    AttributesLifecycle,
-    NodeChildValidate,
-    Adopt,
-    Nodify,
-    OdictStorage,
-)
-from node.utils import (
-    encode,
-    decode,
-    CHARACTER_ENCODING,
-    debug,
-)
+from node.behaviors import Adopt
+from node.behaviors import Attributes
+from node.behaviors import AttributesLifecycle
+from node.behaviors import Lifecycle
+from node.behaviors import NodeAttributes
+from node.behaviors import NodeChildValidate
+from node.behaviors import Nodespaces
+from node.behaviors import Nodify
+from node.behaviors import OdictStorage
+from node.ext.ldap import BASE
+from node.ext.ldap import LDAPSession
+from node.ext.ldap import ONELEVEL
+from node.ext.ldap.events import LDAPNodeAddedEvent
+from node.ext.ldap.events import LDAPNodeCreatedEvent
+from node.ext.ldap.events import LDAPNodeDetachedEvent
+from node.ext.ldap.events import LDAPNodeModifiedEvent
+from node.ext.ldap.events import LDAPNodeRemovedEvent
+from node.ext.ldap.filter import LDAPDictFilter
+from node.ext.ldap.filter import LDAPFilter
+from node.ext.ldap.filter import LDAPRelationFilter
+from node.ext.ldap.interfaces import ILDAPStorage
+from node.ext.ldap.schema import LDAPSchemaInfo
 from node.interfaces import IInvalidate
-from . import (
-    BASE,
-    ONELEVEL,
-    LDAPSession,
-)
-from .interfaces import ILDAPStorage
-from .events import (
-    LDAPNodeCreatedEvent,
-    LDAPNodeAddedEvent,
-    LDAPNodeModifiedEvent,
-    LDAPNodeRemovedEvent,
-    LDAPNodeDetachedEvent
-)
-from .filter import (
-    LDAPFilter,
-    LDAPDictFilter,
-    LDAPRelationFilter,
-)
-from .schema import LDAPSchemaInfo
+from node.utils import CHARACTER_ENCODING
+from node.utils import debug
+from node.utils import decode
+from node.utils import encode
+from plumber import Behavior
+from plumber import default
+from plumber import finalize
+from plumber import plumb
+from plumber import plumbing
+from zope.deprecation import deprecated
+from zope.interface import implementer
 
 
 ACTION_ADD = 0

@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
-import ldap
-from . import (
-    BASE,
-    LDAPConnector,
-    LDAPCommunicator,
-)
 from .base import testLDAPConnectivity
+from node.ext.ldap import BASE
+from node.ext.ldap import LDAPCommunicator
+from node.ext.ldap import LDAPConnector
+import ldap
 
 
 class LDAPSession(object):

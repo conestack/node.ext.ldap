@@ -32,7 +32,6 @@ from plumber import override
 from plumber import plumb
 from plumber import plumbing
 from zope.interface import implementer
-
 import ldap
 import logging
 import time

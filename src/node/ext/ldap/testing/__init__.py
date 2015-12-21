@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from node.ext.ldap import LDAPProps
+from node.ext.ldap import ONELEVEL
+from node.ext.ldap import SUBTREE
 from node.ext.ldap.properties import LDAPProps
 from node.ext.ldap.scope import ONELEVEL
 from node.ext.ldap.scope import SUBTREE
@@ -8,6 +11,7 @@ from odict import odict
 from pkg_resources import resource_filename
 from plone.testing import Layer
 from plone.testing import zca
+import logging
 import os
 import shutil
 import subprocess

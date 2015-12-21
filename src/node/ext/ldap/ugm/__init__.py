@@ -1,13 +1,11 @@
-from ._api import (
-    PrincipalsConfig,
-    UsersConfig,
-    GroupsConfig,
-    RolesConfig,
-    User,
-    Group,
-    Users,
-    Groups,
-    Role,
-    Roles,
-    Ugm,
-)
+from node.ext.ldap.ugm._api import Group
+from node.ext.ldap.ugm._api import Groups
+from node.ext.ldap.ugm._api import GroupsConfig
+from node.ext.ldap.ugm._api import PrincipalsConfig
+from node.ext.ldap.ugm._api import Role
+from node.ext.ldap.ugm._api import Roles
+from node.ext.ldap.ugm._api import RolesConfig
+from node.ext.ldap.ugm._api import Ugm
+from node.ext.ldap.ugm._api import User
+from node.ext.ldap.ugm._api import Users
+from node.ext.ldap.ugm._api import UsersConfig

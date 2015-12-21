@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-from zope.interface import implementer
-from bda.cache import (
-    Memcached,
-    NullCache,
-)
 from .interfaces import ICacheProviderFactory
+from bda.cache import Memcached
+from bda.cache import NullCache
+from zope.interface import implementer
 
 
 def nullcacheProviderFactory():

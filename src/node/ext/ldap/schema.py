@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
+from node.ext.ldap import LDAPCommunicator
+from node.ext.ldap import LDAPConnector
 import ldap
-from . import (
-    LDAPConnector,
-    LDAPCommunicator,
-)
 
 
 class LDAPSchemaInfo(object):
