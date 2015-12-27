@@ -4,6 +4,18 @@ History
 1.0b0 (unreleased)
 ------------------
 
+- Introduce ``get_nodes`` keyword argument in ``LDAPNode.search``. When set,
+  search result contains ``LDAPNode`` instances instead of DN's in result.
+  [rnix]
+
+- ``LDAPNode.search`` returns DN's instead of RDN's in result. This fixes
+  searches with scope SUBTREE where result items can potentially contain
+  duplicate RDN's.
+  [rnix]
+
+- Introduce ``node_by_dn`` on ``LDAPNode``.
+  [rnix]
+
 - remove bbb code: no python 2.4 support (2.7+ now), usage of LDAPProperties
   mandatory now.
   [jensens]

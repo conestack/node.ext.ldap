@@ -424,11 +424,30 @@ class LDAPStorage(OdictStorage):
         return u','.join([decode(key), decode(self.name)])
 
     @default
+    def node_by_dn(self, dn, strict=False):
+        """Return node from tree by DN.
+        """
+        root = node = self.root
+        base_dn = root.name
+        if not dn.endswith(base_dn):
+            raise ValueError(u'Invalid base DN')
+        dn = dn[:len(dn) - len(base_dn)].strip(',')
+        for rdn in reversed(explode_dn(encode(dn))):
+            try:
+                node = node[rdn]
+            except KeyError:
+                if strict:
+                    raise ValueError(u'Tree contains no node by given DN. '
+                                     u'Failed at RDN {}'.format(rdn))
+                return None
+        return node
+
+    @default
     @debug
     def search(self, queryFilter=None, criteria=None, attrlist=None,
                relation=None, relation_node=None, exact_match=False,
                or_search=False, or_keys=None, or_values=None,
-               page_size=None, cookie=None):
+               page_size=None, cookie=None, get_nodes=False):
         attrset = set(attrlist or [])
         attrset.discard('dn')
         # Create queryFilter from all filter definitions
@@ -473,7 +492,7 @@ class LDAPStorage(OdictStorage):
         # extract key and desired attributes
         res = []
         for dn, attrs in matches:
-            key = self._calculate_key(dn, attrs)
+            dn = decode(dn)
             if attrlist is not None:
                 resattr = dict()
                 for k, v in attrs.iteritems():
@@ -483,12 +502,16 @@ class LDAPStorage(OdictStorage):
                         else:
                             resattr[decode(k)] = decode(v)
                 if 'dn' in attrlist:
-                    resattr[u'dn'] = decode(dn)
-                # XXX: optional RDN, DN instead of key
-                res.append((key, resattr))
+                    resattr[u'dn'] = dn
+                if get_nodes:
+                    res.append((self.node_by_dn(dn, strict=True), resattr))
+                else:
+                    res.append((dn, resattr))
             else:
-                # XXX: return DN instead of key
-                res.append(key)
+                if get_nodes:
+                    res.append(self.node_by_dn(dn, strict=True))
+                else:
+                    res.append(dn)
         if cookie is not None:
             return (res, cookie)
         return res
@@ -526,11 +549,6 @@ class LDAPStorage(OdictStorage):
             del self.storage[key]
         except KeyError:
             pass
-
-    @default
-    def _calculate_key(self, dn, attrs):
-        key = explode_dn(encode(dn))[0]
-        return decode(key)
 
     @default
     def _create_suitable_node(self, vessel):
