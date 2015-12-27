@@ -3,11 +3,12 @@ Samba users
 
 ::
 
+    >>> from node.ext.ldap.ugm import Ugm
+
     >>> ucfg = layer['ucfg']
     >>> gcfg = layer['gcfg']
     >>> props = layer['props']
 
-    >>> from node.ext.ldap.ugm import Ugm
     >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg)
     >>> ugm.users.search()
     [u'uid0', u'uid1', u'uid2']

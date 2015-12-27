@@ -1,25 +1,30 @@
 Default value callbacks testing
 ===============================
 
-::
+Test related imports::
+
+    >>> from node.ext.ldap import LDAPNode
+    >>> from node.ext.ldap.scope import SUBTREE
+    >>> from node.ext.ldap.ugm import Groups
+    >>> from node.ext.ldap.ugm import GroupsConfig
+    >>> from node.ext.ldap.ugm import Ugm
+    >>> from node.ext.ldap.ugm import Users
+    >>> from node.ext.ldap.ugm import UsersConfig
+    >>> from node.ext.ldap.ugm import defaults
+    >>> from node.ext.ldap.ugm import posix
+    >>> from node.ext.ldap.ugm import samba
+    >>> from node.ext.ldap.ugm import shadow
+
+Test node::
 
     >>> props = layer['props']
-    >>> from node.ext.ldap import LDAPNode
     >>> root = LDAPNode('dc=my-domain,dc=com', props)
     >>> root['ou=defaults'] = LDAPNode()
     >>> root['ou=defaults'].attrs['objectClass'] = ['organizationalUnit']
     >>> root()
 
-    >>> from node.ext.ldap.scope import SUBTREE
-    >>> from node.ext.ldap.ugm import (
-    ...     UsersConfig,
-    ...     GroupsConfig,
-    ...     Users,
-    ...     Groups,
-    ...     Ugm,
-    ... )
+Creation defaults::
 
-    >>> from node.ext.ldap.ugm import defaults
     >>> defaults.creation_defaults
     {'shadowAccount': 
     {'uid': <function uid at ...>}, 
@@ -67,7 +72,6 @@ Posix Account
     (u'gidNumber', u'100'), 
     (u'homeDirectory', u'/home/posixuser')]
 
-    >>> from node.ext.ldap.ugm import posix
     >>> defaults.creation_defaults['posixAccount']['loginShell'] = \
     ...     posix.loginShell
 
@@ -146,7 +150,6 @@ Shadow Account
     [(u'uid', u'shadowuser'), 
     (u'objectClass', [u'account', u'shadowAccount'])]
 
-    >>> from node.ext.ldap.ugm import shadow
     >>> shadow_d = defaults.creation_defaults['shadowAccount']
     >>> shadow_d['shadowFlag'] = shadow.shadowFlag
     >>> shadow_d['shadowMin'] = shadow.shadowMin
@@ -233,7 +236,6 @@ Samba Account
     (u'uidNumber', u'100'), 
     (u'userPassword', u'{SSHA}...')]
 
-    >>> from node.ext.ldap.ugm import samba
     >>> samba_d = defaults.creation_defaults['sambaSamAccount']
     >>> samba_d['sambaDomainName'] = samba.sambaDomainName
     >>> samba_d['sambaPrimaryGroupSID'] = samba.sambaPrimaryGroupSID

@@ -1,6 +1,10 @@
 Tests refering to groupOfNames.ldif
 ===================================
 
+Test related imports::
+
+    >>> from node.ext.ldap.ugm import Ugm
+
 Ugm root object::
 
     >>> props = layer['props']
@@ -8,7 +12,6 @@ Ugm root object::
     >>> gcfg = layer['gcfg']
     >>> rcfg = None # XXX: later
 
-    >>> from node.ext.ldap.ugm import Ugm
     >>> ugm = Ugm(name='ugm', parent=None, props=props,
     ...           ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
 

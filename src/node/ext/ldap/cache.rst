@@ -1,10 +1,16 @@
 node.ext.ldap.cache
 ===================
 
+Test related imports::
+
+    >>> from node.ext.ldap.cache import MemcachedProviderFactory
+    >>> from node.ext.ldap.cache import nullcacheProviderFactory
+    >>> from node.ext.ldap.interfaces import ICacheProviderFactory
+    >>> from zope.component import registry
+
 Default cache provider factory, userd if caching is enabled and no
 ``ICacheProviderFactory`` utility is registered.::
 
-    >>> from node.ext.ldap.cache import nullcacheProviderFactory
     >>> nullcacheProviderFactory()
     <bda.cache.nullcache.NullCache object at ...>
 
@@ -13,14 +19,11 @@ and register as ``ICacheProviderFactory`` utility if Memcached is the desired
 caching backend. For providing other backends, read documentation of
 ``bda.cache``::
 
-    >>> from node.ext.ldap.cache import MemcachedProviderFactory
     >>> cache_factory = MemcachedProviderFactory()
 
-    >>> from zope.component import registry
     >>> components = registry.Components('comps')
     >>> components.registerUtility(cache_factory)
 
-    >>> from node.ext.ldap.interfaces import ICacheProviderFactory
     >>> factory = components.queryUtility(ICacheProviderFactory)
     >>> factory
     <node.ext.ldap.cache.MemcachedProviderFactory object at ...>

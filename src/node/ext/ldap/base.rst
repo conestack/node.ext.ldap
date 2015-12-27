@@ -1,7 +1,20 @@
-NullCachManager registration::
+Test related imports::
 
     >>> from bda.cache.nullcache import NullCacheManager
+    >>> from ldap import MOD_REPLACE
+    >>> from node.ext.ldap import BASE
+    >>> from node.ext.ldap import LDAPCommunicator
+    >>> from node.ext.ldap import LDAPConnector
+    >>> from node.ext.ldap import LDAPProps
+    >>> from node.ext.ldap import ONELEVEL
+    >>> from node.ext.ldap import SUBTREE
+    >>> from node.ext.ldap.base import main
+    >>> from node.ext.ldap.base import testLDAPConnectivity
     >>> from zope.component import provideAdapter
+    >>> import sys
+
+NullCachManager registration::
+
     >>> provideAdapter(NullCacheManager)
 
 LDAP credentials::
@@ -11,7 +24,6 @@ LDAP credentials::
     >>> binddn = "cn=Manager,dc=my-domain,dc=com"
     >>> bindpw = "secret"
 
-    >>> from node.ext.ldap import LDAPProps
     >>> props = LDAPProps(
     ...     server=host,
     ...     port=port,
@@ -22,8 +34,6 @@ LDAP credentials::
 Test main script, could be used by command line with
 'python base.py server port'::
 
-    >>> from node.ext.ldap.base import main
-    >>> import sys
     >>> old_argv = sys.argv
     >>> sys.argv = ['base.py', '127.0.0.1', '12345']
     >>> main()
@@ -39,15 +49,8 @@ Test main script, could be used by command line with
 
     >>> sys.argv = old_argv
 
-Test node.ext.ldap base objects.::
+Test node.ext.ldap base objects. Test LDAP connectivity::
 
-    >>> from node.ext.ldap import BASE, ONELEVEL, SUBTREE
-    >>> from node.ext.ldap import LDAPConnector
-    >>> from node.ext.ldap import LDAPCommunicator
-
-Test LDAP connectivity::
-
-    >>> from node.ext.ldap.base import testLDAPConnectivity
     >>> testLDAPConnectivity('127.0.0.1', 12345)
     'success'
 
@@ -112,7 +115,6 @@ Query added entry directly.::
 
 Modify this entry and check the result.::
 
-    >>> from ldap import MOD_REPLACE
     >>> communicator.modify(res[0][0], [(MOD_REPLACE, 'sn', 'baz')])
     >>> res = communicator.search('(cn=foo)', SUBTREE)
     >>> res

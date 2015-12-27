@@ -1,13 +1,26 @@
 # -*- coding: utf-8 -*-
 
+Test related imports::
+
+    >>> from node.base import BaseNode
+    >>> from node.ext.ldap import LDAPNode
+    >>> from node.ext.ldap import ONELEVEL
+    >>> from node.ext.ldap.filter import LDAPFilter
+    >>> from node.ext.ldap.testing import props
+    >>> from node.ext.ldap.testing import ucfg
+    >>> from node.ext.ldap.ugm import Groups
+    >>> from node.ext.ldap.ugm import GroupsConfig
+    >>> from node.ext.ldap.ugm import RolesConfig
+    >>> from node.ext.ldap.ugm import Ugm
+    >>> from node.ext.ldap.ugm import Users
+    >>> from node.ext.ldap.ugm import UsersConfig
+    >>> from node.ext.ldap.ugm._api import member_attribute
+    >>> from node.ext.ldap.ugm._api import member_format
+
 Create a LDAPUsers node and configure it. In addition to the key attribute, the
 login attribute also needs to be unique, which will be checked upon calling
 ids() the first time::
 
-    >>> from node.ext.ldap.ugm import Users, UsersConfig
-    >>> from node.ext.ldap import ONELEVEL
-
-    >>> from node.ext.ldap.testing import props, ucfg
     >>> ucfg.attrmap
     {'telephoneNumber': 'telephoneNumber', 
     'login': 'description', 
@@ -198,7 +211,6 @@ id and returns the desired value.::
     >>> sorted(users.ids)
     [u'M\xfcller', u'Schmidt', u'Umhauer', u'newid', u'sn_binary']
 
-    >>> from node.base import BaseNode
     >>> node = BaseNode()
     >>> users['foo'] = node
     Traceback (most recent call last):
@@ -231,6 +243,7 @@ Delete User::
 Search for users::
 
     >>> users = Users(props, ucfg)
+
     >>> schmidt = users['Schmidt']
     >>> users.search(criteria=dict(sn=schmidt.attrs['sn']), exact_match=True)
     [u'Schmidt']
@@ -270,7 +283,6 @@ Only attributes defined in attrmap can be queried::
     ...                            attrlist=['telephoneNumber'])
     [(u'Schmidt', {'telephoneNumber': [u'1234']})]
 
-    >>> from node.ext.ldap.filter import LDAPFilter
     >>> filter = LDAPFilter('(objectClass=person)')
     >>> filter &= LDAPFilter('(!(objectClass=inetOrgPerson))')
     >>> filter |= LDAPFilter('(objectClass=some)')
@@ -412,7 +424,6 @@ A user does not know about it's groups if initialized directly::
 
 Create a LDAPGroups node and configure it::
 
-    >>> from node.ext.ldap.ugm import Groups, GroupsConfig
     >>> gcfg = GroupsConfig(
     ...     baseDN='dc=my-domain,dc=com',
     ...     attrmap={
@@ -488,14 +499,12 @@ Directly created groups object have no access to it's refering users::
 
 Create a UGM object::
 
-    >>> from node.ext.ldap.ugm import Ugm
     >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg)
 
 Currently, the member relation is computed hardcoded and maps to object classes.
 This will propably change in future. Right now 'posigGroup',
 'groupOfUniqueNames', and 'groupOfNames' are supported::
 
-    >>> from node.ext.ldap.ugm._api import member_format, member_attribute
     >>> member_format('groupOfUniqueNames')
     0
 
@@ -614,7 +623,6 @@ Delete Group::
 
 Test role mappings. Create container for roles.::
 
-    >>> from node.ext.ldap import LDAPNode
     >>> node = LDAPNode('dc=my-domain,dc=com', props)
     >>> node['ou=roles'] = LDAPNode()
     >>> node['ou=roles'].attrs['objectClass'] = ['organizationalUnit']
@@ -639,7 +647,6 @@ Test accessing unconfigured roles.::
 
 Configure role config represented by object class 'groupOfNames'::
 
-    >>> from node.ext.ldap.ugm import RolesConfig
     >>> rcfg = RolesConfig(
     ...     baseDN='ou=roles,dc=my-domain,dc=com',
     ...     attrmap={

@@ -1,10 +1,14 @@
 node.ext.ldap.session
 =====================
 
-::
+Test related imports::
 
-    >>> from node.ext.ldap import BASE, ONELEVEL, SUBTREE
-    >>> from node.ext.ldap import LDAPProps, LDAPSession
+    >>> from ldap import MOD_REPLACE
+    >>> from node.ext.ldap import BASE
+    >>> from node.ext.ldap import LDAPProps
+    >>> from node.ext.ldap import LDAPSession
+    >>> from node.ext.ldap import ONELEVEL
+    >>> from node.ext.ldap import SUBTREE
     >>> from node.ext.ldap.testing import props
 
 Create the session with ``LDAPProps`` as argument::
@@ -21,7 +25,6 @@ There's no search base DN set yet::
 Set a baseDN and perform LDAP search::
   
     >>> session.baseDN = 'dc=my-domain,dc=com'
-    >>> from node.ext.ldap import SUBTREE
     >>> res = session.search('(objectClass=*)', SUBTREE)
     >>> len(res)
     7
@@ -29,7 +32,6 @@ Set a baseDN and perform LDAP search::
 Perform batched search::
 
     >>> session.baseDN = 'dc=my-domain,dc=com'
-    >>> from node.ext.ldap import SUBTREE
     >>> res, cookie = session.search('(objectClass=*)', SUBTREE, page_size=2)
     >>> assert cookie
     >>> len(res)
@@ -69,7 +71,6 @@ Modify this entry and check the result::
     [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com', 
     {'objectClass': ['person', 'top'], 'cn': ['foo'], 'sn': ['bar']})]
 
-    >>> from ldap import MOD_REPLACE
     >>> session.modify(res[0][0], [(MOD_REPLACE, 'sn', 'baz')])
     >>> res = session.search('(cn=foo)', SUBTREE)
     >>> res

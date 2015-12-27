@@ -1,12 +1,21 @@
 node.ext.ldap.filter
 ====================
 
+Test related imports::
+
+    >>> from node.base import AttributedNode
+    >>> from node.ext.ldap.filter import LDAPDictFilter
+    >>> from node.ext.ldap.filter import LDAPFilter
+    >>> from node.ext.ldap.filter import LDAPRelationFilter
+    >>> from node.ext.ldap.filter import dict_to_filter
+    >>> from odict import odict
+
+
 LDAPFilter
 ----------
 
 LDAPFilter expects string, other LDAPFilter or None at initialization.:: 
 
-    >>> from node.ext.ldap.filter import LDAPFilter
     >>> str(LDAPFilter(None))
     ''
 
@@ -67,11 +76,9 @@ LDAPDictFilter
 LDAPDictFilter inherits from LDAPFilter and provides converting dict like
 objects to LDAP filters.::
 
-    >>> from node.ext.ldap.filter import dict_to_filter
     >>> str(dict_to_filter(dict(), False))
     ''
 
-    >>> from node.ext.ldap.filter import LDAPDictFilter
     >>> criteria = dict(sn=u'meier\xe4', cn='sepp')
     >>> filter = LDAPDictFilter(criteria, or_search=True)
     >>> filter
@@ -96,7 +103,6 @@ objects to LDAP filters.::
 
 fine-grained control with or_keys and or_values::
 
-    >>> from odict import odict
     >>> criteria = odict((('a', [1, 2]), ('b', [3, 4]), ('c', 5)))
     >>> str(LDAPDictFilter(criteria))
     '(&(&(&(a=1)(a=2))(&(b=3)(b=4)))(c=5))'
@@ -123,12 +129,10 @@ LDAPRelationFilter
 LDAPRelationFilter inherits from LDAPFilter and provides creating LDAP filters
 from relations.::
 
-    >>> from node.base import AttributedNode
     >>> node = AttributedNode()
     >>> node.attrs['someUid'] = u'123\xe4'
     >>> node.attrs['someName'] = 'Name'
 
-    >>> from node.ext.ldap.filter import LDAPRelationFilter
     >>> rel_filter = LDAPRelationFilter(node, 'someUid:otherUid')
     >>> rel_filter
     LDAPRelationFilter('(otherUid=123ä)')

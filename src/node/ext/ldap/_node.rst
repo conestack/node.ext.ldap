@@ -3,11 +3,33 @@
 LDAP Nodes
 ==========
 
-::
+Test related imports::
 
-    >>> from node.ext.ldap import LDAPProps
+    >>> from node.base import AttributedNode
+    >>> from node.base import BaseNode
     >>> from node.ext.ldap import LDAPNode
+    >>> from node.ext.ldap import LDAPProps
+    >>> from node.ext.ldap._node import ACTION_ADD
+    >>> from node.ext.ldap._node import ACTION_DELETE
+    >>> from node.ext.ldap._node import ACTION_MODIFY
+    >>> from node.ext.ldap.events import LDAPNodeAddedEvent
+    >>> from node.ext.ldap.filter import LDAPFilter
+    >>> from node.ext.ldap.filter import LDAPRelationFilter
+    >>> from node.ext.ldap.interfaces import ILDAPNodeAddedEvent
+    >>> from node.ext.ldap.interfaces import ILDAPNodeCreatedEvent
+    >>> from node.ext.ldap.interfaces import ILDAPNodeDetachedEvent
+    >>> from node.ext.ldap.interfaces import ILDAPNodeModifiedEvent
+    >>> from node.ext.ldap.interfaces import ILDAPNodeRemovedEvent
+    >>> from node.ext.ldap.scope import ONELEVEL
+    >>> from node.ext.ldap.scope import SUBTREE
     >>> from node.ext.ldap.testing import props
+    >>> from node.interfaces import INode
+    >>> from plone.testing.zca import popGlobalRegistry
+    >>> from plone.testing.zca import pushGlobalRegistry
+    >>> from zope.component import adapter
+    >>> from zope.component import provideHandler
+    >>> from zope.component.event import objectEventNotify
+    >>> import os
 
 Root Node
 ---------
@@ -139,14 +161,12 @@ Access existing binary data::
 
 Change binary data::
 
-    >>> import os
     >>> jpegdata = open(os.path.join(os.path.dirname(__file__), 'testing',
     ...                 'data', 'binary.jpg')).read()
 
     >>> customers is binnode.parent
     True
 
-    >>> from node.ext.ldap._node import ACTION_MODIFY
     >>> binnode._action == ACTION_MODIFY
     False
 
@@ -299,11 +319,6 @@ The added child has been flagged changed as well...::
 
 ...and now there's also the action set that it has to be added::
 
-    >>> from node.ext.ldap._node import (
-    ...     ACTION_ADD,
-    ...     ACTION_MODIFY,
-    ...     ACTION_DELETE,
-    ... )
     >>> customer._action is ACTION_ADD
     True
 
@@ -774,14 +789,12 @@ instance if a custom callback context is desired::
 It's possible to add other INode implementing objects than LDAPNode. An ldap
 node gets created then and attrs are set from original node::
 
-    >>> from node.base import BaseNode
     >>> new = BaseNode()
     >>> customer['cn=from_other'] = new
     Traceback (most recent call last):
       ...
     ValueError: No attributes found on vessel, cannot convert
 
-    >>> from node.base import AttributedNode
     >>> new = AttributedNode()
     >>> new.attrs['description'] = 'Not from defaults'
     >>> customer['cn=from_other'] = new
@@ -932,8 +945,6 @@ We can fetch nodes by DN's::
 
 Default search scope is ONELEVEL::
 
-    >>> from node.ext.ldap.scope import ONELEVEL, SUBTREE
-
     >>> node.search_scope is ONELEVEL
     True
 
@@ -1001,7 +1012,6 @@ Search with pagination::
 
 Lets add a default search filter.::
 
-    >>> from node.ext.ldap.filter import LDAPFilter
     >>> filter = LDAPFilter('(objectClass=organizationalUnit)')
     >>> node.search_filter = filter
     >>> node.search()
@@ -1120,7 +1130,6 @@ Test relation filter::
 
     >>> node.search_relation = None
 
-    >>> from node.ext.ldap.filter import LDAPRelationFilter
     >>> relation = LDAPRelationFilter(rel_node, 'description:description')
     >>> relation
     LDAPRelationFilter('(description=customers)')
@@ -1181,20 +1190,9 @@ Events
 
 Use new registry::
 
-    >>> from plone.testing.zca import pushGlobalRegistry, popGlobalRegistry
     >>> reg = pushGlobalRegistry()
 
 Provide a bucnh of printing subscribers for testing::
-
-    >>> from zope.component import adapter, provideHandler
-    >>> from node.ext.ldap.interfaces import (
-    ...     ILDAPNodeCreatedEvent,
-    ...     ILDAPNodeAddedEvent,
-    ...     ILDAPNodeModifiedEvent,
-    ...     ILDAPNodeDetachedEvent,
-    ...     ILDAPNodeRemovedEvent,
-    ... )
-    >>> from node.interfaces import INode
 
     >>> @adapter(INode, ILDAPNodeCreatedEvent)
     ... def test_node_created_event(obj, event):
@@ -1223,8 +1221,6 @@ Provide a bucnh of printing subscribers for testing::
 
 Check basic event notification with *added*::
 
-    >>> from zope.component.event import objectEventNotify
-    >>> from node.ext.ldap.events import LDAPNodeAddedEvent
     >>> objectEventNotify(LDAPNodeAddedEvent(node))
     Added <dc=my-domain,dc=com - False>
 

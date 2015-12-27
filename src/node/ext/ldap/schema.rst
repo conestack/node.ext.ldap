@@ -1,3 +1,8 @@
+Test related imports::
+
+    >>> from node.ext.ldap import LDAPProps
+    >>> from node.ext.ldap.schema import LDAPSchemaInfo
+
 LDAP credentials.::
 
     >>> host = "127.0.0.1"
@@ -5,7 +10,6 @@ LDAP credentials.::
     >>> binddn = "cn=Manager,dc=my-domain,dc=com"
     >>> bindpw = "secret"
 
-    >>> from node.ext.ldap import LDAPProps
     >>> props = LDAPProps(
     ...     server=host,
     ...     port=port,
@@ -14,8 +18,7 @@ LDAP credentials.::
     ... )
 
 Schema object::
-  
-    >>> from node.ext.ldap.schema import LDAPSchemaInfo 
+
     >>> info = LDAPSchemaInfo(props)
     >>> info.subschema
     <ldap.schema.subentry.SubSchema instance at 0x...>

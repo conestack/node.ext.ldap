@@ -1,6 +1,13 @@
 Tests refering to posixGroups.ldif
 ==================================
 
+Test related imports::
+
+    >>> from node.ext.ldap import LDAPNode
+    >>> from node.ext.ldap import SUBTREE
+    >>> from node.ext.ldap.ugm import RolesConfig
+    >>> from node.ext.ldap.ugm import Ugm
+
 Ugm root object::
 
     >>> props = layer['props']
@@ -8,7 +15,6 @@ Ugm root object::
     >>> gcfg = layer['gcfg']
     >>> rcfg = None # XXX: later
 
-    >>> from node.ext.ldap.ugm import Ugm
     >>> ugm = Ugm(name='ugm', parent=None, props=props,
     ...           ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
 
@@ -127,6 +133,14 @@ Check Account expiration.
 Note: after changind expires attribute, user must be pesisted in order to take
 expiration effect for authentication. Expires attribute lookup is done against
 LDAP directly in ``users.authenticate``::
+
+Expires attribute not set yet::
+
+    >>> users.expiresAttr
+    >>> users['uid0'].expired
+    False
+
+Set expires attribute for ongoing tests::
 
     >>> users.expiresAttr = 'shadowExpire'
 
@@ -532,7 +546,6 @@ Delete Group::
 
 Test case where group object does not have 'memberUid' attribute set yet.::
 
-    >>> from node.ext.ldap import LDAPNode
     >>> node = LDAPNode(
     ...     u'cn=group0,ou=groups,ou=posixGroups,dc=my-domain,dc=com',
     ...     props=props)
@@ -560,14 +573,11 @@ Test case where group contains reference to inexistent member.::
 
 Role Management. Create container for roles.::
 
-    >>> from node.ext.ldap import LDAPNode
     >>> node = LDAPNode('dc=my-domain,dc=com', props)
     >>> node['ou=roles'] = LDAPNode()
     >>> node['ou=roles'].attrs['objectClass'] = ['organizationalUnit']
     >>> node()
 
-    >>> from node.ext.ldap.ugm import RolesConfig
-    >>> from node.ext.ldap import SUBTREE
     >>> rcfg = RolesConfig(
     ...     baseDN='ou=roles,dc=my-domain,dc=com',
     ...     attrmap={
