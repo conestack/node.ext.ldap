@@ -426,14 +426,15 @@ MemberOf Support::
 
     >>> users = ugm.users
     >>> users.context.search(queryFilter='(memberOf=*)')
-    [u'uid=uid1', u'uid=uid2']
+    [u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com', 
+    u'uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com']
 
     >>> users.context.search(attrlist=['memberOf'])
-    [(u'uid=uid0', {}), 
-    (u'uid=uid1', {u'memberOf': 
+    [(u'uid=uid0,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {}), 
+    (u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {u'memberOf': 
     [u'cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com', 
     u'cn=group1,ou=groups,ou=groupOfNames,dc=my-domain,dc=com']}), 
-    (u'uid=uid2', {u'memberOf': 
+    (u'uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {u'memberOf': 
     [u'cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com']})]
 
     >>> ugm.ucfg.memberOfSupport = True

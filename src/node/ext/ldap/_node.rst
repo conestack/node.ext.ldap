@@ -1041,13 +1041,15 @@ Its also possible to define default search criteria as dict::
 
 To get more information by search result, pass an attrlist to search function::
 
-    >>> node.search(attrlist=['description'])
+    >>> node.search(attrlist=['rdn', 'description'])
     [(u'ou=customers,dc=my-domain,dc=com', 
-    {u'description': [u'customers']})]
+    {u'rdn': u'ou=customers', 
+    u'description': [u'customers']})]
 
-    >>> node.search(attrlist=['description', 'businessCategory'])
+    >>> node.search(attrlist=['rdn', 'description', 'businessCategory'])
     [(u'ou=customers,dc=my-domain,dc=com', 
-    {u'description': [u'customers'], 
+    {u'rdn': u'ou=customers', 
+    u'description': [u'customers'], 
     u'businessCategory': [u'customers_container']})]
 
 We can also fetch nodes instead of DN here::

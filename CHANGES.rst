@@ -4,6 +4,9 @@ History
 1.0b0 (unreleased)
 ------------------
 
+- ``rdn`` can be queried via ``attrlist`` in ``LDAPNode.search`` explicitely.
+  [rnix]
+
 - Introduce ``get_nodes`` keyword argument in ``LDAPNode.search``. When set,
   search result contains ``LDAPNode`` instances instead of DN's in result.
   [rnix]

@@ -450,6 +450,7 @@ class LDAPStorage(OdictStorage):
                page_size=None, cookie=None, get_nodes=False):
         attrset = set(attrlist or [])
         attrset.discard('dn')
+        attrset.discard('rdn')
         # Create queryFilter from all filter definitions
         # filter for this search ANDed with the default filters defined on self
         search_filter = LDAPFilter(queryFilter)
@@ -503,6 +504,9 @@ class LDAPStorage(OdictStorage):
                             resattr[decode(k)] = decode(v)
                 if 'dn' in attrlist:
                     resattr[u'dn'] = dn
+                if 'rdn' in attrlist:
+                    rdn = explode_dn(encode(dn))[0]
+                    resattr[u'rdn'] = decode(rdn)
                 if get_nodes:
                     res.append((self.node_by_dn(dn, strict=True), resattr))
                 else:

@@ -466,19 +466,17 @@ class LDAPPrincipals(OdictStorage):
             return self.storage[key]
         except KeyError:
             criteria = {self._key_attr: key}
-            attrlist = ['dn', self._key_attr]
+            attrlist = ['rdn', self._key_attr]
             res = self.context.search(criteria=criteria, attrlist=attrlist)
             if not res:
                 raise KeyError(key)
             if len(res) > 1:
                 msg = u'More than one principal with id "{0}" found.'
                 logger.warning(msg.format(key))
-            # XXX: as soon as LDAPNode.search result format has been changed,
-            #      this needs to be adopted
-            prdn = res[0][0]
+            prdn = res[0][1]['rdn']
             if prdn in self.context._deleted_children:
                 raise KeyError(key)
-            dn = res[0][1]['dn']
+            dn = res[0][0]
             # XXX: use explode_dn
             path = dn.split(',')[:len(self.context.DN.split(',')) * -1]
             context = self.context
@@ -496,12 +494,10 @@ class LDAPPrincipals(OdictStorage):
     @default
     @locktree
     def __iter__(self):
-        attrlist = [self._key_attr]  # XXX: include RDN
+        attrlist = ['rdn', self._key_attr]
         res = self.context.search(attrlist=attrlist)
         for principal in res:
-            # XXX: as soon as LDAPNode.search result format has been changed,
-            #      this needs to be adopted
-            prdn = principal[0]
+            prdn = principal[1]['rdn']
             if prdn in self.context._deleted_children:
                 continue
             yield principal[1][self._key_attr][0]

@@ -366,20 +366,20 @@ bool operators '&' and '|'::
     >>> filter = LDAPFilter('(objectClass=person)')
     >>> filter |= LDAPFilter('(objectClass=groupOfNames)')
     >>> root.search(queryFilter=filter)
-    [u'cn=person1',
-    u'cn=person2',
-    u'cn=person3',
-    u'cn=person4',
-    u'cn=person5',
-    u'cn=group1',
-    u'cn=group2']
+    [u'cn=person1,ou=demo,dc=my-domain,dc=com', 
+    u'cn=person2,ou=demo,dc=my-domain,dc=com', 
+    u'cn=person3,ou=demo,dc=my-domain,dc=com', 
+    u'cn=person4,ou=demo,dc=my-domain,dc=com', 
+    u'cn=person5,ou=demo,dc=my-domain,dc=com', 
+    u'cn=group1,ou=demo,dc=my-domain,dc=com', 
+    u'cn=group2,ou=demo,dc=my-domain,dc=com']
 
 Define multiple criteria LDAP filter::
 
     >>> from node.ext.ldap import LDAPDictFilter
     >>> filter = LDAPDictFilter({'objectClass': ['person'], 'cn': 'person1'})
     >>> root.search(queryFilter=filter)
-    [u'cn=person1']
+    [u'cn=person1,ou=demo,dc=my-domain,dc=com']
 
 Define a relation LDAP filter. In this case we build a relation between group
 'cn' and person 'businessCategory'::
@@ -387,10 +387,10 @@ Define a relation LDAP filter. In this case we build a relation between group
     >>> from node.ext.ldap import LDAPRelationFilter
     >>> filter = LDAPRelationFilter(root['cn=group1'], 'cn:businessCategory')
     >>> root.search(queryFilter=filter)
-    [u'cn=person2',
-    u'cn=person3',
-    u'cn=person4',
-    u'cn=person5']
+    [u'cn=person2,ou=demo,dc=my-domain,dc=com', 
+    u'cn=person3,ou=demo,dc=my-domain,dc=com', 
+    u'cn=person4,ou=demo,dc=my-domain,dc=com', 
+    u'cn=person5,ou=demo,dc=my-domain,dc=com']
 
 Different LDAP filter types can be combined::
 
@@ -398,8 +398,11 @@ Different LDAP filter types can be combined::
     >>> str(filter)
     '(&(businessCategory=group1)(cn=person2))'
 
-The following keyword arguments are accepted by ``LDAPNode.search``. If multiple keywords are
-used, combine search criteria with '&' where appropriate:
+The following keyword arguments are accepted by ``LDAPNode.search``. If
+multiple keywords are used, combine search criteria with '&' where appropriate.
+
+If ``attrlist`` is given, the result items consists of 2-tuples with a dict
+containing requested attributes at position 1:
 
 **queryFilter**
     Either a LDAP filter instance or a string. If given argument is string type,
@@ -410,7 +413,8 @@ used, combine search criteria with '&' where appropriate:
     created.
 
 **attrlist**
-    List of attribute names to return.
+    List of attribute names to return. Special attributes ``rdn`` and ``dn``
+    are allowed.
 
 **relation**
     Either ``LDAPRelationFilter`` instance or a string defining the relation.
@@ -427,7 +431,27 @@ used, combine search criteria with '&' where appropriate:
 
 **or_search**
     In combination with ``criteria``, this parameter is passed to the creation
-    of LDAPDictFilter controlling whether to combine criteria with '&' or '|'.
+    of LDAPDictFilter. This flag controls whether to combine criteria **keys**
+    and **values** with '&' or '|'.
+
+**or_keys**
+    In combination with ``criteria``, this parameter is passed to the creation
+    of LDAPDictFilter. This flag controls whether criteria **keys** are
+    combined with '|' instead of '&'.
+
+**or_values**
+    In combination with ``criteria``, this parameter is passed to the creation
+    of LDAPDictFilter. This flag controls whether criteria **values** are
+    combined with '|' instead of '&'.
+
+**page_size**
+    Used in conjunction with ``cookie`` for querying paged results.
+
+**cookie**
+    Used in conjunction with ``page_size`` for querying paged results.
+
+**get_nodes**
+    If ``True`` result contains ``LDAPNode`` instances instead of DN's
 
 You can define search defaults on the node which are always considered when
 calling ``search`` on this node. If set, they are always '&' combined with
@@ -443,7 +467,8 @@ LDAPRelationFilter or string::
 
     >>> root.search_filter = LDAPFilter('objectClass=groupOfNames')
     >>> root.search()
-    [u'cn=group1', u'cn=group2']
+    [u'cn=group1,ou=demo,dc=my-domain,dc=com', 
+    u'cn=group2,ou=demo,dc=my-domain,dc=com']
 
     >>> root.search_filter = None
 
@@ -451,21 +476,21 @@ Define default search criteria as dict::
 
     >>> root.search_criteria = {'objectClass': 'person'}
     >>> root.search()
-    [u'cn=person1',
-    u'cn=person2',
-    u'cn=person3',
-    u'cn=person4',
-    u'cn=person5']
+    [u'cn=person1,ou=demo,dc=my-domain,dc=com', 
+    u'cn=person2,ou=demo,dc=my-domain,dc=com', 
+    u'cn=person3,ou=demo,dc=my-domain,dc=com', 
+    u'cn=person4,ou=demo,dc=my-domain,dc=com', 
+    u'cn=person5,ou=demo,dc=my-domain,dc=com']
 
 Define default search relation::
 
     >>> root.search_relation = \
     ...     LDAPRelationFilter(root['cn=group1'], 'cn:businessCategory')
     >>> root.search()
-    [u'cn=person2',
-    u'cn=person3',
-    u'cn=person4',
-    u'cn=person5']
+    [u'cn=person2,ou=demo,dc=my-domain,dc=com', 
+    u'cn=person3,ou=demo,dc=my-domain,dc=com', 
+    u'cn=person4,ou=demo,dc=my-domain,dc=com', 
+    u'cn=person5,ou=demo,dc=my-domain,dc=com']
 
 Again, like with the keyword arguments, multiple defined defaults are '&'
 combined::
@@ -883,15 +908,10 @@ TODO
 Contributors
 ============
 
-- Robert Niederreiter <rnix [at] squarewave [dot] at>
-
-- Florian Friesdorf <flo [at] chaoflow [dot] net>
-
-- Jens Klein <jens [at] bluedynamics [dot] com>
-
-- Georg Bernhard <g.bernhard [at] akbild [dot] ac [dot] at>
-
-- Johannes Raggam <johannes [at] bluedynamics [dot] com>
-
-- Daniel Widerin <daniel [at] widerin [dot] net>
+- Robert Niederreiter
+- Florian Friesdorf
+- Jens Klein
+- Georg Bernhard
+- Johannes Raggam
+- Daniel Widerin
 
