@@ -359,6 +359,50 @@ The changed flag::
       <cn=user1,dc=my-domain,dc=com:cn=user1 - False>
       ...
 
+Invalidate principals::
+
+    >>> len(users.storage.keys())
+    4
+
+    >>> len(users.context.storage.keys())
+    6
+
+    >>> users.invalidate(u'Inexistent')
+    >>> len(users.storage.keys())
+    4
+
+    >>> len(users.context.storage.keys())
+    6
+
+    >>> sorted(users.storage.items())
+    [(u'Meier', <User object 'Meier' at ...>), 
+    (u'M\xfcller', <User object 'M?ller' at ...>), 
+    (u'Schmidt', <User object 'Schmidt' at ...>), 
+    (u'Umhauer', <User object 'Umhauer' at ...>)]
+
+    >>> user_container = users[u'Schmidt'].context.parent.storage
+    >>> len(user_container.keys())
+    10
+
+    >>> users.invalidate(u'Schmidt')
+    >>> sorted(users.storage.items())
+    [(u'Meier', <User object 'Meier' at ...>), 
+    (u'M\xfcller', <User object 'M?ller' at ...>), 
+    (u'Umhauer', <User object 'Umhauer' at ...>)]
+
+    >>> len(user_container.keys())
+    9
+
+    >>> len(users.context.keys())
+    6
+
+    >>> users.invalidate()
+    >>> len(users.storage.keys())
+    0
+
+    >>> len(users.context.storage.keys())
+    0
+
 A user does not know about it's groups if initialized directly::
 
     >>> users['Meier'].groups

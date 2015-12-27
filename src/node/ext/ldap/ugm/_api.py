@@ -435,6 +435,7 @@ class LDAPPrincipals(OdictStorage):
 
         Raise KeyError if not enlisted.
         """
+        # XXX: rename to id_by_dn
         # XXX: what was strict good for? remove
         # if strict:
         #     raise KeyError(dn)
@@ -536,12 +537,13 @@ class LDAPPrincipals(OdictStorage):
     def invalidate(self, key=None):
         """Invalidate LDAPPrincipals.
         """
-        key = decode_utf8(key)
-        self.context.invalidate(key)
         if key is None:
+            self.context.invalidate()
             self.storage.clear()
             return
         try:
+            principal = self.storage[key]
+            principal.context.parent.invalidate(principal.context.name)
             del self.storage[key]
         except KeyError:
             pass
