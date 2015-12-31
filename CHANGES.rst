@@ -1,7 +1,7 @@
 History
 =======
 
-1.0b1 (unreleased)
+1.0b1 (31.12.2015)
 ------------------
 
 - Remove ``ILDAPProps.check_duplicates`` respective
@@ -48,10 +48,6 @@ History
 
 - Remove deprecated ``node.ext.ldap._node.AttributesPart``.
   [rnix]
-
-
-0.9.8 (unreleased)
-------------------
 
 - Don't fail on ``UNWILLING_TO_PERFORM`` exceptions when authenticating. That
   might be thrown, if the LDAP server disallows us to authenticate an ``admin``
