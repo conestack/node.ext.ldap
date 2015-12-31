@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from .base import testLDAPConnectivity
 from node.ext.ldap import BASE
 from node.ext.ldap import LDAPCommunicator
 from node.ext.ldap import LDAPConnector
+from node.ext.ldap import testLDAPConnectivity
 import ldap
 
 

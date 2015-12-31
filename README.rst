@@ -24,6 +24,20 @@ This package is the successor of
     :depth: 2
 
 
+API changes compared to 0.9.x
+=============================
+
+* ``LDAPNode`` instances cannot have direct children of subtree any longer.
+  This was a design flaw because of possible duplicate RDN's.
+
+* ``LDAPNode.search`` returns DN's instead of RDN's by default.
+
+* Secondary keys and alternative key attribute features have been removed
+  entirely from ``LDAPNode``.
+
+* ``LDAPProps.check_duplicates`` setting has been removed.
+
+
 Usage
 =====
 
@@ -863,46 +877,6 @@ There are different compile issues on different platforms. If you experience
 problems with ``python-ldap``, make sure it is available in the python
 environment you run buildout in, so it won't be fetched and built by buildout
 itself.
-
-
-TODO
-====
-
-- TLS/SSL Support. in ``LDAPConnector``
-  could be useful: python-ldap's class SmartLDAPObject(ReconnectLDAPObject) -
-  Mainly the __init__() method does some smarter things like negotiating the
-  LDAP protocol version and calling LDAPObject.start_tls_s().
-  XXX: SmartLDAPObject has been removed from the most recent python-ldap,
-  because of being too buggy.
-
-- define what our retry logic should look like, re-think function of session,
-  communicator and connector. (check ldap.ldapobject.ReconnectLDAPObject)
-  ideas: more complex retry logic with fallback servers, eg. try immediately
-  again, if that fails use backup server, then start to probe other server
-  after a timespan, report status of ldap servers, preferred server,
-  equal servers, load balancing; Are there ldap load balancers to recommend?
-
-- consider ``search_st`` with timeout.
-
-- investigate ``ReconnectLDAPObject.set_cache_options``
-
-- check/implement silent sort on only the keys ``LDAPNode.sortonkeys``
-
-- parse ldap schema to identify binary attributes, also
-  further types like BOOL and multivalued, overrides must be possible.
-
-- node.ext.ldap.filter unicode/utf-8
-
-- auto-detection of rdn attribute.
-
-- interactive configuration showing live how many users/groups are found with
-  the current config and what a selected user/group would look like
-
-- Scope SUBTREE for Principals containers is not tested properly yet.
-  Especially ``__getitem__`` needs a little love.
-
-- Configuration validation for UGM. Add some checks in ``Ugm.__init__`` which
-  tries to block stupid configuration.
 
 
 Contributors

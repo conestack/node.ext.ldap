@@ -193,7 +193,6 @@ class LDAPStorage(OdictStorage):
             self._ldap_schema_info = LDAPSchemaInfo(props)
             self._multivalued_attributes = props.multivalued_attributes
             self._binary_attributes = props.binary_attributes
-            self._check_duplicates = props.check_duplicates
         # search related defaults
         self.search_scope = ONELEVEL
         self.search_filter = None

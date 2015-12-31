@@ -47,12 +47,10 @@ class LDAPServerProperties(object):
                  # tls_cacertdir=None,
                  # tls_clcertfile=None,
                  # tls_clkeyfile=None,
-                 check_duplicates=True,
                  retry_max=1,
                  retry_delay=10.0,
                  multivalued_attributes=MULTIVALUED_DEFAULTS,
-                 binary_attributes=BINARY_DEFAULTS,
-                 ):
+                 binary_attributes=BINARY_DEFAULTS):
         """Take the connection properties as arguments.
 
         SSL/TLS still unsupported
@@ -127,10 +125,6 @@ class LDAPServerProperties(object):
             Set of attributes names considered as binary.
             (no unicode conversion)
 
-        check_duplicates
-            Boolean to avoid duplicates checking in LDAP tree when
-            building nodes.
-
         """
         if uri is None:
             # old school
@@ -143,7 +137,6 @@ class LDAPServerProperties(object):
         self.cache = cache
         self.timeout = timeout
         self.start_tls = start_tls
-        self.check_duplicates = check_duplicates
         self.ignore_cert = ignore_cert
         self.tls_cacertfile = tls_cacertfile
         #self.tls_cacertdir = tls_cacertdir

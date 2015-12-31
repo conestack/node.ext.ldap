@@ -1,8 +1,12 @@
 History
 =======
 
-1.0b0 (unreleased)
+1.0b1 (unreleased)
 ------------------
+
+- Remove ``ILDAPProps.check_duplicates`` respective
+  ``LDAPProps.check_duplicates``.
+  [rnix]
 
 - ``rdn`` can be queried via ``attrlist`` in ``LDAPNode.search`` explicitely.
   [rnix]
