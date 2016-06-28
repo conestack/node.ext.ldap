@@ -83,10 +83,10 @@ class LDAPAttributesBehavior(Behavior):
         )
         # result length must be 1
         if len(entry) != 1:
-            raise RuntimeError(                            #pragma NO COVERAGE
-                u"Fatal. Expected entry does not exist "   #pragma NO COVERAGE
-                u"or more than one entry found"            #pragma NO COVERAGE
-            )                                              #pragma NO COVERAGE
+            raise RuntimeError(                            # pragma NO COVERAGE
+                u"Fatal. Expected entry does not exist "   # pragma NO COVERAGE
+                u"or more than one entry found"            # pragma NO COVERAGE
+            )                                              # pragma NO COVERAGE
         # read attributes from result and set to self
         attrs = entry[0][1]
         for key, item in attrs.items():
@@ -186,6 +186,7 @@ class LDAPStorage(OdictStorage):
         self._reload = False
         self._multivalued_attributes = {}
         self._binary_attributes = {}
+        self._page_size = 1000
         if props:
             # only at root node
             self._ldap_session = LDAPSession(props)
@@ -287,20 +288,29 @@ class LDAPStorage(OdictStorage):
     def __iter__(self):
         if self.name is None:
             return
-        try:
-            res = self.ldap_session.search(
-                scope=ONELEVEL,
-                baseDN=encode(self.DN),
-                attrlist=[''],
-            )
-        # happens if not persisted yet
-        except NO_SUCH_OBJECT:
-            res = list()
-        for dn, _ in res:
-            key = decode(explode_dn(dn)[0])
-            # do not yield if node is supposed to be deleted
-            if key not in self._deleted_children:
-                yield key
+        cookie = ''
+        while True:
+            try:
+                res = self.ldap_session.search(
+                    scope=ONELEVEL,
+                    baseDN=encode(self.DN),
+                    attrlist=[''],
+                    page_size=self._page_size,
+                    cookie=cookie,
+                )
+            # happens if not persisted yet
+            except NO_SUCH_OBJECT:
+                res = list()
+            if isinstance(res, tuple):
+                res, cookie = res
+            for dn, _ in res:
+                key = decode(explode_dn(dn)[0])
+                # do not yield if node is supposed to be deleted
+                if key not in self._deleted_children:
+                    yield key
+            if not cookie:
+                break
+
         # also yield keys of children not persisted yet.
         for key in self._added_children:
             yield key
@@ -625,9 +635,9 @@ class LDAPStorage(OdictStorage):
     LDAPStorage)
 class LDAPNode(object):
     events = {
-        'created':  LDAPNodeCreatedEvent,
-        'added':    LDAPNodeAddedEvent,
+        'created': LDAPNodeCreatedEvent,
+        'added': LDAPNodeAddedEvent,
         'modified': LDAPNodeModifiedEvent,
-        'removed':  LDAPNodeRemovedEvent,
+        'removed': LDAPNodeRemovedEvent,
         'detached': LDAPNodeDetachedEvent,
     }
