@@ -6,7 +6,7 @@ from .base import encode_utf8
 # used to perform suffix/prefix/contains searches, monkey-patch if you
 # don't like
 ESCAPE_CHARS = {
-#    '*': '\\2a',
+    # '*': '\\2a',
     '(': '\\28',
     ')': '\\29',
     '/': '\\2f',
@@ -99,34 +99,38 @@ class LDAPRelationFilter(LDAPFilter):
     def __str__(self):
         """turn relation string into ldap filter string
         """
-        _filter = LDAPFilter()
         dictionary = dict()
 
         parsedRelation = dict()
         for pair in self.relation.split('|'):
             k, _, v = pair.partition(':')
-            if not k in parsedRelation:
+            if k not in parsedRelation:
                 parsedRelation[k] = list()
             parsedRelation[k].append(v)
 
-        existing = [k for k in self.gattrs]
+        existing = [x for x in self.gattrs]
         for k, vals in parsedRelation.items():
             for v in vals:
-                if str(v) == '' \
-                  or str(k) == '' \
-                  or str(k) not in existing:
+                if (
+                    str(v) == '' or
+                    str(k) == '' or
+                    str(k) not in existing
+                ):
                     continue
                 dictionary[str(v)] = self.gattrs[str(k)]
 
         self.dictionary = dictionary
 
-        if len(dictionary) is 1:
-            _filter = LDAPFilter(self.relation)
-        else:
-            _filter = dict_to_filter(parsedRelation, self.or_search)
+        # this "if/else creates an unused result and has no effect
+        # _filter = LDAPFilter()
+        # if len(dictionary) is 1:
+        #    _filter = LDAPFilter(self.relation)
+        # else:
+        #     _filter = dict_to_filter(parsedRelation, self.or_search)
 
-        return self.dictionary and \
-            str(dict_to_filter(self.dictionary, self.or_search)) or ''
+        if self.dictionary:
+            return str(dict_to_filter(self.dictionary, self.or_search))
+        return ''
 
     def __repr__(self):
         return "LDAPRelationFilter('%s')" % (str(self),)

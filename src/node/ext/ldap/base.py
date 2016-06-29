@@ -5,6 +5,7 @@ from node.ext.ldap.cache import nullcacheProviderFactory
 from node.ext.ldap.interfaces import ICacheProviderFactory
 from node.ext.ldap.properties import LDAPProps
 from zope.component import queryUtility
+
 import hashlib
 import ldap
 import logging
@@ -92,7 +93,7 @@ class LDAPConnector(object):
         if self._start_tls:
             # ignore in tests for now. nevertheless provide a test environment
             # for TLS and SSL later
-            self._con.start_tls_s()                         #pragma NO COVERAGE
+            self._con.start_tls_s()                        # pragma NO COVERAGE
         self._con.simple_bind_s(self._bindDN, self._bindPW)
         return self._con
 

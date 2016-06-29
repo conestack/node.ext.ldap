@@ -79,7 +79,7 @@ class LDAPSession(object):
         con = ldap.initialize(self._props.uri)
         try:
             con.simple_bind_s(dn, pw)
-        except (ldap.INVALID_CREDENTIALS, ldap.UNWILLING_TO_PERFORM) as e:  # noqa
+        except (ldap.INVALID_CREDENTIALS, ldap.UNWILLING_TO_PERFORM):
             # The UNWILLING_TO_PERFORM event might be thrown, if you query a
             # local user named ``admin``, but the LDAP server is configured to
             # deny such queries. Instead of raising an exception, just ignore

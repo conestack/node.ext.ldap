@@ -4,6 +4,9 @@ History
 1.0b1 (31.12.2015)
 ------------------
 
+- Minor code cleanup
+  [jensens]
+
 - Paginate LDAP node ``__iter__``.
   [jensens, rnix] 
 
