@@ -23,82 +23,84 @@ class ILDAPProps(Interface):
     """LDAP properties configuration interface.
     """
 
-    uri = Attribute(u"LDAP URI")
+    uri = Attribute(u'LDAP URI')
 
-    user = Attribute(u"LDAP User")
+    user = Attribute(u'LDAP User')
 
-    password = Attribute(u"Bind Password")
+    password = Attribute(u'Bind Password')
 
-    cache = Attribute(u"Flag wether to use cache or not")
+    cache = Attribute(u'Flag wether to use cache or not')
 
-    timeout = Attribute(u"Timeout in seconds")
+    timeout = Attribute(u'Timeout in seconds')
 
-    start_tls = Attribute(u"TLS enabled")
+    start_tls = Attribute(u'TLS enabled')
 
-    ignore_cert = Attribute(u"Ignore TLS/SSL certificate errors")
+    ignore_cert = Attribute(u'Ignore TLS/SSL certificate errors')
 
-    tls_cacertfile = Attribute(u"Name of CA Cert file")
+    tls_cacertfile = Attribute(u'Name of CA Cert file')
 
-    tls_cacertdir = Attribute(u"Path to CA Cert directory")  # unused
+    tls_cacertdir = Attribute(u'Path to CA Cert directory')  # unused
 
-    tls_clcertfile = Attribute(u"Name of CL Cert file")  # unused
+    tls_clcertfile = Attribute(u'Name of CL Cert file')  # unused
 
-    tls_clkeyfile = Attribute(u"Path to CL key file")  # unused
+    tls_clkeyfile = Attribute(u'Path to CL key file')  # unused
 
-    retry_max = Attribute(u"Retry count")
+    retry_max = Attribute(u'Retry count')
 
-    retry_delay = Attribute(u"Retry delay in seconds")
+    retry_delay = Attribute(u'Retry delay in seconds')
 
-    multivalued_attributes = Attribute(u"Attributes considered multi valued")
+    multivalued_attributes = Attribute(u'Attributes considered multi valued')
 
-    binary_attributes = Attribute(u"Attributes considered binary")
+    binary_attributes = Attribute(u'Attributes considered binary')
+
+    page_size = Attribute(u'Page size for LDAP queries.')
 
 
 class ILDAPPrincipalsConfig(Interface):
     """LDAP principals configuration interface.
     """
 
-    baseDN = Attribute(u"Principals base DN")
+    baseDN = Attribute(u'Principals base DN')
 
-    attrmap = Attribute(u"Principals Attribute map as ``odict.odict``")
+    attrmap = Attribute(u'Principals Attribute map as ``odict.odict``')
 
-    scope = Attribute(u"Search scope for principals")
+    scope = Attribute(u'Search scope for principals')
 
-    queryFilter = Attribute(u"Search Query filter for principals")
+    queryFilter = Attribute(u'Search Query filter for principals')
 
     # XXX
-    # member_relation = Attribute(u"Optional member relation to be used to "
-    #                             u"speed up groups search, i.e. "
-    #                             u"'uid:memberUid'")
+    # member_relation = Attribute(u'Optional member relation to be used to '
+    #                             u'speed up groups search, i.e. '
+    #                             u''uid:memberUid'')
 
-    objectClasses = Attribute(u"Object classes for new principals.")
+    objectClasses = Attribute(u'Object classes for new principals.')
 
     defaults = Attribute(
-        u"Dict like object containing default values for principal creation."
-        u"A value could either be static or a callable. This defaults take"
-        u"precedence to defaults detected via set object classes."
+        u'Dict like object containing default values for principal creation.'
+        u'A value could either be static or a callable. This defaults take'
+        u'precedence to defaults detected via set object classes.'
     )
 
     strict = Attribute(
-        u"Flag whether to initialize Aliaser for LDAP attributes in strict "
-        u"mode. Defaults to True."
+        u'Flag whether to initialize Aliaser for LDAP attributes in strict '
+        u'mode. Defaults to True.'
     )
 
     memberOfSupport = Attribute(
-        u"Flag whether to use 'memberOf' attribute (AD) or memberOf overlay "
-        u"(openldap) for Group membership resolution where appropriate."
+        u'Flag whether to use "memberOf" attribute (AD) or memberOf overlay '
+        u'(openldap) for Group membership resolution where appropriate.'
     )
 
     # XXX: currently expiresAttr only gets considered for user authentication
     #      group and role expiration is not implemented yet.
     expiresAttr = Attribute(
-        u"Attribute containing an expiration timestamp from epoch in UTC. "
-        u"If None, entry never expires."
+        u'Attribute containing an expiration timestamp from epoch in UTC. '
+        u'If None, entry never expires.'
     )
 
     expiresUnit = Attribute(
-        u"Expiration unit. Either ``node.ext.ldap.ugm.EXPIRATION_DAYS`` or "
-        u"``EXPIRATION_SECONDS``. defaults to days."
+        u'Expiration unit. Either ``node.ext.ldap.ugm.EXPIRATION_DAYS`` or '
+        u'``EXPIRATION_SECONDS``. defaults to days.'
     )
 
 
@@ -117,26 +119,26 @@ class ILDAPStorage(IStorage):
     """
 
     ldap_session = Attribute(
-        u"``node.ext.ldap.session.LDAPSession`` instance."
+        u'``node.ext.ldap.session.LDAPSession`` instance.'
     )
 
-    DN = Attribute(u"LDAP object DN.")
+    DN = Attribute(u'LDAP object DN.')
 
-    # rdn_attr = Attribute(u"RDN attribute name.")
+    # rdn_attr = Attribute(u'RDN attribute name.')
 
-    changed = Attribute(u"Flag whether node has been modified.")
+    changed = Attribute(u'Flag whether node has been modified.')
 
-    search_scope = Attribute(u"Default child search scope")
+    search_scope = Attribute(u'Default child search scope')
 
-    search_filter = Attribute(u"Default child search filter")
+    search_filter = Attribute(u'Default child search filter')
 
-    search_criteria = Attribute(u"Default child search criteria")
+    search_criteria = Attribute(u'Default child search criteria')
 
-    search_relation = Attribute(u"Default child search relation")
+    search_relation = Attribute(u'Default child search relation')
 
     child_defaults = Attribute(
-        u"Default child attributes. Will be set to all children attributes"
-        u"on __setitem__ if not present yet."
+        u'Default child attributes. Will be set to all children attributes'
+        u'on __setitem__ if not present yet.'
     )
 
     def child_dn(key):

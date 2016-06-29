@@ -39,20 +39,19 @@ stop it if running.
 def test_suite():
     suite = unittest.TestSuite()
     suite.addTests([
-            layered(
-                doctest.DocFileSuite(
-                    docfile,
-                    globs={'interact': interlude.interact,
-                           'pprint': pprint.pprint,
-                           'pp': pprint.pprint,
-                           },
-                    optionflags=optionflags,
-                    ),
-                layer=layer,
-                )
-            for docfile, layer in DOCFILES
-            ])
+        layered(
+            doctest.DocFileSuite(
+                docfile,
+                globs={'interact': interlude.interact,
+                       'pprint': pprint.pprint,
+                       'pp': pprint.pprint,
+                       },
+                optionflags=optionflags,
+            ),
+            layer=layer)
+        for docfile, layer in DOCFILES
+    ])
     return suite
 
 if __name__ == '__main__':
-    unittest.main(defaultTest='test_suite')                 #pragma NO COVERAGE
+    unittest.main(defaultTest='test_suite')                # pragma NO COVERAGE
