@@ -194,6 +194,7 @@ class LDAPStorage(OdictStorage):
             self._ldap_schema_info = LDAPSchemaInfo(props)
             self._multivalued_attributes = props.multivalued_attributes
             self._binary_attributes = props.binary_attributes
+            self._page_size = props.page_size
         # search related defaults
         self.search_scope = ONELEVEL
         self.search_filter = None
@@ -298,8 +299,8 @@ class LDAPStorage(OdictStorage):
                     page_size=self._page_size,
                     cookie=cookie,
                 )
-            # happens if not persisted yet
             except NO_SUCH_OBJECT:
+                # happens if not persisted yet
                 res = list()
             if isinstance(res, tuple):
                 res, cookie = res
