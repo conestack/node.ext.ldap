@@ -8,7 +8,7 @@ from odict import odict
 from pkg_resources import resource_filename
 from plone.testing import Layer
 from plone.testing import zca
-import logging
+
 import os
 import shutil
 import subprocess
@@ -94,14 +94,16 @@ class SlapdConf(Layer):
             )
         # generate config file
         with open(slapdconf, 'w') as slapdconf:
-            slapdconf.write(slapdconf_template % dict(
+            slapdconf.write(
+                slapdconf_template % dict(
                     binddn=binddn,
                     bindpw=bindpw,
                     confdir=confdir,
                     dbdir=dbdir,
                     schema=schema,
                     suffix=suffix,
-                    ))
+                )
+            )
         os.mkdir(dbdir)
         self['props'] = props
         print "SlapdConf set up."
@@ -262,7 +264,9 @@ props = LDAPProps(
     uri='ldap://127.0.0.1:12345/',
     user=user,
     password=pwd,
-    cache=False)
+    cache=False,
+    page_size=3,
+)
 
 
 # base users config
@@ -274,7 +278,7 @@ ucfg = UsersConfig(
         'telephoneNumber': 'telephoneNumber',
         'rdn': 'ou',
         'sn': 'sn',
-        },
+    },
     scope=SUBTREE,
     queryFilter='(&(objectClass=person)(!(objectClass=inetOrgPerson)))',
     objectClasses=['person'])
@@ -435,15 +439,15 @@ LDIF_groupOfNames = Ldif(
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
         objectClasses=['person', 'inetOrgPerson'],
-        ),
+    ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
         attrmap=groupOfNamesGcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=groupOfNames)',
         objectClasses=['groupOfNames'],
-        ),
-    )
+    ),
+)
 ldif_layer['groupOfNames'] = LDIF_groupOfNames
 
 
@@ -457,15 +461,15 @@ LDIF_groupOfNames_10_10 = Ldif(
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
         objectClasses=['inetOrgPerson'],
-        ),
+    ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_10_10,dc=my-domain,dc=com',
         attrmap=groupOfNamesGcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=groupOfNames)',
         objectClasses=['groupOfNames'],
-        ),
-    )
+    ),
+)
 ldif_layer['groupOfNames_10_10'] = LDIF_groupOfNames_10_10
 
 
@@ -479,15 +483,15 @@ LDIF_groupOfNames_100_100 = Ldif(
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
         objectClasses=['person', 'inetOrgPerson'],
-        ),
+    ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_100_100,dc=my-domain,dc=com',
         attrmap=groupOfNamesGcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=groupOfNames)',
         objectClasses=['groupOfNames'],
-        ),
-    )
+    ),
+)
 ldif_layer['groupOfNames_100_100'] = LDIF_groupOfNames_100_100
 
 
@@ -501,15 +505,15 @@ LDIF_groupOfNames_300_300 = Ldif(
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
         objectClasses=['person', 'inetOrgPerson'],
-        ),
+    ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_300_300,dc=my-domain,dc=com',
         attrmap=groupOfNamesGcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=groupOfNames)',
         objectClasses=['groupOfNames'],
-        ),
-    )
+    ),
+)
 ldif_layer['groupOfNames_300_300'] = LDIF_groupOfNames_300_300
 
 
@@ -523,15 +527,15 @@ LDIF_groupOfNames_700_700 = Ldif(
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
         objectClasses=['person', 'inetOrgPerson'],
-        ),
+    ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_700_700,dc=my-domain,dc=com',
         attrmap=groupOfNamesGcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=groupOfNames)',
         objectClasses=['groupOfNames'],
-        ),
-    )
+    ),
+)
 ldif_layer['groupOfNames_700_700'] = LDIF_groupOfNames_700_700
 
 
@@ -545,15 +549,15 @@ LDIF_groupOfNames_1000_1000 = Ldif(
         scope=ONELEVEL,
         queryFilter='(objectClass=inetOrgPerson)',
         objectClasses=['person', 'inetOrgPerson'],
-        ),
+    ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=groupOfNames_1000_1000,dc=my-domain,dc=com',
         attrmap=groupOfNamesGcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=groupOfNames)',
         objectClasses=['groupOfNames'],
-        ),
-    )
+    ),
+)
 ldif_layer['groupOfNames_1000_1000'] = LDIF_groupOfNames_1000_1000
 
 
@@ -588,15 +592,15 @@ LDIF_posixGroups = Ldif(
         scope=ONELEVEL,
         queryFilter='(objectClass=posixAccount)',
         objectClasses=['inetOrgPerson', 'posixAccount'],
-        ),
+    ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=posixGroups,dc=my-domain,dc=com',
         attrmap=posixGroupsGcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=posixGroup)',
         objectClasses=['posixGroup'],
-        ),
-    )
+    ),
+)
 ldif_layer['posixGroups'] = LDIF_posixGroups
 
 
@@ -610,15 +614,15 @@ LDIF_posixGroups_10_10 = Ldif(
         scope=ONELEVEL,
         queryFilter='(objectClass=posixAccount)',
         objectClasses=['inetOrgPerson', 'posixAccount'],
-        ),
+    ),
     gcfg=GroupsConfig(
         baseDN='ou=groups,ou=posixGroups_10_10,dc=my-domain,dc=com',
         attrmap=posixGroupsGcfgAttrmap,
         scope=ONELEVEL,
         queryFilter='(objectClass=posixGroup)',
         objectClasses=['posixGroup'],
-        ),
-    )
+    ),
+)
 ldif_layer['posixGroups_10_10'] = LDIF_posixGroups_10_10
 
 
@@ -644,6 +648,6 @@ LDIF_sambaUsers = Ldif(
         scope=ONELEVEL,
         queryFilter='(objectClass=sambaSamAccount)',
         objectClasses=['sambaSamAccount'],
-        ),
-    )
+    ),
+)
 ldif_layer['sambaUsers'] = LDIF_sambaUsers
