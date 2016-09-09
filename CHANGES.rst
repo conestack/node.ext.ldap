@@ -16,6 +16,9 @@ History
 - Paginate LDAP node ``__iter__``.
   [jensens, rnix] 
 
+1.0b1 (31.12.2015)
+------------------
+
 - Remove ``ILDAPProps.check_duplicates`` respective
   ``LDAPProps.check_duplicates``.
   [rnix]
