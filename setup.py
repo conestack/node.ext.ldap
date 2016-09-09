@@ -4,7 +4,7 @@ from setuptools import setup
 import os
 
 
-version = '1.0b1'
+version = '1.0b2'
 shortdesc = 'LDAP/AD convenience with Node-trees based on python-ldap'
 longdesc = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 longdesc += open(os.path.join(os.path.dirname(__file__), 'CHANGES.rst')).read()
