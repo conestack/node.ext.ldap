@@ -531,6 +531,40 @@ class LDAPStorage(OdictStorage):
         return res
 
     @default
+    def paged_search(self, queryFilter=None, criteria=None, attrlist=None,
+                     relation=None, relation_node=None, exact_match=False,
+                     or_search=False, or_keys=None, or_values=None,
+                     page_size=None, get_nodes=False):
+        """Search function which already does paging for us.
+        """
+        if page_size is None:
+            page_size = self._ldap_props.page_size
+        matches = []
+        cookie = None
+        while True:
+            try:
+                matches, cookie = self.search(
+                    queryFilter=queryFilter,
+                    criteria=criteria,
+                    attrlist=attrlist,
+                    relation=relation,
+                    relation_node=relation_node,
+                    exact_match=exact_match,
+                    or_search=or_search,
+                    or_keys=or_keys,
+                    or_values=or_values,
+                    page_size=page_size,
+                    cookie=cookie,
+                    get_nodes=get_nodes
+                )
+                for item in matches:
+                    yield item
+            except ValueError:
+                break
+            if not cookie:
+                break
+
+    @default
     def invalidate(self, key=None):
         """Invalidate LDAP node.
 

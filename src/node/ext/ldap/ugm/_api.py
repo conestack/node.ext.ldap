@@ -227,7 +227,7 @@ class LDAPUser(LDAPPrincipal, UgmUser):
             # specified by the same criteria as roles, the search returns the
             # role id's as well.
             # XXX: such edge cases should be resolved at UGM init time
-            matches = groups.context.search(
+            matches = groups.context.paged_search(
                 criteria=criteria,
                 attrlist=attrlist
             )
@@ -316,7 +316,7 @@ class LDAPGroupMapping(Behavior):
                 users = ugm.users
                 criteria = {'memberOf': self.context.DN}
                 attrlist = [users._key_attr]
-                res = users.context.search(
+                res = users.context.paged_search(
                     criteria=criteria,
                     attrlist=attrlist
                 )
@@ -496,7 +496,7 @@ class LDAPPrincipals(OdictStorage):
     @locktree
     def __iter__(self):
         attrlist = ['rdn', self._key_attr]
-        res = self.context.search(attrlist=attrlist)
+        res = self.context.paged_search(attrlist=attrlist)
         for principal in res:
             prdn = principal[1]['rdn']
             if prdn in self.context._deleted_children:
@@ -616,6 +616,35 @@ class LDAPPrincipals(OdictStorage):
         if cookie is not None:
             return results, cookie
         return results
+
+    @default
+    def paged_search(self, criteria=None, attrlist=None,
+               exact_match=False, or_search=False, or_keys=None,
+               or_values=None, page_size=None):
+        """Search function which already does paging for us.
+        """
+        if page_size is None:
+            page_size = self.context._ldap_props.page_size
+        matches = []
+        cookie = None
+        while True:
+            try:
+                matches, cookie = self.search(
+                    criteria=criteria,
+                    attrlist=attrlist,
+                    exact_match=exact_match,
+                    or_search=or_search,
+                    or_keys=or_keys,
+                    or_values=or_values,
+                    page_size=page_size,
+                    cookie=cookie,
+                )
+                for item in matches:
+                    yield item
+            except ValueError:
+                break
+            if not cookie:
+                break
 
     @default
     @locktree
