@@ -57,6 +57,7 @@ class AccountExpired(object):
 
     __str__ = __repr__
 
+
 ACCOUNT_EXPIRED = AccountExpired()
 
 
@@ -316,11 +317,24 @@ class LDAPGroupMapping(Behavior):
                 users = ugm.users
                 criteria = {'memberOf': self.context.DN}
                 attrlist = [users._key_attr]
-                res = users.context.search(
-                    criteria=criteria,
-                    attrlist=attrlist
-                )
-                return [att[users._key_attr][0] for _, att in res]
+                cookie = ''
+                matches = []
+                while True:
+                    try:
+                        batch_matches, cookie = users.context.search(
+                            criteria=criteria,
+                            attrlist=attrlist,
+                            page_size=users.context._page_size,
+                            cookie=cookie,
+                        )
+                    except ValueError:
+                        return []
+                    matches += [
+                        att[users._key_attr][0] for _, att in batch_matches
+                    ]
+                    if not cookie:
+                        break
+                return matches
         ret = list()
         members = self.context.attrs.get(self._member_attribute, list())
         for member in members:

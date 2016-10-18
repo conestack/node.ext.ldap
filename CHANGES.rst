@@ -4,7 +4,8 @@ History
 1.0b3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fix missing paging in UGM group mapping method ``member_ids``.
+  [jensens]
 
 
 1.0b2 (2016-09-09)
@@ -14,7 +15,7 @@ History
   [jensens]
 
 - Paginate LDAP node ``__iter__``.
-  [jensens, rnix] 
+  [jensens, rnix]
 
 1.0b1 (31.12.2015)
 ------------------
