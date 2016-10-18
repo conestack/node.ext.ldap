@@ -57,6 +57,7 @@ class AccountExpired(object):
 
     __str__ = __repr__
 
+
 ACCOUNT_EXPIRED = AccountExpired()
 
 
@@ -227,11 +228,11 @@ class LDAPUser(LDAPPrincipal, UgmUser):
             # specified by the same criteria as roles, the search returns the
             # role id's as well.
             # XXX: such edge cases should be resolved at UGM init time
-            matches = groups.context.search(
+            matches_generator = groups.context.batched_search(
                 criteria=criteria,
                 attrlist=attrlist
             )
-            res = [att[groups._key_attr][0] for _, att in matches]
+            res = [att[groups._key_attr][0] for _, att in matches_generator]
         return res
 
     @default
@@ -316,11 +317,13 @@ class LDAPGroupMapping(Behavior):
                 users = ugm.users
                 criteria = {'memberOf': self.context.DN}
                 attrlist = [users._key_attr]
-                res = users.context.search(
+                matches_generator = users.context.batched_search(
                     criteria=criteria,
-                    attrlist=attrlist
+                    attrlist=attrlist,
                 )
-                return [att[users._key_attr][0] for _, att in res]
+                return [
+                    att[users._key_attr][0] for _, att in matches_generator
+                ]
         ret = list()
         members = self.context.attrs.get(self._member_attribute, list())
         for member in members:
@@ -496,8 +499,7 @@ class LDAPPrincipals(OdictStorage):
     @locktree
     def __iter__(self):
         attrlist = ['rdn', self._key_attr]
-        res = self.context.search(attrlist=attrlist)
-        for principal in res:
+        for principal in self.context.batched_search(attrlist=attrlist):
             prdn = principal[1]['rdn']
             if prdn in self.context._deleted_children:
                 continue
