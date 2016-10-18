@@ -4,6 +4,10 @@ History
 1.0b3 (unreleased)
 ------------------
 
+- Add a ``batched_search`` generator function, which do the actual batching for us.
+  Use this function internally too.
+  [jensens, rnix]
+
 - In testing set size_limit to 3 in ``slapd.conf`` in order to catch problems with batching.
   [jensens, rnix]
 

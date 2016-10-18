@@ -531,6 +531,28 @@ class LDAPStorage(OdictStorage):
         return res
 
     @default
+    def batched_search(self, page_size=None, search_func=None, **kw):
+        """Search generator function which does paging for us.
+        """
+        if page_size is None:
+            page_size = self.ldap_session._props.page_size
+        if search_func is None:
+            search_func = self.search
+        matches = []
+        cookie = None
+        kw['page_size'] = page_size
+        while True:
+            try:
+                kw['cookie'] = cookie
+                matches, cookie = search_func(**kw)
+                for item in matches:
+                    yield item
+            except ValueError:
+                break
+            if not cookie:
+                break
+
+    @default
     def invalidate(self, key=None):
         """Invalidate LDAP node.
 
