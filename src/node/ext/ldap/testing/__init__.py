@@ -52,22 +52,24 @@ slapdconf_template = """\
 logfile     %(confdir)s/log
 loglevel    256
 
-pidfile		%(confdir)s/slapd.pid
-argsfile	%(confdir)s/slapd.args
+pidfile     %(confdir)s/slapd.pid
+argsfile    %(confdir)s/slapd.args
 
-database	bdb
-suffix		"%(suffix)s"
-rootdn		"%(binddn)s"
+# XXX: sizelimit has no effect in our test slapd right now.
+#      needed for better coverage.
+#      figure out.
+sizelimit   3
+
+database    bdb
+suffix      "%(suffix)s"
+rootdn      "%(binddn)s"
 rootpw      %(bindpw)s
 directory   %(dbdir)s
 
 # Indices to maintain
-index	    objectClass	eq
+index       objectClass eq
 
 overlay     memberof
-
-# for testing set a lower size_limit in order to be able to catch mismatches
-sizelimit   3
 """
 
 
