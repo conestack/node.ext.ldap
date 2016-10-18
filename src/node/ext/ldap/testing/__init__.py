@@ -49,8 +49,8 @@ def read_env(layer):
 slapdconf_template = """\
 %(schema)s
 
-logfile         %(confdir)s/log
-loglevel        256
+logfile     %(confdir)s/log
+loglevel    256
 
 pidfile		%(confdir)s/slapd.pid
 argsfile	%(confdir)s/slapd.args
@@ -58,12 +58,16 @@ argsfile	%(confdir)s/slapd.args
 database	bdb
 suffix		"%(suffix)s"
 rootdn		"%(binddn)s"
-rootpw		%(bindpw)s
-directory	%(dbdir)s
-# Indices to maintain
-index	objectClass	eq
+rootpw      %(bindpw)s
+directory   %(dbdir)s
 
-overlay memberof
+# Indices to maintain
+index	    objectClass	eq
+
+overlay     memberof
+
+# for testing set a lower size_limit in order to be able to catch mismatches
+sizelimit   3
 """
 
 
@@ -91,7 +95,7 @@ class SlapdConf(Layer):
         slapdconf = self['slapdconf']
         schema = '\n'.join(
             ["include %s" % (schema,) for schema in self.schema]
-            )
+        )
         # generate config file
         with open(slapdconf, 'w') as slapdconf:
             slapdconf.write(

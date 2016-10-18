@@ -4,6 +4,9 @@ History
 1.0b3 (unreleased)
 ------------------
 
+- In testing set size_limit to 3 in ``slapd.conf`` in order to catch problems with batching.
+  [jensens, rnix]
+
 - Fix missing paging in UGM group mapping method ``member_ids``.
   [jensens]
 
