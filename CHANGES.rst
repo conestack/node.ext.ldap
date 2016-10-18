@@ -1,7 +1,13 @@
 History
 =======
 
-1.0b3 (unreleased)
+1.0b4 (unreleased)
+------------------
+
+- No changes yet.
+
+
+1.0b3 (2016-10-18)
 ------------------
 
 - Add a ``batched_search`` generator function, which do the actual batching for us.
@@ -23,6 +29,7 @@ History
 
 - Paginate LDAP node ``__iter__``.
   [jensens, rnix]
+
 
 1.0b1 (31.12.2015)
 ------------------
