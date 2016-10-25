@@ -49,7 +49,7 @@ class LDAPSession(object):
     def search(self, queryFilter='(objectClass=*)', scope=BASE, baseDN=None,
                force_reload=False, attrlist=None, attrsonly=0,
                page_size=None, cookie=None):
-        if queryFilter in ('', u'', None):
+        if not queryFilter:
             # It makes no sense to really pass these to LDAP, therefore, we
             # interpret them as "don't filter" which in LDAP terms is
             # '(objectClass=*)'
