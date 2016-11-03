@@ -433,12 +433,14 @@ MemberOf Support::
     u'uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com']
 
     >>> users.context.search(attrlist=['memberOf'])
-    [(u'uid=uid0,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {}), 
-    (u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {u'memberOf': 
-    [u'cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com', 
-    u'cn=group1,ou=groups,ou=groupOfNames,dc=my-domain,dc=com']}), 
-    (u'uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {u'memberOf': 
-    [u'cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com']})]
+    [(u'uid=uid0,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {}),
+    (u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {u'memberOf':
+    [u'cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
+    u'cn=group3,ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com',
+    u'cn=group1,ou=groups,ou=groupOfNames,dc=my-domain,dc=com']}),
+    (u'uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {u'memberOf':
+    [u'cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
+    u'cn=group3,ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com']})]
 
     >>> ugm.ucfg.memberOfSupport = True
     >>> ugm.gcfg.memberOfSupport = True
