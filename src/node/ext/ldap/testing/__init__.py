@@ -354,6 +354,13 @@ LDIF_data = Ldif(
 ldif_layer['data'] = LDIF_data
 
 
+LDIF_data_encoded = Ldif(
+    resource('ldifs/data.ldif'),
+    name='LDIF_data_encoded',
+    ucfg=ucfg)
+ldif_layer['data_encoded'] = LDIF_data
+
+
 LDIF_principals = Ldif(
     resource('ldifs/principals.ldif'),
     bases=(LDIF_data,),

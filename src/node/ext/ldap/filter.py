@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .base import encode_utf8
+from .base import encodes
 
 
 # all special characters except * are escaped, that means * can be
@@ -22,7 +22,7 @@ class LDAPFilter(object):
                 and not isinstance(queryFilter, basestring) \
                 and not isinstance(queryFilter, LDAPFilter):
             raise TypeError('Query filter must be LDAPFilter or string')
-        queryFilter = encode_utf8(queryFilter)
+        queryFilter = encodes(queryFilter)
         self._filter = queryFilter
         if isinstance(queryFilter, LDAPFilter):
             self._filter = str(queryFilter)
@@ -143,15 +143,14 @@ def dict_to_filter(criteria, or_search=False, or_keys=None, or_values=None):
     or_values = (or_values is None) and or_search or or_values
     _filter = None
     for attr, values in criteria.items():
-        attr = encode_utf8(attr)
+        attr = encodes(attr)
         if not isinstance(values, list):
             values = [values]
         attrfilter = None
         for value in values:
-            if isinstance(value, unicode):
-                value = encode_utf8(value)
+            value = encodes(value)
             attr = ''.join(map(lambda x: ESCAPE_CHARS.get(x, x), attr))
-            if isinstance(value, str):
+            if isinstance(value, str):  # can be e.g. integer
                 value = ''.join(map(lambda x: ESCAPE_CHARS.get(x, x), value))
             valuefilter = LDAPFilter('(%s=%s)' % (attr, value))
             if attrfilter is None:

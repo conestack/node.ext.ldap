@@ -10,7 +10,8 @@ from node.behaviors import OdictStorage
 from node.behaviors import Storage
 from node.behaviors.alias import DictAliaser
 from node.ext.ldap._node import LDAPNode
-from node.ext.ldap.base import decode_utf8
+from node.ext.ldap.base import decodes
+from node.ext.ldap.base import encodes
 from node.ext.ldap.interfaces import ILDAPGroupsConfig as IGroupsConfig
 from node.ext.ldap.interfaces import ILDAPUsersConfig as IUsersConfig
 from node.ext.ldap.scope import BASE
@@ -186,9 +187,10 @@ class LDAPPrincipal(AliasedPrincipal):
         delivered in LDAP response unless explicitly queried. Thus a separate
         property is used to query memberOf information explicit.
         """
+        use_unicode = self.context.root._use_unicode
         entry = self.context.ldap_session.search(
             scope=BASE,
-            baseDN=self.context.DN.encode('utf-8'),
+            baseDN=encodes(self.context.DN) if use_unicode else self.context.DN,  # noqa
             force_reload=self.context._reload,
             attrlist=['memberOf'])
         return entry[0][1].get('memberOf', list())
@@ -205,12 +207,12 @@ class LDAPUser(LDAPPrincipal, UgmUser):
     @default
     @property
     def group_ids(self):
+        use_unicode = self.context.root._use_unicode
         groups = self.parent.parent.groups
         if self.parent.parent.ucfg.memberOfSupport:
             res = list()
             for dn in self.member_of_attr:
-                if not isinstance(dn, unicode):
-                    dn = dn.decode('utf-8')
+                dn = decodes(dn) if use_unicode else dn
                 if groups.context.DN not in dn:
                     # Skip DN outside groups base DN
                     continue
@@ -263,7 +265,8 @@ class LDAPGroupMapping(Behavior):
 
     @override
     def __getitem__(self, key):
-        key = decode_utf8(key)
+        if self.context.root._use_unicode:
+            key = decodes(key)
         if key not in self:
             raise KeyError(key)
         return self.related_principals(key)[key]
@@ -271,7 +274,8 @@ class LDAPGroupMapping(Behavior):
     @override
     @locktree
     def __delitem__(self, key):
-        key = decode_utf8(key)
+        if self.context.root._use_unicode:
+            key = decodes(key)
         if key not in self:
             raise KeyError(key)
         if self._member_format == FORMAT_DN:
@@ -292,7 +296,8 @@ class LDAPGroupMapping(Behavior):
 
     @override
     def __contains__(self, key):
-        key = decode_utf8(key)
+        if self.context.root._use_unicode:
+            key = decodes(key)
         for uid in self:
             if uid == key:
                 return True
@@ -301,7 +306,8 @@ class LDAPGroupMapping(Behavior):
     @default
     @locktree
     def add(self, key):
-        key = decode_utf8(key)
+        if self.context.root._use_unicode:
+            key = decodes(key)
         if key not in self.member_ids:
             val = self.translate_key(key)
             # self.context.attrs[self._member_attribute].append won't work here
@@ -470,7 +476,8 @@ class LDAPPrincipals(OdictStorage):
     @default
     @locktree
     def __getitem__(self, key):
-        key = decode_utf8(key)
+        if self.context.root._use_unicode:
+            key = decodes(key)
         try:
             return self.storage[key]
         except KeyError:
@@ -481,7 +488,7 @@ class LDAPPrincipals(OdictStorage):
                 raise KeyError(key)
             if len(res) > 1:
                 msg = u'More than one principal with id "{0}" found.'
-                logger.warning(msg.format(key))
+                logger.warning(msg.format(decodes(key)))
             prdn = res[0][1]['rdn']
             if prdn in self.context._deleted_children:
                 raise KeyError(key)
@@ -517,7 +524,7 @@ class LDAPPrincipals(OdictStorage):
     def __setitem__(self, name, value):
         if not isinstance(value, self.principal_factory):
             raise ValueError(u"Given value not instance of '{0}'".format(
-                self.principal_factory.__name__
+                decodes(self.principal_factory.__name__)
             ))
         # XXX: check if there is valid user context
         exists = False
@@ -528,8 +535,9 @@ class LDAPPrincipals(OdictStorage):
             pass
         if exists:
             raise KeyError(
-                u"Principal with id '{0}' already exists.".format(name)
-            )
+                u"Principal with id '{0}' already exists.".format(
+                    decodes(name)
+            ))
         value.__name__ = name
         value.__parent__ = self
         self.storage[name] = value
@@ -630,6 +638,7 @@ class LDAPPrincipals(OdictStorage):
         # XXX: mechanism for defining a target container if scope is SUBTREE
         # create principal with LDAPNode as context
         context = LDAPNode()
+        context._use_unicode = self.context.root._use_unicode
         principal = self.principal_factory(
             context,
             attraliaser=self.principal_attraliaser
@@ -646,10 +655,16 @@ class LDAPPrincipals(OdictStorage):
         self[pid] = principal
         # if setting principal has been successful, hook up principal context
         # to ldap tree
-        rdn = u'{0}={1}'.format(
-            self._rdn_attr,
-            principal.context.attrs[self._rdn_attr]
-        )
+        if self.context.root._use_unicode:
+            rdn = u'{0}={1}'.format(
+                self._rdn_attr,
+                principal.context.attrs[self._rdn_attr]
+            )
+        else:
+            rdn = '{0}={1}'.format(
+                self._rdn_attr,
+                principal.context.attrs[self._rdn_attr]
+            )
         self.context[rdn] = context
         # return newly created principal
         return self[pid]
@@ -712,10 +727,11 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
     @default
     @debug
     def authenticate(self, login=None, pw=None, id=None):
+        use_unicode = self.context.root._use_unicode
         if id is not None:
             # bbb. deprecated usage
             login = id
-        user_id = self.id_for_login(decode_utf8(login))
+        user_id = self.id_for_login(decodes(login) if use_unicode else login)
         criteria = {self._key_attr: user_id}
         attrlist = ['dn']
         if self.expiresAttr:
@@ -728,7 +744,7 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
             return False
         if len(res) > 1:
             msg = u'More than one principal with login "{0}" found.'
-            logger.warning(msg.format(user_id))
+            logger.warning(msg.format(decodes(user_id)))
         if self.expiresAttr:
             expires = res[0][1].get(self.expiresAttr)
             expires = expires and expires[0] or None
@@ -738,19 +754,20 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
                 # unknown expires field data
                 msg = u"Accound expiration flag for user '{0}' " + \
                       u"contains unknown data"
-                logger.error(msg.format(id))
+                logger.error(msg.format(decodes(id)))
                 return False
             if expired:
                 return ACCOUNT_EXPIRED
         user_dn = res[0][1]['dn']
         session = self.context.ldap_session
-        authenticated = session.authenticate(user_dn.encode('utf-8'), pw)
+        authenticated = session.authenticate(
+            user_dn.encode('utf-8') if use_unicode else user_dn, pw)
         return authenticated and user_id or False
 
     @default
     @debug
     def passwd(self, id, oldpw, newpw):
-        user_id = self.id_for_login(decode_utf8(id))
+        user_id = self.id_for_login(decodes(id))
         criteria = {self._key_attr: user_id}
         attrlist = ['dn']
         if self.expiresAttr:
@@ -760,7 +777,7 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
             raise KeyError(id)
         if len(res) > 1:
             msg = u'More than one principal with login "{0}" found.'
-            logger.warning(msg.format(user_id))
+            logger.warning(msg.format(decodes(user_id)))
         user_dn = res[0][1]['dn']
         self.context.ldap_session.passwd(user_dn, oldpw, newpw)
         object_classes = self.context.child_defaults['objectClass']
@@ -845,7 +862,8 @@ class LDAPGroups(LDAPGroupsMapping):
     @override
     @locktree
     def __delitem__(self, key):
-        key = decode_utf8(key)
+        if self.context.root._use_unicode:
+            key = decodes(key)
         group = self[key]
         parent = self.parent
         if parent and parent.rcfg is not None:
@@ -928,7 +946,8 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
     @override
     @locktree
     def __getitem__(self, key):
-        key = decode_utf8(key)
+        if self.context.root._use_unicode:
+            key = decodes(key)
         if key not in self:
             raise KeyError(key)
         principals = self.related_principals(key)
@@ -939,7 +958,7 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
     @override
     @locktree
     def __delitem__(self, key):
-        key = decode_utf8(key)
+        key = decodes(key)
         if key not in self:
             raise KeyError(key)
         principals = self.related_principals(key)
@@ -1108,7 +1127,7 @@ class LDAPUgm(UgmBase):
         if role is None:
             role = roles.create(rolename)
         if uid in role.member_ids:
-            raise ValueError(u"Principal already has role '%s'" % rolename)
+            raise ValueError(u"Principal already has role '%s'" % decodes(rolename))  # noqa
         role.add(uid)
 
     @default
@@ -1120,9 +1139,9 @@ class LDAPUgm(UgmBase):
             raise ValueError(u"Role support not configured properly")
         role = roles.get(rolename)
         if role is None:
-            raise ValueError(u"Role not exists '%s'" % rolename)
+            raise ValueError(u"Role not exists '%s'" % decodes(rolename))
         if uid not in role.member_ids:
-            raise ValueError(u"Principal does not has role '%s'" % rolename)
+            raise ValueError(u"Principal does not has role '%s'" % decodes(rolename))  # noqa
         del role[uid]
         if not role.member_ids:
             parent = role.parent

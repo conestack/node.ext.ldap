@@ -4,6 +4,7 @@ from bda.cache.interfaces import INullCacheProvider
 from node.ext.ldap.cache import nullcacheProviderFactory
 from node.ext.ldap.interfaces import ICacheProviderFactory
 from node.ext.ldap.properties import LDAPProps
+from node.utils import CHARACTER_ENCODING
 from zope.component import queryUtility
 
 import hashlib
@@ -46,16 +47,22 @@ def md5digest(key):
     return m.hexdigest()
 
 
-def decode_utf8(value):
+def decodes(value):
     if value and not isinstance(value, unicode):
-        value = value.decode('utf-8')
+        value = value.decode(CHARACTER_ENCODING)
     return value
 
 
-def encode_utf8(value):
+decode_utf8 = decodes  # BBB
+
+
+def encodes(value):
     if value and isinstance(value, unicode):
-        value = value.encode('utf-8')
+        value = value.encode(CHARACTER_ENCODING)
     return value
+
+
+encode_utf8 = encodes  # BBB
 
 
 class LDAPConnector(object):

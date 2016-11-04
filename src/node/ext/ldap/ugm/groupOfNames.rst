@@ -81,9 +81,9 @@ XXX: LDAPNodeAttributes.items does not return consistent results if attrmap
 ::
 
     >>> sorted(user_0.attrs.items())
-    [('cn', u'cn0'), 
-    ('mail', u'uid0@groupOfNames.com'), 
-    ('rdn', u'uid0'), 
+    [('cn', u'cn0'),
+    ('mail', u'uid0@groupOfNames.com'),
+    ('rdn', u'uid0'),
     ('sn', u'sn0')]
 
 User is a leaf::
@@ -213,7 +213,7 @@ Groups object::
     [('member', [u'cn=nobody']), ('rdn', u'group0')]
 
     >>> group_1.attrs.items()
-    [('member', [u'cn=nobody', u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com']), 
+    [('member', [u'cn=nobody', u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com']),
     ('rdn', u'group1')]
 
 Add a group::
@@ -429,7 +429,7 @@ MemberOf Support::
 
     >>> users = ugm.users
     >>> users.context.search(queryFilter='(memberOf=*)')
-    [u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com', 
+    [u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com',
     u'uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com']
 
     >>> users.context.search(attrlist=['memberOf'])
@@ -446,7 +446,7 @@ MemberOf Support::
     >>> ugm.gcfg.memberOfSupport = True
 
     >>> users['uid1'].groups
-    [<Group object 'group2' at ...>, 
+    [<Group object 'group2' at ...>,
     <Group object 'group1' at ...>]
 
     >>> users['uid1'].group_ids
@@ -460,3 +460,49 @@ MemberOf Support::
 
     >>> ugm.ucfg.memberOfSupport = False
     >>> ugm.gcfg.memberOfSupport = False
+
+
+Recreate UGM object with unicode support disabled::
+
+    >>> import pickle
+    >>> props = pickle.loads(pickle.dumps(props))
+    >>> props.use_unicode = False
+    >>> ugm = Ugm(name='ugm', parent=None, props=props,
+    ...           ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
+    >>> users = ugm.users
+    >>> groups = ugm.groups
+
+Test search function::
+
+    >>> users.search(criteria={'login': 'cn0'})
+    ['uid0']
+
+    >>> groups.search(criteria={'id': 'group2'})
+    ['group2']
+
+There's an ids property on principals base class::
+
+    >>> users.ids
+    ['uid0', 'uid1', 'uid2']
+
+    >>> groups.ids
+    ['group0', 'group1', 'group2']
+
+Add user::
+
+    >>> users.printtree()
+    <class 'node.ext.ldap.ugm._api.Users'>: users
+      <class 'node.ext.ldap.ugm._api.User'>: uid0
+      <class 'node.ext.ldap.ugm._api.User'>: uid1
+      <class 'node.ext.ldap.ugm._api.User'>: uid2
+
+    >>> user = users.create('sepp',
+    ...                     cn='Sepp',
+    ...                     sn='Bla',
+    ...                     mail='baz@bar.com')
+
+    >>> user
+    <User object 'sepp' at ...>
+
+    >>> users.ids
+    ['uid0', 'uid1', 'uid2', 'sepp']

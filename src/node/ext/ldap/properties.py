@@ -52,7 +52,8 @@ class LDAPServerProperties(object):
         retry_delay=10.0,
         multivalued_attributes=MULTIVALUED_DEFAULTS,
         binary_attributes=BINARY_DEFAULTS,
-        page_size=1000
+        page_size=1000,
+        use_unicode=True
     ):
         """Take the connection properties as arguments.
 
@@ -133,6 +134,15 @@ class LDAPServerProperties(object):
             Number of objects requested at once.
             In iterations after this number of objects a new search query is
             sent for the next batch using returned the LDAP cookie.
+
+        use_unicode
+            Support unicode in node.ext.ldap API. Defaults to True.
+            LDAP always expects and returns only UTF-8 encoded strings.
+            When enabled, node.ext.ldap can be called with unicode
+            arguments and it will return only unicode strings in its
+            responses. When disabled (for better performance), node.ext.ldap
+            must be called with UTF-8 encoded strings and it will return
+            only UTF-8 encoded strings in its responses.
         """
         if uri is None:
             # old school
@@ -155,5 +165,6 @@ class LDAPServerProperties(object):
         self.multivalued_attributes = multivalued_attributes
         self.binary_attributes = binary_attributes
         self.page_size = page_size
+        self.use_unicode = use_unicode
 
 LDAPProps = LDAPServerProperties

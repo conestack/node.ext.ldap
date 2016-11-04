@@ -17,6 +17,8 @@ from node.behaviors import OdictStorage
 from node.ext.ldap import BASE
 from node.ext.ldap import LDAPSession
 from node.ext.ldap import ONELEVEL
+from node.ext.ldap.base import decodes
+from node.ext.ldap.base import encodes
 from node.ext.ldap.events import LDAPNodeAddedEvent
 from node.ext.ldap.events import LDAPNodeCreatedEvent
 from node.ext.ldap.events import LDAPNodeDetachedEvent
@@ -28,7 +30,6 @@ from node.ext.ldap.filter import LDAPRelationFilter
 from node.ext.ldap.interfaces import ILDAPStorage
 from node.ext.ldap.schema import LDAPSchemaInfo
 from node.interfaces import IInvalidate
-from node.utils import CHARACTER_ENCODING
 from node.utils import debug
 from node.utils import decode
 from node.utils import encode
@@ -75,9 +76,10 @@ class LDAPAttributesBehavior(Behavior):
         #    attrlist.append('memberOf')
 
         # fetch attributes for ldap_node
+        use_unicode = ldap_node.root._use_unicode
         entry = ldap_node.ldap_session.search(
             scope=BASE,
-            baseDN=ldap_node.DN.encode('utf-8'),
+            baseDN=encodes(ldap_node.DN) if use_unicode else ldap_node.DN,  # noqa
             force_reload=ldap_node._reload,
             attrlist=attrlist,
         )
@@ -110,9 +112,10 @@ class LDAPAttributesBehavior(Behavior):
 
     @plumb
     def __setitem__(_next, self, key, val):
-        if not self.is_binary(key):
-            val = decode(val)
-        key = decode(key)
+        if self.parent.root._use_unicode:
+            if not self.is_binary(key):
+                val = decode(val)
+            key = decodes(key)
         _next(self, key, val)
         self._set_attrs_modified()
 
@@ -172,8 +175,6 @@ class LDAPStorage(OdictStorage):
         """
         if (name and not props) or (props and not name):
             raise ValueError(u"Wrong initialization.")
-        if name and not isinstance(name, unicode):
-            name = name.decode(CHARACTER_ENCODING)
         self.__name__ = name
         self.__parent__ = None
         self._dn = None
@@ -187,6 +188,7 @@ class LDAPStorage(OdictStorage):
         self._multivalued_attributes = {}
         self._binary_attributes = {}
         self._page_size = 1000
+        self._use_unicode = True
         if props:
             # only at root node
             self._ldap_session = LDAPSession(props)
@@ -195,6 +197,9 @@ class LDAPStorage(OdictStorage):
             self._multivalued_attributes = props.multivalued_attributes
             self._binary_attributes = props.binary_attributes
             self._page_size = props.page_size
+            self._use_unicode = props.use_unicode
+        if name and self._use_unicode:
+            self.__name__ = decodes(name)
         # search related defaults
         self.search_scope = ONELEVEL
         self.search_filter = None
@@ -207,8 +212,7 @@ class LDAPStorage(OdictStorage):
     @finalize
     def __getitem__(self, key):
         # nodes are created for keys, if they do not already exist in memory
-        if isinstance(key, str):
-            key = decode(key)
+        key = decodes(key) if self.root._use_unicode else key
         try:
             return self.storage[key]
         except KeyError:
@@ -218,7 +222,7 @@ class LDAPStorage(OdictStorage):
             try:
                 res = self.ldap_session.search(
                     scope=BASE,
-                    baseDN=val.DN.encode('utf-8'),
+                    baseDN=encodes(val.DN) if self.root._use_unicode else val.DN,  # noqa
                     attrlist=[''],  # no need for attrs
                 )
                 # remember DN
@@ -231,8 +235,7 @@ class LDAPStorage(OdictStorage):
 
     @finalize
     def __setitem__(self, key, val):
-        if isinstance(key, str):
-            key = decode(key)
+        key = decodes(key) if self.root._use_unicode else key
         if not isinstance(val, LDAPNode):
             # create one from whatever we got
             # XXX: raise KeyError instead of trying to create node
@@ -244,7 +247,7 @@ class LDAPStorage(OdictStorage):
         try:
             self.ldap_session.search(
                 scope=BASE,
-                baseDN=val.DN.encode('utf-8'),
+                baseDN=encodes(val.DN) if self.root._use_unicode else val.DN,
                 attrlist=[''],  # no need for attrs
             )
         except (NO_SUCH_OBJECT, INVALID_DN_SYNTAX):
@@ -271,8 +274,7 @@ class LDAPStorage(OdictStorage):
     @finalize
     def __delitem__(self, key):
         # do not delete immediately. Just mark LDAPNode to be deleted.
-        if isinstance(key, str):
-            key = decode(key)
+        key = decodes(key) if self.root._use_unicode else key
         # value not persistent yet, remove from storage and add list
         if key in self._added_children:
             del self.storage[key]
@@ -294,7 +296,7 @@ class LDAPStorage(OdictStorage):
             try:
                 res = self.ldap_session.search(
                     scope=ONELEVEL,
-                    baseDN=encode(self.DN),
+                    baseDN=encodes(self.DN) if self.root._use_unicode else self.DN,  # noqa
                     attrlist=[''],
                     page_size=self._page_size,
                     cookie=cookie,
@@ -304,11 +306,18 @@ class LDAPStorage(OdictStorage):
                 res = list()
             if isinstance(res, tuple):
                 res, cookie = res
-            for dn, _ in res:
-                key = decode(explode_dn(dn)[0])
-                # do not yield if node is supposed to be deleted
-                if key not in self._deleted_children:
-                    yield key
+            if self.root._use_unicode:
+                for dn, _ in res:
+                    key = decode(explode_dn(dn)[0])
+                    # do not yield if node is supposed to be deleted
+                    if key not in self._deleted_children:
+                        yield key
+            else:
+                for dn, _ in res:
+                    key = explode_dn(dn)[0]
+                    # do not yield if node is supposed to be deleted
+                    if key not in self._deleted_children:
+                        yield key
             if not cookie:
                 break
 
@@ -342,10 +351,16 @@ class LDAPStorage(OdictStorage):
 
     @finalize
     def __repr__(self):
-        dn = self.DN.encode('ascii', 'replace') or '(dn not set)'
+        if self.root._use_unicode:
+            dn = self.DN.encode('ascii', 'replace') or '(dn not set)'
+        else:
+            dn = decodes(self.DN).encode('ascii', 'replace') or '(dn not set)'  # noqa
         if self.parent is None:
             return "<%s - %s>" % (dn, self.changed)
-        name = self.name.encode('ascii', 'replace')
+        if self.root._use_unicode:
+            name = self.name.encode('ascii', 'replace')
+        else:
+            name = decodes(self.name).encode('ascii', 'replace')
         return "<%s:%s - %s>" % (dn, name, self.changed)
 
     __str__ = finalize(__repr__)
@@ -372,8 +387,8 @@ class LDAPStorage(OdictStorage):
             return self.parent.child_dn(self.name)
         if self.name:
             # We should not have a name if we are not a root node.
-            return decode(self.name)
-        return u''
+            return self.name
+        return u'' if self.root._use_unicode else ''
 
     @default
     @property
@@ -429,9 +444,14 @@ class LDAPStorage(OdictStorage):
     @default
     def child_dn(self, key):
         # return child DN for key
-        if self._dn:
-            return u','.join([decode(key), decode(self._dn)])
-        return u','.join([decode(key), decode(self.name)])
+        if self.root._use_unicode:
+            if self._dn:
+                return u','.join([decodes(key), decodes(self._dn)])
+            return u','.join([decodes(key), decodes(self.name)])
+        else:
+            if self._dn:
+                return ','.join([key, self._dn])
+            return ','.join([key, self.name])
 
     @default
     def node_by_dn(self, dn, strict=False):
@@ -442,13 +462,13 @@ class LDAPStorage(OdictStorage):
         if not dn.endswith(base_dn):
             raise ValueError(u'Invalid base DN')
         dn = dn[:len(dn) - len(base_dn)].strip(',')
-        for rdn in reversed(explode_dn(encode(dn))):
+        for rdn in reversed(explode_dn(encodes(dn) if self.root._use_unicode else dn)):  # noqa
             try:
                 node = node[rdn]
             except KeyError:
                 if strict:
                     raise ValueError(u'Tree contains no node by given DN. '
-                                     u'Failed at RDN {}'.format(rdn))
+                                     u'Failed at RDN {}'.format(decodes(rdn)))
                 return None
         return node
 
@@ -487,7 +507,7 @@ class LDAPStorage(OdictStorage):
         matches = self.ldap_session.search(
             str(_filter),
             self.search_scope,
-            baseDN=encode(self.DN),
+            baseDN=encodes(self.DN) if self.root._use_unicode else self.DN,
             force_reload=self._reload,
             attrlist=list(attrset),
             page_size=page_size,
@@ -502,32 +522,54 @@ class LDAPStorage(OdictStorage):
             raise ValueError(u"Exact match asked but result length is zero")
         # extract key and desired attributes
         res = []
-        for dn, attrs in matches:
-            dn = decode(dn)
-            if attrlist is not None:
-                resattr = dict()
-                for k, v in attrs.iteritems():
-                    if k in attrlist:
-                        # Check binary binary attribute directly from root
-                        # data to avoid initing attrs for a simple search.
-                        if k in self.root._binary_attributes:
-                            resattr[decode(k)] = v
-                        else:
-                            resattr[decode(k)] = decode(v)
-                if 'dn' in attrlist:
-                    resattr[u'dn'] = dn
-                if 'rdn' in attrlist:
-                    rdn = explode_dn(encode(dn))[0]
-                    resattr[u'rdn'] = decode(rdn)
-                if get_nodes:
-                    res.append((self.node_by_dn(dn, strict=True), resattr))
+        if self.root._use_unicode:
+            for dn, attrs in matches:
+                dn = decodes(dn)
+                if attrlist is not None:
+                    resattr = dict()
+                    for k, v in attrs.iteritems():
+                        if k in attrlist:
+                            # Check binary binary attribute directly from root
+                            # data to avoid initing attrs for a simple search.
+                            if k in self.root._binary_attributes:
+                                resattr[decodes(k)] = v
+                            else:
+                                resattr[decodes(k)] = decode(v)
+                    if 'dn' in attrlist:
+                        resattr[u'dn'] = dn
+                    if 'rdn' in attrlist:
+                        rdn = explode_dn(encodes(dn))[0]
+                        resattr[u'rdn'] = decodes(rdn)
+                    if get_nodes:
+                        res.append((self.node_by_dn(dn, strict=True), resattr))
+                    else:
+                        res.append((dn, resattr))
                 else:
-                    res.append((dn, resattr))
-            else:
-                if get_nodes:
-                    res.append(self.node_by_dn(dn, strict=True))
+                    if get_nodes:
+                        res.append(self.node_by_dn(dn, strict=True))
+                    else:
+                        res.append(dn)
+        else:
+            for dn, attrs in matches:
+                if attrlist is not None:
+                    resattr = dict()
+                    for k, v in attrs.iteritems():
+                        if k in attrlist:
+                            resattr[k] = v
+                    if 'dn' in attrlist:
+                        resattr['dn'] = dn
+                    if 'rdn' in attrlist:
+                        rdn = explode_dn(dn)[0]
+                        resattr['rdn'] = rdn
+                    if get_nodes:
+                        res.append((self.node_by_dn(dn, strict=True), resattr))
+                    else:
+                        res.append((dn, resattr))
                 else:
-                    res.append(dn)
+                    if get_nodes:
+                        res.append(self.node_by_dn(dn, strict=True))
+                    else:
+                        res.append(dn)
         if cookie is not None:
             return (res, cookie)
         return res
@@ -540,7 +582,6 @@ class LDAPStorage(OdictStorage):
             page_size = self.ldap_session._props.page_size
         if search_func is None:
             search_func = self.search
-        matches = []
         cookie = None
         kw['page_size'] = page_size
         while True:
@@ -583,7 +624,7 @@ class LDAPStorage(OdictStorage):
             if child.changed:
                 raise RuntimeError(
                     u"Invalid tree state. Try to invalidate "
-                    u"changed child node '%s'." % (key,))
+                    u"changed child node '%s'." % (decodes(key),))
             del self.storage[key]
         except KeyError:
             pass
@@ -604,6 +645,8 @@ class LDAPStorage(OdictStorage):
     def _ldap_add(self):
         # adds self to the ldap directory.
         attrs = {}
+        # because every new node starts with unicode support enabled, we
+        # need to encode data even when the root had unicode support disabled
         for key, value in self.attrs.items():
             if not self.attrs.is_binary(key):
                 value = encode(value)
@@ -616,10 +659,12 @@ class LDAPStorage(OdictStorage):
         modlist = list()
         orgin = self.attributes_factory(name='__attrs__', parent=self)
 
+        # because every new node starts with unicode support enabled, we
+        # need to encode data even when the root had unicode support disabled
         for key in orgin:
             # MOD_DELETE
             if key not in self.attrs:
-                moddef = (MOD_DELETE, encode(key), None)
+                moddef = (MOD_DELETE, encodes(key), None)
                 modlist.append(moddef)
         for key in self.attrs:
             # MOD_ADD
@@ -627,20 +672,23 @@ class LDAPStorage(OdictStorage):
             if not self.attrs.is_binary(key):
                 value = encode(value)
             if key not in orgin:
-                moddef = (MOD_ADD, encode(key), value)
+                moddef = (MOD_ADD, encodes(key), value)
                 modlist.append(moddef)
             # MOD_REPLACE
             elif self.attrs[key] != orgin[key]:
-                moddef = (MOD_REPLACE, encode(key), value)
+                moddef = (MOD_REPLACE, encodes(key), value)
                 modlist.append(moddef)
         if modlist:
-            self.ldap_session.modify(encode(self.DN), modlist)
+            self.ldap_session.modify(encodes(self.DN), modlist)
 
     @default
     def _ldap_delete(self):
         # delete self from the ldap-directory.
         del self.parent.storage[self.name]
-        self.ldap_session.delete(encode(self.DN))
+        if self.root._use_unicode:
+            self.ldap_session.delete(encodes(self.DN))
+        else:
+            self.ldap_session.delete(self.DN)
 
     @default
     @property
