@@ -4,6 +4,11 @@ History
 1.0b4 (unreleased)
 ------------------
 
+- Fix search to check list of binary attributes directly from the root node
+  data (not from attr behavior) to avoid unnecessarily initializing attribute
+  behavior just a simple search
+  [datakurre]
+
 - Fix to skip group DNs outside the base DN to allow users' memberOf
   attribute contain groups outside the group base DN
   [datakurre]
