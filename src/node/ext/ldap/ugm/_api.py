@@ -209,6 +209,11 @@ class LDAPUser(LDAPPrincipal, UgmUser):
         if self.parent.parent.ucfg.memberOfSupport:
             res = list()
             for dn in self.member_of_attr:
+                if not isinstance(dn, unicode):
+                    dn = dn.decode('utf-8')
+                if groups.context.DN not in dn:
+                    # Skip DN outside groups base DN
+                    continue
                 try:
                     res.append(groups.idbydn(dn))
                 except KeyError:

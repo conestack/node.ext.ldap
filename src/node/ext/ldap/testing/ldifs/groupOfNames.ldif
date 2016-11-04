@@ -10,6 +10,10 @@ dn: ou=groups,ou=groupOfNames,dc=my-domain,dc=com
 ou: groups
 objectClass: organizationalUnit
 
+dn: ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com
+ou: groups
+objectClass: organizationalUnit
+
 dn: uid=uid0,ou=users,ou=groupOfNames,dc=my-domain,dc=com
 uid: uid0
 objectClass: inetOrgPerson
@@ -47,6 +51,13 @@ member: uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com
 
 dn: cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com
 cn: group2
+objectClass: groupOfNames
+member: cn=nobody
+member: uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com
+member: uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com
+
+dn: cn=group3,ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com
+cn: group3
 objectClass: groupOfNames
 member: cn=nobody
 member: uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com

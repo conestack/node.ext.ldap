@@ -4,7 +4,9 @@ History
 1.0b4 (unreleased)
 ------------------
 
-- No changes yet.
+- Fix to skip group DNs outside the base DN to allow users' memberOf
+  attribute contain groups outside the group base DN
+  [datakurre]
 
 
 1.0b3 (2016-10-18)

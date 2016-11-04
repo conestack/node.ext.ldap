@@ -267,7 +267,7 @@ pwd = 'secret'
 
 
 props = LDAPProps(
-    uri='ldap://127.0.0.1:12345/',
+    uri=SLAPDURIS,
     user=user,
     password=pwd,
     cache=False,
