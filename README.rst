@@ -515,6 +515,95 @@ combined::
     []
 
 
+JSON Serialization
+------------------
+
+Serialize and deserialize LDAP nodes::
+
+    >>> root = LDAPNode('ou=demo,dc=my-domain,dc=com', props=props)
+
+Serialize children::
+
+    >>> from node.serializer import serialize
+    >>> json_dump = serialize(root.values())
+
+Clear and persist root::
+
+    >>> root.clear()
+    >>> root()
+
+Deserialize JSON dump::
+
+    >>> from node.serializer import deserialize
+    >>> deserialize(json_dump, root=root)
+    [<cn=person1,ou=demo,dc=my-domain,dc=com:cn=person1 - True>, 
+    <cn=person2,ou=demo,dc=my-domain,dc=com:cn=person2 - True>, 
+    <cn=person3,ou=demo,dc=my-domain,dc=com:cn=person3 - True>, 
+    <cn=person4,ou=demo,dc=my-domain,dc=com:cn=person4 - True>, 
+    <cn=person5,ou=demo,dc=my-domain,dc=com:cn=person5 - True>, 
+    <cn=group1,ou=demo,dc=my-domain,dc=com:cn=group1 - True>, 
+    <cn=group2,ou=demo,dc=my-domain,dc=com:cn=group2 - True>]
+
+Since root has been given, created nodes were added::
+
+    >>> root()
+    >>> root.printtree()
+    <ou=demo,dc=my-domain,dc=com - False>
+      <cn=person1,ou=demo,dc=my-domain,dc=com:cn=person1 - False>
+      <cn=person2,ou=demo,dc=my-domain,dc=com:cn=person2 - False>
+      <cn=person3,ou=demo,dc=my-domain,dc=com:cn=person3 - False>
+      <cn=person4,ou=demo,dc=my-domain,dc=com:cn=person4 - False>
+      <cn=person5,ou=demo,dc=my-domain,dc=com:cn=person5 - False>
+      <cn=group1,ou=demo,dc=my-domain,dc=com:cn=group1 - False>
+      <cn=group2,ou=demo,dc=my-domain,dc=com:cn=group2 - False>
+
+Non simple vs simple mode. Create container with children::
+
+    >>> container = LDAPNode()
+    >>> container.attrs['objectClass'] = ['organizationalUnit']
+    >>> root['ou=container'] = container
+
+    >>> person = LDAPNode()
+    >>> person.attrs['objectClass'] = ['person', 'inetOrgPerson']
+    >>> person.attrs['sn'] = 'Mustermann'
+    >>> person.attrs['userPassword'] = 'secret'
+    >>> container['cn=person1'] = person
+
+    >>> root()
+
+Serialize in default mode contains type specific information. Thus JSON dump
+can be deserialized later::
+
+    >>> serialize(container)
+    '{"__node__": 
+    {"attrs": {"objectClass": ["organizationalUnit"], 
+    "ou": "container"}, 
+    "children": 
+    [{"__node__": 
+    {"attrs": 
+    {"objectClass": ["person", "inetOrgPerson"], 
+    "userPassword": "secret", 
+    "sn": "Mustermann", "cn": "person1"}, 
+    "class": "node.ext.ldap._node.LDAPNode", 
+    "name": "cn=person1"}}], 
+    "class": "node.ext.ldap._node.LDAPNode", 
+    "name": "ou=container"}}'
+
+Serialize in simple mode is better readable, but not deserialzable any more::
+
+    >>> serialize(container, simple_mode=True)
+    '{"attrs": 
+    {"objectClass": ["organizationalUnit"], 
+    "ou": "container"}, 
+    "name": "ou=container", 
+    "children": 
+    [{"name": "cn=person1", 
+    "attrs": {"objectClass": ["person", "inetOrgPerson"], 
+    "userPassword": "secret", 
+    "sn": "Mustermann", 
+    "cn": "person1"}}]}'
+
+
 User and Group management
 -------------------------
 
