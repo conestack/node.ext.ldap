@@ -4,7 +4,8 @@ History
 1.0b11 (unreleased)
 -------------------
 
-- No changes yet.
+- Skip objects that were found in LDAP while searching on several attributes but don't contain the required attribute.
+  [fredvd, maurits]
 
 
 1.0b10 (2019-06-30)
