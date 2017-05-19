@@ -89,6 +89,9 @@ class LDAPConnector(object):
         elif self._tls_cacert_file:
             ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, self._tls_cacert_file)
         self._con = ldap.initialize(self._uri)
+        # Turning referrals off since they cause problems with MS Active Directory
+        # More info: https://www.python-ldap.org/faq.html#usage
+        self._con.set_option(ldap.OPT_REFERRALS,0)
         self._con.protocol_version = self.protocol
         if self._start_tls:
             # ignore in tests for now. nevertheless provide a test environment
