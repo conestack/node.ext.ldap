@@ -77,6 +77,9 @@ class LDAPSession(object):
         if self._props.ignore_cert:
             ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
         con = ldap.initialize(self._props.uri)
+        # Turning referrals off since they cause problems with MS Active
+        # Directory More info: https://www.python-ldap.org/faq.html#usage
+        con.set_option(ldap.OPT_REFERRALS, 0)
         try:
             con.simple_bind_s(dn, pw)
         except (ldap.INVALID_CREDENTIALS, ldap.UNWILLING_TO_PERFORM):
