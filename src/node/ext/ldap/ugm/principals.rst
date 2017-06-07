@@ -768,8 +768,8 @@ Test roles for group.::
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
         <class 'node.ext.ldap.ugm._api.Group'>: group1
-          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
           <class 'node.ext.ldap.ugm._api.User'>: M?ller
+          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
 
     >>> ugm.roles(group)
     ['viewer']
@@ -786,8 +786,8 @@ Test roles for group.::
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
         <class 'node.ext.ldap.ugm._api.Group'>: group1
-          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
           <class 'node.ext.ldap.ugm._api.User'>: M?ller
+          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
         <class 'node.ext.ldap.ugm._api.Group'>: group3
       <class 'node.ext.ldap.ugm._api.Role'>: editor
         <class 'node.ext.ldap.ugm._api.Group'>: group3
@@ -810,8 +810,8 @@ If role already granted, an error is raised.::
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
         <class 'node.ext.ldap.ugm._api.Group'>: group1
-          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
           <class 'node.ext.ldap.ugm._api.User'>: M?ller
+          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
       <class 'node.ext.ldap.ugm._api.Role'>: editor
         <class 'node.ext.ldap.ugm._api.Group'>: group3
 
@@ -821,8 +821,8 @@ If role already granted, an error is raised.::
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
         <class 'node.ext.ldap.ugm._api.Group'>: group1
-          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
           <class 'node.ext.ldap.ugm._api.User'>: M?ller
+          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
 
     >>> ugm.roles_storage()
 
@@ -885,8 +885,8 @@ Delete user and check if roles are removed.::
         <class 'node.ext.ldap.ugm._api.User'>: Umhauer
       <class 'node.ext.ldap.ugm._api.Groups'>: groups
         <class 'node.ext.ldap.ugm._api.Group'>: group1
-          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
           <class 'node.ext.ldap.ugm._api.User'>: M?ller
+          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
         <class 'node.ext.ldap.ugm._api.Group'>: group2
           <class 'node.ext.ldap.ugm._api.User'>: Umhauer
         <class 'node.ext.ldap.ugm._api.Group'>: group3
@@ -896,8 +896,8 @@ Delete user and check if roles are removed.::
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.User'>: Meier
         <class 'node.ext.ldap.ugm._api.Group'>: group1
-          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
           <class 'node.ext.ldap.ugm._api.User'>: M?ller
+          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
 
     >>> users = ugm.users
     >>> del users['Meier']
@@ -905,8 +905,8 @@ Delete user and check if roles are removed.::
     <class 'node.ext.ldap.ugm._api.Roles'>: roles
       <class 'node.ext.ldap.ugm._api.Role'>: viewer
         <class 'node.ext.ldap.ugm._api.Group'>: group1
-          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
           <class 'node.ext.ldap.ugm._api.User'>: M?ller
+          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
 
     >>> users.storage.keys()
     [u'Schmidt', u'M\xfcller', u'Umhauer']

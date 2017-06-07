@@ -383,8 +383,8 @@ from all this groups.::
         <class 'node.ext.ldap.ugm._api.Group'>: group0
           <class 'node.ext.ldap.ugm._api.User'>: sepp
         <class 'node.ext.ldap.ugm._api.Group'>: group1
-          <class 'node.ext.ldap.ugm._api.User'>: uid1
           <class 'node.ext.ldap.ugm._api.User'>: sepp
+          <class 'node.ext.ldap.ugm._api.User'>: uid1
         <class 'node.ext.ldap.ugm._api.Group'>: group2
           <class 'node.ext.ldap.ugm._api.User'>: uid1
           <class 'node.ext.ldap.ugm._api.User'>: uid2
