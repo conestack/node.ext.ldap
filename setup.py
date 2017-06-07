@@ -4,7 +4,7 @@ from setuptools import setup
 import os
 
 
-version = '1.0b4.dev0'
+version = '1.0b4'
 shortdesc = 'LDAP/AD convenience with Node-trees based on python-ldap'
 longdesc = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 longdesc += open(os.path.join(os.path.dirname(__file__), 'CHANGES.rst')).read()
@@ -39,7 +39,10 @@ setup(
         'smbpasswd',
         'argparse',
         'bda.cache',
-        'node.ext.ugm',
+        'odict>=1.6.1',
+        'plumber>=1.4',
+        'node>=0.9.20'
+        'node.ext.ugm>=0.9.9',
     ],
     extras_require={
         'test': [

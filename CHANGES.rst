@@ -1,8 +1,11 @@
 History
 =======
 
-1.0b4 (unreleased)
+1.0b4 (2017-06-07)
 ------------------
+
+- Turning referrals off to fix problems with MS AD if it contains aliases.
+  [alexsielicki]
 
 - Fix search to check list of binary attributes directly from the root node
   data (not from attr behavior) to avoid unnecessarily initializing attribute

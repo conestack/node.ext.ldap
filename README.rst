@@ -27,15 +27,15 @@ This package is the successor of
 API changes compared to 0.9.x
 =============================
 
-* ``LDAPNode`` instances cannot have direct children of subtree any longer.
+- ``LDAPNode`` instances cannot have direct children of subtree any longer.
   This was a design flaw because of possible duplicate RDN's.
 
-* ``LDAPNode.search`` returns DN's instead of RDN's by default.
+- ``LDAPNode.search`` returns DN's instead of RDN's by default.
 
-* Secondary keys and alternative key attribute features have been removed
+- Secondary keys and alternative key attribute features have been removed
   entirely from ``LDAPNode``.
 
-* ``LDAPProps.check_duplicates`` setting has been removed.
+- ``LDAPProps.check_duplicates`` setting has been removed.
 
 
 Usage
@@ -46,7 +46,9 @@ LDAP Properties
 ---------------
 
 To define connection properties for LDAP use ``node.ext.ldap.LDAPProps``
-object::
+object:
+
+.. code-block:: pycon
 
     >>> from node.ext.ldap import LDAPProps
     >>> props = LDAPProps(uri='ldap://localhost:12345/',
@@ -54,7 +56,9 @@ object::
     ...                   password='secret',
     ...                   cache=False)
 
-Test server connectivity with ``node.ext.ldap.testLDAPConnectivity``::
+Test server connectivity with ``node.ext.ldap.testLDAPConnectivity``:
+
+.. code-block:: pycon
 
     >>> from node.ext.ldap import testLDAPConnectivity
     >>> testLDAPConnectivity(props=props)
@@ -67,19 +71,25 @@ LDAP Connection
 For handling LDAP connections, ``node.ext.ldap.LDAPConnector`` is used. It
 expects a ``LDAPProps`` instance in the constructor. Normally there is no
 need to instantiate this object directly, this happens during creation of
-higher abstractions, see below::
+higher abstractions, see below:
+
+.. code-block:: pycon
 
     >>> from node.ext.ldap import LDAPConnector
     >>> connector = LDAPConnector(props=props)
     >>> connector
     <node.ext.ldap.base.LDAPConnector object at ...>
 
-Calling ``bind`` creates and returns the LDAP connection::
+Calling ``bind`` creates and returns the LDAP connection:
+
+.. code-block:: pycon
 
     >>> connector.bind()
     <ldap.ldapobject.SimpleLDAPObject instance at ...>
 
-Calling ``unbind`` destroys the connection::
+Calling ``unbind`` destroys the connection:
+
+.. code-block:: pycon
 
     >>> connector.unbind()
 
@@ -91,18 +101,24 @@ For communicating with an LDAP server, ``node.ext.ldap.LDAPCommunicator`` is
 used. It provides all the basic functions needed to search and modify the
 directory.
 
-``LDAPCommunicator`` expects a ``LDAPConnector`` instance at creation time::
+``LDAPCommunicator`` expects a ``LDAPConnector`` instance at creation time:
+
+.. code-block:: pycon
 
     >>> from node.ext.ldap import LDAPCommunicator
     >>> communicator = LDAPCommunicator(connector)
     >>> communicator
     <node.ext.ldap.base.LDAPCommunicator object at ...>
 
-Bind to server::
+Bind to server:
+
+.. code-block:: pycon
 
     >>> communicator.bind()
 
-Adding directory entry::
+Adding directory entry:
+
+.. code-block:: pycon
 
     >>> communicator.add(
     ...     'cn=foo,ou=demo,dc=my-domain,dc=com',
@@ -113,11 +129,15 @@ Adding directory entry::
     ...         'objectClass': ['person'],
     ...     })
 
-Set default search DN::
+Set default search DN:
+
+.. code-block:: pycon
 
     >>> communicator.baseDN = 'ou=demo,dc=my-domain,dc=com'
 
-Search in directory::
+Search in directory:
+
+.. code-block:: pycon
 
     >>> import node.ext.ldap
     >>> communicator.search('(objectClass=person)', node.ext.ldap.SUBTREE)
@@ -127,7 +147,9 @@ Search in directory::
     'cn': ['foo'],
     'sn': ['Mustermann']})]
 
-Modify directory entry::
+Modify directory entry:
+
+.. code-block:: pycon
 
     >>> from ldap import MOD_REPLACE
     >>> communicator.modify('cn=foo,ou=demo,dc=my-domain,dc=com',
@@ -139,7 +161,9 @@ Modify directory entry::
     [('cn=foo,ou=demo,dc=my-domain,dc=com',
     {'cn': ['foo']})]
 
-Change the password of a directory entry which represents a user::
+Change the password of a directory entry which represents a user:
+
+.. code-block:: pycon
 
     >>> communicator.passwd(
     ...     'cn=foo,ou=demo,dc=my-domain,dc=com', 'secret', '12345')
@@ -150,14 +174,18 @@ Change the password of a directory entry which represents a user::
     [('cn=foo,ou=demo,dc=my-domain,dc=com',
     {'userPassword': ['{SSHA}...']})]
 
-Delete directory entry::
+Delete directory entry:
+
+.. code-block:: pycon
 
     >>> communicator.delete('cn=foo,ou=demo,dc=my-domain,dc=com')
 
     >>> communicator.search('(objectClass=person)', node.ext.ldap.SUBTREE)
     []
 
-Close connection::
+Close connection:
+
+.. code-block:: pycon
 
     >>> communicator.unbind()
 
@@ -170,21 +198,29 @@ A more convenient way for dealing with LDAP is provided by
 as ``LDAPCommunicator``, but automatically creates the connectivity objects
 and checks the connection state before performing actions.
 
-Instantiate ``LDAPSession`` object. Expects ``LDAPProps`` instance::
+Instantiate ``LDAPSession`` object. Expects ``LDAPProps`` instance:
+
+.. code-block:: pycon
 
     >>> from node.ext.ldap import LDAPSession
     >>> session = LDAPSession(props)
 
-LDAP session has a convenience to check given properties::
+LDAP session has a convenience to check given properties:
+
+.. code-block:: pycon
 
     >>> session.checkServerProperties()
     (True, 'OK')
 
-Set default search DN for session::
+Set default search DN for session:
+
+.. code-block:: pycon
 
     >>> session.baseDN = 'ou=demo,dc=my-domain,dc=com'
 
-Search in directory::
+Search in directory:
+
+.. code-block:: pycon
 
     >>> session.search()
     [('ou=demo,dc=my-domain,dc=com',
@@ -192,7 +228,9 @@ Search in directory::
     'ou': ['demo'],
     'description': ['Demo organizational unit']})]
 
-Add directory entry::
+Add directory entry:
+
+.. code-block:: pycon
 
     >>> session.add(
     ...     'cn=foo,ou=demo,dc=my-domain,dc=com',
@@ -203,16 +241,22 @@ Add directory entry::
     ...         'objectClass': ['person'],
     ...     })
 
-Change the password of a directory entry which represents a user::
+Change the password of a directory entry which represents a user:
+
+.. code-block:: pycon
 
     >>> session.passwd('cn=foo,ou=demo,dc=my-domain,dc=com', 'secret', '12345')
 
-Authenticate a specific user::
+Authenticate a specific user:
+
+.. code-block:: pycon
 
     >>> session.authenticate('cn=foo,ou=demo,dc=my-domain,dc=com', '12345')
     True
 
-Modify directory entry::
+Modify directory entry:
+
+.. code-block:: pycon
 
     >>> session.modify('cn=foo,ou=demo,dc=my-domain,dc=com',
     ...                [(MOD_REPLACE, 'sn', 'Musterfrau')])
@@ -222,13 +266,17 @@ Modify directory entry::
     ...                attrlist=['cn'])
     [('cn=foo,ou=demo,dc=my-domain,dc=com', {'cn': ['foo']})]
 
-Delete directory entry::
+Delete directory entry:
+
+.. code-block:: pycon
 
     >>> session.delete('cn=foo,ou=demo,dc=my-domain,dc=com')
     >>> session.search('(objectClass=person)', node.ext.ldap.SUBTREE)
     []
 
-Close session::
+Close session:
+
+.. code-block:: pycon
 
     >>> session.unbind()
 
@@ -241,12 +289,16 @@ One can deal with LDAP entries as node objects. Therefor
 node API, see `node <http://pypi.python.org/pypi/node>`_ package.
 
 Create a LDAP node. The root Node expects the base DN and a ``LDAPProps``
-instance::
+instance:
+
+.. code-block:: pycon
 
     >>> from node.ext.ldap import LDAPNode
     >>> root = LDAPNode('ou=demo,dc=my-domain,dc=com', props=props)
 
-Every LDAP node has a DN and a RDN::
+Every LDAP node has a DN and a RDN:
+
+.. code-block:: pycon
 
     >>> root.DN
     u'ou=demo,dc=my-domain,dc=com'
@@ -254,12 +306,16 @@ Every LDAP node has a DN and a RDN::
     >>> root.rdn_attr
     u'ou'
 
-Directory entry has no children yet::
+Directory entry has no children yet:
+
+.. code-block:: pycon
 
     >>> root.keys()
     []
 
-Add children to root node::
+Add children to root node:
+
+.. code-block:: pycon
 
     >>> person = LDAPNode()
     >>> person.attrs['objectClass'] = ['person', 'inetOrgPerson']
@@ -274,17 +330,23 @@ Add children to root node::
     >>> root['cn=person2'] = person
 
 If the RDN attribute was not set during node creation, it is computed from
-node key and set automatically::
+node key and set automatically:
+
+.. code-block:: pycon
 
     >>> person.attrs['cn']
     u'person2'
 
-Fetch children DN by key from LDAP node::
+Fetch children DN by key from LDAP node:
+
+.. code-block:: pycon
 
     >>> root.child_dn('cn=person1')
     u'cn=person1,ou=demo,dc=my-domain,dc=com'
 
-Have a look at the tree::
+Have a look at the tree:
+
+.. code-block:: pycon
 
     >>> root.printtree()
     <ou=demo,dc=my-domain,dc=com - True>
@@ -295,7 +357,9 @@ The entries have not been written to the directory yet. When modifying a LDAP
 node tree, everything happens im memory. Persisting is done by calling the
 tree, or a part of it. You can check sync state of a node with its ``changed``
 flag. If changed is ``True`` it means either that the node attributes or node
-children has changed::
+children has changed:
+
+.. code-block:: pycon
 
     >>> root.changed
     True
@@ -304,25 +368,35 @@ children has changed::
     >>> root.changed
     False
 
-Modify a LDAP node::
+Modify a LDAP node:
+
+.. code-block:: pycon
 
     >>> person = root['cn=person1']
 
-Modify existing attribute::
+Modify existing attribute:
+
+.. code-block:: pycon
 
     >>> person.attrs['sn'] = 'Mustermensch'
 
-Add new attribute::
+Add new attribute:
+
+.. code-block:: pycon
 
     >>> person.attrs['description'] = 'Mustermensch description'
     >>> person()
 
-Delete an attribute::
+Delete an attribute:
+
+.. code-block:: pycon
 
     >>> del person.attrs['description']
     >>> person()
 
-Delete LDAP node::
+Delete LDAP node:
+
+.. code-block:: pycon
 
     >>> del root['cn=person2']
     >>> root()
@@ -334,7 +408,9 @@ Delete LDAP node::
 Searching LDAP
 --------------
 
-Add some users and groups we'll search for::
+Add some users and groups we'll search for:
+
+.. code-block:: pycon
 
     >>> for i in range(2, 6):
     ...     node = LDAPNode()
@@ -374,7 +450,9 @@ Add some users and groups we'll search for::
       <cn=group2,ou=demo,dc=my-domain,dc=com:cn=group2 - False>
 
 For defining search criteria LDAP filters are used, which can be combined by
-bool operators '&' and '|'::
+bool operators '&' and '|':
+
+.. code-block:: pycon
 
     >>> from node.ext.ldap import LDAPFilter
     >>> filter = LDAPFilter('(objectClass=person)')
@@ -388,7 +466,9 @@ bool operators '&' and '|'::
     u'cn=group1,ou=demo,dc=my-domain,dc=com', 
     u'cn=group2,ou=demo,dc=my-domain,dc=com']
 
-Define multiple criteria LDAP filter::
+Define multiple criteria LDAP filter:
+
+.. code-block:: pycon
 
     >>> from node.ext.ldap import LDAPDictFilter
     >>> filter = LDAPDictFilter({'objectClass': ['person'], 'cn': 'person1'})
@@ -396,7 +476,9 @@ Define multiple criteria LDAP filter::
     [u'cn=person1,ou=demo,dc=my-domain,dc=com']
 
 Define a relation LDAP filter. In this case we build a relation between group
-'cn' and person 'businessCategory'::
+'cn' and person 'businessCategory':
+
+.. code-block:: pycon
 
     >>> from node.ext.ldap import LDAPRelationFilter
     >>> filter = LDAPRelationFilter(root['cn=group1'], 'cn:businessCategory')
@@ -406,7 +488,9 @@ Define a relation LDAP filter. In this case we build a relation between group
     u'cn=person4,ou=demo,dc=my-domain,dc=com', 
     u'cn=person5,ou=demo,dc=my-domain,dc=com']
 
-Different LDAP filter types can be combined::
+Different LDAP filter types can be combined:
+
+.. code-block:: pycon
 
     >>> filter &= LDAPFilter('(cn=person2)')
     >>> str(filter)
@@ -471,13 +555,17 @@ You can define search defaults on the node which are always considered when
 calling ``search`` on this node. If set, they are always '&' combined with
 any (optional) passed filters.
 
-Define the default search scope::
+Define the default search scope:
+
+.. code-block:: pycon
 
     >>> from node.ext.ldap import SUBTREE
     >>> root.search_scope = SUBTREE
 
 Define default search filter, could be of type LDAPFilter, LDAPDictFilter,
-LDAPRelationFilter or string::
+LDAPRelationFilter or string:
+
+.. code-block:: pycon
 
     >>> root.search_filter = LDAPFilter('objectClass=groupOfNames')
     >>> root.search()
@@ -486,7 +574,9 @@ LDAPRelationFilter or string::
 
     >>> root.search_filter = None
 
-Define default search criteria as dict::
+Define default search criteria as dict:
+
+.. code-block:: pycon
 
     >>> root.search_criteria = {'objectClass': 'person'}
     >>> root.search()
@@ -496,7 +586,9 @@ Define default search criteria as dict::
     u'cn=person4,ou=demo,dc=my-domain,dc=com', 
     u'cn=person5,ou=demo,dc=my-domain,dc=com']
 
-Define default search relation::
+Define default search relation:
+
+.. code-block:: pycon
 
     >>> root.search_relation = \
     ...     LDAPRelationFilter(root['cn=group1'], 'cn:businessCategory')
@@ -507,7 +599,9 @@ Define default search relation::
     u'cn=person5,ou=demo,dc=my-domain,dc=com']
 
 Again, like with the keyword arguments, multiple defined defaults are '&'
-combined::
+combined:
+
+.. code-block:: pycon
 
     # empty result, there are no groups with group 'cn' as 'description'
     >>> root.search_criteria = {'objectClass': 'group'}
@@ -518,21 +612,29 @@ combined::
 JSON Serialization
 ------------------
 
-Serialize and deserialize LDAP nodes::
+Serialize and deserialize LDAP nodes:
+
+.. code-block:: pycon
 
     >>> root = LDAPNode('ou=demo,dc=my-domain,dc=com', props=props)
 
-Serialize children::
+Serialize children:
+
+.. code-block:: pycon
 
     >>> from node.serializer import serialize
     >>> json_dump = serialize(root.values())
 
-Clear and persist root::
+Clear and persist root:
+
+.. code-block:: pycon
 
     >>> root.clear()
     >>> root()
 
-Deserialize JSON dump::
+Deserialize JSON dump:
+
+.. code-block:: pycon
 
     >>> from node.serializer import deserialize
     >>> deserialize(json_dump, root=root)
@@ -544,7 +646,9 @@ Deserialize JSON dump::
     <cn=group1,ou=demo,dc=my-domain,dc=com:cn=group1 - True>, 
     <cn=group2,ou=demo,dc=my-domain,dc=com:cn=group2 - True>]
 
-Since root has been given, created nodes were added::
+Since root has been given, created nodes were added:
+
+.. code-block:: pycon
 
     >>> root()
     >>> root.printtree()
@@ -557,7 +661,9 @@ Since root has been given, created nodes were added::
       <cn=group1,ou=demo,dc=my-domain,dc=com:cn=group1 - False>
       <cn=group2,ou=demo,dc=my-domain,dc=com:cn=group2 - False>
 
-Non simple vs simple mode. Create container with children::
+Non simple vs simple mode. Create container with children:
+
+.. code-block:: pycon
 
     >>> container = LDAPNode()
     >>> container.attrs['objectClass'] = ['organizationalUnit']
@@ -572,7 +678,9 @@ Non simple vs simple mode. Create container with children::
     >>> root()
 
 Serialize in default mode contains type specific information. Thus JSON dump
-can be deserialized later::
+can be deserialized later:
+
+.. code-block:: pycon
 
     >>> serialize(container)
     '{"__node__": 
@@ -589,7 +697,9 @@ can be deserialized later::
     "class": "node.ext.ldap._node.LDAPNode", 
     "name": "ou=container"}}'
 
-Serialize in simple mode is better readable, but not deserialzable any more::
+Serialize in simple mode is better readable, but not deserialzable any more:
+
+.. code-block:: pycon
 
     >>> serialize(container, simple_mode=True)
     '{"attrs": 
@@ -609,7 +719,9 @@ User and Group management
 
 LDAP is often used to manage Authentication, thus ``node.ext.ldap`` provides
 an API for User and Group management. The API follows the contract of
-`node.ext.ugm <http://pypi.python.org/pypi/node.ext.ugm>`_::
+`node.ext.ugm <http://pypi.python.org/pypi/node.ext.ugm>`_:
+
+.. code-block:: pycon
 
     >>> from node.ext.ldap import ONELEVEL
     >>> from node.ext.ldap.ugm import (
@@ -670,7 +782,9 @@ Reserved attrmap keys for Users:
 **login**
     Alternative login name attribute (optional)
 
-Create config objects::
+Create config objects:
+
+.. code-block:: pycon
 
     >>> ucfg = UsersConfig(
     ...     baseDN='ou=demo,dc=my-domain,dc=com',
@@ -703,7 +817,9 @@ Create config objects::
 Roles are represented in LDAP like groups. Note, if groups and roles are mixed
 up in the same container, make sure that query filter fits. For our demo,
 different group object classes are used. Anyway, in real world it might be
-worth considering a seperate container for roles::
+worth considering a seperate container for roles:
+
+.. code-block:: pycon
 
     >>> rcfg = GroupsConfig(
     ...     baseDN='ou=demo,dc=my-domain,dc=com',
@@ -718,7 +834,9 @@ worth considering a seperate container for roles::
     ...     strict=False,
     ... )
 
-Instantiate ``Ugm`` object::
+Instantiate ``Ugm`` object:
+
+.. code-block:: pycon
 
     >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
     >>> ugm
@@ -726,7 +844,9 @@ Instantiate ``Ugm`` object::
 
 The Ugm object has 2 children, the users container and the groups container.
 The are accessible via node API, but also on ``users`` respective ``groups``
-attribute::
+attribute:
+
+.. code-block:: pycon
 
     >>> ugm.keys()
     ['users', 'groups']
@@ -737,13 +857,17 @@ attribute::
     >>> ugm.groups
     <Groups object 'groups' at ...>
 
-Fetch user::
+Fetch user:
+
+.. code-block:: pycon
 
     >>> user = ugm.users['person1']
     >>> user
     <User object 'person1' at ...>
 
-User attributes. Reserved keys are available on user attributes::
+User attributes. Reserved keys are available on user attributes:
+
+.. code-block:: pycon
 
     >>> user.attrs['id']
     u'person1'
@@ -751,7 +875,9 @@ User attributes. Reserved keys are available on user attributes::
     >>> user.attrs['login']
     u'Mustermensch'
 
-'login' maps to 'sn'::
+'login' maps to 'sn':
+
+.. code-block:: pycon
 
     >>> user.attrs['sn']
     u'Mustermensch'
@@ -763,23 +889,31 @@ User attributes. Reserved keys are available on user attributes::
     >>> user.attrs['description'] = 'Some description'
     >>> user()
 
-Check user credentials::
+Check user credentials:
+
+.. code-block:: pycon
 
     >>> user.authenticate('secret')
     True
 
-Change user password::
+Change user password:
+
+.. code-block:: pycon
 
     >>> user.passwd('secret', 'newsecret')
     >>> user.authenticate('newsecret')
     True
 
-Groups user is member of::
+Groups user is member of:
+
+.. code-block:: pycon
 
     >>> user.groups
     [<Group object 'group1' at ...>]
 
-Add new User::
+Add new User:
+
+.. code-block:: pycon
 
     >>> user = ugm.users.create('person99', sn='Person 99')
     >>> user()
@@ -792,7 +926,9 @@ Add new User::
     u'person5',
     u'person99']
 
-Delete User::
+Delete User:
+
+.. code-block:: pycon
 
     >>> del ugm.users['person99']
     >>> ugm.users()
@@ -803,11 +939,15 @@ Delete User::
     u'person4',
     u'person5']
 
-Fetch Group::
+Fetch Group:
+
+.. code-block:: pycon
 
     >>> group = ugm.groups['group1']
 
-Group members::
+Group members:
+
+.. code-block:: pycon
 
     >>> group.member_ids
     [u'person1', u'person2']
@@ -815,13 +955,17 @@ Group members::
     >>> group.users
     [<User object 'person1' at ...>, <User object 'person2' at ...>]
 
-Add group member::
+Add group member:
+
+.. code-block:: pycon
 
     >>> group.add('person3')
     >>> group.member_ids
     [u'person1', u'person2', u'person3']
 
-Delete group member::
+Delete group member:
+
+.. code-block:: pycon
 
     >>> del group['person3']
     >>> group.member_ids
@@ -830,53 +974,75 @@ Delete group member::
 Group attribute manipulation works the same way as on user objects.
 
 Manage roles for users and groups. Roles can be queried, added and removed via
-ugm or principal object. Fetch a user::
+ugm or principal object. Fetch a user:
+
+.. code-block:: pycon
 
     >>> user = ugm.users['person1']
 
-Add role for user via ugm::
+Add role for user via ugm:
+
+.. code-block:: pycon
 
     >>> ugm.add_role('viewer', user)
 
-Add role for user directly::
+Add role for user directly:
+
+.. code-block:: pycon
 
     >>> user.add_role('editor')
 
-Query roles for user via ugm::
+Query roles for user via ugm:
+
+.. code-block:: pycon
 
     >>> sorted(ugm.roles(user))
     ['editor', 'viewer']
 
-Query roles directly::
+Query roles directly:
+
+.. code-block:: pycon
 
     >>> sorted(user.roles)
     ['editor', 'viewer']
 
-Call UGM to persist roles::
+Call UGM to persist roles:
+
+.. code-block:: pycon
 
     >>> ugm()
 
-Delete role via ugm::
+Delete role via ugm:
+
+.. code-block:: pycon
 
     >>> ugm.remove_role('viewer', user)
     >>> user.roles
     ['editor']
 
-Delete role directly::
+Delete role directly:
+
+.. code-block:: pycon
 
     >>> user.remove_role('editor')
     >>> user.roles
     []
 
-Call UGM to persist roles::
+Call UGM to persist roles:
+
+.. code-block:: pycon
 
     >>> ugm()
 
-Same with group. Fetch a group::
+Same with group. Fetch a group:
+
+.. code-block:: pycon
 
     >>> group = ugm.groups['group1']
 
-Add roles::
+Add roles:
+
+.. code-block:: pycon
 
     >>> ugm.add_role('viewer', group)
     >>> group.add_role('editor')
@@ -889,7 +1055,9 @@ Add roles::
 
     >>> ugm()
 
-Remove roles::
+Remove roles:
+
+.. code-block:: pycon
 
     >>> ugm.remove_role('viewer', group)
     >>> group.remove_role('editor')
@@ -926,7 +1094,9 @@ work. If you don't, ``node.ext.ldap`` falls back to use ``bda.cache.NullCache``,
 which does not cache anything and is just an API placeholder.
 
 To provide a cache based on ``Memcached`` install memcached server and
-configure it. Then you need to provide the factory utility::
+configure it. Then you need to provide the factory utility:
+
+.. code-block:: pycon
 
     >>> # Dummy registry.
     >>> from zope.component import registry
@@ -937,7 +1107,9 @@ configure it. Then you need to provide the factory utility::
     >>> components.registerUtility(cache_factory)
 
 In case of multiple memcached backends on various IPs and ports initialization
-of the factory looks like this::
+of the factory looks like this:
+
+.. code-block:: pycon
 
     >>> # Dummy registry.
     >>> components = registry.Components('comps')
@@ -951,11 +1123,17 @@ Dependencies
 ------------
 
 - python-ldap
+
 - smbpasswd
+
 - argparse
+
 - plumber
+
 - node
+
 - node.ext.ugm
+
 - bda.cache
 
 
@@ -972,10 +1150,21 @@ Contributors
 ============
 
 - Robert Niederreiter
+
 - Florian Friesdorf
+
 - Jens Klein
+
 - Georg Bernhard
+
 - Johannes Raggam
+
+- Alexander Pilz
+
+- Domen Kožar
+
 - Daniel Widerin
+
 - Asko Soukka
 
+- Alex Milosz Sielicki
