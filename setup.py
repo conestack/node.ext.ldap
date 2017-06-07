@@ -1,15 +1,26 @@
 # -*- coding: utf-8 -*-
 from setuptools import find_packages
 from setuptools import setup
+import codecs
 import os
+
+
+def read_file(name):
+    with codecs.open(
+        os.path.join(os.path.dirname(__file__), name),
+        encoding='utf-8'
+    ) as f:
+        return f.read()
 
 
 version = '1.0b4'
 shortdesc = 'LDAP/AD convenience with Node-trees based on python-ldap'
-longdesc = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
-longdesc += open(os.path.join(os.path.dirname(__file__), 'CHANGES.rst')).read()
-longdesc += open(os.path.join(os.path.dirname(__file__), 'TODO.rst')).read()
-longdesc += open(os.path.join(os.path.dirname(__file__), 'LICENSE.rst')).read()
+longdesc = '\n\n'.join([read_file(name) for name in [
+    'README.rst',
+    'CHANGES.rst',
+    'TODO.rst',
+    'LICENSE.rst'
+]])
 
 
 setup(
@@ -41,7 +52,7 @@ setup(
         'bda.cache',
         'odict>=1.6.1',
         'plumber>=1.4',
-        'node>=0.9.20'
+        'node>=0.9.20',
         'node.ext.ugm>=0.9.9',
     ],
     extras_require={
