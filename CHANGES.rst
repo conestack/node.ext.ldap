@@ -1,7 +1,7 @@
 History
 =======
 
-1.0b6 (unreleased)
+1.0b6 (2017-10-27)
 ------------------
 
 - Switch to use mdb as default db for slapd i testing layer.
