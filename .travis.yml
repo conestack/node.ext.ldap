@@ -23,7 +23,6 @@ before_install:
 install:
   - ./bin/buildout -N -t 3 -c travis.cfg
 script:
-  - ./bin/test
-after_success:
   - bin/coverage run --source=./src/node/ext/ldap bin/test
+after_success:
   - bin/coveralls
