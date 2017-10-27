@@ -275,10 +275,10 @@ Check added node internal DN::
 Data has changed in memory, but not persisted yet to LDAP::
 
     >>> customers.keys()
-    [u'ou=customer1', 
-    u'ou=customer2', 
-    u'ou=n\xe4sty\\, customer', 
-    u'uid=binary', 
+    [u'ou=customer1',
+    u'ou=customer2',
+    u'ou=n\xe4sty\\, customer',
+    u'uid=binary',
     u'ou=customer3']
 
 Now tree nodes from customer up to root are flagged changed after adding the
@@ -961,51 +961,52 @@ No other default search criteria set::
 
 Search with no arguments given return childs keys::
 
-    >>> node.search()
+    >>> sorted(node.search())
     [u'ou=customers,dc=my-domain,dc=com', u'ou=demo,dc=my-domain,dc=com']
 
 Set default search scope to SUBTREE::
 
     >>> node.search_scope = SUBTREE
-    >>> node.search()
-    [u'dc=my-domain,dc=com', 
-    u'ou=customers,dc=my-domain,dc=com', 
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com', 
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com', 
-    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com', 
-    u'ou=demo,dc=my-domain,dc=com', 
-    u'uid=binary,ou=customers,dc=my-domain,dc=com', 
-    u'ou=customer3,ou=customers,dc=my-domain,dc=com', 
-    u'cn=customer99,ou=customers,dc=my-domain,dc=com']
+    >>> sorted(node.search())
+    [u'cn=customer99,ou=customers,dc=my-domain,dc=com',
+    u'dc=my-domain,dc=com',
+    u'ou=customer1,ou=customers,dc=my-domain,dc=com',
+    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
+    u'ou=customer3,ou=customers,dc=my-domain,dc=com',
+    u'ou=customers,dc=my-domain,dc=com',
+    u'ou=demo,dc=my-domain,dc=com',
+    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com',
+    u'uid=binary,ou=customers,dc=my-domain,dc=com']
 
 We can fetch node instances instead of DN's in search result::
 
-    >>> node.search(get_nodes=True)
-    [<dc=my-domain,dc=com - False>, 
-    <ou=customers,dc=my-domain,dc=com:ou=customers - False>, 
-    <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>, 
-    <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>, 
-    <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>, 
-    <ou=demo,dc=my-domain,dc=com:ou=demo - False>, 
-    <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>, 
-    <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>, 
-    <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
+    >>> pprint(node.search(get_nodes=True))
+    [<dc=my-domain,dc=com - False>,
+    <ou=demo,dc=my-domain,dc=com:ou=demo - False>,
+    <ou=customers,dc=my-domain,dc=com:ou=customers - False>,
+    <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>,
+    <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>,
+    <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>,
+    <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>,
+    <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>,
+    <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>]
+
 
 Search with pagination::
 
     >>> res, cookie = node.search(page_size=5)
     >>> res
-    [u'dc=my-domain,dc=com', 
-    u'ou=customers,dc=my-domain,dc=com', 
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com', 
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com', 
+    [u'dc=my-domain,dc=com',
+    u'ou=customers,dc=my-domain,dc=com',
+    u'ou=customer1,ou=customers,dc=my-domain,dc=com',
+    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
     u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com']
 
     >>> res, cookie = node.search(page_size=5, cookie=cookie)
     >>> res
-    [u'ou=demo,dc=my-domain,dc=com', 
-    u'uid=binary,ou=customers,dc=my-domain,dc=com', 
-    u'ou=customer3,ou=customers,dc=my-domain,dc=com', 
+    [u'ou=demo,dc=my-domain,dc=com',
+    u'uid=binary,ou=customers,dc=my-domain,dc=com',
+    u'ou=customer3,ou=customers,dc=my-domain,dc=com',
     u'cn=customer99,ou=customers,dc=my-domain,dc=com']
 
     >>> assert cookie == ''
@@ -1015,22 +1016,22 @@ Lets add a default search filter.::
     >>> filter = LDAPFilter('(objectClass=organizationalUnit)')
     >>> node.search_filter = filter
     >>> node.search()
-    [u'ou=customers,dc=my-domain,dc=com', 
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com', 
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com', 
-    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com', 
-    u'ou=demo,dc=my-domain,dc=com', 
+    [u'ou=customers,dc=my-domain,dc=com',
+    u'ou=customer1,ou=customers,dc=my-domain,dc=com',
+    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
+    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com',
+    u'ou=demo,dc=my-domain,dc=com',
     u'ou=customer3,ou=customers,dc=my-domain,dc=com']
 
 The default search filter could also be a string::
 
     >>> node.search_filter = '(objectClass=organizationalUnit)'
     >>> node.search()
-    [u'ou=customers,dc=my-domain,dc=com', 
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com', 
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com', 
-    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com', 
-    u'ou=demo,dc=my-domain,dc=com', 
+    [u'ou=customers,dc=my-domain,dc=com',
+    u'ou=customer1,ou=customers,dc=my-domain,dc=com',
+    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
+    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com',
+    u'ou=demo,dc=my-domain,dc=com',
     u'ou=customer3,ou=customers,dc=my-domain,dc=com']
 
 Its also possible to define default search criteria as dict::
@@ -1039,8 +1040,8 @@ Its also possible to define default search criteria as dict::
     ...     'businessCategory': 'customers',
     ... }
     >>> node.search()
-    [u'ou=customer1,ou=customers,dc=my-domain,dc=com', 
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com', 
+    [u'ou=customer1,ou=customers,dc=my-domain,dc=com',
+    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
     u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com']
 
     >>> node.search_criteria = {
@@ -1052,29 +1053,29 @@ Its also possible to define default search criteria as dict::
 To get more information by search result, pass an attrlist to search function::
 
     >>> node.search(attrlist=['rdn', 'description'])
-    [(u'ou=customers,dc=my-domain,dc=com', 
-    {u'rdn': u'ou=customers', 
+    [(u'ou=customers,dc=my-domain,dc=com',
+    {u'rdn': u'ou=customers',
     u'description': [u'customers']})]
 
     >>> node.search(attrlist=['rdn', 'description', 'businessCategory'])
-    [(u'ou=customers,dc=my-domain,dc=com', 
-    {u'rdn': u'ou=customers', 
-    u'description': [u'customers'], 
+    [(u'ou=customers,dc=my-domain,dc=com',
+    {u'rdn': u'ou=customers',
+    u'description': [u'customers'],
     u'businessCategory': [u'customers_container']})]
 
 We can also fetch nodes instead of DN here::
 
     >>> node.search(attrlist=['dn', 'description'],
     ...             get_nodes=True)
-    [(<ou=customers,dc=my-domain,dc=com:ou=customers - False>, 
-    {u'dn': u'ou=customers,dc=my-domain,dc=com', 
+    [(<ou=customers,dc=my-domain,dc=com:ou=customers - False>,
+    {u'dn': u'ou=customers,dc=my-domain,dc=com',
     u'description': [u'customers']})]
 
     >>> node.search(attrlist=['dn', 'description', 'businessCategory'],
     ...             get_nodes=True)
-    [(<ou=customers,dc=my-domain,dc=com:ou=customers - False>, 
-    {u'dn': u'ou=customers,dc=my-domain,dc=com', 
-    u'description': [u'customers'], 
+    [(<ou=customers,dc=my-domain,dc=com:ou=customers - False>,
+    {u'dn': u'ou=customers,dc=my-domain,dc=com',
+    u'description': [u'customers'],
     u'businessCategory': [u'customers_container']})]
 
 Test without defaults, defining search with keyword arguments::
@@ -1121,8 +1122,8 @@ Test relation filter::
     >>> node.search_relation = 'description:businessCategory'
     >>> rel_node = node['ou=customers']['cn=customer99']
     >>> node.search(relation_node=rel_node)
-    [u'ou=customer1,ou=customers,dc=my-domain,dc=com', 
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com', 
+    [u'ou=customer1,ou=customers,dc=my-domain,dc=com',
+    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
     u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com']
 
     >>> node.search(relation='description:description', relation_node=rel_node)
@@ -1146,32 +1147,32 @@ Test relation filter::
     '(|(description=customers)(businessCategory=customers))'
 
     >>> node.search(relation=relation)
-    [u'ou=customers,dc=my-domain,dc=com', 
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com', 
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com', 
+    [u'ou=customers,dc=my-domain,dc=com',
+    u'ou=customer1,ou=customers,dc=my-domain,dc=com',
+    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
     u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com']
 
     >>> node.search_relation = relation
     >>> node.search()
-    [u'ou=customers,dc=my-domain,dc=com', 
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com', 
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com', 
+    [u'ou=customers,dc=my-domain,dc=com',
+    u'ou=customer1,ou=customers,dc=my-domain,dc=com',
+    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
     u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com']
 
 Search with binary in attrlist::
 
     >>> node = LDAPNode('dc=my-domain,dc=com', props)
     >>> node.search_scope = SUBTREE
-    >>> node.search(attrlist=['jpegPhoto'])
-    [(u'dc=my-domain,dc=com', {}), 
-    (u'ou=customers,dc=my-domain,dc=com', {}), 
-    (u'ou=customer1,ou=customers,dc=my-domain,dc=com', {}), 
-    (u'ou=customer2,ou=customers,dc=my-domain,dc=com', {}), 
-    (u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com', {}), 
-    (u'ou=demo,dc=my-domain,dc=com', {}), 
-    (u'uid=binary,ou=customers,dc=my-domain,dc=com', {u'jpegPhoto': ['...']}), 
-    (u'ou=customer3,ou=customers,dc=my-domain,dc=com', {}), 
-    (u'cn=customer99,ou=customers,dc=my-domain,dc=com', {})]
+    >>> sorted(node.search(attrlist=['jpegPhoto']))
+    [(u'cn=customer99,ou=customers,dc=my-domain,dc=com', {}),
+    (u'dc=my-domain,dc=com', {}),
+    (u'ou=customer1,ou=customers,dc=my-domain,dc=com', {}),
+    (u'ou=customer2,ou=customers,dc=my-domain,dc=com', {}),
+    (u'ou=customer3,ou=customers,dc=my-domain,dc=com', {}),
+    (u'ou=customers,dc=my-domain,dc=com', {}),
+    (u'ou=demo,dc=my-domain,dc=com', {}),
+    (u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com', {}),
+    (u'uid=binary,ou=customers,dc=my-domain,dc=com', {u'jpegPhoto': ['...']})]
 
 Add and delete node without persisting in between::
 

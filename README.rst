@@ -457,14 +457,14 @@ bool operators '&' and '|':
     >>> from node.ext.ldap import LDAPFilter
     >>> filter = LDAPFilter('(objectClass=person)')
     >>> filter |= LDAPFilter('(objectClass=groupOfNames)')
-    >>> root.search(queryFilter=filter)
-    [u'cn=person1,ou=demo,dc=my-domain,dc=com', 
-    u'cn=person2,ou=demo,dc=my-domain,dc=com', 
-    u'cn=person3,ou=demo,dc=my-domain,dc=com', 
-    u'cn=person4,ou=demo,dc=my-domain,dc=com', 
-    u'cn=person5,ou=demo,dc=my-domain,dc=com', 
-    u'cn=group1,ou=demo,dc=my-domain,dc=com', 
-    u'cn=group2,ou=demo,dc=my-domain,dc=com']
+    >>> sorted(root.search(queryFilter=filter))
+    [u'cn=group1,ou=demo,dc=my-domain,dc=com',
+    u'cn=group2,ou=demo,dc=my-domain,dc=com',
+    u'cn=person1,ou=demo,dc=my-domain,dc=com',
+    u'cn=person2,ou=demo,dc=my-domain,dc=com',
+    u'cn=person3,ou=demo,dc=my-domain,dc=com',
+    u'cn=person4,ou=demo,dc=my-domain,dc=com',
+    u'cn=person5,ou=demo,dc=my-domain,dc=com']
 
 Define multiple criteria LDAP filter:
 
@@ -483,9 +483,9 @@ Define a relation LDAP filter. In this case we build a relation between group
     >>> from node.ext.ldap import LDAPRelationFilter
     >>> filter = LDAPRelationFilter(root['cn=group1'], 'cn:businessCategory')
     >>> root.search(queryFilter=filter)
-    [u'cn=person2,ou=demo,dc=my-domain,dc=com', 
-    u'cn=person3,ou=demo,dc=my-domain,dc=com', 
-    u'cn=person4,ou=demo,dc=my-domain,dc=com', 
+    [u'cn=person2,ou=demo,dc=my-domain,dc=com',
+    u'cn=person3,ou=demo,dc=my-domain,dc=com',
+    u'cn=person4,ou=demo,dc=my-domain,dc=com',
     u'cn=person5,ou=demo,dc=my-domain,dc=com']
 
 Different LDAP filter types can be combined:
@@ -569,7 +569,7 @@ LDAPRelationFilter or string:
 
     >>> root.search_filter = LDAPFilter('objectClass=groupOfNames')
     >>> root.search()
-    [u'cn=group1,ou=demo,dc=my-domain,dc=com', 
+    [u'cn=group1,ou=demo,dc=my-domain,dc=com',
     u'cn=group2,ou=demo,dc=my-domain,dc=com']
 
     >>> root.search_filter = None
@@ -580,10 +580,10 @@ Define default search criteria as dict:
 
     >>> root.search_criteria = {'objectClass': 'person'}
     >>> root.search()
-    [u'cn=person1,ou=demo,dc=my-domain,dc=com', 
-    u'cn=person2,ou=demo,dc=my-domain,dc=com', 
-    u'cn=person3,ou=demo,dc=my-domain,dc=com', 
-    u'cn=person4,ou=demo,dc=my-domain,dc=com', 
+    [u'cn=person1,ou=demo,dc=my-domain,dc=com',
+    u'cn=person2,ou=demo,dc=my-domain,dc=com',
+    u'cn=person3,ou=demo,dc=my-domain,dc=com',
+    u'cn=person4,ou=demo,dc=my-domain,dc=com',
     u'cn=person5,ou=demo,dc=my-domain,dc=com']
 
 Define default search relation:
@@ -593,9 +593,9 @@ Define default search relation:
     >>> root.search_relation = \
     ...     LDAPRelationFilter(root['cn=group1'], 'cn:businessCategory')
     >>> root.search()
-    [u'cn=person2,ou=demo,dc=my-domain,dc=com', 
-    u'cn=person3,ou=demo,dc=my-domain,dc=com', 
-    u'cn=person4,ou=demo,dc=my-domain,dc=com', 
+    [u'cn=person2,ou=demo,dc=my-domain,dc=com',
+    u'cn=person3,ou=demo,dc=my-domain,dc=com',
+    u'cn=person4,ou=demo,dc=my-domain,dc=com',
     u'cn=person5,ou=demo,dc=my-domain,dc=com']
 
 Again, like with the keyword arguments, multiple defined defaults are '&'
@@ -638,12 +638,12 @@ Deserialize JSON dump:
 
     >>> from node.serializer import deserialize
     >>> deserialize(json_dump, root=root)
-    [<cn=person1,ou=demo,dc=my-domain,dc=com:cn=person1 - True>, 
-    <cn=person2,ou=demo,dc=my-domain,dc=com:cn=person2 - True>, 
-    <cn=person3,ou=demo,dc=my-domain,dc=com:cn=person3 - True>, 
-    <cn=person4,ou=demo,dc=my-domain,dc=com:cn=person4 - True>, 
-    <cn=person5,ou=demo,dc=my-domain,dc=com:cn=person5 - True>, 
-    <cn=group1,ou=demo,dc=my-domain,dc=com:cn=group1 - True>, 
+    [<cn=person1,ou=demo,dc=my-domain,dc=com:cn=person1 - True>,
+    <cn=person2,ou=demo,dc=my-domain,dc=com:cn=person2 - True>,
+    <cn=person3,ou=demo,dc=my-domain,dc=com:cn=person3 - True>,
+    <cn=person4,ou=demo,dc=my-domain,dc=com:cn=person4 - True>,
+    <cn=person5,ou=demo,dc=my-domain,dc=com:cn=person5 - True>,
+    <cn=group1,ou=demo,dc=my-domain,dc=com:cn=group1 - True>,
     <cn=group2,ou=demo,dc=my-domain,dc=com:cn=group2 - True>]
 
 Since root has been given, created nodes were added:
@@ -683,18 +683,18 @@ can be deserialized later:
 .. code-block:: pycon
 
     >>> serialize(container)
-    '{"__node__": 
-    {"attrs": {"objectClass": ["organizationalUnit"], 
-    "ou": "container"}, 
-    "children": 
-    [{"__node__": 
-    {"attrs": 
-    {"objectClass": ["person", "inetOrgPerson"], 
-    "userPassword": "secret", 
-    "sn": "Mustermann", "cn": "person1"}, 
-    "class": "node.ext.ldap._node.LDAPNode", 
-    "name": "cn=person1"}}], 
-    "class": "node.ext.ldap._node.LDAPNode", 
+    '{"__node__":
+    {"attrs": {"objectClass": ["organizationalUnit"],
+    "ou": "container"},
+    "children":
+    [{"__node__":
+    {"attrs":
+    {"objectClass": ["person", "inetOrgPerson"],
+    "userPassword": "secret",
+    "sn": "Mustermann", "cn": "person1"},
+    "class": "node.ext.ldap._node.LDAPNode",
+    "name": "cn=person1"}}],
+    "class": "node.ext.ldap._node.LDAPNode",
     "name": "ou=container"}}'
 
 Serialize in simple mode is better readable, but not deserialzable any more:
@@ -702,15 +702,15 @@ Serialize in simple mode is better readable, but not deserialzable any more:
 .. code-block:: pycon
 
     >>> serialize(container, simple_mode=True)
-    '{"attrs": 
-    {"objectClass": ["organizationalUnit"], 
-    "ou": "container"}, 
-    "name": "ou=container", 
-    "children": 
-    [{"name": "cn=person1", 
-    "attrs": {"objectClass": ["person", "inetOrgPerson"], 
-    "userPassword": "secret", 
-    "sn": "Mustermann", 
+    '{"attrs":
+    {"objectClass": ["organizationalUnit"],
+    "ou": "container"},
+    "name": "ou=container",
+    "children":
+    [{"name": "cn=person1",
+    "attrs": {"objectClass": ["person", "inetOrgPerson"],
+    "userPassword": "secret",
+    "sn": "Mustermann",
     "cn": "person1"}}]}'
 
 
