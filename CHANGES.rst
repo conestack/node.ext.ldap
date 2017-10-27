@@ -4,7 +4,8 @@ History
 1.0b5 (unreleased)
 ------------------
 
-- No changes yet.
+- make db-type in test layer configurable
+  [jensens]
 
 
 1.0b4 (2017-06-07)

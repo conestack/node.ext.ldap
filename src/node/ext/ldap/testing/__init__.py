@@ -19,6 +19,7 @@ import time
 SCHEMA = os.environ.get('SCHEMA')
 SLAPDBIN = os.environ.get('SLAPD_BIN', 'slapd')
 SLAPDURIS = os.environ.get('SLAPD_URIS', 'ldap://127.0.0.1:12345')
+SLAPDDB = os.environ.get('SLAPD_DB', 'bdb')  # or 'mdb'
 LDAPADDBIN = os.environ.get('LDAP_ADD_BIN', 'ldapadd')
 LDAPDELETEBIN = os.environ.get('LDAP_DELETE_BIN', 'ldapdelete')
 LDAPSUFFIX = os.environ.get('LDAP_SUFFIX', None) or "dc=my-domain,dc=com"
@@ -43,6 +44,7 @@ def read_env(layer):
     layer['binddn'] = "cn=Manager,%s" % LDAPSUFFIX
     layer['suffix'] = LDAPSUFFIX
     layer['bindpw'] = "secret"
+    layer['slapddb'] = SLAPDDB
     print tmpdir
 
 
@@ -60,7 +62,7 @@ argsfile    %(confdir)s/slapd.args
 #      figure out.
 sizelimit   3
 
-database    bdb
+database    %(slapddb)s
 suffix      "%(suffix)s"
 rootdn      "%(binddn)s"
 rootpw      %(bindpw)s
@@ -95,6 +97,7 @@ class SlapdConf(Layer):
         confdir = self['confdir']
         dbdir = self['dbdir']
         slapdconf = self['slapdconf']
+        slapddb = self['slapddb']
         schema = '\n'.join(
             ["include %s" % (schema,) for schema in self.schema]
         )
@@ -108,6 +111,7 @@ class SlapdConf(Layer):
                     dbdir=dbdir,
                     schema=schema,
                     suffix=suffix,
+                    slapddb=slapddb,
                 )
             )
         os.mkdir(dbdir)
