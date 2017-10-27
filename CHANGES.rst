@@ -1,7 +1,7 @@
 History
 =======
 
-1.0b5 (unreleased)
+1.0b5 (2017-10-27)
 ------------------
 
 - make db-type in test layer configurable
