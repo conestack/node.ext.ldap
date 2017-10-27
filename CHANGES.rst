@@ -4,7 +4,11 @@ History
 1.0b6 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Switch to use mdb as default db for slapd i testing layer.
+  [jensens]
+
+- fix tests, where output order could be random.
+  [jensens]
 
 
 1.0b5 (2017-10-27)
