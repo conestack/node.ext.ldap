@@ -25,5 +25,5 @@ install:
 script:
   - ./bin/test
 after_success:
-  - bin/createcoverage
+  - bin/coverage run --source=./src/node/ext/ldap bin/test
   - bin/coveralls
