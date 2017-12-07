@@ -18,5 +18,6 @@
 /lib/
 /local/
 /parts/
+/share/
 /src/node.ext.ldap.egg-info
 /pip-selfcheck.json
