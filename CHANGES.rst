@@ -4,7 +4,12 @@ History
 1.0b7 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Add ``objectSid`` from AD schema to ``properties.BINARY_DEFAULTS``.
+  [rnix]
+
+- Fix default value of ``LDAPStorage._multivalued_attributes`` and
+  ``LDAPStorage._binary_attributes``.
+  [rnix]
 
 
 1.0b6 (2017-10-27)

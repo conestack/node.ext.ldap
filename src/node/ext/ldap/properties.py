@@ -25,6 +25,8 @@ BINARY_DEFAULTS = set([
     'userPKCS12',
     'photo',
     'jpegPhoto',
+    # active directory
+    'objectSid'
 ])
 
 

@@ -184,8 +184,8 @@ class LDAPStorage(OdictStorage):
         self._modified_children = set()
         self._deleted_children = set()
         self._reload = False
-        self._multivalued_attributes = {}
-        self._binary_attributes = {}
+        self._multivalued_attributes = set()
+        self._binary_attributes = set()
         self._page_size = 1000
         if props:
             # only at root node
