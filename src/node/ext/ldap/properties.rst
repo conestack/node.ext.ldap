@@ -30,7 +30,8 @@ Defaults::
     ...     'crossCertificatePair',
     ...     'objectSid',
     ...     'userSMIMECertificate',
-    ...     'jpegPhoto'
+    ...     'jpegPhoto',
+    ...     'objectGUID'
     ... ]))
 
 Test LDAPPropes::

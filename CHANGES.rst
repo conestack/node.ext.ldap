@@ -4,7 +4,8 @@ History
 1.0b7 (unreleased)
 ------------------
 
-- Add ``objectSid`` from AD schema to ``properties.BINARY_DEFAULTS``.
+- Add ``objectSid`` and ``objectGUID`` from Active Directory schema to
+  ``properties.BINARY_DEFAULTS``.
   [rnix]
 
 - Fix default value of ``LDAPStorage._multivalued_attributes`` and

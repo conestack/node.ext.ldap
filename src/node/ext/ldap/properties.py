@@ -26,7 +26,8 @@ BINARY_DEFAULTS = set([
     'photo',
     'jpegPhoto',
     # active directory
-    'objectSid'
+    'objectSid',
+    'objectGUID'
 ])
 
 
