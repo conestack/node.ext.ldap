@@ -59,6 +59,15 @@ The non-unicode name got decoded::
     >>> root.rdn_attr
     u'dc'
 
+Check exists::
+
+    >>> root.exists
+    True
+
+    >>> inexistent = LDAPNode('dc=other-domain,dc=com', props)
+    >>> inexistent.exists
+    False
+
 LDAP attributes for DN are stored on ``attrs``::
 
     >>> root.attrs

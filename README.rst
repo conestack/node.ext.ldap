@@ -306,6 +306,13 @@ Every LDAP node has a DN and a RDN:
     >>> root.rdn_attr
     u'ou'
 
+Check whether created node exists in the database::
+
+.. code-block:: pycon
+
+    >>> root.exists
+    True
+
 Directory entry has no children yet:
 
 .. code-block:: pycon

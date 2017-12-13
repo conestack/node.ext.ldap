@@ -434,6 +434,22 @@ class LDAPStorage(OdictStorage):
         return u','.join([decode(key), decode(self.name)])
 
     @default
+    @property
+    def exists(self):
+        try:
+            res = self.ldap_session.search(
+                scope=BASE,
+                baseDN=self.DN.encode('utf-8'),
+                attrlist=['']
+            )
+            # this probably never happens
+            if len(res) != 1:
+                raise RuntimeError()
+            return True
+        except NO_SUCH_OBJECT:
+            return False
+
+    @default
     def node_by_dn(self, dn, strict=False):
         """Return node from tree by DN.
         """

@@ -4,6 +4,9 @@ History
 1.0b7 (unreleased)
 ------------------
 
+- Add ``exists`` property to ``LDAPStorage``.
+  [rnix]
+
 - Add ``objectSid`` and ``objectGUID`` from Active Directory schema to
   ``properties.BINARY_DEFAULTS``.
   [rnix]
