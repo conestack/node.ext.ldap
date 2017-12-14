@@ -586,9 +586,9 @@ class LDAPPrincipals(OdictStorage):
         return unaliased_dct
 
     @default
-    def search(self, criteria=None, attrlist=None,
-               exact_match=False, or_search=False, or_keys=None,
-               or_values=None, page_size=None, cookie=None):
+    def raw_search(self, criteria=None, attrlist=None,
+                   exact_match=False, or_search=False, or_keys=None,
+                   or_values=None, page_size=None, cookie=None):
         search_attrlist = [self._key_attr]
         if attrlist is not None and self._key_attr not in attrlist:
             search_attrlist += attrlist
@@ -623,6 +623,29 @@ class LDAPPrincipals(OdictStorage):
         if cookie is not None:
             return results, cookie
         return results
+
+    @default
+    def search(self, criteria=None, attrlist=None,
+               exact_match=False, or_search=False):
+        result = []
+        cookie = None
+        while True:
+            try:
+                chunk, cookie = self.raw_search(
+                    criteria=criteria,
+                    attrlist=attrlist,
+                    exact_match=exact_match,
+                    or_search=or_search,
+                    page_size=self.context.ldap_session._props.page_size,
+                    cookie=cookie
+                )
+            except ValueError as e:
+                logger.error(str(e))
+                return ret
+            result += chunk
+            if not cookie:
+                break
+        return result
 
     @default
     @locktree

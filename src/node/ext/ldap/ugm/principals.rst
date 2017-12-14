@@ -260,13 +260,14 @@ Search for users::
     >>> users.search(criteria=dict(sn=schmidt.attrs['sn']), attrlist=['login'])
     [(u'Schmidt', {'login': [u'user3']})]
 
-Paginated search for users::
+By default, search function is paginated. To control the LDAP search behavior
+in more detail, ``raw_search`` can be used::
 
-    >>> results, cookie = users.search(page_size=3, cookie='')
+    >>> results, cookie = users.raw_search(page_size=3, cookie='')
     >>> results
     [u'Meier', u'M\xfcller', u'Schmidt']
 
-    >>> results, cookie = users.search(page_size=3, cookie=cookie)
+    >>> results, cookie = users.raw_search(page_size=3, cookie=cookie)
     >>> results
     [u'Umhauer']
     >>> assert cookie == ''

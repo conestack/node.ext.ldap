@@ -4,6 +4,11 @@ History
 1.0b7 (unreleased)
 ------------------
 
+- Fix signature of ``node.ext.ldap.ugm.LDAPPrincipals.search`` according to
+  ``node.ext.ugm.interfaces.IPrincipals.search``. The implementation exposed
+  LDAP related arguments and has been renamed to ``raw_search``.
+  [rnix]
+
 - Add ``exists`` property to ``LDAPStorage``.
   [rnix]
 
