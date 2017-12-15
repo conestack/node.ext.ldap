@@ -4,6 +4,14 @@ History
 1.0b7 (unreleased)
 ------------------
 
+- Use property decorators for ``node.ext.ldap._node.LDAPStorage.changed``
+  and ``node.ext.ldap.session.LDAPSession.baseDN``.
+  [rnix]
+
+- Fix signature of ``node.ext.ldap.interfaces.ILDAPStorage.search`` to match
+  the actual implementation in ``node.ext.ldap._node.LDAPStorage.search``.
+  [rnix]
+
 - Fix signature of ``node.ext.ldap.ugm.LDAPPrincipals.search`` according to
   ``node.ext.ugm.interfaces.IPrincipals.search``. The implementation exposed
   LDAP related arguments and has been renamed to ``raw_search``.

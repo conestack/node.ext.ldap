@@ -26,16 +26,16 @@ class LDAPSession(object):
         else:
             return (False, res)
 
-    def _get_baseDN(self):
+    @property
+    def baseDN(self):
         baseDN = self._communicator.baseDN
         return baseDN
 
-    def _set_baseDN(self, baseDN):
+    @baseDN.setter
+    def baseDN(self, baseDN):
         """baseDN must be utf8-encoded.
         """
         self._communicator.baseDN = baseDN
-
-    baseDN = property(_get_baseDN, _set_baseDN)
 
     def ensure_connection(self):
         """If LDAP directory is down, bind again and retry given function.
