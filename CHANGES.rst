@@ -1,7 +1,7 @@
 History
 =======
 
-1.0b7 (unreleased)
+1.0b7 (2017-12-15)
 ------------------
 
 - Do not catch ``ValueError`` in
