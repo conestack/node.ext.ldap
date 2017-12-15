@@ -5,7 +5,6 @@ from node.ext.ldap.cache import nullcacheProviderFactory
 from node.ext.ldap.interfaces import ICacheProviderFactory
 from node.ext.ldap.properties import LDAPProps
 from zope.component import queryUtility
-
 import hashlib
 import ldap
 import logging
@@ -17,14 +16,11 @@ logger = logging.getLogger('node.ext.ldap')
 def testLDAPConnectivity(server=None, port=None, props=None):
     """Function to test the availability of the LDAP Server.
 
-    server
-        Server IP or name
-
-    port
-        LDAP port
-
-    props
-        LDAPProps object. If given, server and port are ignored.
+    :param server: Server IP or name
+    :param port: LDAP port
+    :param props: LDAPProps object. If given, server and port are ignored.
+    :return object: Either string 'success' if connectivity, otherwise ldap
+        error instance.
     """
     if props is None:
         props = LDAPProps(server=server, port=port)
@@ -39,7 +35,10 @@ def testLDAPConnectivity(server=None, port=None, props=None):
 
 
 def md5digest(key):
-    """abbrev to create a md5 hex digest
+    """Abbrev to create a md5 hex digest.
+
+    :param key: Key to create a md5 hex digest for.
+    :return digest: hex digest.
     """
     m = hashlib.md5()
     m.update(key)
@@ -69,7 +68,9 @@ class LDAPConnector(object):
     """
 
     def __init__(self, props=None):
-        """Initialize LDAPConnector.
+        """Initialize LDAP connector.
+
+        :param props: ``LDAPServerProperties`` instance.
         """
         self.protocol = ldap.VERSION3
         self._uri = props.uri
@@ -96,7 +97,7 @@ class LDAPConnector(object):
         if self._start_tls:
             # ignore in tests for now. nevertheless provide a test environment
             # for TLS and SSL later
-            self._con.start_tls_s()                        # pragma NO COVERAGE
+            self._con.start_tls_s()                        #pragma NO COVERAGE
         self._con.simple_bind_s(self._bindDN, self._bindPW)
         return self._con
 
@@ -116,9 +117,9 @@ class LDAPCommunicator(object):
     """
 
     def __init__(self, connector):
-        """
-        connector
-            LDAPConnector instance.
+        """Initialize LDAP communicator.
+
+        :param connector: ``LDAPConnector`` instance.
         """
         self.baseDN = ''
         self._connector = connector
@@ -162,36 +163,21 @@ class LDAPCommunicator(object):
                page_size=None, cookie=None):
         """Search the directory.
 
-        queryFilter
-            LDAP query filter
-
-        scope
-            LDAP search scope
-
-        baseDN
-            Search base. Defaults to ``self.baseDN``
-
-        force_reload
-            Force reload of result if cache enabled.
-
-        attrlist
-            LDAP attrlist to query.
-
-        attrsonly
-            Flag whether to return only attribute names, without corresponding
-            values.
-
-        page_size
-            Number of items per page, when doing pagination.
-
-        cookie
-            Cookie string returned by previous search with pagination.
+        :param queryFilter: LDAP query filter
+        :param scope: LDAP search scope
+        :param baseDN: Search base. Defaults to ``self.baseDN``
+        :param force_reload: Force reload of result if cache enabled.
+        :param attrlist: LDAP attrlist to query.
+        :param attrsonly: Flag whether to return only attribute names, without
+            corresponding values.
+        :param page_size: Number of items per page, when doing pagination.
+        :param cookie: Cookie string returned by previous search with
+            pagination.
         """
         if baseDN is None:
             baseDN = self.baseDN
             if not baseDN:
                 raise ValueError(u"baseDN unset.")
-
         if page_size:
             if cookie is None:
                 cookie = ''
@@ -209,7 +195,6 @@ class LDAPCommunicator(object):
             # in case we do pagination of results
             if type(attrlist) in (list, tuple):
                 attrlist = [str(_) for _ in attrlist]
-
             msgid = self._con.search_ext(
                 baseDN,
                 scope,
@@ -225,7 +210,6 @@ class LDAPCommunicator(object):
                 return results, pctrls[0].cookie
             else:
                 return results
-
         args = [baseDN, scope, queryFilter, attrlist, attrsonly, serverctrls]
         if self._cache:
             key_items = [
@@ -251,11 +235,8 @@ class LDAPCommunicator(object):
     def add(self, dn, data):
         """Insert an entry into directory.
 
-        dn
-            adding DN
-
-        data
-            dict containing key/value pairs of entry attributes
+        :param dn: Adding DN
+        :param data: Dict containing key/value pairs of entry attributes
         """
         attributes = [(k, v) for k, v in data.items()]
         self._con.add_s(dn, attributes)

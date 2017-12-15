@@ -28,7 +28,7 @@ LDAP credentials::
     ...     server=host,
     ...     port=port,
     ...     user=binddn,
-    ...     password=bindpw,
+    ...     password=bindpw
     ... )
 
 Test main script, could be used by command line with
@@ -93,6 +93,31 @@ Set base dn and check if previously imported entries are present.::
     >>> res = communicator.search('(objectClass=*)', SUBTREE)
     >>> len(res)
     7
+
+Test search pagination::
+
+    >>> res, cookie = communicator.search(
+    ...     '(objectClass=*)', SUBTREE, page_size=4, cookie='')
+    >>> len(res)
+    4
+
+    >>> res, cookie = communicator.search(
+    ...     '(objectClass=*)', SUBTREE, page_size=4, cookie=cookie)
+
+    >>> len(res)
+    3
+
+    >>> cookie
+    ''
+
+Pagination search fails if cookie but no page size given::
+
+    >>> res, cookie = communicator.search(
+    ...     '(objectClass=*)', SUBTREE, page_size=4, cookie='')
+    >>> communicator.search('(objectClass=*)', SUBTREE, cookie=cookie)
+    Traceback (most recent call last):
+      ...
+    ValueError: cookie passed without page_size
 
 Test inserting entries.::
 

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# do not change import order
 from node.ext.ldap.scope import BASE
 from node.ext.ldap.scope import ONELEVEL
 from node.ext.ldap.scope import SUBTREE

@@ -55,84 +55,48 @@ class LDAPServerProperties(object):
         retry_delay=10.0,
         multivalued_attributes=MULTIVALUED_DEFAULTS,
         binary_attributes=BINARY_DEFAULTS,
-        page_size=1000
-    ):
+        page_size=1000):
         """Take the connection properties as arguments.
 
-        SSL/TLS still unsupported
+        SSL/TLS still unsupported.
 
-        server
-            DEPRECATED use uri! servername, defaults to 'localhost'
-
-        port
-            DEPRECATED uss uri! server port, defaults to 389
-
-        user
-            username to bind, defaults to ''
-
-        password
-            password to bind, defaults to ''
-
-        cache
-            Bool wether to enable caching or not, defaults to True
-
-        timeout
-            Cache timeout in seconds. only takes affect if cache is enabled.
-
-        uri
-            overrides server/port, forget about server and port, use
+        :param server: DEPRECATED use uri! servername, defaults to 'localhost'
+        :param port: DEPRECATED uss uri! server port, defaults to 389
+        :param user: Username to bind, defaults to ''
+        :param password: Password to bind, defaults to ''
+        :param cache: Bool wether to enable caching or not, defaults to True
+        :param timeout: Cache timeout in seconds. only takes affect if cache is
+            enabled.
+        :param uri: Overrides server/port, forget about server and port, use
             this to specify how to access the ldap server, eg:
                 - ldapi:///path/to/socket
                 - ldap://<server>:<port> (will try start_tls, which you can
                   enforce, see start_tls)
                 - ldaps://<server>:<port>
-
-        start_tls
-            Determines if StartTLS extended operation is tried on
+        :param start_tls: Determines if StartTLS extended operation is tried on
             a LDAPv3 server, if the LDAP URL scheme is ldap:. If LDAP URL
             scheme is not 'ldap:' (e.g. 'ldaps:' or 'ldapi:') this parameter
             is ignored.
                 0 - Don't use StartTLS ext op
                 1 - Try StartTLS ext op but proceed when unavailable
                 2 - Try StartTLS ext op and re-raise exception if it fails
-
-        ignore_cert
-            Ignore TLS/SSL certificate errors. Useful for self-signed
-            certificates. Defaults to False
-
-        tls_cacertfile
-            Provide a specific CA Certifcate file. This is needed if the
-            CA is not in the default CA keyring (i.e. with self-signed
-            certificates). Under Windows its possible that python-ldap lib does
-            recognize the system keyring.
-
-        tls_cacertdir
+        :param ignore_cert: Ignore TLS/SSL certificate errors. Useful for
+            self-signed certificates. Defaults to False
+        :param tls_cacertfile: Provide a specific CA Certifcate file. This is
+            needed if the CA is not in the default CA keyring (i.e. with
+            self-signed certificates). Under Windows its possible that
+            python-ldap lib does recognize the system keyring.
+        :param tls_cacertdir: Not yet
+        :param tls_clcertfile: Not yet
+        :param tls_clkeyfile: Not yet
+        :param retry_max: Maximum count of reconnect trials. Not yet
+        :param retry_delay: Time span to wait between two reconnect trials.
             Not yet
-
-        tls_clcertfile
-            Not yet
-
-        tls_clkeyfile
-            Not yet
-
-        retry_max
-            Maximum count of reconnect trials
-            Not yet
-
-        retry_delay
-            Time span to wait between two reconnect trials
-            Not yet
-
-        multivalued_attributes
-            Set of attributes names considered as multivalued to be returned
-            as list.
-
-        binary_attributes
-            Set of attributes names considered as binary.
+        :param multivalued_attributes: Set of attributes names considered as
+            multivalued to be returned as list.
+        :param binary_attributes: Set of attributes names considered as binary.
             (no unicode conversion)
-
-        page_size
-            page size for LDAP search requests, defaults to 1000.
+        :param page_size: Oage size for LDAP search requests, defaults to 1000.
             Number of objects requested at once.
             In iterations after this number of objects a new search query is
             sent for the next batch using returned the LDAP cookie.
@@ -159,4 +123,5 @@ class LDAPServerProperties(object):
         self.binary_attributes = binary_attributes
         self.page_size = page_size
 
+# B/C
 LDAPProps = LDAPServerProperties

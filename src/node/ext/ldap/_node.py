@@ -56,7 +56,7 @@ class LDAPAttributesBehavior(Behavior):
     @default
     def load(self):
         ldap_node = self.parent
-        # nothong to load
+        # nothing to load
         if not ldap_node.name \
                 or not ldap_node.ldap_session \
                 or ldap_node._action == ACTION_ADD:
@@ -83,10 +83,10 @@ class LDAPAttributesBehavior(Behavior):
         )
         # result length must be 1
         if len(entry) != 1:
-            raise RuntimeError(                            # pragma NO COVERAGE
-                u"Fatal. Expected entry does not exist "   # pragma NO COVERAGE
-                u"or more than one entry found"            # pragma NO COVERAGE
-            )                                              # pragma NO COVERAGE
+            raise RuntimeError(                            #pragma NO COVERAGE
+                u"Fatal. Expected entry does not exist "   #pragma NO COVERAGE
+                u"or more than one entry found"            #pragma NO COVERAGE
+            )                                              #pragma NO COVERAGE
         # read attributes from result and set to self
         attrs = entry[0][1]
         for key, item in attrs.items():
@@ -140,7 +140,8 @@ class LDAPAttributesBehavior(Behavior):
         return name in self.parent.root._multivalued_attributes
 
 
-AttributesBehavior = LDAPAttributesBehavior  # B/C
+# B/C
+AttributesBehavior = LDAPAttributesBehavior
 deprecated('AttributesBehavior', """
 ``node.ext.ldap._node.AttributesBehavior`` is deprecated as of node.ext.ldap
 1.0 and will be removed in node.ext.ldap 1.1. Use
@@ -164,11 +165,8 @@ class LDAPStorage(OdictStorage):
         """LDAP Node expects ``name`` and ``props`` arguments for the root LDAP
         Node or nothing for children.
 
-        name
-            Initial base DN for the root LDAP Node.
-
-        props
-            ``node.ext.ldap.LDAPProps`` object.
+        :param name: Initial base DN for the root LDAP Node.
+        :param props: ``node.ext.ldap.LDAPProps`` instance.
         """
         if (name and not props) or (props and not name):
             raise ValueError(u"Wrong initialization.")
@@ -380,11 +378,14 @@ class LDAPStorage(OdictStorage):
     def rdn_attr(self):
         return self.name and self.name.split('=')[0] or None
 
-    def _get_changed(self):
+    @property
+    def changed(self):
         return self._changed
 
-    def _set_changed(self, value):
-        """Set the changed flag
+    @default
+    @changed.setter
+    def changed(self, value):
+        """Set the changed flag.
 
         Set:
             - if self.attrs are changed (attrs set us)
@@ -424,8 +425,6 @@ class LDAPStorage(OdictStorage):
         if self._changed is not oldval and self.parent is not None:
             self.parent.changed = self._changed
 
-    changed = default(property(_get_changed, _set_changed))
-
     @default
     def child_dn(self, key):
         # return child DN for key
@@ -444,7 +443,7 @@ class LDAPStorage(OdictStorage):
             )
             # this probably never happens
             if len(res) != 1:
-                raise RuntimeError()
+                raise RuntimeError()                        #pragma NO COVERAGE
             return True
         except NO_SUCH_OBJECT:
             return False
@@ -560,13 +559,10 @@ class LDAPStorage(OdictStorage):
         cookie = None
         kw['page_size'] = page_size
         while True:
-            try:
-                kw['cookie'] = cookie
-                matches, cookie = search_func(**kw)
-                for item in matches:
-                    yield item
-            except ValueError:
-                break
+            kw['cookie'] = cookie
+            matches, cookie = search_func(**kw)
+            for item in matches:
+                yield item
             if not cookie:
                 break
 
@@ -631,7 +627,6 @@ class LDAPStorage(OdictStorage):
         # modifies attributs of self on the ldap directory.
         modlist = list()
         orgin = self.attributes_factory(name='__attrs__', parent=self)
-
         for key in orgin:
             # MOD_DELETE
             if key not in self.attrs:

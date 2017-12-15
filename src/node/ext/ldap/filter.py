@@ -58,8 +58,7 @@ class LDAPFilter(object):
         return LDAPFilter(res)
 
     def __contains__(self, attr):
-        attr = '(%s=' % (attr,)
-        return attr in self._filter
+        return self._filter.find('({}='.format(attr)) > -1
 
     def __str__(self):
         return self._filter and self._filter or ''
@@ -100,34 +99,21 @@ class LDAPRelationFilter(LDAPFilter):
         """turn relation string into ldap filter string
         """
         dictionary = dict()
-
         parsedRelation = dict()
         for pair in self.relation.split('|'):
             k, _, v = pair.partition(':')
             if k not in parsedRelation:
                 parsedRelation[k] = list()
             parsedRelation[k].append(v)
-
         existing = [x for x in self.gattrs]
         for k, vals in parsedRelation.items():
             for v in vals:
-                if (
-                    str(v) == '' or
+                if (str(v) == '' or
                     str(k) == '' or
-                    str(k) not in existing
-                ):
+                    str(k) not in existing):
                     continue
                 dictionary[str(v)] = self.gattrs[str(k)]
-
         self.dictionary = dictionary
-
-        # this "if/else creates an unused result and has no effect
-        # _filter = LDAPFilter()
-        # if len(dictionary) is 1:
-        #    _filter = LDAPFilter(self.relation)
-        # else:
-        #     _filter = dict_to_filter(parsedRelation, self.or_search)
-
         if self.dictionary:
             return str(dict_to_filter(self.dictionary, self.or_search))
         return ''

@@ -26,16 +26,16 @@ class LDAPSession(object):
         else:
             return (False, res)
 
-    def _get_baseDN(self):
+    @property
+    def baseDN(self):
         baseDN = self._communicator.baseDN
         return baseDN
 
-    def _set_baseDN(self, baseDN):
+    @baseDN.setter
+    def baseDN(self, baseDN):
         """baseDN must be utf8-encoded.
         """
         self._communicator.baseDN = baseDN
-
-    baseDN = property(_get_baseDN, _set_baseDN)
 
     def ensure_connection(self):
         """If LDAP directory is down, bind again and retry given function.
@@ -94,17 +94,12 @@ class LDAPSession(object):
     def modify(self, dn, data, replace=False):
         """Modify an existing entry in the directory.
 
-        dn
-            Modification DN
-
-        #data
-        #    either list of 3 tuples (look at
-        #    node.ext.ldap.base.LDAPCommunicator.modify for details), or
-        #    a dictionary representing the entry or parts of the entry.
-        #    XXX: dicts not yet
-
-        replace
-            if set to True, replace entry at DN entirely with data.
+        :param dn: Modification DN
+        :param data: Either list of 3 tuples (look at
+            ``node.ext.ldap.base.LDAPCommunicator.modify`` for details), or a
+            dictionary representing the entry or parts of the entry.
+            XXX: dicts not yet
+        :param replace: If set to True, replace entry at DN entirely with data.
         """
         self.ensure_connection()
         result = self._communicator.modify(dn, data)
