@@ -114,11 +114,8 @@ class PrincipalAliasedAttributes(object):
 
     def __init__(self, context, aliaser=None):
         """
-        context
-            the node whose children to alias
-
-        aliaser
-            the aliaser to be used
+        :param context: The node whose children to alias
+        :param aliaser: The aliaser to be used
         """
         self.__name__ = context.name
         self.__parent__ = None
@@ -630,18 +627,14 @@ class LDAPPrincipals(OdictStorage):
         result = []
         cookie = None
         while True:
-            try:
-                chunk, cookie = self.raw_search(
-                    criteria=criteria,
-                    attrlist=attrlist,
-                    exact_match=exact_match,
-                    or_search=or_search,
-                    page_size=self.context.ldap_session._props.page_size,
-                    cookie=cookie
-                )
-            except ValueError as e:
-                logger.error(str(e))
-                return ret
+            chunk, cookie = self.raw_search(
+                criteria=criteria,
+                attrlist=attrlist,
+                exact_match=exact_match,
+                or_search=or_search,
+                page_size=self.context.ldap_session._props.page_size,
+                cookie=cookie
+            )
             result += chunk
             if not cookie:
                 break
@@ -1015,23 +1008,12 @@ class LDAPUgm(UgmBase):
     def __init__(self, name=None, parent=None, props=None,
                  ucfg=None, gcfg=None, rcfg=None):
         """
-        name
-            node name
-
-        parent
-            node parent
-
-        props
-            LDAPProps
-
-        ucfg
-            UsersConfig
-
-        gcfg
-            GroupsConfig
-
-        rcfg
-            RolesConfig
+        :param name: Node name.
+        :param parent: Node parent.
+        :param props: LDAPProps instance.
+        :param ucfg: UsersConfig instance.
+        :param gcfg: GroupsConfig instance.
+        :param rcfg: RolesConfig instance.
         """
         self.__name__ = name
         self.__parent__ = parent

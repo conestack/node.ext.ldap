@@ -4,6 +4,10 @@ History
 1.0b7 (unreleased)
 ------------------
 
+- Do not catch ``ValueError`` in
+  ``node.ext.ldap._node.LDAPStorage.batched_search``.
+  [rnix]
+
 - Use property decorators for ``node.ext.ldap._node.LDAPStorage.changed``
   and ``node.ext.ldap.session.LDAPSession.baseDN``.
   [rnix]

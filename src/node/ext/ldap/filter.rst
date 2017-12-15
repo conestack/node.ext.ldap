@@ -52,6 +52,12 @@ another LDAPFilter, a string or a None type.::
     >>> foo
     LDAPFilter('(a=ä)')
 
+    >>> 'a' in foo
+    True
+
+    >>> 'objectClass' in foo
+    False
+
     >>> filter = LDAPFilter('(objectClass=person)')
     >>> filter |= LDAPFilter('(objectClass=some)')
     >>> filter
@@ -68,6 +74,9 @@ another LDAPFilter, a string or a None type.::
     >>> filter |= LDAPFilter(u'(objectClass=some\xe4)')
     >>> filter
     LDAPFilter('(|(objectClass=personä)(objectClass=someä))')
+
+    >>> 'objectClass' in filter
+    True
 
 
 LDAPDictFilter
@@ -132,6 +141,13 @@ from relations.::
     >>> node = AttributedNode()
     >>> node.attrs['someUid'] = u'123\xe4'
     >>> node.attrs['someName'] = 'Name'
+
+    >>> rel_filter = LDAPRelationFilter(node, '')
+    >>> rel_filter
+    LDAPRelationFilter('')
+
+    >>> str(rel_filter)
+    ''
 
     >>> rel_filter = LDAPRelationFilter(node, 'someUid:otherUid')
     >>> rel_filter

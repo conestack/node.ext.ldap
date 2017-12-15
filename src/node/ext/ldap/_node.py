@@ -83,10 +83,10 @@ class LDAPAttributesBehavior(Behavior):
         )
         # result length must be 1
         if len(entry) != 1:
-            raise RuntimeError(                            # pragma NO COVERAGE
-                u"Fatal. Expected entry does not exist "   # pragma NO COVERAGE
-                u"or more than one entry found"            # pragma NO COVERAGE
-            )                                              # pragma NO COVERAGE
+            raise RuntimeError(                            #pragma NO COVERAGE
+                u"Fatal. Expected entry does not exist "   #pragma NO COVERAGE
+                u"or more than one entry found"            #pragma NO COVERAGE
+            )                                              #pragma NO COVERAGE
         # read attributes from result and set to self
         attrs = entry[0][1]
         for key, item in attrs.items():
@@ -443,7 +443,7 @@ class LDAPStorage(OdictStorage):
             )
             # this probably never happens
             if len(res) != 1:
-                raise RuntimeError()
+                raise RuntimeError()                        #pragma NO COVERAGE
             return True
         except NO_SUCH_OBJECT:
             return False
@@ -559,13 +559,10 @@ class LDAPStorage(OdictStorage):
         cookie = None
         kw['page_size'] = page_size
         while True:
-            try:
-                kw['cookie'] = cookie
-                matches, cookie = search_func(**kw)
-                for item in matches:
-                    yield item
-            except ValueError:
-                break
+            kw['cookie'] = cookie
+            matches, cookie = search_func(**kw)
+            for item in matches:
+                yield item
             if not cookie:
                 break
 
