@@ -607,13 +607,13 @@ class LDAPPrincipals(OdictStorage):
         if attrlist is not None:
             _results = list()
             for _, att in results:
-                user_id = att[self._key_attr][0]
+                principal_id = att[self._key_attr][0]
                 aliased = self._alias_dict(att)
                 keys = aliased.keys()
                 for key in keys:
                     if key not in attrlist:
                         del aliased[key]
-                _results.append((user_id, aliased))
+                _results.append((principal_id, aliased))
             results = _results
         else:
             results = [att[self._key_attr][0] for _, att in results]
