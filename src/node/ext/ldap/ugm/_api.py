@@ -484,7 +484,7 @@ class LDAPPrincipals(OdictStorage):
             if prdn in self.context._deleted_children:
                 raise KeyError(key)
             dn = res[0][0]
-            path = explode_dn(dn)[:len(self.context.DN.split(',')) * -1]
+            path = explode_dn(dn.encode('utf-8'))[:len(self.context.DN.split(',')) * -1]
             context = self.context
             for rdn in reversed(path):
                 context = context[rdn]
