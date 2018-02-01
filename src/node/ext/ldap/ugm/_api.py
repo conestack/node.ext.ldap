@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from ldap.dn import explode_dn
 from node.behaviors import Adopt
 from node.behaviors import Alias
 from node.behaviors import Attributes
@@ -483,8 +484,7 @@ class LDAPPrincipals(OdictStorage):
             if prdn in self.context._deleted_children:
                 raise KeyError(key)
             dn = res[0][0]
-            # XXX: use explode_dn
-            path = dn.split(',')[:len(self.context.DN.split(',')) * -1]
+            path = explode_dn(dn)[:len(self.context.DN.split(',')) * -1]
             context = self.context
             for rdn in reversed(path):
                 context = context[rdn]
