@@ -4,7 +4,9 @@ History
 1.0b8 (unreleased)
 ------------------
 
-- No changes yet.
+- Use ``explode_dn`` in ``LDAPPrincipals.__getitem__`` to prevent ``KeyError``
+  if DN contains comma.
+  [dmunicio]
 
 
 1.0b7 (2017-12-15)
