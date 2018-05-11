@@ -47,7 +47,7 @@ CN Attribute::
     >>> attrcn.ordering
 
     >>> attrcn.schema_attribute
-    'attributeTypes'
+    u'attributeTypes'
 
     >>> attrcn.single_value
     False

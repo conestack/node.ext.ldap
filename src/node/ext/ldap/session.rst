@@ -104,5 +104,5 @@ Create the session with invalid ``LDAPProps``::
     >>> props = LDAPProps()
     >>> session = LDAPSession(props)
     >>> session.checkServerProperties()
-    (False, SERVER_DOWN({'info': 'Transport endpoint is not connected', 
-    'errno': 107, 'desc': "Can't contact LDAP server"},))
+    (False, SERVER_DOWN({u'info': 'Transport endpoint is not connected', 
+    'errno': 107, 'desc': u"Can't contact LDAP server"},))

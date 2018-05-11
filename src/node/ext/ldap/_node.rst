@@ -510,8 +510,8 @@ Changing the rdn attribute on loaded nodes fails.::
     >>> person()
     Traceback (most recent call last):
       ...
-    NAMING_VIOLATION: {'info': "value of naming attribute 'cn'
-    is not present in entry", 'desc': 'Naming violation'}
+    NAMING_VIOLATION: {'info': u"value of naming attribute 'cn'
+    is not present in entry", 'desc': u'Naming violation'}
 
     >>> person.attrs.load()
     >>> person.attrs['cn']

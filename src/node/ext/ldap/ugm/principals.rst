@@ -100,7 +100,7 @@ Query all user nodes::
     [<cn=user1,dc=my-domain,dc=com:cn=user1 - False>, 
     <cn=user2,ou=customers,dc=my-domain,dc=com:cn=user2 - False>, 
     <cn=user3,ou=customers,dc=my-domain,dc=com:cn=user3 - False>, 
-    <cn=n?sty\2C User,ou=customers,dc=my-domain,dc=com:cn=n?sty\2C User - False>]
+    <cn=n?sty\, User,ou=customers,dc=my-domain,dc=com:cn=n?sty\, User - False>]
 
 Authenticate a user, via the user object. (also see 'via LDAPUsers' below,
 after passwd, this is to make sure, that LDAPUsers.authenticate does not work
@@ -395,7 +395,7 @@ Invalidate principals::
 
     >>> user_container = users[u'Schmidt'].context.parent.storage
     >>> len(user_container.keys())
-    10
+    9
 
     >>> users.invalidate(u'Schmidt')
     >>> sorted(users.storage.items())
@@ -404,7 +404,7 @@ Invalidate principals::
     (u'Umhauer', <User object 'Umhauer' at ...>)]
 
     >>> len(user_container.keys())
-    9
+    8
 
     >>> len(users.context.keys())
     6
@@ -568,14 +568,14 @@ Add and remove user from group::
     [u'Schmidt', u'M\xfcller']
 
     >>> group.translate_key('Umhauer')
-    u'cn=n\xe4sty\\2C User,ou=customers,dc=my-domain,dc=com'
+    u'cn=n\xe4sty\\, User,ou=customers,dc=my-domain,dc=com'
 
     >>> group.add('Umhauer')
     >>> group.attrs.items()
     [('member', 
     [u'cn=user3,ou=customers,dc=my-domain,dc=com', 
     u'cn=user2,ou=customers,dc=my-domain,dc=com', 
-    u'cn=n\xe4sty\\2C User,ou=customers,dc=my-domain,dc=com']), 
+    u'cn=n\xe4sty\\, User,ou=customers,dc=my-domain,dc=com']), 
     ('rdn', u'group1')]
 
     >>> group.member_ids

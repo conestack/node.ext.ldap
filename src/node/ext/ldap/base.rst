@@ -41,9 +41,9 @@ Test main script, could be used by command line with
 
     >>> sys.argv[-1] = '12346'
     >>> main()
-    {'info': 'Transport endpoint is not connected', 
+    {u'info': 'Transport endpoint is not connected', 
     'errno': 107, 
-    'desc': "Can't contact LDAP server"}
+    'desc': u"Can't contact LDAP server"}
 
     >>> sys.argv = []
     >>> main()
@@ -57,9 +57,9 @@ Test node.ext.ldap base objects. Test LDAP connectivity::
     'success'
 
     >>> testLDAPConnectivity('127.0.0.1', 12346)
-    SERVER_DOWN({'info': 'Transport endpoint is not connected', 
+    SERVER_DOWN({u'info': 'Transport endpoint is not connected', 
     'errno': 107, 
-    'desc': "Can't contact LDAP server"},)
+    'desc': u"Can't contact LDAP server"},)
 
 Create connector.::
 
