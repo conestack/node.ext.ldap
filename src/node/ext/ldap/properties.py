@@ -89,9 +89,8 @@ class LDAPServerProperties(object):
         :param tls_cacertdir: Not yet
         :param tls_clcertfile: Not yet
         :param tls_clkeyfile: Not yet
-        :param retry_max: Maximum count of reconnect trials. Not yet
+        :param retry_max: Maximum count of reconnect trials. Value has to be >= 1
         :param retry_delay: Time span to wait between two reconnect trials.
-            Not yet
         :param multivalued_attributes: Set of attributes names considered as
             multivalued to be returned as list.
         :param binary_attributes: Set of attributes names considered as binary.

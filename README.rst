@@ -85,7 +85,7 @@ Calling ``bind`` creates and returns the LDAP connection:
 .. code-block:: pycon
 
     >>> connector.bind()
-    <ldap.ldapobject.SimpleLDAPObject instance at ...>
+    <ldap.ldapobject.ReconnectLDAPObject instance at ...>
 
 Calling ``unbind`` destroys the connection:
 
