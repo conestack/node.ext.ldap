@@ -4,6 +4,12 @@ History
 1.0b8 (unreleased)
 ------------------
 
+- Use ``ldap.ldapobject.ReconnectLDAPObject`` instead of ``SimpleLDAPObject`` to create
+  the connection object. This makes the connection more robust.
+  Add properties `retry_max` (default 1) and `retry_delay` (default 10) to
+  ``node.ext.ldap.properties.LDAPServerProperties`` to configure ``ReconnectLDAPObject``.
+  [joka]
+
 - Use ``explode_dn`` in ``LDAPPrincipals.__getitem__`` to prevent ``KeyError``
   if DN contains comma.
   [dmunicio]

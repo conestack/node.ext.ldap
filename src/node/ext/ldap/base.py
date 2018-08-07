@@ -81,6 +81,8 @@ class LDAPConnector(object):
         self._start_tls = props.start_tls
         self._ignore_cert = props.ignore_cert
         self._tls_cacert_file = props.tls_cacertfile
+        self._retry_max = props.retry_max
+        self._retry_delay = props.retry_delay
 
     def bind(self):
         """Bind to Server and return the Connection Object.
@@ -89,7 +91,11 @@ class LDAPConnector(object):
             ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
         elif self._tls_cacert_file:
             ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, self._tls_cacert_file)
-        self._con = ldap.initialize(self._uri)
+        self._con = ldap.ldapobject.ReconnectLDAPObject(
+            self._uri,
+            retry_max=self._retry_max,
+            retry_delay=self._retry_delay,
+        )
         # Turning referrals off since they cause problems with MS Active
         # Directory More info: https://www.python-ldap.org/faq.html#usage
         self._con.set_option(ldap.OPT_REFERRALS, 0)
