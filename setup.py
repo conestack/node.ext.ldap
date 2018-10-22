@@ -13,7 +13,7 @@ def read_file(name):
         return f.read()
 
 
-version = '1.0b8.dev0'
+version = '1.0b8'
 shortdesc = 'LDAP/AD convenience with Node-trees based on python-ldap'
 longdesc = '\n\n'.join([read_file(name) for name in [
     'README.rst',

@@ -1,7 +1,7 @@
 History
 =======
 
-1.0b8 (unreleased)
+1.0b8 (2018-10-22)
 ------------------
 
 - Use ``ldap.ldapobject.ReconnectLDAPObject`` instead of ``SimpleLDAPObject`` to create
