@@ -157,15 +157,16 @@ id and returns the desired value.::
     ...     # default value callback function
     ...     return '123'
 
+    >>> from odict import odict
     >>> add_ucfg = UsersConfig(
     ...     baseDN='ou=customers,dc=my-domain,dc=com',
-    ...     attrmap={
-    ...         'id': 'sn',
-    ...         'login': 'cn',
-    ...         'rdn': 'cn',
-    ...         'telephoneNumber': 'telephoneNumber',
-    ...         'sn': 'sn',
-    ...     },
+    ...     attrmap=odict((
+    ...         ('id', 'sn'),
+    ...         ('login', 'cn'),
+    ...         ('rdn', 'cn'),
+    ...         ('telephoneNumber', 'telephoneNumber'),
+    ...         ('sn', 'sn'),
+    ...     )),
     ...     scope=ONELEVEL,
     ...     queryFilter='(objectClass=person)',
     ...     objectClasses=['top', 'person'],
@@ -430,10 +431,10 @@ Create a LDAPGroups node and configure it::
 
     >>> gcfg = GroupsConfig(
     ...     baseDN='dc=my-domain,dc=com',
-    ...     attrmap={
-    ...         'id': 'cn',
-    ...         'rdn': 'cn',
-    ...     },
+    ...     attrmap=odict((
+    ...         ('id', 'cn'),
+    ...         ('rdn', 'cn'),
+    ...     )),
     ...     scope=ONELEVEL,
     ...     queryFilter='(objectClass=groupOfNames)',
     ...     objectClasses=['groupOfNames'],
@@ -450,24 +451,25 @@ Create a LDAPGroups node and configure it::
     >>> group
     <Group object 'group1' at ...>
 
-    >>> sorted(group.attrs.items())
-    [('member', 
-    ['cn=user3,ou=customers,dc=my-domain,dc=com', 
-    'cn=user2,ou=customers,dc=my-domain,dc=com']), 
-    ('rdn', 'group1')]
+    >>> sorted(group.attrs['member'])
+    ['cn=user2,ou=customers,dc=my-domain,dc=com', 
+    'cn=user3,ou=customers,dc=my-domain,dc=com']
 
-    >>> group.attrs.context.items()
-    [('objectClass', ['top', 'groupOfNames']), 
+    >>> group.attrs['rdn']
+    'group1'
+
+    >>> sorted(group.attrs.context.items())
+    [('cn', 'group1'),
     ('member', ['cn=user3,ou=customers,dc=my-domain,dc=com', 
     'cn=user2,ou=customers,dc=my-domain,dc=com']), 
-    ('cn', 'group1')]
+    ('objectClass', ['top', 'groupOfNames'])]
 
     >>> groups.context.child_defaults
     {'objectClass': ['groupOfNames']}
 
     >>> group = groups.create('group3')
     >>> group.attrs.items()
-    [('rdn', 'group3'), ('member', ['cn=nobody'])]
+    [('id', 'group3'), ('member', ['cn=nobody'])]
 
     >>> group.attrs.context.items()
     [('cn', 'group3'), 
@@ -481,12 +483,14 @@ Create a LDAPGroups node and configure it::
     # XXX: dummy member should be created by default value callback, currently
     #      a __setitem__ plumbing on groups object
 
-    >>> groups.context.ldap_session.search(queryFilter='cn=group3',
+    >>> res = groups.context.ldap_session.search(queryFilter='cn=group3',
     ...                                    scope=ONELEVEL)
-    [('cn=group3,dc=my-domain,dc=com', 
-    {'member': ['cn=nobody'], 
-    'objectClass': ['groupOfNames'], 
-    'cn': ['group3']})]
+    >>> res[0][0]
+    'cn=group3,dc=my-domain,dc=com'
+    >>> sorted(res[0][1].items())
+    [('cn', ['group3']),
+    ('member', ['cn=nobody']), 
+    ('objectClass', ['groupOfNames'])]
 
     >>> groups['group1']._member_format
     0
@@ -574,12 +578,12 @@ Add and remove user from group::
     'cn=n...sty\\, User,ou=customers,dc=my-domain,dc=com'
 
     >>> group.add('Umhauer')
-    >>> group.attrs.items()
-    [('member', 
+    >>> sorted(group.attrs.items())
+    [('id', 'group1'),
+    ('member', 
     ['cn=user3,ou=customers,dc=my-domain,dc=com', 
     'cn=user2,ou=customers,dc=my-domain,dc=com', 
-    'cn=n...sty\\, User,ou=customers,dc=my-domain,dc=com']), 
-    ('rdn', 'group1')]
+    'cn=n...sty\\, User,ou=customers,dc=my-domain,dc=com'])]
 
     >>> group.member_ids
     ['Schmidt', 'M...ller', 'Umhauer']
@@ -653,10 +657,10 @@ Configure role config represented by object class 'groupOfNames'::
 
     >>> rcfg = RolesConfig(
     ...     baseDN='ou=roles,dc=my-domain,dc=com',
-    ...     attrmap={
-    ...         'id': 'cn',
-    ...         'rdn': 'cn',
-    ...     },
+    ...     attrmap=odict((
+    ...         ('id', 'cn'),
+    ...         ('rdn', 'cn'),
+    ...     )),
     ...     scope=ONELEVEL,
     ...     queryFilter='(objectClass=groupOfNames)',
     ...     objectClasses=['groupOfNames'],
@@ -747,8 +751,8 @@ Remove role 'editor', No other principal left, remove role as well.::
     >>> roles.storage.keys()
     ['viewer']
 
-    >>> roles.context._deleted_children
-    set(['cn=editor'])
+    >>> roles.context._deleted_children == set(['cn=editor'])
+    True
 
     >>> roles.keys()
     ['viewer']

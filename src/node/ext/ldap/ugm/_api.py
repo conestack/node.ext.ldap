@@ -51,6 +51,9 @@ EXPIRATION_SECONDS = 1
 
 class AccountExpired(object):
 
+    def __bool__(self):
+        return False
+
     def __nonzero__(self):
         return False
 

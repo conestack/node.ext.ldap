@@ -82,11 +82,11 @@ Fetch some users::
     'cn0'
 
     >>> sorted(user_0.attrs.items())
-    [('cn', 'cn0'), 
-    ('gidNumber', '0'), 
+    [('gidNumber', '0'), 
     ('homeDirectory', '/home/uid0'), 
+    ('id', 'uid0'), 
+    ('login', 'cn0'), 
     ('sn', 'sn0'), 
-    ('uid', 'uid0'), 
     ('uidNumber', '0')]
 
 User is a leaf::
@@ -210,7 +210,7 @@ Change password::
     >>> users.passwd('uid0', 'foo', 'bar')
     Traceback (most recent call last):
       ...
-    UNWILLING_TO_PERFORM: ...
+    ldap.UNWILLING_TO_PERFORM: ...
 
     >>> users.passwd('foo', 'secret0', 'bar')
     Traceback (most recent call last):
@@ -295,15 +295,15 @@ Groups object::
     >>> group_0.attrs
     Aliased <LDAPNodeAttributes object 'cn=group0' at ...>
 
-    >>> group_0.attrs.items()
-    [('memberUid', ['nobody', 'uid0']), 
-    ('gidNumber', '0'), 
-    ('rdn', 'group0')]
+    >>> sorted(group_0.attrs.items())
+    [('gidNumber', '0'), 
+    ('id', 'group0'),
+    ('memberUid', ['nobody', 'uid0'])]
 
-    >>> group_1.attrs.items()
-    [('memberUid', ['nobody', 'uid0', 'uid1']), 
-    ('gidNumber', '1'), 
-    ('rdn', 'group1')]
+    >>> sorted(group_1.attrs.items())
+    [('gidNumber', '1'), 
+    ('id', 'group1'),
+    ('memberUid', ['nobody', 'uid0', 'uid1'])]
 
 Add a group::
 
@@ -578,12 +578,13 @@ Role Management. Create container for roles.::
     >>> node['ou=roles'].attrs['objectClass'] = ['organizationalUnit']
     >>> node()
 
+    >>> from odict import odict
     >>> rcfg = RolesConfig(
     ...     baseDN='ou=roles,dc=my-domain,dc=com',
-    ...     attrmap={
-    ...         'id': 'cn',
-    ...         'rdn': 'cn',
-    ...     },
+    ...     attrmap=odict((
+    ...         ('id', 'cn'),
+    ...         ('rdn', 'cn'),
+    ...     )),
     ...     scope=SUBTREE,
     ...     queryFilter='(objectClass=posixGroup)',
     ...     objectClasses=['posixGroup'],
@@ -607,7 +608,7 @@ Role Management. Create container for roles.::
     >>> user = ugm.users['uid2']
     >>> user.add_role('viewer')
     >>> user.add_role('editor')
-    >>> user.roles
+    >>> sorted(user.roles)
     ['editor', 'viewer']
 
     >>> ugm.roles_storage()

@@ -209,12 +209,12 @@ Groups object::
     >>> group_0.attrs
     Aliased <LDAPNodeAttributes object 'cn=group0' at ...>
 
-    >>> group_0.attrs.items()
-    [('member', ['cn=nobody']), ('rdn', 'group0')]
+    >>> sorted(group_0.attrs.items())
+    [('id', 'group0'), ('member', ['cn=nobody'])]
 
-    >>> group_1.attrs.items()
-    [('member', ['cn=nobody', 'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com']), 
-    ('rdn', 'group1')]
+    >>> sorted(group_1.attrs.items())
+    [('id', 'group1'),
+    ('member', ['cn=nobody', 'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com'])]
 
 Add a group::
 
