@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from .base import encode_utf8
+from .base import decode_utf8
+import six
 
 
 # all special characters except * are escaped, that means * can be
@@ -19,13 +20,14 @@ class LDAPFilter(object):
 
     def __init__(self, queryFilter=None):
         if queryFilter is not None \
-                and not isinstance(queryFilter, basestring) \
+                and not isinstance(queryFilter, six.string_types) \
                 and not isinstance(queryFilter, LDAPFilter):
             raise TypeError('Query filter must be LDAPFilter or string')
-        queryFilter = encode_utf8(queryFilter)
         self._filter = queryFilter
         if isinstance(queryFilter, LDAPFilter):
             self._filter = str(queryFilter)
+            if six.PY2:
+                self._filter = self._filter.decode('utf-8')
 
     def __and__(self, other):
         if other is None:
@@ -33,11 +35,15 @@ class LDAPFilter(object):
         res = ''
         if isinstance(other, LDAPFilter):
             other = str(other)
-        elif not isinstance(other, basestring):
+            if six.PY2:
+                other = other.decode('utf-8')
+        elif not isinstance(other, six.string_types):
             raise TypeError(u"unsupported operand type")
         us = str(self)
+        if six.PY2:
+            us = us.decode('utf-8')
         if us and other:
-            res = '(&%s%s)' % (us, other)
+            res = u'(&%s%s)' % (us, other)
         elif us:
             res = us
         elif other:
@@ -50,21 +56,31 @@ class LDAPFilter(object):
         res = ''
         if isinstance(other, LDAPFilter):
             other = str(other)
-        elif not isinstance(other, basestring):
+            if six.PY2:
+                other = other.decode('utf-8')
+        elif not isinstance(other, six.string_types):
             raise TypeError(u"unsupported operand type")
         us = str(self)
+        if six.PY2:
+            us = us.decode('utf-8')
         if us and other:
-            res = '(|%s%s)' % (us, other)
+            res = u'(|%s%s)' % (us, other)
         return LDAPFilter(res)
 
     def __contains__(self, attr):
         return self._filter.find('({}='.format(attr)) > -1
 
     def __str__(self):
-        return self._filter and self._filter or ''
+        filterstr = self._filter and self._filter or ''
+        if six.PY2:
+            filterstr = filterstr.encode('utf-8')
+        return filterstr
 
     def __repr__(self):
-        return "LDAPFilter('%s')" % (self._filter,)
+        filterstr = self._filter
+        if six.PY2 and isinstance(filterstr, six.string_types):
+            filterstr = filterstr.encode('utf-8')
+        return "LDAPFilter('%s')" % (filterstr,)
 
 
 class LDAPDictFilter(LDAPFilter):
@@ -129,16 +145,16 @@ def dict_to_filter(criteria, or_search=False, or_keys=None, or_values=None):
     or_values = (or_values is None) and or_search or or_values
     _filter = None
     for attr, values in criteria.items():
-        attr = encode_utf8(attr)
+        attr = decode_utf8(attr)
         if not isinstance(values, list):
             values = [values]
         attrfilter = None
         for value in values:
-            if isinstance(value, unicode):
-                value = encode_utf8(value)
-            attr = ''.join(map(lambda x: ESCAPE_CHARS.get(x, x), attr))
-            if isinstance(value, str):
-                value = ''.join(map(lambda x: ESCAPE_CHARS.get(x, x), value))
+            attr = ''.join([ESCAPE_CHARS.get(x, x) for x in attr])
+            if isinstance(value, six.string_types):
+                value = ''.join([ESCAPE_CHARS.get(x, x) for x in value])
+            if isinstance(value, six.binary_type):
+                value = decode_utf8(value)
             valuefilter = LDAPFilter('(%s=%s)' % (attr, value))
             if attrfilter is None:
                 attrfilter = valuefilter

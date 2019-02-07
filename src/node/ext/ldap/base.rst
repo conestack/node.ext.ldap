@@ -41,9 +41,7 @@ Test main script, could be used by command line with
 
     >>> sys.argv[-1] = '12346'
     >>> main()
-    {u'info': 'Transport endpoint is not connected', 
-    'errno': 107, 
-    'desc': u"Can't contact LDAP server"}
+    {...'info': 'Transport endpoint is not connected'...}
 
     >>> sys.argv = []
     >>> main()
@@ -57,9 +55,7 @@ Test node.ext.ldap base objects. Test LDAP connectivity::
     'success'
 
     >>> testLDAPConnectivity('127.0.0.1', 12346)
-    SERVER_DOWN({u'info': 'Transport endpoint is not connected', 
-    'errno': 107, 
-    'desc': u"Can't contact LDAP server"},)
+    SERVER_DOWN({...'info': 'Transport endpoint is not connected'...},)
 
 Create connector.::
 
@@ -108,7 +104,7 @@ Test search pagination::
     3
 
     >>> cookie
-    ''
+    b''
 
 Pagination search fails if cookie but no page size given::
 
@@ -138,17 +134,23 @@ Now there's one more entry in the directory.::
 Query added entry directly.::
 
     >>> res = communicator.search('(cn=foo)', SUBTREE)
-    >>> res
-    [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
-    {'objectClass': ['person', 'top'], 'cn': ['foo'], 'sn': ['bar']})]
+    >>> res[0][0]
+    'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com'
+    >>> sorted(res[0][1].items())
+    [('cn', ['foo']),
+    ('objectClass', ['person', 'top']),
+    ('sn', ['bar'])]
 
 Modify this entry and check the result.::
 
     >>> communicator.modify(res[0][0], [(MOD_REPLACE, 'sn', 'baz')])
     >>> res = communicator.search('(cn=foo)', SUBTREE)
-    >>> res
-    [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
-    {'objectClass': ['person', 'top'], 'cn': ['foo'], 'sn': ['baz']})]
+    >>> res[0][0]
+    'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com'
+    >>> sorted(res[0][1].items())
+    [('cn', ['foo']),
+    ('objectClass', ['person', 'top']),
+    ('sn', ['baz'])]
 
 Finally delete this entry and check the result.::
 
@@ -182,9 +184,12 @@ registered. Thus the nullcacheProviderFactory is used. But cache API is used
 anyways::
 
     >>> res = communicator.search('(cn=foo)', SUBTREE)
-    >>> res
-    [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
-    {'objectClass': ['person', 'top'], 'cn': ['foo'], 'sn': ['bar']})]
+    >>> res[0][0]
+    'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com'
+    >>> sorted(res[0][1].items())
+    [('cn', ['foo']),
+    ('objectClass', ['person', 'top']),
+    ('sn', ['bar'])]
 
 Delete entry::
 

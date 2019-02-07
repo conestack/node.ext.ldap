@@ -39,6 +39,7 @@ from plumber import plumb
 from plumber import plumbing
 from zope.deprecation import deprecated
 from zope.interface import implementer
+import six
 
 
 ACTION_ADD = 0
@@ -75,9 +76,12 @@ class LDAPAttributesBehavior(Behavior):
         #    attrlist.append('memberOf')
 
         # fetch attributes for ldap_node
+        dn = ldap_node.DN
+        if six.PY2:
+            dn = dn.encode('utf-8')
         entry = ldap_node.ldap_session.search(
             scope=BASE,
-            baseDN=ldap_node.DN.encode('utf-8'),
+            baseDN=dn,
             force_reload=ldap_node._reload,
             attrlist=attrlist,
         )
@@ -170,7 +174,7 @@ class LDAPStorage(OdictStorage):
         """
         if (name and not props) or (props and not name):
             raise ValueError(u"Wrong initialization.")
-        if name and not isinstance(name, unicode):
+        if name and not isinstance(name, six.text_type):
             name = name.decode(CHARACTER_ENCODING)
         self.__name__ = name
         self.__parent__ = None
@@ -213,10 +217,13 @@ class LDAPStorage(OdictStorage):
             val = self.child_factory()
             val.__name__ = key
             val.__parent__ = self
+            dn = val.DN
+            if six.PY2:
+                dn = dn.encode('utf-8')
             try:
                 res = self.ldap_session.search(
                     scope=BASE,
-                    baseDN=val.DN.encode('utf-8'),
+                    baseDN=dn,
                     attrlist=[''],  # no need for attrs
                 )
                 # remember DN
@@ -239,10 +246,13 @@ class LDAPStorage(OdictStorage):
         val.__parent__ = self
         val._dn = self.child_dn(key)
         val._ldap_session = self.ldap_session
+        dn = val.DN
+        if six.PY2:
+            dn = dn.encode('utf-8')
         try:
             self.ldap_session.search(
                 scope=BASE,
-                baseDN=val.DN.encode('utf-8'),
+                baseDN=dn,
                 attrlist=[''],  # no need for attrs
             )
         except (NO_SUCH_OBJECT, INVALID_DN_SYNTAX):
@@ -289,10 +299,13 @@ class LDAPStorage(OdictStorage):
             return
         cookie = ''
         while True:
+            dn = self.DN
+            if six.PY2:
+                dn = encode(dn)
             try:
                 res = self.ldap_session.search(
                     scope=ONELEVEL,
-                    baseDN=encode(self.DN),
+                    baseDN=dn,
                     attrlist=[''],
                     page_size=self._page_size,
                     cookie=cookie,
@@ -334,16 +347,21 @@ class LDAPStorage(OdictStorage):
             self.changed = False
             self._action = None
         deleted = [self[key] for key in self._deleted_children]
-        for node in self.storage.values() + deleted:
+        for node in list(self.storage.values()) + deleted:
             if node.changed:
                 node()
 
     @finalize
     def __repr__(self):
-        dn = self.DN.encode('ascii', 'replace') or '(dn not set)'
+        dn = self.DN
+        if six.PY2:
+            dn = dn.encode('ascii', 'replace')
+        dn = dn or '(dn not set)'
         if self.parent is None:
             return "<%s - %s>" % (dn, self.changed)
-        name = self.name.encode('ascii', 'replace')
+        name = self.name
+        if six.PY2:
+            name = name.encode('ascii', 'replace')
         return "<%s:%s - %s>" % (dn, name, self.changed)
 
     __str__ = finalize(__repr__)
@@ -436,9 +454,12 @@ class LDAPStorage(OdictStorage):
     @property
     def exists(self):
         try:
+            dn = self.DN
+            if six.PY2:
+                dn = dn.encode('utf-8')
             res = self.ldap_session.search(
                 scope=BASE,
-                baseDN=self.DN.encode('utf-8'),
+                baseDN=dn,
                 attrlist=['']
             )
             # this probably never happens
@@ -457,7 +478,9 @@ class LDAPStorage(OdictStorage):
         if not dn.endswith(base_dn):
             raise ValueError(u'Invalid base DN')
         dn = dn[:len(dn) - len(base_dn)].strip(',')
-        for rdn in reversed(explode_dn(encode(dn))):
+        if six.PY2:
+            dn = encode(dn)
+        for rdn in reversed(explode_dn(dn)):
             try:
                 node = node[rdn]
             except KeyError:
@@ -502,7 +525,7 @@ class LDAPStorage(OdictStorage):
         matches = self.ldap_session.search(
             str(_filter),
             self.search_scope,
-            baseDN=encode(self.DN),
+            baseDN=self.DN,
             force_reload=self._reload,
             attrlist=list(attrset),
             page_size=page_size,
@@ -521,7 +544,7 @@ class LDAPStorage(OdictStorage):
             dn = decode(dn)
             if attrlist is not None:
                 resattr = dict()
-                for k, v in attrs.iteritems():
+                for k, v in six.iteritems(attrs):
                     if k in attrlist:
                         # Check binary binary attribute directly from root
                         # data to avoid initing attrs for a simple search.
@@ -532,7 +555,9 @@ class LDAPStorage(OdictStorage):
                 if 'dn' in attrlist:
                     resattr[u'dn'] = dn
                 if 'rdn' in attrlist:
-                    rdn = explode_dn(encode(dn))[0]
+                    if six.PY2:
+                        dn = encode(dn)
+                    rdn = explode_dn(dn)[0]
                     resattr[u'rdn'] = decode(rdn)
                 if get_nodes:
                     res.append((self.node_by_dn(dn, strict=True), resattr))
@@ -608,7 +633,7 @@ class LDAPStorage(OdictStorage):
         except AttributeError:
             raise ValueError(u"No attributes found on vessel, cannot convert")
         node = LDAPNode()
-        for key, val in attrs.iteritems():
+        for key, val in six.iteritems(attrs):
             node.attrs[key] = val
         return node
 
@@ -618,9 +643,15 @@ class LDAPStorage(OdictStorage):
         attrs = {}
         for key, value in self.attrs.items():
             if not self.attrs.is_binary(key):
-                value = encode(value)
-            attrs[encode(key)] = value
-        self.ldap_session.add(encode(self.DN), attrs)
+                if six.PY2:
+                    value = encode(value)
+            if six.PY2:
+                key = encode(key)
+            attrs[key] = value
+        dn = self.DN
+        if six.PY2:
+            dn = encode(dn)
+        self.ldap_session.add(dn, attrs)
 
     @default
     def _ldap_modify(self):
@@ -630,28 +661,41 @@ class LDAPStorage(OdictStorage):
         for key in orgin:
             # MOD_DELETE
             if key not in self.attrs:
-                moddef = (MOD_DELETE, encode(key), None)
+                moddef = (MOD_DELETE, key, None)
+                if six.PY2:
+                    moddef = (MOD_DELETE, encode(key), None)
                 modlist.append(moddef)
         for key in self.attrs:
             # MOD_ADD
             value = self.attrs[key]
             if not self.attrs.is_binary(key):
-                value = encode(value)
+                if six.PY2:
+                    value = encode(value)
             if key not in orgin:
-                moddef = (MOD_ADD, encode(key), value)
+                moddef = (MOD_ADD, key, value)
+                if six.PY2:
+                    moddef = (MOD_ADD, encode(key), value)
                 modlist.append(moddef)
             # MOD_REPLACE
             elif self.attrs[key] != orgin[key]:
-                moddef = (MOD_REPLACE, encode(key), value)
+                moddef = (MOD_REPLACE, key, value)
+                if six.PY2:
+                    moddef = (MOD_REPLACE, encode(key), value)
                 modlist.append(moddef)
         if modlist:
-            self.ldap_session.modify(encode(self.DN), modlist)
+            dn = self.DN
+            if six.PY2:
+                dn = encode(dn)
+            self.ldap_session.modify(dn, modlist)
 
     @default
     def _ldap_delete(self):
         # delete self from the ldap-directory.
         del self.parent.storage[self.name]
-        self.ldap_session.delete(encode(self.DN))
+        dn = self.DN
+        if six.PY2:
+            dn = encode(dn)
+        self.ldap_session.delete(dn)
 
     @default
     @property

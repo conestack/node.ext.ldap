@@ -54,10 +54,10 @@ the server properties::
 The non-unicode name got decoded::
 
     >>> root.name
-    u'dc=my-domain,dc=com'
+    'dc=my-domain,dc=com'
 
     >>> root.rdn_attr
-    u'dc'
+    'dc'
 
 Check exists::
 
@@ -80,28 +80,28 @@ The node has session::
 
 Check and modify attributes of root::
 
-    >>> root.attrs.items()
-    [(u'objectClass', [u'top', u'dcObject', u'organization']),
-     (u'dc', u'my-domain'),
-     (u'o', u'my-organization')]
+    >>> sorted(root.attrs.items())
+    [('dc', 'my-domain'),
+     ('o', 'my-organization'),
+     ('objectClass', ['top', 'dcObject', 'organization'])]
 
     >>> root.attrs['o'] = 'foo'
 
 On ``__call__`` data gets persisted::
 
     >>> root()
-    >>> root.attrs.items()
-    [(u'objectClass', [u'top', u'dcObject', u'organization']),
-     (u'dc', u'my-domain'),
-     (u'o', u'foo')]
+    >>> sorted(root.attrs.items())
+    [('dc', 'my-domain'),
+     ('o', 'foo'),
+     ('objectClass', ['top', 'dcObject', 'organization'])] 
 
 Recreate root and check changed attributes::
 
     >>> root = LDAPNode('dc=my-domain,dc=com', props)
     >>> root.attrs.items()
-    [(u'objectClass', [u'top', u'dcObject', u'organization']),
-    (u'dc', u'my-domain'),
-    (u'o', u'foo')]
+    [('objectClass', ['top', 'dcObject', 'organization']),
+    ('dc', 'my-domain'),
+    ('o', 'foo')]
 
 Reset o::
 
@@ -111,43 +111,43 @@ Reset o::
 Check child keys of root::
 
     >>> root.keys()
-    [u'ou=customers', u'ou=demo']
+    ['ou=customers', 'ou=demo']
 
 Access inexistent child::
 
     >>> foo = root['foo']
     Traceback (most recent call last):
     ...
-    KeyError: u'foo'
+    KeyError: 'foo'
 
 Existent Child Nodes
 --------------------
 
-Access existent child and it's attributes::
+Access existent child and its attributes::
 
     >>> customers = root['ou=customers']
     >>> customers
     <ou=customers,dc=my-domain,dc=com:ou=customers - False>
 
-    >>> customers.attrs.items()
-    [(u'objectClass', [u'top', u'organizationalUnit']),
-    (u'ou', u'customers'),
-    (u'description', u'customers'),
-    (u'businessCategory', u'customers_container')]
+    >>> sorted(customers.attrs.items())
+    [('businessCategory', 'customers_container'),
+    ('description', 'customers'),
+    ('objectClass', ['top', 'organizationalUnit']),
+    ('ou', 'customers')]
 
     >>> customers.DN
-    u'ou=customers,dc=my-domain,dc=com'
+    'ou=customers,dc=my-domain,dc=com'
 
     >>> customers.name
-    u'ou=customers'
+    'ou=customers'
 
     >>> customers.rdn_attr
-    u'ou'
+    'ou'
 
 Customers child keys::
 
     >>> customers.keys()
-    [u'ou=customer1', u'ou=customer2', u'ou=n\xe4sty\\, customer', u'uid=binary']
+    ['ou=customer1', 'ou=customer2', 'ou=n\xe4sty\\, customer', 'uid=binary']
 
 Customer has not been changed::
 
@@ -163,7 +163,7 @@ Access existing binary data::
     >>> binnode = customers['uid=binary']
 
     >>> binnode.attrs['jpegPhoto'][:20]
-    '\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x01,\x01,\x00\x00'
+    b'\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x01,\x01,\x00\x00'
 
     >>> len(binnode.attrs['jpegPhoto'])
     2155
@@ -171,7 +171,7 @@ Access existing binary data::
 Change binary data::
 
     >>> jpegdata = open(os.path.join(os.path.dirname(__file__), 'testing',
-    ...                 'data', 'binary.jpg')).read()
+    ...                 'data', 'binary.jpg'), 'rb').read()
 
     >>> customers is binnode.parent
     True
@@ -179,11 +179,11 @@ Change binary data::
     >>> binnode._action == ACTION_MODIFY
     False
 
-    >>> customers._modified_children
-    set([])
+    >>> customers._modified_children == set()
+    True
 
-    >>> binnode.parent._modified_children
-    set([])
+    >>> binnode.parent._modified_children == set()
+    True
 
     >>> customers._modified_children is binnode.parent._modified_children
     True
@@ -196,11 +196,11 @@ Change binary data::
     >>> customers._modified_children is binnode.parent._modified_children
     True
 
-    >>> customers._modified_children
-    set([u'uid=binary'])
+    >>> customers._modified_children == set(['uid=binary'])
+    True
 
-    >>> binnode.parent._modified_children
-    set([u'uid=binary'])
+    >>> binnode.parent._modified_children == set(['uid=binary'])
+    True
 
     >>> binnode()
 
@@ -228,22 +228,22 @@ Create new LDAPNode and add it to customers::
 The already created node has not been attached to the tree, so rdn_attr is not
 known yet::
 
-    >>> print customer.rdn_attr
+    >>> print(customer.rdn_attr)
     None
 
 Also no DN and no LDAP session yet::
 
     >>> customer.DN
-    u''
+    ''
 
     >>> customer.ldap_session is None
     True
 
     >>> customer.attrs['ou']
-    u'customer3'
+    'customer3'
 
     >>> customer.attrs['objectClass']
-    [u'top', u'organizationalUnit']
+    ['top', 'organizationalUnit']
 
     >>> customer.keys()
     []
@@ -255,7 +255,7 @@ Tree has not changed yet::
       <ou=customers,dc=my-domain,dc=com:ou=customers - False>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n...sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n...sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
       <ou=demo,dc=my-domain,dc=com:ou=demo - False>
 
@@ -263,10 +263,10 @@ Set already created customer::
 
     >>> customers['ou=customer3'] = customer
     >>> customer.DN
-    u'ou=customer3,ou=customers,dc=my-domain,dc=com'
+    'ou=customer3,ou=customers,dc=my-domain,dc=com'
 
     >>> customer.rdn_attr
-    u'ou'
+    'ou'
 
 Now it got the LDAP session which is used by the whole tree::
 
@@ -279,16 +279,16 @@ Now it got the LDAP session which is used by the whole tree::
 Check added node internal DN::
 
     >>> customer._dn
-    u'ou=customer3,ou=customers,dc=my-domain,dc=com'
+    'ou=customer3,ou=customers,dc=my-domain,dc=com'
 
 Data has changed in memory, but not persisted yet to LDAP::
 
     >>> customers.keys()
-    [u'ou=customer1',
-    u'ou=customer2',
-    u'ou=n\xe4sty\\, customer',
-    u'uid=binary',
-    u'ou=customer3']
+    ['ou=customer1',
+    'ou=customer2',
+    'ou=n\xe4sty\\, customer',
+    'uid=binary',
+    'ou=customer3']
 
 Now tree nodes from customer up to root are flagged changed after adding the
 new node::
@@ -298,7 +298,7 @@ new node::
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n...sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n...sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
       <ou=demo,dc=my-domain,dc=com:ou=demo - False>
@@ -318,7 +318,7 @@ The Container has changed...::
 ...but there's no action on the container since a child was added and the
 attributes of the contained has not been changed::
 
-    >>> print customers._action
+    >>> print(customers._action)
     None
 
 The added child has been flagged changed as well...::
@@ -357,7 +357,7 @@ All nodes are flagged unchanged again::
       <ou=customers,dc=my-domain,dc=com:ou=customers - False>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n...sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n...sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
       <ou=demo,dc=my-domain,dc=com:ou=demo - False>
@@ -371,10 +371,10 @@ Add a person for more modification and changed flag tests::
     >>> person.attrs['description'] = 'Initial Description'
     >>> customer['cn=max'] = person
     >>> customer.keys()
-    [u'cn=max']
+    ['cn=max']
 
     >>> person.DN
-    u'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com'
+    'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com'
 
 Again, not in directory yet::
 
@@ -392,20 +392,20 @@ Change the container of the person::
 Tell the person to commit its changes. The container (customer3) is still
 changed because of its changed attributes::
 
-    >>> customer._added_children
-    set([u'cn=max'])
+    >>> customer._added_children == set(['cn=max'])
+    True
 
     >>> person()
 
-    >>> customer._added_children
-    set([])
+    >>> customer._added_children == set([])
+    True
 
     >>> root.printtree()
     <dc=my-domain,dc=com - True>
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n...sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n...sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
@@ -419,7 +419,7 @@ Call customer now, whole tree unchanged again::
       <ou=customers,dc=my-domain,dc=com:ou=customers - False>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n...sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n...sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
@@ -436,7 +436,7 @@ person is still changed::
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n...sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n...sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - True>
@@ -469,7 +469,7 @@ person is still changed::
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n...sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n...sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - True>
@@ -483,7 +483,7 @@ After calling person, whole tree is unchanged again::
       <ou=customers,dc=my-domain,dc=com:ou=customers - False>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n...sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n...sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
@@ -501,8 +501,8 @@ Check set child immediately after init time::
     >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
     >>> tmp['cn=child'] = LDAPNode()
     >>> tmp.keys()
-    [u'ou=customer1', u'ou=customer2', u'ou=n\xe4sty\\, customer',
-    u'uid=binary', u'ou=customer3', u'cn=child']
+    ['ou=customer1', 'ou=customer2', 'ou=n\xe4sty\\, customer',
+    'uid=binary', 'ou=customer3', 'cn=child']
 
 Changing the rdn attribute on loaded nodes fails.::
 
@@ -510,12 +510,12 @@ Changing the rdn attribute on loaded nodes fails.::
     >>> person()
     Traceback (most recent call last):
       ...
-    NAMING_VIOLATION: {'info': u"value of naming attribute 'cn'
-    is not present in entry", 'desc': u'Naming violation'}
+    ldap.NAMING_VIOLATION: ..."value of naming attribute 'cn'
+    is not present in entry"...}
 
     >>> person.attrs.load()
     >>> person.attrs['cn']
-    u'Max'
+    'Max'
 
 More attributes modification tests. Create Customer convenience query function
 for later tests.::
@@ -539,7 +539,7 @@ Modify this person. First look at the changed flags::
     >>> root.changed, customer.changed, person.changed
     (False, False, False)
 
-    >>> print person._action
+    >>> print(person._action)
     None
 
     >>> person.attrs.changed
@@ -601,7 +601,7 @@ We can call a node in the middle::
 
 Check adding of an attribute::
 
-    >>> person.attrs['description'] = u'Brandnew description'
+    >>> person.attrs['description'] = 'Brandnew description'
     >>> root.changed, customer.changed, person.changed, \
     ... person.attrs.changed
     (True, True, True, True)
@@ -622,15 +622,15 @@ Attribute with non-ascii unicode returns as is::
 
     >>> person.attrs['sn'] = u'i\u0107'
     >>> person()
-    >>> queryPersonDirectly()[0][1]['sn'][0]
-    'i\xc4\x87'
+    >>> queryPersonDirectly()[0][1]['sn'][0] == u'i\u0107'
+    True
 
 Attribute with non-ascii str (utf8) returns as unicode::
 
-    >>> person.attrs['sn'] = 'i\xc4\x87'
+    >>> person.attrs['sn'] = b'i\xc4\x87'
     >>> person()
-    >>> queryPersonDirectly()[0][1]['sn'][0]
-    'i\xc4\x87'
+    >>> queryPersonDirectly()[0][1]['sn'][0] == u'i\u0107'
+    True
 
 # XXX: Don't test this until we have proper binary attr support
 #Attribute with utf16 str fails::
@@ -647,11 +647,11 @@ Attribute with non-ascii str (utf8) returns as unicode::
 Check access to attributes on a fresh but added-to-parent node. There was a bug
 so we test it. Note that rdn attribute is computed from key if not set yet::
 
-    >>> customers._added_children
-    set([])
+    >>> customers._added_children == set([])
+    True
 
-    >>> customers._modified_children
-    set([])
+    >>> customers._modified_children == set([])
+    True
 
     >>> customerattrempty = LDAPNode()
     >>> customerattrempty._action is None
@@ -659,14 +659,14 @@ so we test it. Note that rdn attribute is computed from key if not set yet::
 
     >>> customers['cn=customer99'] = customerattrempty
 
-    >>> customers._added_children
-    set([u'cn=customer99'])
+    >>> customers._added_children == {'cn=customer99'}
+    True
 
-    >>> customers._modified_children
-    set([])
+    >>> customers._modified_children == set([])
+    True
 
     >>> customerattrempty.attrs.keys()
-    [u'cn']
+    ['cn']
 
     >>> customerattrempty._action == ACTION_ADD
     True
@@ -684,7 +684,7 @@ Check deleting of entries::
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n...sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n...sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
           <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
@@ -692,7 +692,7 @@ Check deleting of entries::
       <ou=demo,dc=my-domain,dc=com:ou=demo - False>
 
     >>> [k for k in customer.storage.keys()]
-    [u'cn=max']
+    ['cn=max']
 
     >>> del customer['cn=max']
     >>> root.changed, customer.changed, person.changed, \
@@ -700,10 +700,10 @@ Check deleting of entries::
     (True, True, True, False)
 
     >>> [k for k in customer.storage.keys()]
-    [u'cn=max']
+    ['cn=max']
 
-    >>> customer._deleted_children
-    set([u'cn=max'])
+    >>> customer._deleted_children == {'cn=max'}
+    True
 
     >>> customer.keys()
     []
@@ -713,7 +713,7 @@ Check deleting of entries::
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n...sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n...sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
         <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
@@ -724,8 +724,8 @@ Check deleting of entries::
     >>> [k for k in customer.storage.keys()]
     []
 
-    >>> customer._deleted_children
-    set([])
+    >>> customer._deleted_children == set([])
+    True
 
     >>> queryPersonDirectly()
     []
@@ -735,7 +735,7 @@ Check deleting of entries::
       <ou=customers,dc=my-domain,dc=com:ou=customers - True>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n...sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n...sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
         <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
@@ -748,11 +748,11 @@ Check deleting of entries::
     >>> customerattrempty.parent is customers
     True
 
-    >>> customers._added_children
-    set([u'cn=customer99'])
+    >>> customers._added_children == {'cn=customer99'}
+    True
 
-    >>> customers._modified_children
-    set([])
+    >>> customers._modified_children == set([])
+    True
 
     >>> customerattrempty()
 
@@ -764,7 +764,7 @@ Check deleting of entries::
       <ou=customers,dc=my-domain,dc=com:ou=customers - False>
         <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
         <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+        <ou=n...sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n...sty\, customer - False>
         <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
         <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
         <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
@@ -787,9 +787,9 @@ instance if a custom callback context is desired::
     >>> person = LDAPNode()
     >>> customer['cn=person_with_default1'] = person
     >>> person.attrs.items()
-    [(u'cn', u'person_with_default1'), (u'objectClass', [u'top', u'person']),
-    (u'sn', u'sn for cn=person_with_default1'), (u'description',
-    u'Description for cn=person_with_default1')]
+    [('cn', 'person_with_default1'), ('objectClass', ['top', 'person']),
+    ('sn', 'sn for cn=person_with_default1'), ('description',
+    'Description for cn=person_with_default1')]
 
     >>> person()
     >>> del customer['cn=person_with_default1']
@@ -812,10 +812,10 @@ node gets created then and attrs are set from original node::
     <cn=from_other,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=from_other - False>
 
     >>> customer['cn=from_other'].attrs.items()
-    [(u'description', u'Not from defaults'),
-    (u'cn', u'from_other'),
-    (u'objectClass', [u'top', u'person']),
-    (u'sn', u'sn for cn=from_other')]
+    [('description', 'Not from defaults'),
+    ('cn', 'from_other'),
+    ('objectClass', ['top', 'person']),
+    ('sn', 'sn for cn=from_other')]
 
     >>> del customer['cn=from_other']
     >>> customer()
@@ -827,7 +827,7 @@ Test invalidation. Initialize node::
     <ou=customers,dc=my-domain,dc=com - False>
       <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
       <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-      <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+      <ou=n...sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n...sty\, customer - False>
       <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
       <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
       <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
@@ -844,7 +844,7 @@ Reload entries::
     <ou=customers,dc=my-domain,dc=com - False>
       <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
       <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-      <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+      <ou=n...sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n...sty\, customer - False>
       <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
       <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
       <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
@@ -884,7 +884,7 @@ Reload all children and check node state::
     >>> node.values()
     [<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>,
     <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>,
-    <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>,
+    <ou=n...sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n...sty\, customer - False>,
     <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>,
     <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>,
     <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
@@ -892,7 +892,7 @@ Reload all children and check node state::
     >>> node.storage.values()
     [<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>,
     <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>,
-    <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>,
+    <ou=n...sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n...sty\, customer - False>,
     <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>,
     <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>,
     <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
@@ -902,7 +902,7 @@ Invalidate with given key invalidates only child::
     >>> node.invalidate('ou=customer1')
     >>> node.storage.values()
     [<ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>,
-    <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>,
+    <ou=n...sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n...sty\, customer - False>,
     <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>,
     <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>,
     <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
@@ -912,7 +912,7 @@ Invalidate key not in memory does nothing::
     >>> node.invalidate('ou=notexistent')
     >>> node.storage.values()
     [<ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>,
-    <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>,
+    <ou=n...sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n...sty\, customer - False>,
     <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>,
     <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>,
     <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
@@ -959,33 +959,33 @@ Default search scope is ONELEVEL::
 
 No other default search criteria set::
 
-    >>> print node.search_filter
+    >>> print(node.search_filter)
     None
 
-    >>> print node.search_criteria
+    >>> print(node.search_criteria)
     None
 
-    >>> print node.search_relation
+    >>> print(node.search_relation)
     None
 
 Search with no arguments given return childs keys::
 
     >>> sorted(node.search())
-    [u'ou=customers,dc=my-domain,dc=com', u'ou=demo,dc=my-domain,dc=com']
+    ['ou=customers,dc=my-domain,dc=com', 'ou=demo,dc=my-domain,dc=com']
 
 Set default search scope to SUBTREE::
 
     >>> node.search_scope = SUBTREE
     >>> sorted(node.search())
-    [u'cn=customer99,ou=customers,dc=my-domain,dc=com',
-    u'dc=my-domain,dc=com',
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com',
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
-    u'ou=customer3,ou=customers,dc=my-domain,dc=com',
-    u'ou=customers,dc=my-domain,dc=com',
-    u'ou=demo,dc=my-domain,dc=com',
-    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com',
-    u'uid=binary,ou=customers,dc=my-domain,dc=com']
+    ['cn=customer99,ou=customers,dc=my-domain,dc=com',
+    'dc=my-domain,dc=com',
+    'ou=customer1,ou=customers,dc=my-domain,dc=com',
+    'ou=customer2,ou=customers,dc=my-domain,dc=com',
+    'ou=customer3,ou=customers,dc=my-domain,dc=com',
+    'ou=customers,dc=my-domain,dc=com',
+    'ou=demo,dc=my-domain,dc=com',
+    'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com',
+    'uid=binary,ou=customers,dc=my-domain,dc=com']
 
 We can fetch node instances instead of DN's in search result::
 
@@ -998,50 +998,50 @@ We can fetch node instances instead of DN's in search result::
     <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>,
     <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>,
     <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>,
-    <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>]
+    <ou=n...sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n...sty\, customer - False>]
 
 
 Search with pagination::
 
     >>> res, cookie = node.search(page_size=5)
     >>> res
-    [u'dc=my-domain,dc=com',
-    u'ou=customers,dc=my-domain,dc=com',
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com',
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
-    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com']
+    ['dc=my-domain,dc=com',
+    'ou=customers,dc=my-domain,dc=com',
+    'ou=customer1,ou=customers,dc=my-domain,dc=com',
+    'ou=customer2,ou=customers,dc=my-domain,dc=com',
+    'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com']
 
     >>> res, cookie = node.search(page_size=5, cookie=cookie)
     >>> res
-    [u'ou=demo,dc=my-domain,dc=com',
-    u'uid=binary,ou=customers,dc=my-domain,dc=com',
-    u'ou=customer3,ou=customers,dc=my-domain,dc=com',
-    u'cn=customer99,ou=customers,dc=my-domain,dc=com']
+    ['ou=demo,dc=my-domain,dc=com',
+    'uid=binary,ou=customers,dc=my-domain,dc=com',
+    'ou=customer3,ou=customers,dc=my-domain,dc=com',
+    'cn=customer99,ou=customers,dc=my-domain,dc=com']
 
-    >>> assert cookie == ''
+    >>> assert cookie == b''
 
 Lets add a default search filter.::
 
     >>> filter = LDAPFilter('(objectClass=organizationalUnit)')
     >>> node.search_filter = filter
     >>> node.search()
-    [u'ou=customers,dc=my-domain,dc=com',
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com',
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
-    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com',
-    u'ou=demo,dc=my-domain,dc=com',
-    u'ou=customer3,ou=customers,dc=my-domain,dc=com']
+    ['ou=customers,dc=my-domain,dc=com',
+    'ou=customer1,ou=customers,dc=my-domain,dc=com',
+    'ou=customer2,ou=customers,dc=my-domain,dc=com',
+    'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com',
+    'ou=demo,dc=my-domain,dc=com',
+    'ou=customer3,ou=customers,dc=my-domain,dc=com']
 
 The default search filter could also be a string::
 
     >>> node.search_filter = '(objectClass=organizationalUnit)'
     >>> node.search()
-    [u'ou=customers,dc=my-domain,dc=com',
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com',
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
-    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com',
-    u'ou=demo,dc=my-domain,dc=com',
-    u'ou=customer3,ou=customers,dc=my-domain,dc=com']
+    ['ou=customers,dc=my-domain,dc=com',
+    'ou=customer1,ou=customers,dc=my-domain,dc=com',
+    'ou=customer2,ou=customers,dc=my-domain,dc=com',
+    'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com',
+    'ou=demo,dc=my-domain,dc=com',
+    'ou=customer3,ou=customers,dc=my-domain,dc=com']
 
 Its also possible to define default search criteria as dict::
 
@@ -1049,52 +1049,73 @@ Its also possible to define default search criteria as dict::
     ...     'businessCategory': 'customers',
     ... }
     >>> node.search()
-    [u'ou=customer1,ou=customers,dc=my-domain,dc=com',
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
-    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com']
+    ['ou=customer1,ou=customers,dc=my-domain,dc=com',
+    'ou=customer2,ou=customers,dc=my-domain,dc=com',
+    'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com']
 
     >>> node.search_criteria = {
     ...     'businessCategory': 'customers_container',
     ... }
     >>> node.search()
-    [u'ou=customers,dc=my-domain,dc=com']
+    ['ou=customers,dc=my-domain,dc=com']
 
 To get more information by search result, pass an attrlist to search function::
 
-    >>> node.search(attrlist=['rdn', 'description'])
-    [(u'ou=customers,dc=my-domain,dc=com',
-    {u'rdn': u'ou=customers',
-    u'description': [u'customers']})]
+    >>> res = node.search(attrlist=['rdn', 'description'])
+    >>> res[0][0]
+    'ou=customers,dc=my-domain,dc=com'
 
-    >>> node.search(attrlist=['rdn', 'description', 'businessCategory'])
-    [(u'ou=customers,dc=my-domain,dc=com',
-    {u'rdn': u'ou=customers',
-    u'description': [u'customers'],
-    u'businessCategory': [u'customers_container']})]
+    >>> res[0][1]['rdn']
+    'ou=customers'
+
+    >>> res[0][1]['description']
+    ['customers']
+
+    >>> res = node.search(attrlist=['rdn', 'description', 'businessCategory'])
+    >>> res[0][0]
+    'ou=customers,dc=my-domain,dc=com'
+
+    >>> res[0][1]['rdn']
+    'ou=customers'
+
+    >>> res[0][1]['description']
+    ['customers']
+
+    >>> res[0][1]['businessCategory']
+    ['customers_container']
 
 We can also fetch nodes instead of DN here::
 
-    >>> node.search(attrlist=['dn', 'description'],
+    >>> res = node.search(attrlist=['dn', 'description'],
     ...             get_nodes=True)
-    [(<ou=customers,dc=my-domain,dc=com:ou=customers - False>,
-    {u'dn': u'ou=customers,dc=my-domain,dc=com',
-    u'description': [u'customers']})]
+    >>> res[0][0]
+    <ou=customers,dc=my-domain,dc=com:ou=customers - False>
 
-    >>> node.search(attrlist=['dn', 'description', 'businessCategory'],
+    >>> res[0][1]['dn']
+    'ou=customers,dc=my-domain,dc=com'
+
+    >>> res = node.search(attrlist=['dn', 'description', 'businessCategory'],
     ...             get_nodes=True)
-    [(<ou=customers,dc=my-domain,dc=com:ou=customers - False>,
-    {u'dn': u'ou=customers,dc=my-domain,dc=com',
-    u'description': [u'customers'],
-    u'businessCategory': [u'customers_container']})]
+    >>> res[0][0]
+    <ou=customers,dc=my-domain,dc=com:ou=customers - False>
+
+    >>> res[0][1]['dn']
+    'ou=customers,dc=my-domain,dc=com'
+
+    >>> res[0][1]['description']
+    ['customers']
+
+    >>> res[0][1]['businessCategory']
+    ['customers_container']
 
 Test without defaults, defining search with keyword arguments::
 
-    >>> node.searcg_filter = None
+    >>> node.search_filter = None
     >>> node.search_criteria = None
     >>> node.search(
     ...     queryFilter='(objectClass=organizationalUnit)',
     ...     criteria={'businessCategory': 'customers_container'})
-    [u'ou=customers,dc=my-domain,dc=com']
+    ['ou=customers,dc=my-domain,dc=com']
 
 Restrict with exact match wotks on 1-length results::
 
@@ -1102,7 +1123,7 @@ Restrict with exact match wotks on 1-length results::
     ...     queryFilter='(objectClass=organizationalUnit)',
     ...     criteria={'businessCategory': 'customers_container'},
     ...     exact_match=True)
-    [u'ou=customers,dc=my-domain,dc=com']
+    ['ou=customers,dc=my-domain,dc=com']
 
 Exact match fails on multi search results::
 
@@ -1126,14 +1147,14 @@ Test relation filter::
 
     >>> node['ou=customers']['cn=customer99'].attrs['description'] = 'customers'
     >>> node()
-    >>> node.searcg_filter = None
+    >>> node.search_filter = None
     >>> node.search_criteria = None
     >>> node.search_relation = 'description:businessCategory'
     >>> rel_node = node['ou=customers']['cn=customer99']
     >>> node.search(relation_node=rel_node)
-    [u'ou=customer1,ou=customers,dc=my-domain,dc=com',
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
-    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com']
+    ['ou=customer1,ou=customers,dc=my-domain,dc=com',
+    'ou=customer2,ou=customers,dc=my-domain,dc=com',
+    'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com']
 
     >>> node.search(relation='description:description', relation_node=rel_node)
     []
@@ -1148,7 +1169,7 @@ Test relation filter::
     '(description=customers)'
 
     >>> node.search(relation=relation)
-    [u'ou=customers,dc=my-domain,dc=com']
+    ['ou=customers,dc=my-domain,dc=com', 'cn=customer99,ou=customers,dc=my-domain,dc=com']
 
     >>> relation = LDAPRelationFilter(
     ...     rel_node, 'description:description|description:businessCategory')
@@ -1156,44 +1177,46 @@ Test relation filter::
     '(|(description=customers)(businessCategory=customers))'
 
     >>> node.search(relation=relation)
-    [u'ou=customers,dc=my-domain,dc=com',
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com',
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
-    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com']
+    ['ou=customers,dc=my-domain,dc=com',
+    'ou=customer1,ou=customers,dc=my-domain,dc=com',
+    'ou=customer2,ou=customers,dc=my-domain,dc=com',
+    'cn=customer99,ou=customers,dc=my-domain,dc=com',
+    'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com']
 
     >>> node.search_relation = relation
     >>> node.search()
-    [u'ou=customers,dc=my-domain,dc=com',
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com',
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
-    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com']
+    ['ou=customers,dc=my-domain,dc=com',
+    'ou=customer1,ou=customers,dc=my-domain,dc=com',
+    'ou=customer2,ou=customers,dc=my-domain,dc=com',
+    'cn=customer99,ou=customers,dc=my-domain,dc=com',
+    'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com']
 
 Search with binary in attrlist::
 
     >>> node = LDAPNode('dc=my-domain,dc=com', props)
     >>> node.search_scope = SUBTREE
     >>> sorted(node.search(attrlist=['jpegPhoto']))
-    [(u'cn=customer99,ou=customers,dc=my-domain,dc=com', {}),
-    (u'dc=my-domain,dc=com', {}),
-    (u'ou=customer1,ou=customers,dc=my-domain,dc=com', {}),
-    (u'ou=customer2,ou=customers,dc=my-domain,dc=com', {}),
-    (u'ou=customer3,ou=customers,dc=my-domain,dc=com', {}),
-    (u'ou=customers,dc=my-domain,dc=com', {}),
-    (u'ou=demo,dc=my-domain,dc=com', {}),
-    (u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com', {}),
-    (u'uid=binary,ou=customers,dc=my-domain,dc=com', {u'jpegPhoto': ['...']})]
+    [('cn=customer99,ou=customers,dc=my-domain,dc=com', {}),
+    ('dc=my-domain,dc=com', {}),
+    ('ou=customer1,ou=customers,dc=my-domain,dc=com', {}),
+    ('ou=customer2,ou=customers,dc=my-domain,dc=com', {}),
+    ('ou=customer3,ou=customers,dc=my-domain,dc=com', {}),
+    ('ou=customers,dc=my-domain,dc=com', {}),
+    ('ou=demo,dc=my-domain,dc=com', {}),
+    ('ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com', {}),
+    ('uid=binary,ou=customers,dc=my-domain,dc=com', {'jpegPhoto': [b'...']})]
 
 Add and delete node without persisting in between::
 
     >>> root = LDAPNode('dc=my-domain,dc=com', props)
     >>> directadd = root['ou=directadd'] = LDAPNode()
-    >>> directadd.attrs['ou'] = 'directadd'
+    >>> directadd.attrs['o'] = 'directadd'
     >>> directadd.attrs['description'] = 'directadd'
     >>> directadd.attrs['objectClass'] = ['top', 'organizationalUnit']
     >>> del root['ou=directadd']
     >>> root()
     >>> root.keys()
-    [u'ou=customers', u'ou=demo']
+    ['ou=customers', 'ou=demo']
 
 Events
 ======
@@ -1206,27 +1229,27 @@ Provide a bucnh of printing subscribers for testing::
 
     >>> @adapter(INode, ILDAPNodeCreatedEvent)
     ... def test_node_created_event(obj, event):
-    ...     print "Created", event.object
+    ...     print("Created {}".format(event.object))
     >>> provideHandler(test_node_created_event)
 
     >>> @adapter(INode, ILDAPNodeAddedEvent)
     ... def test_node_added_event(obj, event):
-    ...     print "Added", event.object
+    ...     print("Added {}".format(event.object))
     >>> provideHandler(test_node_added_event)
 
     >>> @adapter(INode, ILDAPNodeModifiedEvent)
     ... def test_node_modified_event(obj, event):
-    ...     print "Modified", event.object
+    ...     print("Modified {}".format(event.object))
     >>> provideHandler(test_node_modified_event)
 
     >>> @adapter(INode, ILDAPNodeDetachedEvent)
     ... def test_node_detached_event(obj, event):
-    ...     print "Detached", event.object
+    ...     print("Detached {}".format(event.object))
     >>> provideHandler(test_node_detached_event)
 
     >>> @adapter(INode, ILDAPNodeRemovedEvent)
     ... def test_node_removed_event(obj, event):
-    ...     print "Removed", event.object
+    ...     print("Removed {}".format(event.object))
     >>> provideHandler(test_node_removed_event)
 
 Check basic event notification with *added*::
@@ -1240,7 +1263,7 @@ Check for each event type in context::
     Created <dc=my-domain,dc=com - False>
 
     >>> root.keys()
-    [u'ou=customers', u'ou=demo']
+    ['ou=customers', 'ou=demo']
 
     >>> dummy = root.items()
     Created <(dn not set) - False>
@@ -1290,7 +1313,7 @@ Get schema information::
     >>> schema_info
     <node.ext.ldap.schema.LDAPSchemaInfo object at ...>
 
-    >>> root[u'ou=customers'].schema_info is schema_info
+    >>> root['ou=customers'].schema_info is schema_info
     True
 
 Clean

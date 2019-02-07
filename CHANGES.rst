@@ -4,7 +4,13 @@ History
 1.0b9 (unreleased)
 ------------------
 
-- No changes yet.
+- Python 3 support:
+  - fixed imports
+  - text/encoding fixes
+  - replaced iteritems
+  - fixed exception handling
+  - replaced print statement
+  - mangled doctests, added Py23DocChecker
 
 
 1.0b8 (2018-10-22)

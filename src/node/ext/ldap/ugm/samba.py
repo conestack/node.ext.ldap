@@ -40,8 +40,8 @@ sambaGroupMapping
 - description -------------> no default callback available
 - sambaSIDList ------------> no default callback available
 """
+from node.ext.ldap.ugm import posix
 import smbpasswd
-import posix
 import time
 
 

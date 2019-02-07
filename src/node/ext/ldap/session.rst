@@ -67,15 +67,25 @@ Add an entry::
 Modify this entry and check the result::
 
     >>> res = session.search('(cn=foo)', SUBTREE)
-    >>> res
-    [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com', 
-    {'objectClass': ['person', 'top'], 'cn': ['foo'], 'sn': ['bar']})]
+    >>> res[0][0]
+    'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com'
+    >>> res[0][1]['objectClass']
+    ['person', 'top']
+    >>> res[0][1]['cn']
+    ['foo']
+    >>> res[0][1]['sn']
+    ['bar']
 
     >>> session.modify(res[0][0], [(MOD_REPLACE, 'sn', 'baz')])
     >>> res = session.search('(cn=foo)', SUBTREE)
-    >>> res
-     [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
-     {'objectClass': ['person', 'top'], 'cn': ['foo'], 'sn': ['baz']})]
+    >>> res[0][0]
+    'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com'
+    >>> res[0][1]['objectClass']
+    ['person', 'top']
+    >>> res[0][1]['cn']
+    ['foo']
+    >>> res[0][1]['sn']
+    ['baz']
 
 Query only specific attributes::
 
@@ -103,6 +113,12 @@ Create the session with invalid ``LDAPProps``::
 
     >>> props = LDAPProps()
     >>> session = LDAPSession(props)
-    >>> session.checkServerProperties()
-    (False, SERVER_DOWN({u'info': 'Transport endpoint is not connected', 
-    'errno': 107, 'desc': u"Can't contact LDAP server"},))
+    >>> res, exc = session.checkServerProperties()
+    >>> res
+    False
+    >>> exc
+    SERVER_DOWN(...'info': 'Transport endpoint is not connected'...
+    >>> exc
+    SERVER_DOWN(...'errno': 107...
+    >>> exc
+    SERVER_DOWN(...'desc': "Can't contact LDAP server"...

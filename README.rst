@@ -85,7 +85,7 @@ Calling ``bind`` creates and returns the LDAP connection:
 .. code-block:: pycon
 
     >>> connector.bind()
-    <ldap.ldapobject.ReconnectLDAPObject instance at ...>
+    <ldap.ldapobject.ReconnectLDAPObject ...>
 
 Calling ``unbind`` destroys the connection:
 
@@ -140,12 +140,14 @@ Search in directory:
 .. code-block:: pycon
 
     >>> import node.ext.ldap
-    >>> communicator.search('(objectClass=person)', node.ext.ldap.SUBTREE)
-    [('cn=foo,ou=demo,dc=my-domain,dc=com',
-    {'objectClass': ['person'],
-    'userPassword': ['secret'],
-    'cn': ['foo'],
-    'sn': ['Mustermann']})]
+    >>> res = communicator.search('(objectClass=person)', node.ext.ldap.SUBTREE)
+    >>> res[0][0]
+    'cn=foo,ou=demo,dc=my-domain,dc=com'
+    >>> sorted(res[0][1].items())
+    [('cn', ['foo']),
+    ('objectClass', ['person']),
+    ('sn', ['Mustermann']),
+    ('userPassword', ['secret'])]
 
 Modify directory entry:
 
@@ -222,11 +224,13 @@ Search in directory:
 
 .. code-block:: pycon
 
-    >>> session.search()
-    [('ou=demo,dc=my-domain,dc=com',
-    {'objectClass': ['top', 'organizationalUnit'],
-    'ou': ['demo'],
-    'description': ['Demo organizational unit']})]
+    >>> res = session.search()
+    >>> res[0][0]
+    'ou=demo,dc=my-domain,dc=com'
+    >>> sorted(res[0][1].items())
+    [('description', ['Demo organizational unit']),
+    ('objectClass', ['top', 'organizationalUnit']),
+    ('ou', ['demo'])]
 
 Add directory entry:
 
@@ -301,10 +305,10 @@ Every LDAP node has a DN and a RDN:
 .. code-block:: pycon
 
     >>> root.DN
-    u'ou=demo,dc=my-domain,dc=com'
+    'ou=demo,dc=my-domain,dc=com'
 
     >>> root.rdn_attr
-    u'ou'
+    'ou'
 
 Check whether created node exists in the database::
 
@@ -342,23 +346,27 @@ node key and set automatically:
 .. code-block:: pycon
 
     >>> person.attrs['cn']
-    u'person2'
+    'person2'
 
 Fetch children DN by key from LDAP node:
 
 .. code-block:: pycon
 
     >>> root.child_dn('cn=person1')
-    u'cn=person1,ou=demo,dc=my-domain,dc=com'
+    'cn=person1,ou=demo,dc=my-domain,dc=com'
 
 Have a look at the tree:
 
 .. code-block:: pycon
 
     >>> root.printtree()
-    <ou=demo,dc=my-domain,dc=com - True>
-      <cn=person2,ou=demo,dc=my-domain,dc=com:cn=person2 - True>
-      <cn=person1,ou=demo,dc=my-domain,dc=com:cn=person1 - True>
+    <ou=demo,dc=my-domain,dc=com - True>...
+
+    >>> root.printtree()
+    <...  <cn=person2,ou=demo,dc=my-domain,dc=com:cn=person2 - True>...
+
+    >>> root.printtree()
+    <...  <cn=person1,ou=demo,dc=my-domain,dc=com:cn=person1 - True>...
 
 The entries have not been written to the directory yet. When modifying a LDAP
 node tree, everything happens im memory. Persisting is done by calling the
@@ -434,7 +442,7 @@ Add some users and groups we'll search for:
     ...     root.child_dn('cn=person1'),
     ...     root.child_dn('cn=person2'),
     ... ]
-    ... node.attrs['description'] = 'IT'
+    >>> node.attrs['description'] = 'IT'
     >>> root['cn=group1'] = node
 
     >>> node = LDAPNode()
@@ -465,13 +473,13 @@ bool operators '&' and '|':
     >>> filter = LDAPFilter('(objectClass=person)')
     >>> filter |= LDAPFilter('(objectClass=groupOfNames)')
     >>> sorted(root.search(queryFilter=filter))
-    [u'cn=group1,ou=demo,dc=my-domain,dc=com',
-    u'cn=group2,ou=demo,dc=my-domain,dc=com',
-    u'cn=person1,ou=demo,dc=my-domain,dc=com',
-    u'cn=person2,ou=demo,dc=my-domain,dc=com',
-    u'cn=person3,ou=demo,dc=my-domain,dc=com',
-    u'cn=person4,ou=demo,dc=my-domain,dc=com',
-    u'cn=person5,ou=demo,dc=my-domain,dc=com']
+    ['cn=group1,ou=demo,dc=my-domain,dc=com',
+    'cn=group2,ou=demo,dc=my-domain,dc=com',
+    'cn=person1,ou=demo,dc=my-domain,dc=com',
+    'cn=person2,ou=demo,dc=my-domain,dc=com',
+    'cn=person3,ou=demo,dc=my-domain,dc=com',
+    'cn=person4,ou=demo,dc=my-domain,dc=com',
+    'cn=person5,ou=demo,dc=my-domain,dc=com']
 
 Define multiple criteria LDAP filter:
 
@@ -480,7 +488,7 @@ Define multiple criteria LDAP filter:
     >>> from node.ext.ldap import LDAPDictFilter
     >>> filter = LDAPDictFilter({'objectClass': ['person'], 'cn': 'person1'})
     >>> root.search(queryFilter=filter)
-    [u'cn=person1,ou=demo,dc=my-domain,dc=com']
+    ['cn=person1,ou=demo,dc=my-domain,dc=com']
 
 Define a relation LDAP filter. In this case we build a relation between group
 'cn' and person 'businessCategory':
@@ -490,10 +498,10 @@ Define a relation LDAP filter. In this case we build a relation between group
     >>> from node.ext.ldap import LDAPRelationFilter
     >>> filter = LDAPRelationFilter(root['cn=group1'], 'cn:businessCategory')
     >>> root.search(queryFilter=filter)
-    [u'cn=person2,ou=demo,dc=my-domain,dc=com',
-    u'cn=person3,ou=demo,dc=my-domain,dc=com',
-    u'cn=person4,ou=demo,dc=my-domain,dc=com',
-    u'cn=person5,ou=demo,dc=my-domain,dc=com']
+    ['cn=person2,ou=demo,dc=my-domain,dc=com',
+    'cn=person3,ou=demo,dc=my-domain,dc=com',
+    'cn=person4,ou=demo,dc=my-domain,dc=com',
+    'cn=person5,ou=demo,dc=my-domain,dc=com']
 
 Different LDAP filter types can be combined:
 
@@ -576,8 +584,8 @@ LDAPRelationFilter or string:
 
     >>> root.search_filter = LDAPFilter('objectClass=groupOfNames')
     >>> root.search()
-    [u'cn=group1,ou=demo,dc=my-domain,dc=com',
-    u'cn=group2,ou=demo,dc=my-domain,dc=com']
+    ['cn=group1,ou=demo,dc=my-domain,dc=com',
+    'cn=group2,ou=demo,dc=my-domain,dc=com']
 
     >>> root.search_filter = None
 
@@ -587,11 +595,11 @@ Define default search criteria as dict:
 
     >>> root.search_criteria = {'objectClass': 'person'}
     >>> root.search()
-    [u'cn=person1,ou=demo,dc=my-domain,dc=com',
-    u'cn=person2,ou=demo,dc=my-domain,dc=com',
-    u'cn=person3,ou=demo,dc=my-domain,dc=com',
-    u'cn=person4,ou=demo,dc=my-domain,dc=com',
-    u'cn=person5,ou=demo,dc=my-domain,dc=com']
+    ['cn=person1,ou=demo,dc=my-domain,dc=com',
+    'cn=person2,ou=demo,dc=my-domain,dc=com',
+    'cn=person3,ou=demo,dc=my-domain,dc=com',
+    'cn=person4,ou=demo,dc=my-domain,dc=com',
+    'cn=person5,ou=demo,dc=my-domain,dc=com']
 
 Define default search relation:
 
@@ -600,10 +608,10 @@ Define default search relation:
     >>> root.search_relation = \
     ...     LDAPRelationFilter(root['cn=group1'], 'cn:businessCategory')
     >>> root.search()
-    [u'cn=person2,ou=demo,dc=my-domain,dc=com',
-    u'cn=person3,ou=demo,dc=my-domain,dc=com',
-    u'cn=person4,ou=demo,dc=my-domain,dc=com',
-    u'cn=person5,ou=demo,dc=my-domain,dc=com']
+    ['cn=person2,ou=demo,dc=my-domain,dc=com',
+    'cn=person3,ou=demo,dc=my-domain,dc=com',
+    'cn=person4,ou=demo,dc=my-domain,dc=com',
+    'cn=person5,ou=demo,dc=my-domain,dc=com']
 
 Again, like with the keyword arguments, multiple defined defaults are '&'
 combined:
@@ -689,36 +697,39 @@ can be deserialized later:
 
 .. code-block:: pycon
 
-    >>> serialize(container)
-    '{"__node__":
-    {"attrs": {"objectClass": ["organizationalUnit"],
-    "ou": "container"},
-    "children":
-    [{"__node__":
-    {"attrs":
-    {"objectClass": ["person", "inetOrgPerson"],
-    "userPassword": "secret",
-    "sn": "Mustermann", "cn": "person1"},
-    "class": "node.ext.ldap._node.LDAPNode",
-    "name": "cn=person1"}}],
-    "class": "node.ext.ldap._node.LDAPNode",
-    "name": "ou=container"}}'
+    >>> dump = serialize(container)
+    >>> import json
+    >>> json.loads(dump) == {"__node__":
+    ...     {"attrs": {"objectClass": ["organizationalUnit"],
+    ...     "ou": "container"},
+    ...     "children":
+    ...     [{"__node__":
+    ...     {"attrs":
+    ...     {"objectClass": ["person", "inetOrgPerson"],
+    ...     "userPassword": "secret",
+    ...     "sn": "Mustermann", "cn": "person1"},
+    ...     "class": "node.ext.ldap._node.LDAPNode",
+    ...     "name": "cn=person1"}}],
+    ...     "class": "node.ext.ldap._node.LDAPNode",
+    ...     "name": "ou=container"}}
+    True
 
 Serialize in simple mode is better readable, but not deserialzable any more:
 
 .. code-block:: pycon
 
-    >>> serialize(container, simple_mode=True)
-    '{"attrs":
-    {"objectClass": ["organizationalUnit"],
-    "ou": "container"},
-    "name": "ou=container",
-    "children":
-    [{"name": "cn=person1",
-    "attrs": {"objectClass": ["person", "inetOrgPerson"],
-    "userPassword": "secret",
-    "sn": "Mustermann",
-    "cn": "person1"}}]}'
+    >>> dump = serialize(container, simple_mode=True)
+    >>> json.loads(dump) == {"attrs":
+    ...     {"objectClass": ["organizationalUnit"],
+    ...     "ou": "container"},
+    ...     "name": "ou=container",
+    ...     "children":
+    ...     [{"name": "cn=person1",
+    ...     "attrs": {"objectClass": ["person", "inetOrgPerson"],
+    ...     "userPassword": "secret",
+    ...     "sn": "Mustermann",
+    ...     "cn": "person1"}}]}
+    True
 
 
 User and Group management
@@ -877,21 +888,21 @@ User attributes. Reserved keys are available on user attributes:
 .. code-block:: pycon
 
     >>> user.attrs['id']
-    u'person1'
+    'person1'
 
     >>> user.attrs['login']
-    u'Mustermensch'
+    'Mustermensch'
 
 'login' maps to 'sn':
 
 .. code-block:: pycon
 
     >>> user.attrs['sn']
-    u'Mustermensch'
+    'Mustermensch'
 
-    >>> user.attrs['login'] = u'Mustermensch1'
+    >>> user.attrs['login'] = 'Mustermensch1'
     >>> user.attrs['sn']
-    u'Mustermensch1'
+    'Mustermensch1'
 
     >>> user.attrs['description'] = 'Some description'
     >>> user()
@@ -926,12 +937,12 @@ Add new User:
     >>> user()
 
     >>> ugm.users.keys()
-    [u'person1',
-    u'person2',
-    u'person3',
-    u'person4',
-    u'person5',
-    u'person99']
+    ['person1',
+    'person2',
+    'person3',
+    'person4',
+    'person5',
+    'person99']
 
 Delete User:
 
@@ -940,11 +951,11 @@ Delete User:
     >>> del ugm.users['person99']
     >>> ugm.users()
     >>> ugm.users.keys()
-    [u'person1',
-    u'person2',
-    u'person3',
-    u'person4',
-    u'person5']
+    ['person1',
+    'person2',
+    'person3',
+    'person4',
+    'person5']
 
 Fetch Group:
 
@@ -957,7 +968,7 @@ Group members:
 .. code-block:: pycon
 
     >>> group.member_ids
-    [u'person1', u'person2']
+    ['person1', 'person2']
 
     >>> group.users
     [<User object 'person1' at ...>, <User object 'person2' at ...>]
@@ -968,7 +979,7 @@ Add group member:
 
     >>> group.add('person3')
     >>> group.member_ids
-    [u'person1', u'person2', u'person3']
+    ['person1', 'person2', 'person3']
 
 Delete group member:
 
@@ -976,7 +987,7 @@ Delete group member:
 
     >>> del group['person3']
     >>> group.member_ids
-    [u'person1', u'person2']
+    ['person1', 'person2']
 
 Group attribute manipulation works the same way as on user objects.
 

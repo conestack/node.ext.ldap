@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import sys
+from six.moves import range
 
 base = "ou=groupOfNames_%(nusers)s_%(ngroups)s,dc=my-domain,dc=com"
 domain = "groupOfNames_%(nusers)s_%(ngroups)s.com"
@@ -61,26 +63,26 @@ base = base % dict(nusers=nusers, ngroups=ngroups)
 domain = domain % dict(nusers=nusers, ngroups=ngroups)
 
 if len(sys.argv) > 1 and sys.argv[-1] == "add":
-    print users_add_template % dict(base=base)
-    print groups_add_template % dict(base=base)
+    print(users_add_template % dict(base=base))
+    print(groups_add_template % dict(base=base))
     exit(0)
 
-print base_template % dict(base=base, nusers=nusers, ngroups=ngroups)
-print users_template % dict(base=base)
-print groups_template % dict(base=base)
+print(base_template % dict(base=base, nusers=nusers, ngroups=ngroups))
+print(users_template % dict(base=base))
+print(groups_template % dict(base=base))
 
 for nu in range(nusers):
-    print user_template % dict(
+    print(user_template % dict(
         base=base,
         domain=domain,
         n=nu,
-        )
+        ))
 
 for ng in range(ngroups):
-    print group_template % dict(
+    print(group_template % dict(
         base=base,
         n=ng,
-        ),
+        ), end=' ')
     for nu in range(ng):
-        print member_template % dict(base=base, n=nu+1)
-    print
+        print(member_template % dict(base=base, n=nu+1))
+    print()

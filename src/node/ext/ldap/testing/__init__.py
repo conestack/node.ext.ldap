@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 from node.ext.ldap import LDAPProps
 from node.ext.ldap import ONELEVEL
 from node.ext.ldap import SUBTREE
@@ -45,7 +46,7 @@ def read_env(layer):
     layer['suffix'] = LDAPSUFFIX
     layer['bindpw'] = "secret"
     layer['slapddb'] = SLAPDDB
-    print tmpdir
+    print(tmpdir)
 
 
 slapdconf_template = """\
@@ -119,7 +120,7 @@ class SlapdConf(Layer):
             )
         os.mkdir(dbdir)
         self['props'] = props
-        print "SlapdConf set up."
+        print("SlapdConf set up.")
 
     def tearDown(self):
         """remove our traces
@@ -127,7 +128,7 @@ class SlapdConf(Layer):
         read_env(self)
         shutil.rmtree(self['confdir'])
         del self['confdir']
-        print "SlapdConf torn down."
+        print("SlapdConf torn down.")
 
 
 schema = [
@@ -164,19 +165,19 @@ class Slapd(LDAPLayer):
     def setUp(self, args=['-d', '0']):
         """start slapd
         """
-        print "\nStarting LDAP server: ",
+        print("\nStarting LDAP server: ", end=' ')
         read_env(self)
         cmd = [self.slapdbin, '-f', self['slapdconf'], '-h', self['uris']]
         cmd += args
-        print ' '.join(cmd)
+        print(' '.join(cmd))
         self.slapd = subprocess.Popen(cmd)
         time.sleep(1)
-        print "done."
+        print("done.")
 
     def tearDown(self):
         """stop the previously started slapd
         """
-        print "\nStopping LDAP Server: ",
+        print("\nStopping LDAP Server: ", end=' ')
         read_env(self)
         if self['externalpidfile']:
             # case testldap server started via node.ext.ldap.main.slapd
@@ -188,13 +189,13 @@ class Slapd(LDAPLayer):
             pid = self.slapd.pid
         os.kill(pid, 15)
         if self.slapd is not None:
-            print "waiting for slapd to terminate...",
+            print("waiting for slapd to terminate...", end=' ')
             self.slapd.wait()
-        print "done."
-        print "Whiping ldap data directory %s: " % (self['dbdir'],),
+        print("done.")
+        print("Wiping ldap data directory %s: " % (self['dbdir'],), end=' ')
         for file in os.listdir(self['dbdir']):
             os.remove('%s/%s' % (self['dbdir'], file))
-        print "done."
+        print("done.")
 
 
 SLAPD = Slapd()
@@ -228,27 +229,27 @@ class Ldif(LDAPLayer):
         read_env(self)
         self['ucfg'] = self.ucfg
         self['gcfg'] = self.gcfg
-        print
+        print()
         for ldif in self.ldifs:
-            print "Adding ldif %s: " % (ldif,),
+            print("Adding ldif %s: " % (ldif,), end=' ')
             cmd = [self.ldapaddbin, '-f', ldif, '-x', '-D', self['binddn'],
                    '-w', self['bindpw'], '-c', '-a', '-H', self['uris']]
             retcode = subprocess.call(cmd)
-            print "done. %s" % retcode
+            print("done. %s" % retcode)
 
     def tearDown(self):
         """remove previously added ldifs
         """
         read_env(self)
         for ldif in self.ldifs:
-            print "Removing ldif %s recursively: " % (ldif,),
+            print("Removing ldif %s recursively: " % (ldif,), end=' ')
             with open(ldif) as ldif:
                 dns = [x.strip().split(' ', 1)[1] for x in ldif if
                        x.startswith('dn: ')]
             cmd = [self.ldapdeletebin, '-x', '-D', self['binddn'], '-c', '-r',
                    '-w', self['bindpw'], '-H', self['uris']] + dns
             retcode = subprocess.call(cmd, stderr=subprocess.PIPE)
-            print "done. %s" % retcode
+            print("done. %s" % retcode)
         for key in ('ucfg', 'gcfg'):
             if key in self:
                 del self[key]
@@ -257,13 +258,13 @@ class Ldif(LDAPLayer):
             # XXX: fails to pop global registry in Zope 2. Why?
             try:
                 zca.popGlobalRegistry()
-                print 80 * '*'
-                print "pop global registry"
-            except Exception, e:
-                print 80 * '*'
-                print "pop global registry failed"
-                print e
-                print 80 * '*'
+                print(80 * '*')
+                print("pop global registry")
+            except Exception as e:
+                print(80 * '*')
+                print("pop global registry failed")
+                print(e)
+                print(80 * '*')
 
 
 ldif_layer = odict()

@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 from bda.cache import ICacheManager
 from bda.cache.interfaces import INullCacheProvider
 from node.ext.ldap.cache import nullcacheProviderFactory
 from node.ext.ldap.interfaces import ICacheProviderFactory
 from node.ext.ldap.properties import LDAPProps
+from node.utils import encode
+from node.utils import decode
 from zope.component import queryUtility
 import hashlib
 import ldap
 import logging
+import six
 
 
 logger = logging.getLogger('node.ext.ldap')
@@ -30,7 +34,7 @@ def testLDAPConnectivity(server=None, port=None, props=None):
         lc.bind()
         lc.unbind()
         return 'success'
-    except ldap.LDAPError, error:
+    except ldap.LDAPError as error:
         return error
 
 
@@ -41,18 +45,18 @@ def md5digest(key):
     :return digest: hex digest.
     """
     m = hashlib.md5()
-    m.update(key)
+    m.update(key.encode('utf-8'))
     return m.hexdigest()
 
 
 def decode_utf8(value):
-    if value and not isinstance(value, unicode):
+    if value and not isinstance(value, six.text_type):
         value = value.decode('utf-8')
     return value
 
 
 def encode_utf8(value):
-    if value and isinstance(value, unicode):
+    if value and isinstance(value, six.text_type):
         value = value.encode('utf-8')
     return value
 
@@ -212,6 +216,7 @@ class LDAPCommunicator(object):
             rtype, results, rmsgid, rctrls = self._con.result3(msgid)
             ctype = ldap.controls.libldap.SimplePagedResultsControl.controlType
             pctrls = [c for c in rctrls if c.controlType == ctype]
+            results = decode(results)
             if pctrls:
                 return results, pctrls[0].cookie
             else:
@@ -244,7 +249,7 @@ class LDAPCommunicator(object):
         :param dn: Adding DN
         :param data: Dict containing key/value pairs of entry attributes
         """
-        attributes = [(k, v) for k, v in data.items()]
+        attributes = [(k, encode(v)) for k, v in data.items()]
         self._con.add_s(dn, attributes)
 
     def modify(self, dn, modlist):
@@ -256,7 +261,12 @@ class LDAPCommunicator(object):
         gives the name of the field to modify, and the third gives the new
         value for the field (for MOD_ADD and MOD_REPLACE).
         """
-        self._con.modify_s(dn, modlist)
+        modlist_b = []
+        for mod in modlist:
+            if mod[2] and not isinstance(mod[2], six.binary_type):
+                mod = (mod[0], mod[1], encode(mod[2]))
+            modlist_b.append(mod)
+        self._con.modify_s(dn, modlist_b)
 
     def delete(self, deleteDN):
         """Delete an entry from the directory.
@@ -277,10 +287,10 @@ def main():
     """
     import sys
     if len(sys.argv) < 3:
-        print 'usage: python base.py [server] [port]'
+        print('usage: python base.py [server] [port]')
     else:
         server, port = sys.argv[1:]
-        print testLDAPConnectivity(server, int(port))
+        print((testLDAPConnectivity(server, int(port))))
 
 
 if __name__ == "__main__":

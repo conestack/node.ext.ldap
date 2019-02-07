@@ -55,7 +55,7 @@ User keys::
 
     >>> users = ugm.users
     >>> users.keys()
-    [u'uid0', u'uid1', u'uid2']
+    ['uid0', 'uid1', 'uid2']
 
 Fetch some users::
 
@@ -73,21 +73,21 @@ Fetch some users::
     Aliased <LDAPNodeAttributes object 'uid=uid0' at ...>
 
     >>> user_0.attrs['cn']
-    u'cn0'
+    'cn0'
 
     >>> user_0.attrs['sn']
-    u'sn0'
+    'sn0'
 
     >>> user_0.attrs['login']
-    u'cn0'
+    'cn0'
 
     >>> sorted(user_0.attrs.items())
-    [('cn', u'cn0'), 
-    ('gidNumber', u'0'), 
-    ('homeDirectory', u'/home/uid0'), 
-    ('sn', u'sn0'), 
-    ('uid', u'uid0'), 
-    ('uidNumber', u'0')]
+    [('cn', 'cn0'), 
+    ('gidNumber', '0'), 
+    ('homeDirectory', '/home/uid0'), 
+    ('sn', 'sn0'), 
+    ('uid', 'uid0'), 
+    ('uidNumber', '0')]
 
 User is a leaf::
 
@@ -114,10 +114,10 @@ Authenticate no account expiration configured::
     >>> users.expiresAttr
 
     >>> users.authenticate('uid0', 'secret0')
-    u'uid0'
+    'uid0'
 
     >>> users.authenticate('cn0', 'secret0')
-    u'uid0'
+    'uid0'
 
     >>> users.authenticate('uid0', 'invalid')
     False
@@ -147,13 +147,13 @@ Set expires attribute for ongoing tests::
 Value 99999 and -1 means no expiration::
 
     >>> users['uid0'].context.attrs['shadowExpire']
-    u'99999'
+    '99999'
 
     >>> users['uid0'].context.attrs['shadowInactive']
-    u'0'
+    '0'
 
     >>> users.authenticate('uid0', 'secret0')
-    u'uid0'
+    'uid0'
 
     >>> users['uid0'].expired
     False
@@ -178,7 +178,7 @@ No expiration far future::
     >>> users['uid0'].context.attrs['shadowExpire'] = '99999'
     >>> users['uid0']()
     >>> users.authenticate('uid0', 'secret0')
-    u'uid0'
+    'uid0'
 
     >>> users['uid0'].expired
     False
@@ -188,20 +188,20 @@ No expiration by '-1'::
     >>> users['uid0'].context.attrs['shadowExpire'] = '-1'
     >>> users['uid0']()
     >>> users.authenticate('uid0', 'secret0')
-    u'uid0'
+    'uid0'
 
     >>> users['uid0'].expired
     False
 
 #### figure out shadowInactive -> PAM and samba seem to ignore -> configuration?
 
-    >> users['uid0'].context.attrs['shadowInactive'] = u'99999'
+    >> users['uid0'].context.attrs['shadowInactive'] = '99999'
 
 Uid0 never expires - or at leas expires in many years and even if, there are
 99999 more days unless account gets disabled::
 
 #    >> users.authenticate('uid0', 'secret0')
-#    u'uid0'
+#    'uid0'
 
 #    >> users['uid0'].context.attrs['shadowInactive'] = '0'
 
@@ -219,7 +219,7 @@ Change password::
 
     >>> users.passwd('uid0', 'secret0', 'bar')
     >>> users.authenticate('uid0', 'bar')
-    u'uid0'
+    'uid0'
 
 Add user::
 
@@ -274,13 +274,13 @@ After calling, new user is available in LDAP::
     >>> ugm()
     >>> ugm.users.passwd('sepp', None, 'secret')
     >>> users.authenticate('sepp', 'secret')
-    u'sepp'
+    'sepp'
 
 Groups object::
 
     >>> groups = ugm.groups
     >>> groups.keys()
-    [u'group0', u'group1', u'group2']
+    ['group0', 'group1', 'group2']
 
     >>> group_0 = groups['group0']
     >>> group_1 = groups['group1']
@@ -296,14 +296,14 @@ Groups object::
     Aliased <LDAPNodeAttributes object 'cn=group0' at ...>
 
     >>> group_0.attrs.items()
-    [('memberUid', [u'nobody', u'uid0']), 
-    ('gidNumber', u'0'), 
-    ('rdn', u'group0')]
+    [('memberUid', ['nobody', 'uid0']), 
+    ('gidNumber', '0'), 
+    ('rdn', 'group0')]
 
     >>> group_1.attrs.items()
-    [('memberUid', [u'nobody', u'uid0', u'uid1']), 
-    ('gidNumber', u'1'), 
-    ('rdn', u'group1')]
+    [('memberUid', ['nobody', 'uid0', 'uid1']), 
+    ('gidNumber', '1'), 
+    ('rdn', 'group1')]
 
 Add a group::
 
@@ -337,13 +337,13 @@ Add a group::
 A group returns the members ids as keys::
 
     >>> group_0.member_ids
-    [u'uid0']
+    ['uid0']
 
     >> group_1.member_ids
-    [u'uid1']
+    ['uid1']
 
     >> group_2.member_ids
-    [u'uid1', u'uid2']
+    ['uid1', 'uid2']
 
 The member users are fetched via ``__getitem__``::
 
@@ -358,14 +358,14 @@ Querying a group for a non-member results in a KeyError::
     >>> group_0['uid1']
     Traceback (most recent call last):
       ...
-    KeyError: u'uid1'
+    KeyError: 'uid1'
 
 Deleting inexistend member from group fails::
 
     >>> del group_0['inexistent']
     Traceback (most recent call last):
       ...
-    KeyError: u'inexistent'
+    KeyError: 'inexistent'
 
 ``__setitem__`` is prohibited::
 
@@ -378,10 +378,10 @@ Members are added via ``add``::
 
     >>> group_1.add('uid0')
     >>> group_1.keys()
-    [u'uid0', u'uid1']
+    ['uid0', 'uid1']
 
     >>> group_1.member_ids
-    [u'uid0', u'uid1']
+    ['uid0', 'uid1']
 
     >>> group_1['uid0']
     <User object 'uid0' at ...>
@@ -396,7 +396,7 @@ Let's take a fresh view on ldap whether this really happened::
     >>> ugm_fresh = Ugm(name='ugm', parent=None, props=props,
     ...                 ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
     >>> ugm_fresh.groups['group1'].keys()
-    [u'uid0', u'uid1']
+    ['uid0', 'uid1']
 
 Members are removed via ``delitem``::
 
@@ -404,7 +404,7 @@ Members are removed via ``delitem``::
     >>> ugm_fresh = Ugm(name='ugm', parent=None, props=props,
     ...                 ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
     >>> ugm_fresh.groups['group1'].keys()
-    [u'uid1']
+    ['uid1']
 
     >>> ugm.printtree()
     <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
@@ -436,13 +436,13 @@ A user knows its groups::
     [<Group object 'group2' at ...>]
 
     >>> user_0.group_ids
-    [u'group0', u'group2']
+    ['group0', 'group2']
 
     >>> user_1.group_ids
-    [u'group1', u'group2']
+    ['group1', 'group2']
 
     >>> user_2.group_ids
-    [u'group2']
+    ['group2']
 
 Recreate UGM object::
 
@@ -454,18 +454,18 @@ Recreate UGM object::
 Test search function::
 
     >>> users.search(criteria={'login': 'cn0'})
-    [u'uid0']
+    ['uid0']
 
     >>> groups.search(criteria={'id': 'group2'})
-    [u'group2']
+    ['group2']
 
 There's an ids property on principals base class::
 
     >>> users.ids
-    [u'uid0', u'uid1', u'uid2', u'sepp']
+    ['uid0', 'uid1', 'uid2', 'sepp']
 
     >>> groups.ids
-    [u'group0', u'group1', u'group2', u'group99']
+    ['group0', 'group1', 'group2', 'group99']
 
 Add now user to some groups and then delete user, check whether user is removed
 from all this groups::
@@ -483,7 +483,7 @@ from all this groups::
     [<Group object 'group0' at ...>, <Group object 'group1' at ...>]
 
     >>> user.group_ids
-    [u'group0', u'group1']
+    ['group0', 'group1']
 
     >>> ugm.printtree()
     <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
@@ -547,7 +547,7 @@ Delete Group::
 Test case where group object does not have 'memberUid' attribute set yet.::
 
     >>> node = LDAPNode(
-    ...     u'cn=group0,ou=groups,ou=posixGroups,dc=my-domain,dc=com',
+    ...     'cn=group0,ou=groups,ou=posixGroups,dc=my-domain,dc=com',
     ...     props=props)
 
     >>> del node.attrs['memberUid']
@@ -569,7 +569,7 @@ Test case where group contains reference to inexistent member.::
     >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg)
     >>> group = ugm.groups['group0']
     >>> group.items()
-    [(u'uid1', <User object 'uid1' at ...>)]
+    [('uid1', <User object 'uid1' at ...>)]
 
 Role Management. Create container for roles.::
 
@@ -648,12 +648,12 @@ Role Management. Create container for roles.::
     >>> ugm.remove_role('viewer', group)
 
     >>> ugm.roles_storage.keys()
-    [u'viewer', u'editor']
+    ['viewer', 'editor']
 
     >>> group.remove_role('editor')
 
     >>> ugm.roles_storage.keys()
-    [u'viewer']
+    ['viewer']
 
     >>> ugm.roles_storage.storage.keys()
     ['viewer']
@@ -661,7 +661,7 @@ Role Management. Create container for roles.::
     >>> ugm.roles_storage['editor']
     Traceback (most recent call last):
       ...
-    KeyError: u'editor'
+    KeyError: 'editor'
 
     >>> group.remove_role('editor')
     Traceback (most recent call last):

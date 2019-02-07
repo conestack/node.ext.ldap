@@ -21,16 +21,19 @@ Schema object::
 
     >>> info = LDAPSchemaInfo(props)
     >>> info.subschema
-    <ldap.schema.subentry.SubSchema instance at 0x...>
+    <ldap.schema.subentry.SubSchema ...>
 
 CN Attribute::
 
     >>> attrcn = info.attribute('cn')
     >>> attrcn
-    <ldap.schema.models.AttributeType instance at 0x...>
+    <ldap.schema.models.AttributeType ...>
 
-    >>> attrcn.names
-    ('cn', 'commonName')
+    >>> attrcn.names[0] == 'cn'
+    True
+
+    >>> attrcn.names[1] == 'commonName'
+    True
 
     >>> attrcn.collective
     False
@@ -47,7 +50,7 @@ CN Attribute::
     >>> attrcn.ordering
 
     >>> attrcn.schema_attribute
-    u'attributeTypes'
+    'attributeTypes'
 
     >>> attrcn.single_value
     False
@@ -62,7 +65,7 @@ CN Attribute::
 
     >>> gof = info.objectclass('groupOfNames')
     >>> gof
-    <ldap.schema.models.ObjectClass instance at 0x...>
+    <ldap.schema.models.ObjectClass ...>
 
     >>> gof.must
     ('member', 'cn')
@@ -71,28 +74,28 @@ CN Attribute::
     ('businessCategory', 'seeAlso', 'owner', 'ou', 'o', 'description')
 
     >>> pprint(info.attributes_of_objectclass('groupOfNames'))
-    [{'info': <ldap.schema.models.AttributeType instance at ...>,
+    [{'info': <ldap.schema.models.AttributeType ...>,
       'name': 'member',
       'required': True},
-     {'info': <ldap.schema.models.AttributeType instance at ...>,
+     {'info': <ldap.schema.models.AttributeType ...>,
       'name': 'cn',
       'required': True},
-     {'info': <ldap.schema.models.AttributeType instance at ...>,
+     {'info': <ldap.schema.models.AttributeType ...>,
       'name': 'businessCategory',
       'required': False},
-     {'info': <ldap.schema.models.AttributeType instance at ...>,
+     {'info': <ldap.schema.models.AttributeType ...>,
       'name': 'seeAlso',
       'required': False},
-     {'info': <ldap.schema.models.AttributeType instance at ...>,
+     {'info': <ldap.schema.models.AttributeType ...>,
       'name': 'owner',
       'required': False},
-     {'info': <ldap.schema.models.AttributeType instance at ...>,
+     {'info': <ldap.schema.models.AttributeType ...>,
       'name': 'ou',
       'required': False},
-     {'info': <ldap.schema.models.AttributeType instance at ...>,
+     {'info': <ldap.schema.models.AttributeType ...>,
       'name': 'o',
       'required': False},
-     {'info': <ldap.schema.models.AttributeType instance at ...>,
+     {'info': <ldap.schema.models.AttributeType ...>,
       'name': 'description',
       'required': False}]
       

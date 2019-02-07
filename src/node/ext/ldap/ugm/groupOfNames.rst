@@ -52,7 +52,7 @@ User keys::
 
     >>> users = ugm.users
     >>> users.keys()
-    [u'uid0', u'uid1', u'uid2']
+    ['uid0', 'uid1', 'uid2']
 
 Fetch some users::
 
@@ -70,21 +70,21 @@ Fetch some users::
     Aliased <LDAPNodeAttributes object 'uid=uid0' at ...>
 
     >>> user_0.attrs['cn']
-    u'cn0'
+    'cn0'
 
     >>> user_0.attrs['login']
-    u'cn0'
+    'cn0'
 
 XXX: LDAPNodeAttributes.items does not return consistent results if attrmap
      points to same attribute twice ('login' missing here)
 
 ::
 
-    >>> sorted(user_0.attrs.items())
-    [('cn', u'cn0'), 
-    ('mail', u'uid0@groupOfNames.com'), 
-    ('rdn', u'uid0'), 
-    ('sn', u'sn0')]
+    >>> sorted(user_0.attrs.values())
+    ['cn0', 
+     'sn0',
+     'uid0',
+     'uid0@groupOfNames.com']
 
 User is a leaf::
 
@@ -109,10 +109,10 @@ User is a leaf::
 Authenticate::
 
     >>> users.authenticate('uid0', 'secret0')
-    u'uid0'
+    'uid0'
 
     >>> users.authenticate('cn0', 'secret0')
-    u'uid0'
+    'uid0'
 
     >>> users.authenticate('uid0', 'invalid')
     False
@@ -128,7 +128,7 @@ Change password::
     >>> users.passwd('uid0', 'foo', 'bar')
     Traceback (most recent call last):
       ...
-    UNWILLING_TO_PERFORM: ...
+    ldap.UNWILLING_TO_PERFORM: ...
 
     >>> users.passwd('foo', 'secret0', 'bar')
     Traceback (most recent call last):
@@ -137,7 +137,7 @@ Change password::
 
     >>> users.passwd('uid0', 'secret0', 'bar')
     >>> users.authenticate('uid0', 'bar')
-    u'uid0'
+    'uid0'
 
 Add user::
 
@@ -188,13 +188,13 @@ After calling, new user is available in LDAP::
     >>> ugm()
     >>> ugm.users.passwd('sepp', None, 'secret')
     >>> users.authenticate('sepp', 'secret')
-    u'sepp'
+    'sepp'
 
 Groups object::
 
     >>> groups = ugm.groups
     >>> groups.keys()
-    [u'group0', u'group1', u'group2']
+    ['group0', 'group1', 'group2']
 
     >>> group_0 = groups['group0']
     >>> group_1 = groups['group1']
@@ -210,11 +210,11 @@ Groups object::
     Aliased <LDAPNodeAttributes object 'cn=group0' at ...>
 
     >>> group_0.attrs.items()
-    [('member', [u'cn=nobody']), ('rdn', u'group0')]
+    [('member', ['cn=nobody']), ('rdn', 'group0')]
 
     >>> group_1.attrs.items()
-    [('member', [u'cn=nobody', u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com']), 
-    ('rdn', u'group1')]
+    [('member', ['cn=nobody', 'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com']), 
+    ('rdn', 'group1')]
 
 Add a group::
 
@@ -248,10 +248,10 @@ A group returns the members ids as keys::
     []
 
     >> group_1.member_ids
-    [u'uid1']
+    ['uid1']
 
     >> group_2.member_ids
-    [u'uid1', u'uid2']
+    ['uid1', 'uid2']
 
 The member users are fetched via ``__getitem__``::
 
@@ -266,14 +266,14 @@ Querying a group for a non-member results in a KeyError::
     >>> group_0['uid1']
     Traceback (most recent call last):
       ...
-    KeyError: u'uid1'
+    KeyError: 'uid1'
 
 Deleting inexistend member from group fails::
 
     >>> del group_0['inexistent']
     Traceback (most recent call last):
       ...
-    KeyError: u'inexistent'
+    KeyError: 'inexistent'
 
 ``__setitem__`` is prohibited::
 
@@ -286,10 +286,10 @@ Members are added via ``add``::
 
     >>> group_1.add('uid0')
     >>> group_1.keys()
-    [u'uid1', u'uid0']
+    ['uid1', 'uid0']
 
     >>> group_1.member_ids
-    [u'uid1', u'uid0']
+    ['uid1', 'uid0']
 
     >>> group_1['uid0']
     <User object 'uid0' at ...>
@@ -304,7 +304,7 @@ Let's take a fresh view on ldap whether this really happened::
     >>> ugm_fresh = Ugm(name='ugm', parent=None, props=props,
     ...                 ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
     >>> ugm_fresh.groups['group1'].keys()
-    [u'uid1', u'uid0']
+    ['uid1', 'uid0']
 
 Members are removed via ``delitem``::
 
@@ -312,7 +312,7 @@ Members are removed via ``delitem``::
     >>> ugm_fresh = Ugm(name='ugm', parent=None, props=props,
     ...                 ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
     >>> ugm_fresh.groups['group1'].keys()
-    [u'uid1']
+    ['uid1']
 
 A user knows its groups::
 
@@ -326,10 +326,10 @@ A user knows its groups::
     [<Group object 'group2' at ...>]
 
     >>> user_1.group_ids
-    [u'group1', u'group2']
+    ['group1', 'group2']
 
     >>> user_2.group_ids
-    [u'group2']
+    ['group2']
 
 Recreate UGM object::
 
@@ -341,18 +341,18 @@ Recreate UGM object::
 Test search function::
 
     >>> users.search(criteria={'login': 'cn0'})
-    [u'uid0']
+    ['uid0']
 
     >>> groups.search(criteria={'id': 'group2'})
-    [u'group2']
+    ['group2']
 
 There's an ids property on principals base class::
 
     >>> users.ids
-    [u'uid0', u'uid1', u'uid2', u'sepp']
+    ['uid0', 'uid1', 'uid2', 'sepp']
 
     >>> groups.ids
-    [u'group0', u'group1', u'group2', u'group99']
+    ['group0', 'group1', 'group2', 'group99']
 
 Add now user to some groups and then delete user, check whether user is removed
 from all this groups.::
@@ -370,7 +370,7 @@ from all this groups.::
     [<Group object 'group0' at ...>, <Group object 'group1' at ...>]
 
     >>> user.group_ids
-    [u'group0', u'group1']
+    ['group0', 'group1']
 
     >>> ugm.printtree()
     <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
@@ -429,18 +429,18 @@ MemberOf Support::
 
     >>> users = ugm.users
     >>> users.context.search(queryFilter='(memberOf=*)')
-    [u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com', 
-    u'uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com']
+    ['uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com', 
+    'uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com']
 
     >>> users.context.search(attrlist=['memberOf'])
-    [(u'uid=uid0,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {}),
-    (u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {u'memberOf':
-    [u'cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
-    u'cn=group3,ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com',
-    u'cn=group1,ou=groups,ou=groupOfNames,dc=my-domain,dc=com']}),
-    (u'uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {u'memberOf':
-    [u'cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
-    u'cn=group3,ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com']})]
+    [('uid=uid0,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {}),
+    ('uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {'memberOf':
+    ['cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
+    'cn=group3,ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com',
+    'cn=group1,ou=groups,ou=groupOfNames,dc=my-domain,dc=com']}),
+    ('uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {'memberOf':
+    ['cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
+    'cn=group3,ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com']})]
 
     >>> ugm.ucfg.memberOfSupport = True
     >>> ugm.gcfg.memberOfSupport = True
@@ -450,13 +450,13 @@ MemberOf Support::
     <Group object 'group1' at ...>]
 
     >>> users['uid1'].group_ids
-    [u'group2', u'group1']
+    ['group2', 'group1']
 
     >>> groups['group1'].member_ids
-    [u'uid1']
+    ['uid1']
 
     >>> groups['group2'].member_ids
-    [u'uid1', u'uid2']
+    ['uid1', 'uid2']
 
     >>> ugm.ucfg.memberOfSupport = False
     >>> ugm.gcfg.memberOfSupport = False

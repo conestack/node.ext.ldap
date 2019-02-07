@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import sys
+from six.moves import range
 
 container_template = """\
 dn: ou=%(ou)s,dc=my-domain,dc=com
@@ -24,13 +26,13 @@ ou = sys.argv.pop(1)
 n = int(sys.argv.pop(1))
 
 
-print container_template % dict(ou=ou)
+print(container_template % dict(ou=ou))
 for x in range(n):
-    print user_template % dict(
+    print(user_template % dict(
             uid='uid%d' % x,
             cn='cn%d' % x,
             mail='uid%d@%s' % (x, ou),
             ou=ou,
             password='secret%d' % x,
             sn='sn%d' % x,
-            ),
+            ), end=' ')
