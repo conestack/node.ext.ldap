@@ -12,6 +12,7 @@ History
   - replaced print statement
   - mangled doctests, added Py23DocChecker
   - fixed boolean value of AccountExpired
+  [reinhardt]
 
 
 1.0b8 (2018-10-22)

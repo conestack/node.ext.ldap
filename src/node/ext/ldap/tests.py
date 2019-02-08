@@ -41,17 +41,12 @@ stop it if running.
 
 
 class Py23DocChecker(doctest.OutputChecker):
-    exclude = [
-        #"<.*>$",  # object repr
-        #"^\S*Error: ",  # raised error
-    ]
 
     def check_output(self, want, got, optionflags):
         if want != got and six.PY2:
             # if running on py2, ignore any "u" prefixes in the output
-            if not any(re.match(pattern, want) for pattern in self.exclude):
-                got = re.sub("(\\W|^)u'(.*?)'", "\\1'\\2'", got)
-                got = re.sub("(\\W|^)u\"(.*?)\"", "\\1\"\\2\"", got)
+            got = re.sub("(\\W|^)u'(.*?)'", "\\1'\\2'", got)
+            got = re.sub("(\\W|^)u\"(.*?)\"", "\\1\"\\2\"", got)
             # also ignore "b" prefixes in the expected output
             want = re.sub("b'(.*?)'", "'\\1'", want)
             # we get 'ldap.' prefixes on python 3, e.g.
