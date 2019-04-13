@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from odict import odict
 from node.base import AttributedNode
 from node.base import BaseNode
 from node.ext.ldap import LDAPNode
+from node.ext.ldap import LDAPNodeAttributes
 from node.ext.ldap import LDAPProps
 from node.ext.ldap import testing
 from node.ext.ldap._node import ACTION_ADD
@@ -18,18 +18,18 @@ from node.ext.ldap.interfaces import ILDAPNodeModifiedEvent
 from node.ext.ldap.interfaces import ILDAPNodeRemovedEvent
 from node.ext.ldap.scope import ONELEVEL
 from node.ext.ldap.scope import SUBTREE
+from node.ext.ldap.session import LDAPSession
 from node.ext.ldap.testing import props
 from node.interfaces import INode
 from node.tests import NodeTestCase
+from odict import odict
 from plone.testing.zca import popGlobalRegistry
 from plone.testing.zca import pushGlobalRegistry
 from zope.component import adapter
 from zope.component import provideHandler
 from zope.component.event import objectEventNotify
-import os
 import ldap
-from node.ext.ldap import LDAPNodeAttributes
-from node.ext.ldap.session import LDAPSession
+import os
 
 
 class TestLDAPNode(NodeTestCase):
@@ -838,277 +838,300 @@ class TestLDAPNode(NodeTestCase):
         expected = "Invalid tree state. Try to invalidate changed child node 'ou=customer2'."
         self.assertEqual(str(err), expected)
 
+        del customers['ou=customer3']
+        del customers['cn=customer99']
+        customers()
+
+    def test_search(self):
+        # We can fetch nodes by DNs
+        node = LDAPNode('dc=my-domain,dc=com', props)
+        err = self.expect_error(
+            ValueError,
+            node.node_by_dn,
+            'ou=customers,dc=invalid_base,dc=com'
+        )
+        self.assertEqual(str(err), 'Invalid base DN')
+        self.assertEqual(
+            repr(node.node_by_dn('dc=my-domain,dc=com')),
+            '<dc=my-domain,dc=com - False>'
+        )
+        self.assertEqual(
+            repr(node.node_by_dn('ou=customers,dc=my-domain,dc=com')),
+            '<ou=customers,dc=my-domain,dc=com:ou=customers - False>'
+        )
+        self.assertEqual(
+            repr(node.node_by_dn('ou=demo,dc=my-domain,dc=com')),
+            '<ou=demo,dc=my-domain,dc=com:ou=demo - False>'
+        )
+        self.assertEqual(
+            node.node_by_dn('ou=inexistent,dc=my-domain,dc=com'),
+            None
+        )
+        err = self.expect_error(
+            ValueError,
+            node.node_by_dn,
+            'ou=inexistent,dc=my-domain,dc=com',
+            strict=True
+        )
+        expected = 'Tree contains no node by given DN. Failed at RDN ou=inexistent'
+        self.assertEqual(str(err), expected)
+
+        # Default search scope is ONELEVEL
+        self.assertEqual(node.search_scope, ONELEVEL)
+
+        # No other default search criteria set
+        self.assertEqual(node.search_filter, None)
+        self.assertEqual(node.search_criteria, None)
+        self.assertEqual(node.search_relation, None)
+
+        # Search with no arguments given return childs keys
+        self.assertEqual(sorted(node.search()), [
+            'ou=customers,dc=my-domain,dc=com',
+            'ou=demo,dc=my-domain,dc=com'
+        ])
+
+        # Set default search scope to SUBTREE
+        node.search_scope = SUBTREE
+        self.assertEqual(sorted(node.search()), [
+            u'dc=my-domain,dc=com',
+            u'ou=customer1,ou=customers,dc=my-domain,dc=com',
+            u'ou=customer2,ou=customers,dc=my-domain,dc=com',
+            u'ou=customers,dc=my-domain,dc=com',
+            u'ou=demo,dc=my-domain,dc=com',
+            u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com',
+            u'uid=binary,ou=customers,dc=my-domain,dc=com'
+        ])
+
+        # We can fetch node instances instead of DN's in search result
+        res = [repr(it) for it in node.search(get_nodes=True)]
+        self.assertEqual(sorted(res), [
+            '<dc=my-domain,dc=com - False>',
+            '<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>',
+            '<ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>',
+            '<ou=customers,dc=my-domain,dc=com:ou=customers - False>',
+            '<ou=demo,dc=my-domain,dc=com:ou=demo - False>',
+            '<ou=n?sty\\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\\, customer - False>',
+            '<uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>'
+        ])
+
+        # Search with pagination
+        res, cookie = node.search(page_size=5)
+        self.assertEqual(sorted(res), [
+            u'dc=my-domain,dc=com',
+            u'ou=customer1,ou=customers,dc=my-domain,dc=com',
+            u'ou=customer2,ou=customers,dc=my-domain,dc=com',
+            u'ou=customers,dc=my-domain,dc=com',
+            u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com'
+        ])
+
+        res, cookie = node.search(page_size=5, cookie=cookie)
+        self.assertEqual(sorted(res), [
+            u'ou=demo,dc=my-domain,dc=com',
+            u'uid=binary,ou=customers,dc=my-domain,dc=com'
+        ])
+
+        self.assertEqual(cookie, '')
+
+        # Lets add a default search filter.
+        filter = LDAPFilter('(objectClass=organizationalUnit)')
+        node.search_filter = filter
+        self.assertEqual(sorted(node.search()), [
+            u'ou=customer1,ou=customers,dc=my-domain,dc=com',
+            u'ou=customer2,ou=customers,dc=my-domain,dc=com',
+            u'ou=customers,dc=my-domain,dc=com',
+            u'ou=demo,dc=my-domain,dc=com',
+            u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com',
+        ])
+
+        # The default search filter could also be a string::
+        node.search_filter = '(objectClass=organizationalUnit)'
+        self.assertEqual(sorted(node.search()), [
+            u'ou=customer1,ou=customers,dc=my-domain,dc=com',
+            u'ou=customer2,ou=customers,dc=my-domain,dc=com',
+            u'ou=customers,dc=my-domain,dc=com',
+            u'ou=demo,dc=my-domain,dc=com',
+            u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com',
+        ])
+
+        # Its also possible to define default search criteria as dict
+        node.search_criteria = {
+            'businessCategory': 'customers',
+        }
+        self.assertEqual(sorted(node.search()), [
+            u'ou=customer1,ou=customers,dc=my-domain,dc=com',
+            u'ou=customer2,ou=customers,dc=my-domain,dc=com',
+            u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com'
+        ])
+
+        node.search_criteria = {
+            'businessCategory': 'customers_container',
+        }
+        self.assertEqual(node.search(), [u'ou=customers,dc=my-domain,dc=com'])
+
+        # To get more information by search result, pass an attrlist to search
+        # function
+        self.assertEqual(node.search(attrlist=['rdn', 'description']), [
+            (u'ou=customers,dc=my-domain,dc=com', {
+                u'rdn': u'ou=customers',
+                u'description': [u'customers']
+            })
+        ])
+
+        self.assertEqual(
+            node.search(attrlist=['rdn', 'description', 'businessCategory']),
+            [(u'ou=customers,dc=my-domain,dc=com', {
+                u'rdn': u'ou=customers',
+                u'description': [u'customers'],
+                u'businessCategory': [u'customers_container']
+            })]
+        )
+
+        # We can also fetch nodes instead of DN here
+        res = node.search(attrlist=['dn', 'description'], get_nodes=True)
+        self.assertEqual(len(res), 1)
+        self.assertEqual(
+            repr(res[0][0]),
+            '<ou=customers,dc=my-domain,dc=com:ou=customers - False>'
+        )
+        self.assertEqual(res[0][1], {
+            u'dn': u'ou=customers,dc=my-domain,dc=com',
+            u'description': [u'customers']
+        })
+
+        res = node.search(
+            attrlist=['dn', 'description', 'businessCategory'],
+            get_nodes=True
+        )
+        self.assertEqual(len(res), 1)
+        self.assertEqual(
+            repr(res[0][0]),
+            '<ou=customers,dc=my-domain,dc=com:ou=customers - False>'
+        )
+        self.assertEqual(res[0][1], {
+            u'dn': u'ou=customers,dc=my-domain,dc=com',
+            u'description': [u'customers'],
+            u'businessCategory': [u'customers_container']
+        })
+
+        # Test without defaults, defining search with keyword arguments
+        node.searcg_filter = None
+        node.search_criteria = None
+        res = node.search(
+            queryFilter='(objectClass=organizationalUnit)',
+            criteria={'businessCategory': 'customers_container'}
+        )
+        self.assertEqual(res, [u'ou=customers,dc=my-domain,dc=com'])
+
+        # Restrict with exact match wotks on 1-length results
+        res = node.search(
+            queryFilter='(objectClass=organizationalUnit)',
+            criteria={'businessCategory': 'customers_container'},
+            exact_match=True
+        )
+        self.assertEqual(res, [u'ou=customers,dc=my-domain,dc=com'])
+
+        # Exact match fails on multi search results
+        err = self.expect_error(
+            ValueError,
+            node.search,
+            queryFilter='(objectClass=organizationalUnit)',
+            exact_match=True
+        )
+        expected = 'Exact match asked but result not unique'
+        self.assertEqual(str(err), expected)
+
+        # Exact match also fails on zero length result
+        err = self.expect_error(
+            ValueError,
+            node.search,
+            queryFilter='(objectClass=inexistent)',
+            exact_match=True
+        )
+        expected = 'Exact match asked but result length is zero'
+        self.assertEqual(str(err), expected)
+
+        # Test relation filter
+        node['ou=customers']['uid=binary'].attrs['description'] = 'customers'
+        node()
+        node.searcg_filter = None
+        node.search_criteria = None
+        node.search_relation = 'description:businessCategory'
+        rel_node = node['ou=customers']['uid=binary']
+        self.assertEqual(sorted(node.search(relation_node=rel_node)), [
+            u'ou=customer1,ou=customers,dc=my-domain,dc=com',
+            u'ou=customer2,ou=customers,dc=my-domain,dc=com',
+            u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com'
+        ])
+
+        self.assertEqual(
+            node.search(relation='description:description', relation_node=rel_node),
+            []
+        )
+
+        node.search_relation = None
+        relation = LDAPRelationFilter(rel_node, 'description:description')
+        self.assertEqual(
+            repr(relation),
+            "LDAPRelationFilter('(description=customers)')"
+        )
+        self.assertEqual(str(relation), '(description=customers)')
+        self.assertEqual(
+            node.search(relation=relation),
+            [u'ou=customers,dc=my-domain,dc=com']
+        )
+
+        relation = LDAPRelationFilter(
+            rel_node,
+            'description:description|description:businessCategory'
+        )
+        self.assertEqual(
+            str(relation),
+            '(|(description=customers)(businessCategory=customers))'
+        )
+        self.assertEqual(sorted(node.search(relation=relation)), [
+            u'ou=customer1,ou=customers,dc=my-domain,dc=com',
+            u'ou=customer2,ou=customers,dc=my-domain,dc=com',
+            u'ou=customers,dc=my-domain,dc=com',
+            u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com'
+        ])
+
+        node.search_relation = relation
+        self.assertEqual(sorted(node.search()), [
+            u'ou=customer1,ou=customers,dc=my-domain,dc=com',
+            u'ou=customer2,ou=customers,dc=my-domain,dc=com',
+            u'ou=customers,dc=my-domain,dc=com',
+            u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com'
+        ])
+
+        # Search with binary in attrlist
+        node = LDAPNode('dc=my-domain,dc=com', props)
+        node.search_scope = SUBTREE
+        res = sorted(node.search(attrlist=['jpegPhoto']))
+        self.assertEqual(
+            res[1][0],
+            u'ou=customer1,ou=customers,dc=my-domain,dc=com'
+        )
+        self.assertFalse('jpegPhoto' in res[1][1])
+        self.assertEqual(
+            res[-1][0],
+            u'uid=binary,ou=customers,dc=my-domain,dc=com'
+        )
+        self.assertTrue('jpegPhoto' in res[-1][1])
+
+        # Add and delete node without persisting in between
+        root = LDAPNode('dc=my-domain,dc=com', props)
+        directadd = root['ou=directadd'] = LDAPNode()
+        directadd.attrs['ou'] = 'directadd'
+        directadd.attrs['description'] = 'directadd'
+        directadd.attrs['objectClass'] = ['top', 'organizationalUnit']
+        del root['ou=directadd']
+        root()
+        self.assertEqual(root.keys(), [u'ou=customers', u'ou=demo'])
+
+    def test_events(self):
+        pass
+
 """
-Search
-------
-
-We can fetch nodes by DN's::
-
-    >>> node = LDAPNode('dc=my-domain,dc=com', props)
-    >>> node.node_by_dn('ou=customers,dc=invalid_base,dc=com')
-    Traceback (most recent call last):
-      ...
-    ValueError: Invalid base DN
-
-    >>> node.node_by_dn('dc=my-domain,dc=com')
-    <dc=my-domain,dc=com - False>
-
-    >>> node.node_by_dn('ou=customers,dc=my-domain,dc=com')
-    <ou=customers,dc=my-domain,dc=com:ou=customers - False>
-
-    >>> node.node_by_dn('ou=demo,dc=my-domain,dc=com')
-    <ou=demo,dc=my-domain,dc=com:ou=demo - False>
-
-    >>> node.node_by_dn('ou=inexistent,dc=my-domain,dc=com')
-
-    >>> node.node_by_dn('ou=inexistent,dc=my-domain,dc=com', strict=True)
-    Traceback (most recent call last):
-      ...
-    ValueError: Tree contains no node by given DN. Failed at RDN ou=inexistent
-
-Default search scope is ONELEVEL::
-
-    >>> node.search_scope is ONELEVEL
-    True
-
-No other default search criteria set::
-
-    >>> print node.search_filter
-    None
-
-    >>> print node.search_criteria
-    None
-
-    >>> print node.search_relation
-    None
-
-Search with no arguments given return childs keys::
-
-    >>> sorted(node.search())
-    [u'ou=customers,dc=my-domain,dc=com', u'ou=demo,dc=my-domain,dc=com']
-
-Set default search scope to SUBTREE::
-
-    >>> node.search_scope = SUBTREE
-    >>> sorted(node.search())
-    [u'cn=customer99,ou=customers,dc=my-domain,dc=com',
-    u'dc=my-domain,dc=com',
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com',
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
-    u'ou=customer3,ou=customers,dc=my-domain,dc=com',
-    u'ou=customers,dc=my-domain,dc=com',
-    u'ou=demo,dc=my-domain,dc=com',
-    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com',
-    u'uid=binary,ou=customers,dc=my-domain,dc=com']
-
-We can fetch node instances instead of DN's in search result::
-
-    >>> pprint(node.search(get_nodes=True))
-    [<dc=my-domain,dc=com - False>,
-    <ou=demo,dc=my-domain,dc=com:ou=demo - False>,
-    <ou=customers,dc=my-domain,dc=com:ou=customers - False>,
-    <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>,
-    <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>,
-    <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>,
-    <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>,
-    <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>,
-    <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>]
-
-
-Search with pagination::
-
-    >>> res, cookie = node.search(page_size=5)
-    >>> res
-    [u'dc=my-domain,dc=com',
-    u'ou=customers,dc=my-domain,dc=com',
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com',
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
-    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com']
-
-    >>> res, cookie = node.search(page_size=5, cookie=cookie)
-    >>> res
-    [u'ou=demo,dc=my-domain,dc=com',
-    u'uid=binary,ou=customers,dc=my-domain,dc=com',
-    u'ou=customer3,ou=customers,dc=my-domain,dc=com',
-    u'cn=customer99,ou=customers,dc=my-domain,dc=com']
-
-    >>> assert cookie == ''
-
-Lets add a default search filter.::
-
-    >>> filter = LDAPFilter('(objectClass=organizationalUnit)')
-    >>> node.search_filter = filter
-    >>> node.search()
-    [u'ou=customers,dc=my-domain,dc=com',
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com',
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
-    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com',
-    u'ou=demo,dc=my-domain,dc=com',
-    u'ou=customer3,ou=customers,dc=my-domain,dc=com']
-
-The default search filter could also be a string::
-
-    >>> node.search_filter = '(objectClass=organizationalUnit)'
-    >>> node.search()
-    [u'ou=customers,dc=my-domain,dc=com',
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com',
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
-    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com',
-    u'ou=demo,dc=my-domain,dc=com',
-    u'ou=customer3,ou=customers,dc=my-domain,dc=com']
-
-Its also possible to define default search criteria as dict::
-
-    >>> node.search_criteria = {
-    ...     'businessCategory': 'customers',
-    ... }
-    >>> node.search()
-    [u'ou=customer1,ou=customers,dc=my-domain,dc=com',
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
-    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com']
-
-    >>> node.search_criteria = {
-    ...     'businessCategory': 'customers_container',
-    ... }
-    >>> node.search()
-    [u'ou=customers,dc=my-domain,dc=com']
-
-To get more information by search result, pass an attrlist to search function::
-
-    >>> node.search(attrlist=['rdn', 'description'])
-    [(u'ou=customers,dc=my-domain,dc=com',
-    {u'rdn': u'ou=customers',
-    u'description': [u'customers']})]
-
-    >>> node.search(attrlist=['rdn', 'description', 'businessCategory'])
-    [(u'ou=customers,dc=my-domain,dc=com',
-    {u'rdn': u'ou=customers',
-    u'description': [u'customers'],
-    u'businessCategory': [u'customers_container']})]
-
-We can also fetch nodes instead of DN here::
-
-    >>> node.search(attrlist=['dn', 'description'],
-    ...             get_nodes=True)
-    [(<ou=customers,dc=my-domain,dc=com:ou=customers - False>,
-    {u'dn': u'ou=customers,dc=my-domain,dc=com',
-    u'description': [u'customers']})]
-
-    >>> node.search(attrlist=['dn', 'description', 'businessCategory'],
-    ...             get_nodes=True)
-    [(<ou=customers,dc=my-domain,dc=com:ou=customers - False>,
-    {u'dn': u'ou=customers,dc=my-domain,dc=com',
-    u'description': [u'customers'],
-    u'businessCategory': [u'customers_container']})]
-
-Test without defaults, defining search with keyword arguments::
-
-    >>> node.searcg_filter = None
-    >>> node.search_criteria = None
-    >>> node.search(
-    ...     queryFilter='(objectClass=organizationalUnit)',
-    ...     criteria={'businessCategory': 'customers_container'})
-    [u'ou=customers,dc=my-domain,dc=com']
-
-Restrict with exact match wotks on 1-length results::
-
-    >>> node.search(
-    ...     queryFilter='(objectClass=organizationalUnit)',
-    ...     criteria={'businessCategory': 'customers_container'},
-    ...     exact_match=True)
-    [u'ou=customers,dc=my-domain,dc=com']
-
-Exact match fails on multi search results::
-
-    >>> node.search(
-    ...     queryFilter='(objectClass=organizationalUnit)',
-    ...     exact_match=True)
-    Traceback (most recent call last):
-      ...
-    ValueError: Exact match asked but result not unique
-
-Exact match also fails on zero length result::
-
-    >>> node.search(
-    ...     queryFilter='(objectClass=inexistent)',
-    ...     exact_match=True)
-    Traceback (most recent call last):
-      ...
-    ValueError: Exact match asked but result length is zero
-
-Test relation filter::
-
-    >>> node['ou=customers']['cn=customer99'].attrs['description'] = 'customers'
-    >>> node()
-    >>> node.searcg_filter = None
-    >>> node.search_criteria = None
-    >>> node.search_relation = 'description:businessCategory'
-    >>> rel_node = node['ou=customers']['cn=customer99']
-    >>> node.search(relation_node=rel_node)
-    [u'ou=customer1,ou=customers,dc=my-domain,dc=com',
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
-    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com']
-
-    >>> node.search(relation='description:description', relation_node=rel_node)
-    []
-
-    >>> node.search_relation = None
-
-    >>> relation = LDAPRelationFilter(rel_node, 'description:description')
-    >>> relation
-    LDAPRelationFilter('(description=customers)')
-
-    >>> str(relation)
-    '(description=customers)'
-
-    >>> node.search(relation=relation)
-    [u'ou=customers,dc=my-domain,dc=com']
-
-    >>> relation = LDAPRelationFilter(
-    ...     rel_node, 'description:description|description:businessCategory')
-    >>> str(relation)
-    '(|(description=customers)(businessCategory=customers))'
-
-    >>> node.search(relation=relation)
-    [u'ou=customers,dc=my-domain,dc=com',
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com',
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
-    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com']
-
-    >>> node.search_relation = relation
-    >>> node.search()
-    [u'ou=customers,dc=my-domain,dc=com',
-    u'ou=customer1,ou=customers,dc=my-domain,dc=com',
-    u'ou=customer2,ou=customers,dc=my-domain,dc=com',
-    u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com']
-
-Search with binary in attrlist::
-
-    >>> node = LDAPNode('dc=my-domain,dc=com', props)
-    >>> node.search_scope = SUBTREE
-    >>> sorted(node.search(attrlist=['jpegPhoto']))
-    [(u'cn=customer99,ou=customers,dc=my-domain,dc=com', {}),
-    (u'dc=my-domain,dc=com', {}),
-    (u'ou=customer1,ou=customers,dc=my-domain,dc=com', {}),
-    (u'ou=customer2,ou=customers,dc=my-domain,dc=com', {}),
-    (u'ou=customer3,ou=customers,dc=my-domain,dc=com', {}),
-    (u'ou=customers,dc=my-domain,dc=com', {}),
-    (u'ou=demo,dc=my-domain,dc=com', {}),
-    (u'ou=n\xe4sty\\2C customer,ou=customers,dc=my-domain,dc=com', {}),
-    (u'uid=binary,ou=customers,dc=my-domain,dc=com', {u'jpegPhoto': ['...']})]
-
-Add and delete node without persisting in between::
-
-    >>> root = LDAPNode('dc=my-domain,dc=com', props)
-    >>> directadd = root['ou=directadd'] = LDAPNode()
-    >>> directadd.attrs['ou'] = 'directadd'
-    >>> directadd.attrs['description'] = 'directadd'
-    >>> directadd.attrs['objectClass'] = ['top', 'organizationalUnit']
-    >>> del root['ou=directadd']
-    >>> root()
-    >>> root.keys()
-    [u'ou=customers', u'ou=demo']
-
 Events
 ======
 
