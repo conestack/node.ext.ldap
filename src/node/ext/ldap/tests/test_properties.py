@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
-from node.tests import NodeTestCase
-from node.ext.ldap import testing
 from node.ext.ldap import LDAPProps
-from node.ext.ldap.properties import MULTIVALUED_DEFAULTS
+from node.ext.ldap import testing
 from node.ext.ldap.properties import BINARY_DEFAULTS
+from node.ext.ldap.properties import MULTIVALUED_DEFAULTS
+from node.tests import NodeTestCase
 
 
 class TestProperties(NodeTestCase):
