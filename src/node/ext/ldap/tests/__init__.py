@@ -11,6 +11,9 @@ def test_suite():
     from node.ext.ldap.tests import test_schema
     from node.ext.ldap.tests import test_session
 
+    from node.ext.ldap.tests import test_ugm_defaults
+    from node.ext.ldap.tests import test_ugm_group_of_names
+
     suite = unittest.TestSuite()
 
     suite.addTest(unittest.findTestCases(test_base))
@@ -20,6 +23,9 @@ def test_suite():
     suite.addTest(unittest.findTestCases(test_properties))
     suite.addTest(unittest.findTestCases(test_schema))
     suite.addTest(unittest.findTestCases(test_session))
+
+    suite.addTest(unittest.findTestCases(test_ugm_defaults))
+    suite.addTest(unittest.findTestCases(test_ugm_group_of_names))
 
     return suite
 

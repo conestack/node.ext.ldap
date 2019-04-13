@@ -5,11 +5,8 @@ from node.ext.ldap.ugm import defaults
 from node.ext.ldap.ugm import Groups
 from node.ext.ldap.ugm import GroupsConfig
 from node.ext.ldap.ugm import posix
-from node.ext.ldap.ugm import posix
-from node.ext.ldap.ugm import samba
 from node.ext.ldap.ugm import samba
 from node.ext.ldap.ugm import shadow
-from node.ext.ldap.ugm import Ugm
 from node.ext.ldap.ugm import Users
 from node.ext.ldap.ugm import UsersConfig
 from node.tests import NodeTestCase
