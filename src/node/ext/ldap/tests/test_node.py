@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from odict import odict
 from node.base import AttributedNode
 from node.base import BaseNode
 from node.ext.ldap import LDAPNode
@@ -474,387 +475,370 @@ class TestLDAPNode(NodeTestCase):
         self.assertEqual(person._action, None)
         self.assertFalse(person.attrs.changed)
 
+        # Modify and check flags again
+        person.attrs['description'] = 'Another description'
+        self.assertTrue(person.attrs.changed)
+        self.assertTrue(person._action == ACTION_MODIFY)
+        self.assertEqual(
+            (root.changed, customer.changed, person.changed),
+            (True, True, True)
+        )
+
+        # Write changed to directory
+        root()
+
+        # Check the flags
+        self.assertEqual(
+            (root.changed, customer.changed, person.changed),
+            (False, False, False)
+        )
+
+        # And check the changes in the directory
+        res = queryPersonDirectly()
+        self.assertEqual(
+            res[0][0],
+            'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com'
+        )
+        self.assertEqual(sorted(res[0][1].items()), [
+            ('cn', ['Max']),
+            ('description', ['Another description']),
+            ('objectClass', ['top', 'person']),
+            ('sn', ['Mustermann'])
+        ])
+
+        # Check removing of an attribute
+        self.assertEqual(
+            (root.changed, customer.changed, person.changed, person.attrs.changed),
+            (False, False, False, False)
+        )
+
+        del person.attrs['description']
+        self.assertEqual(
+            (root.changed, customer.changed, person.changed, person.attrs.changed),
+            (True, True, True, True)
+        )
+
+        # We can call a node in the middle
+        customer()
+        res = queryPersonDirectly()
+        self.assertEqual(
+            res[0][0],
+            'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com'
+        )
+        self.assertEqual(sorted(res[0][1].items()), [
+            ('cn', ['Max']),
+            ('objectClass', ['top', 'person']),
+            ('sn', ['Mustermann'])
+        ])
+        self.assertEqual(
+            (root.changed, customer.changed, person.changed, person.attrs.changed),
+            (False, False, False, False)
+        )
+
+        # Check adding of an attribute
+        person.attrs['description'] = u'Brandnew description'
+        self.assertEqual(
+            (root.changed, customer.changed, person.changed, person.attrs.changed),
+            (True, True, True, True)
+        )
+
+        customer()
+        res = queryPersonDirectly()
+        self.assertEqual(
+            res[0][0],
+            'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com'
+        )
+        self.assertEqual(sorted(res[0][1].items()), [
+            ('cn', ['Max']),
+            ('description', ['Brandnew description']),
+            ('objectClass', ['top', 'person']),
+            ('sn', ['Mustermann'])
+        ])
+        self.assertEqual(
+            (root.changed, customer.changed, person.changed, person.attrs.changed),
+            (False, False, False, False)
+        )
+
+        # Attribute with non-ascii unicode returns as is
+        person.attrs['sn'] = u'i\u0107'
+        person()
+        self.assertEqual(queryPersonDirectly()[0][1]['sn'][0], 'i\xc4\x87')
+
+        # Attribute with non-ascii str (utf8) returns as unicode
+        person.attrs['sn'] = 'i\xc4\x87'
+        person()
+        self.assertEqual(queryPersonDirectly()[0][1]['sn'][0], 'i\xc4\x87')
+
+        # XXX: Don't test this until we have proper binary attr support
+        # Attribute with utf16 str fails
+        # person.attrs['sn'] = '\xff\xfei\x00\x07\x01'
+        # person()
+        # queryPersonDirectly()[0][1]['sn'][0]
+        # Traceback (most recent call last):
+        #   ...
+        # UnicodeDecodeError:
+        #   'utf8' codec can't decode byte 0xff in position 0: unexpected code byte
+
+        # Check access to attributes on a fresh but added-to-parent node. There
+        # was a bug so we test it. Note that rdn attribute is computed from key
+        # if not set yet
+        self.assertEqual(customers._added_children, set())
+        self.assertEqual(customers._modified_children, set())
+
+        customerattrempty = LDAPNode()
+        self.assertEqual(customerattrempty._action, None)
+
+        customers['cn=customer99'] = customerattrempty
+        self.assertEqual(customers._added_children, set(['cn=customer99']))
+        self.assertEqual(customers._modified_children, set())
+        self.assertEqual(customerattrempty.attrs.keys(), ['cn'])
+        self.assertEqual(customerattrempty._action, ACTION_ADD)
+
+        # Add some attributes to make call work
+        customerattrempty.attrs['objectClass'] = [
+            'organizationalRole',
+            'simpleSecurityObject'
+        ]
+        customerattrempty.attrs['userPassword'] = 'fooo'
+
+        # Check deleting of entries
+        self.check_output("""
+        <dc=my-domain,dc=com - True>
+          <ou=customers,dc=my-domain,dc=com:ou=customers - True>
+            <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
+            <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
+            <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+            <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
+            <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
+              <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
+            <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
+          <ou=demo,dc=my-domain,dc=com:ou=demo - False>
+        """, root.treerepr())
+
+        self.assertEqual(customer.storage.keys(), ['cn=max'])
+
+        del customer['cn=max']
+        self.assertEqual(
+            (root.changed, customer.changed, person.changed, person.attrs.changed),
+            (True, True, True, False)
+        )
+        self.assertEqual(customer.storage.keys(), ['cn=max'])
+        self.assertEqual(customer._deleted_children, set(['cn=max']))
+        self.assertEqual(customer.keys(), [])
+
+        self.check_output("""
+        <dc=my-domain,dc=com - True>
+          <ou=customers,dc=my-domain,dc=com:ou=customers - True>
+            <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
+            <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
+            <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+            <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
+            <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
+            <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
+          <ou=demo,dc=my-domain,dc=com:ou=demo - False>
+        """, root.treerepr())
+
+        customer()
+        self.assertEqual(customer.storage.keys(), [])
+        self.assertEqual(customer._deleted_children, set())
+        self.assertEqual(queryPersonDirectly(), [])
+
+        self.check_output("""
+        <dc=my-domain,dc=com - True>
+          <ou=customers,dc=my-domain,dc=com:ou=customers - True>
+            <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
+            <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
+            <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+            <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
+            <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
+            <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
+          <ou=demo,dc=my-domain,dc=com:ou=demo - False>
+        """, root.treerepr())
+
+        self.assertEqual(
+            (root.changed, customers.changed, customer.changed, customerattrempty.changed),
+            (True, True, False, True)
+        )
+        self.assertTrue(customerattrempty.parent is customers)
+        self.assertEqual(customers._added_children, set(['cn=customer99']))
+        self.assertEqual(customers._modified_children, set())
+
+        customerattrempty()
+        self.assertEqual(
+            (root.changed, customers.changed, customerattrempty.changed),
+            (False, False, False)
+        )
+
+        self.check_output("""
+        <dc=my-domain,dc=com - False>
+          <ou=customers,dc=my-domain,dc=com:ou=customers - False>
+            <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
+            <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
+            <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+            <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
+            <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
+            <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
+          <ou=demo,dc=my-domain,dc=com:ou=demo - False>
+        """, root.treerepr())
+
+        # Test LDAPNode.child_defaults. A default value can either be a string
+        # or a callback accepting the container node and the child key with
+        # which the new child gets added.
+        defaults = {
+            'objectClass': ['top', 'person'],
+            'sn': lambda x, y: 'sn for %s' % y,
+            'description': lambda x, y: 'Description for %s' % y,
+        }
+
+        # Define child defaults for customer. It's possible to set an
+        # LDAPNodeDefaults instance if a custom callback context is desired
+        customer.child_defaults = defaults
+        person = LDAPNode()
+        customer['cn=person_with_default1'] = person
+        self.assertEqual(sorted(person.attrs.items()), [
+            ('cn', 'person_with_default1'),
+            ('description', 'Description for cn=person_with_default1'),
+            ('objectClass', ['top', 'person']),
+            ('sn', 'sn for cn=person_with_default1')
+        ])
+
+        person()
+        del customer['cn=person_with_default1']
+        customer()
+
+        # It's possible to add other INode implementing objects than LDAPNode.
+        # An ldap node gets created then and attrs are set from original node
+        new = BaseNode()
+        err = self.expect_error(
+            ValueError,
+            customer.__setitem__,
+            'cn=from_other',
+            new
+        )
+        expected = 'No attributes found on vessel, cannot convert'
+        self.assertEqual(str(err), expected)
+
+        new = AttributedNode()
+        new.attrs['description'] = 'Not from defaults'
+        customer['cn=from_other'] = new
+        customer()
+        self.assertEqual(
+            repr(customer['cn=from_other']),
+            '<cn=from_other,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=from_other - False>'
+        )
+
+        self.assertEqual(sorted(customer['cn=from_other'].attrs.items()), [
+            ('cn', 'from_other'),
+            ('description', 'Not from defaults'),
+            ('objectClass', ['top', 'person']),
+            ('sn', 'sn for cn=from_other')
+        ])
+
+        del customer['cn=from_other']
+        customer()
+
+        # Test invalidation. Initialize node
+        node = LDAPNode('ou=customers,dc=my-domain,dc=com', props)
+        self.check_output("""
+        <ou=customers,dc=my-domain,dc=com - False>
+          <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
+          <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
+          <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+          <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
+          <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
+          <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
+        """, node.treerepr())
+
+        # Invalidate node, children are invalidated and attrs are loaded
+        node.invalidate()
+        self.assertEqual(node.storage, odict())
+
+        # Reload entries
+        self.check_output("""
+        <ou=customers,dc=my-domain,dc=com - False>
+          <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
+          <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
+          <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+          <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
+          <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
+          <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
+        """, node.treerepr())
+
+        # Change descripton and try to invalidate, fails
+        node.attrs['description'] = 'changed description'
+        err = self.expect_error(RuntimeError, node.invalidate)
+        expected = 'Invalid tree state. Try to invalidate changed node.'
+        self.assertEqual(str(err), expected)
+
+        # Reload attrs, change child and try to invalidate again, also fails
+        node.attrs.load()
+        self.assertFalse(node.changed)
+
+        node.invalidate()
+        node['ou=customer1'].attrs['description'] = 'changed description'
+        err = self.expect_error(RuntimeError, node.invalidate)
+        expected = 'Invalid tree state. Try to invalidate changed node.'
+        self.assertEqual(str(err), expected)
+
+        # Reload child attrs and check internal node state only customer one
+        # loaded
+        node['ou=customer1'].attrs.load()
+        self.assertFalse(node.changed)
+        self.assertEqual(len(node.storage.values()), 1)
+        self.assertEqual(
+            repr(node.storage.values()[0]),
+            '<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>'
+        )
+
+        # Reload all children and check node state
+        self.assertEqual([repr(it) for it in node.values()], [
+            '<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>',
+            '<ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>',
+            '<ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>',
+            '<uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>',
+            '<ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>',
+            '<cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>'
+        ])
+        self.assertEqual([repr(it) for it in node.storage.values()], [
+            '<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>',
+            '<ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>',
+            '<ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>',
+            '<uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>',
+            '<ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>',
+            '<cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>'
+        ])
+
+        # Invalidate with given key invalidates only child
+        node.invalidate('ou=customer1')
+        self.assertEqual([repr(it) for it in node.storage.values()], [
+            '<ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>',
+            '<ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>',
+            '<uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>',
+            '<ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>',
+            '<cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>'
+        ])
+
+        # Invalidate key not in memory does nothing
+        node.invalidate('ou=notexistent')
+        self.assertEqual([repr(it) for it in node.storage.values()], [
+            '<ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>',
+            '<ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>',
+            '<uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>',
+            '<ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>',
+            '<cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>'
+        ])
+
+        # Invalidate changed child fails
+        node['ou=customer2'].attrs['description'] = 'changed description'
+        err = self.expect_error(
+            RuntimeError,
+            node.invalidate,
+            'ou=customer2'
+        )
+        expected = "Invalid tree state. Try to invalidate changed child node 'ou=customer2'."
+        self.assertEqual(str(err), expected)
+
 """
-Modify and check flags again::
-
-    >>> person.attrs['description'] = 'Another description'
-    >>> person.attrs.changed
-    True
-
-    >>> person._action == ACTION_MODIFY
-    True
-
-    >>> root.changed, customer.changed, person.changed
-    (True, True, True)
-
-Write changed to directory::
-
-    >>> root()
-
-Check the flags::
-
-    >>> root.changed, customer.changed, person.changed
-    (False, False, False)
-
-And check the changes in the directory::
-
-    >>> pprint(queryPersonDirectly())
-    [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com',
-      {'cn': ['Max'],
-       'description': ['Another description'],
-       'objectClass': ['top', 'person'],
-       'sn': ['Mustermann']})]
-
-Check removing of an attribute::
-
-    >>> root.changed, customer.changed, person.changed, \
-    ... person.attrs.changed
-    (False, False, False, False)
-
-    >>> del person.attrs['description']
-    >>> root.changed, customer.changed, person.changed, \
-    ... person.attrs.changed
-    (True, True, True, True)
-
-We can call a node in the middle::
-
-    >>> customer()
-    >>> pprint(queryPersonDirectly())
-    [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com',
-      {'cn': ['Max'],
-      'objectClass': ['top', 'person'],
-      'sn': ['Mustermann']})]
-
-    >>> root.changed, customer.changed, person.changed, \
-    ... person.attrs.changed
-    (False, False, False, False)
-
-Check adding of an attribute::
-
-    >>> person.attrs['description'] = u'Brandnew description'
-    >>> root.changed, customer.changed, person.changed, \
-    ... person.attrs.changed
-    (True, True, True, True)
-
-    >>> customer()
-    >>> pprint(queryPersonDirectly())
-    [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com',
-      {'cn': ['Max'],
-       'description': ['Brandnew description'],
-       'objectClass': ['top', 'person'],
-       'sn': ['Mustermann']})]
-
-    >>> root.changed, customer.changed, person.changed, \
-    ... person.attrs.changed
-    (False, False, False, False)
-
-Attribute with non-ascii unicode returns as is::
-
-    >>> person.attrs['sn'] = u'i\u0107'
-    >>> person()
-    >>> queryPersonDirectly()[0][1]['sn'][0]
-    'i\xc4\x87'
-
-Attribute with non-ascii str (utf8) returns as unicode::
-
-    >>> person.attrs['sn'] = 'i\xc4\x87'
-    >>> person()
-    >>> queryPersonDirectly()[0][1]['sn'][0]
-    'i\xc4\x87'
-
-# XXX: Don't test this until we have proper binary attr support
-#Attribute with utf16 str fails::
-
-#::
-#    >>> person.attrs['sn'] = '\xff\xfei\x00\x07\x01'
-#    >>> person()
-#    >>> queryPersonDirectly()[0][1]['sn'][0]
-#    Traceback (most recent call last):
-#    ...
-#    UnicodeDecodeError:
-#      'utf8' codec can't decode byte 0xff in position 0: unexpected code byte
-
-Check access to attributes on a fresh but added-to-parent node. There was a bug
-so we test it. Note that rdn attribute is computed from key if not set yet::
-
-    >>> customers._added_children
-    set([])
-
-    >>> customers._modified_children
-    set([])
-
-    >>> customerattrempty = LDAPNode()
-    >>> customerattrempty._action is None
-    True
-
-    >>> customers['cn=customer99'] = customerattrempty
-
-    >>> customers._added_children
-    set([u'cn=customer99'])
-
-    >>> customers._modified_children
-    set([])
-
-    >>> customerattrempty.attrs.keys()
-    [u'cn']
-
-    >>> customerattrempty._action == ACTION_ADD
-    True
-
-Add some attributes to make call work::
-
-    >>> customerattrempty.attrs['objectClass'] = \
-    ...     ['organizationalRole', 'simpleSecurityObject']
-    >>> customerattrempty.attrs['userPassword'] = 'fooo'
-
-Check deleting of entries::
-
-    >>> root.printtree()
-    <dc=my-domain,dc=com - True>
-      <ou=customers,dc=my-domain,dc=com:ou=customers - True>
-        <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
-        <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
-        <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
-        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
-          <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
-        <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
-      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
-
-    >>> [k for k in customer.storage.keys()]
-    [u'cn=max']
-
-    >>> del customer['cn=max']
-    >>> root.changed, customer.changed, person.changed, \
-    ... person.attrs.changed
-    (True, True, True, False)
-
-    >>> [k for k in customer.storage.keys()]
-    [u'cn=max']
-
-    >>> customer._deleted_children
-    set([u'cn=max'])
-
-    >>> customer.keys()
-    []
-
-    >>> root.printtree()
-    <dc=my-domain,dc=com - True>
-      <ou=customers,dc=my-domain,dc=com:ou=customers - True>
-        <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
-        <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
-        <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
-        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
-        <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
-      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
-
-    >>> customer()
-
-    >>> [k for k in customer.storage.keys()]
-    []
-
-    >>> customer._deleted_children
-    set([])
-
-    >>> queryPersonDirectly()
-    []
-
-    >>> root.printtree()
-    <dc=my-domain,dc=com - True>
-      <ou=customers,dc=my-domain,dc=com:ou=customers - True>
-        <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
-        <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
-        <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
-        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
-        <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - True>
-      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
-
-    >>> root.changed, customers.changed, customer.changed, \
-    ...     customerattrempty.changed
-    (True, True, False, True)
-
-    >>> customerattrempty.parent is customers
-    True
-
-    >>> customers._added_children
-    set([u'cn=customer99'])
-
-    >>> customers._modified_children
-    set([])
-
-    >>> customerattrempty()
-
-    >>> root.changed, customers.changed, customerattrempty.changed
-    (False, False, False)
-
-    >>> root.printtree()
-    <dc=my-domain,dc=com - False>
-      <ou=customers,dc=my-domain,dc=com:ou=customers - False>
-        <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
-        <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
-        <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
-        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
-        <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
-      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
-
-Test LDAPNode.child_defaults. A default value can either be a string or a
-callback accepting the container node and the child key with which the new
-child gets added.::
-
-    >>> defaults = {
-    ...     'objectClass': ['top', 'person'],
-    ...     'sn': lambda x, y: 'sn for %s' % y,
-    ...     'description': lambda x, y: 'Description for %s' % y,
-    ... }
-
-Define child defaults for customer. It's possible to set an LDAPNodeDefaults
-instance if a custom callback context is desired::
-
-    >>> customer.child_defaults = defaults
-    >>> person = LDAPNode()
-    >>> customer['cn=person_with_default1'] = person
-    >>> person.attrs.items()
-    [(u'cn', u'person_with_default1'), (u'objectClass', [u'top', u'person']),
-    (u'sn', u'sn for cn=person_with_default1'), (u'description',
-    u'Description for cn=person_with_default1')]
-
-    >>> person()
-    >>> del customer['cn=person_with_default1']
-    >>> customer()
-
-It's possible to add other INode implementing objects than LDAPNode. An ldap
-node gets created then and attrs are set from original node::
-
-    >>> new = BaseNode()
-    >>> customer['cn=from_other'] = new
-    Traceback (most recent call last):
-      ...
-    ValueError: No attributes found on vessel, cannot convert
-
-    >>> new = AttributedNode()
-    >>> new.attrs['description'] = 'Not from defaults'
-    >>> customer['cn=from_other'] = new
-    >>> customer()
-    >>> customer['cn=from_other']
-    <cn=from_other,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=from_other - False>
-
-    >>> customer['cn=from_other'].attrs.items()
-    [(u'description', u'Not from defaults'),
-    (u'cn', u'from_other'),
-    (u'objectClass', [u'top', u'person']),
-    (u'sn', u'sn for cn=from_other')]
-
-    >>> del customer['cn=from_other']
-    >>> customer()
-
-Test invalidation. Initialize node::
-
-    >>> node = LDAPNode('ou=customers,dc=my-domain,dc=com', props)
-    >>> node.printtree()
-    <ou=customers,dc=my-domain,dc=com - False>
-      <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
-      <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-      <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
-      <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
-      <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
-      <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
-
-Invalidate node, children are invalidated and attrs are loaded::
-
-    >>> node.invalidate()
-    >>> node.storage
-    odict()
-
-Reload entries::
-
-    >>> node.printtree()
-    <ou=customers,dc=my-domain,dc=com - False>
-      <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
-      <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-      <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
-      <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
-      <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
-      <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>
-
-Change descripton and try to invalidate, fails::
-
-    >>> node.attrs['description'] = 'changed description'
-    >>> node.invalidate()
-    Traceback (most recent call last):
-      ...
-    RuntimeError: Invalid tree state. Try to invalidate changed node.
-
-Reload attrs, change child and try to invalidate again, also fails::
-
-    >>> node.attrs.load()
-    >>> node.changed
-    False
-
-    >>> node.invalidate()
-    >>> node['ou=customer1'].attrs['description'] = 'changed description'
-    >>> node.invalidate()
-    Traceback (most recent call last):
-      ...
-    RuntimeError: Invalid tree state. Try to invalidate changed node.
-
-Reload child attrs and check internal node state only customer one loaded::
-
-    >>> node['ou=customer1'].attrs.load()
-    >>> node.changed
-    False
-
-    >>> node.storage.values()
-    [<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>]
-
-Reload all children and check node state::
-
-    >>> node.values()
-    [<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>,
-    <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>,
-    <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>,
-    <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>,
-    <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>,
-    <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
-
-    >>> node.storage.values()
-    [<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>,
-    <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>,
-    <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>,
-    <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>,
-    <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>,
-    <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
-
-Invalidate with given key invalidates only child::
-
-    >>> node.invalidate('ou=customer1')
-    >>> node.storage.values()
-    [<ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>,
-    <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>,
-    <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>,
-    <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>,
-    <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
-
-Invalidate key not in memory does nothing::
-
-    >>> node.invalidate('ou=notexistent')
-    >>> node.storage.values()
-    [<ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>,
-    <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>,
-    <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>,
-    <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>,
-    <cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>]
-
-Invalidate changed child fails::
-
-    >>> node['ou=customer2'].attrs['description'] = 'changed description'
-    >>> node.invalidate('ou=customer2')
-    Traceback (most recent call last):
-      ...
-    RuntimeError: Invalid tree state. Try to invalidate changed child node 'ou=customer2'.
-
 Search
 ------
 
