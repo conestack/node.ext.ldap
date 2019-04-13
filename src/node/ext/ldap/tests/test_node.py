@@ -31,7 +31,7 @@ import ldap
 import os
 
 
-class TestLDAPNode(NodeTestCase):
+class TestNode(NodeTestCase):
     layer = testing.LDIF_data
 
     def test_basics(self):

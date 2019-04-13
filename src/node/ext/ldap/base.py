@@ -277,11 +277,13 @@ def main():
     """
     import sys
     if len(sys.argv) < 3:
-        print 'usage: python base.py [server] [port]'
+        res = 'usage: python base.py [server] [port]'
     else:
         server, port = sys.argv[1:]
-        print testLDAPConnectivity(server, int(port))
+        res = testLDAPConnectivity(server, int(port))
+    print(res)
+    return res
 
 
 if __name__ == "__main__":
-    main()                                                  #pragma NO COVERAGE
+    main()
