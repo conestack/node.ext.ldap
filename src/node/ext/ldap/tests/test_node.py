@@ -3,10 +3,8 @@ from node.base import AttributedNode
 from node.base import BaseNode
 from node.ext.ldap import LDAPNode
 from node.ext.ldap import LDAPNodeAttributes
-from node.ext.ldap import LDAPProps
 from node.ext.ldap import testing
 from node.ext.ldap._node import ACTION_ADD
-from node.ext.ldap._node import ACTION_DELETE
 from node.ext.ldap._node import ACTION_MODIFY
 from node.ext.ldap.events import LDAPNodeAddedEvent
 from node.ext.ldap.filter import LDAPFilter
@@ -16,6 +14,7 @@ from node.ext.ldap.interfaces import ILDAPNodeCreatedEvent
 from node.ext.ldap.interfaces import ILDAPNodeDetachedEvent
 from node.ext.ldap.interfaces import ILDAPNodeModifiedEvent
 from node.ext.ldap.interfaces import ILDAPNodeRemovedEvent
+from node.ext.ldap.schema import LDAPSchemaInfo
 from node.ext.ldap.scope import ONELEVEL
 from node.ext.ldap.scope import SUBTREE
 from node.ext.ldap.session import LDAPSession
@@ -1129,114 +1128,111 @@ class TestLDAPNode(NodeTestCase):
         self.assertEqual(root.keys(), [u'ou=customers', u'ou=demo'])
 
     def test_events(self):
-        pass
+        pushGlobalRegistry()
 
-"""
-Events
-======
+        node = LDAPNode('dc=my-domain,dc=com', props)
+        events = list()
 
-Use new registry::
+        # Provide a bucnh of printing subscribers for testing
+        @adapter(INode, ILDAPNodeCreatedEvent)
+        def test_node_created_event(obj, event):
+            events.append("Created {}".format(event.object))
+        provideHandler(test_node_created_event)
 
-    >>> reg = pushGlobalRegistry()
+        @adapter(INode, ILDAPNodeAddedEvent)
+        def test_node_added_event(obj, event):
+            events.append("Added {}".format(event.object))
+        provideHandler(test_node_added_event)
 
-Provide a bucnh of printing subscribers for testing::
+        @adapter(INode, ILDAPNodeModifiedEvent)
+        def test_node_modified_event(obj, event):
+            events.append("Modified {}".format(event.object))
+        provideHandler(test_node_modified_event)
 
-    >>> @adapter(INode, ILDAPNodeCreatedEvent)
-    ... def test_node_created_event(obj, event):
-    ...     print "Created", event.object
-    >>> provideHandler(test_node_created_event)
+        @adapter(INode, ILDAPNodeDetachedEvent)
+        def test_node_detached_event(obj, event):
+            events.append("Detached {}".format(event.object))
+        provideHandler(test_node_detached_event)
 
-    >>> @adapter(INode, ILDAPNodeAddedEvent)
-    ... def test_node_added_event(obj, event):
-    ...     print "Added", event.object
-    >>> provideHandler(test_node_added_event)
+        @adapter(INode, ILDAPNodeRemovedEvent)
+        def test_node_removed_event(obj, event):
+            events.append("Removed {}".format(event.object))
+        provideHandler(test_node_removed_event)
 
-    >>> @adapter(INode, ILDAPNodeModifiedEvent)
-    ... def test_node_modified_event(obj, event):
-    ...     print "Modified", event.object
-    >>> provideHandler(test_node_modified_event)
+        # Check basic event notification with *added*
+        objectEventNotify(LDAPNodeAddedEvent(node))
+        self.assertEqual(events, ['Added <dc=my-domain,dc=com - False>'])
+        events = list()
 
-    >>> @adapter(INode, ILDAPNodeDetachedEvent)
-    ... def test_node_detached_event(obj, event):
-    ...     print "Detached", event.object
-    >>> provideHandler(test_node_detached_event)
+        # Check for each event type in context
+        root = LDAPNode('dc=my-domain,dc=com', props)
+        self.assertEqual(events, ['Created <dc=my-domain,dc=com - False>'])
+        events = list()
 
-    >>> @adapter(INode, ILDAPNodeRemovedEvent)
-    ... def test_node_removed_event(obj, event):
-    ...     print "Removed", event.object
-    >>> provideHandler(test_node_removed_event)
+        self.assertEqual(root.keys(), [u'ou=customers', u'ou=demo'])
+        root.values()
+        self.assertEqual(events, [
+            'Created <(dn not set) - False>',
+            'Created <(dn not set) - False>'
+        ])
+        events = list()
 
-Check basic event notification with *added*::
+        # create empty node
+        newnode = LDAPNode()
+        self.assertEqual(events, ['Created <(dn not set) - False>'])
+        events = list()
 
-    >>> objectEventNotify(LDAPNodeAddedEvent(node))
-    Added <dc=my-domain,dc=com - False>
+        # add new node
+        root['ou=eventtest01'] = newnode
+        self.assertEqual(
+            events,
+            ['Added <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>']
+        )
+        events = list()
 
-Check for each event type in context::
+        # modify attrs
+        newnode.attrs['description'] = 'foobar'
+        self.assertEqual(
+            events,
+            ['Modified <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>']
+        )
+        events = list()
 
-    >>> root = LDAPNode('dc=my-domain,dc=com', props)
-    Created <dc=my-domain,dc=com - False>
+        del newnode.attrs['description']
+        self.assertEqual(
+            events,
+            ['Modified <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>']
+        )
+        events = list()
 
-    >>> root.keys()
-    [u'ou=customers', u'ou=demo']
+        # detach
+        eventtest = root.detach('ou=eventtest01')
+        self.assertEqual(
+            events,
+            ['Detached <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>']
+        )
+        events = list()
 
-    >>> dummy = root.items()
-    Created <(dn not set) - False>
-    Created <(dn not set) - False>
+        root['ou=eventtest01'] = eventtest
+        self.assertEqual(
+            events,
+            ['Added <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>']
+        )
+        events = list()
 
-create empty node::
+        # delete
+        del root['ou=eventtest01']
+        self.assertEqual(
+            events,
+            ['Removed <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>']
+        )
 
-    >>> newnode = LDAPNode()
-    Created <(dn not set) - False>
+        popGlobalRegistry()
 
-add new node::
+    def test_schema_info(self):
+        root = LDAPNode('dc=my-domain,dc=com', props)
 
-    >>> root['ou=eventtest01'] = newnode
-    Added <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>
-
-modify attrs::
-
-    >>> newnode.attrs['description'] = 'foobar'
-    Modified <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>
-
-    >>> del newnode.attrs['description']
-    Modified <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>
-
-detach::
-
-    >>> eventtest = root.detach('ou=eventtest01')
-    Detached <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>
-
-    >>> root['ou=eventtest01'] = eventtest
-    Added <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>
-
-delete::
-
-    >>> del root['ou=eventtest01']
-    Removed <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>
-
-Remove registry::
-
-    >>> reg = popGlobalRegistry()
-
-Schema Info
-===========
-
-Get schema information::
-
-    >>> schema_info = root.schema_info
-    >>> schema_info
-    <node.ext.ldap.schema.LDAPSchemaInfo object at ...>
-
-    >>> root[u'ou=customers'].schema_info is schema_info
-    True
-
-Clean
-=====
-
-Cleanup for following tests::
-
-    >> root = LDAPNode('dc=my-domain,dc=com', props)
-    >> del root['cn=foo']
-    >> root()
-
-"""
+        # Get schema information
+        schema_info = root.schema_info
+        self.assertTrue(isinstance(schema_info, LDAPSchemaInfo))
+        self.assertTrue(root[u'ou=customers'].schema_info is schema_info)
