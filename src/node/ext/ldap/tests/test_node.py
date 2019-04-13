@@ -26,6 +26,7 @@ from zope.component import adapter
 from zope.component import provideHandler
 from zope.component.event import objectEventNotify
 import os
+import ldap
 from node.ext.ldap import LDAPNodeAttributes
 from node.ext.ldap.session import LDAPSession
 
@@ -104,432 +105,376 @@ class TestLDAPNode(NodeTestCase):
         # Access inexistent child
         self.expect_error(KeyError, root.__getitem__, 'foo')
 
+    def test_child_basics(self):
+        # Access existent child and it's attributes
+        root = LDAPNode('dc=my-domain,dc=com', props)
+        customers = root['ou=customers']
+        self.assertEqual(
+            repr(customers),
+            '<ou=customers,dc=my-domain,dc=com:ou=customers - False>'
+        )
+
+        self.assertEqual(sorted(customers.attrs.items()), [
+            ('businessCategory', 'customers_container'),
+            ('description', 'customers'),
+            ('objectClass', ['top', 'organizationalUnit']),
+            ('ou', 'customers')
+        ])
+
+        self.assertEqual(customers.DN, 'ou=customers,dc=my-domain,dc=com')
+        self.assertEqual(customers.name, 'ou=customers')
+        self.assertEqual(customers.rdn_attr, 'ou')
+
+        # Customers child keys
+        self.assertEqual(customers.keys(), [
+            u'ou=customer1', u'ou=customer2',
+            u'ou=n\xe4sty\\, customer', u'uid=binary'
+        ])
+
+        # Customer has not been changed
+        self.assertFalse(customers.changed)
+
+    def test_binary_data(self):
+        # Access existing binary data
+        root = LDAPNode('dc=my-domain,dc=com', props)
+        customers = root['ou=customers']
+        binnode = customers['uid=binary']
+
+        self.assertEqual(
+            binnode.attrs['jpegPhoto'][:20],
+            '\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x01,\x01,\x00\x00'
+        )
+        self.assertEqual(len(binnode.attrs['jpegPhoto']), 2155)
+
+        # Change binary data
+        path = os.path.join(
+            os.path.dirname(__file__),
+            '..', 'testing', 'data', 'binary.jpg'
+        )
+        with open(path) as f:
+            jpegdata = f.read()
+
+        self.assertTrue(customers is binnode.parent)
+        self.assertFalse(binnode._action == ACTION_MODIFY)
+        self.assertEqual(customers._modified_children, set())
+        self.assertEqual(binnode.parent._modified_children, set())
+        self.assertTrue(
+            customers._modified_children is binnode.parent._modified_children
+        )
+
+        binnode.attrs['jpegPhoto'] = jpegdata
+        self.assertTrue(binnode._action == ACTION_MODIFY)
+        self.assertTrue(
+            customers._modified_children is binnode.parent._modified_children
+        )
+
+        self.assertEqual(customers._modified_children, set(['uid=binary']))
+        self.assertEqual(binnode.parent._modified_children, set(['uid=binary']))
+
+        binnode()
+
+        # Reload
+        root = LDAPNode('dc=my-domain,dc=com', props)
+        customers = root['ou=customers']
+        binnode = customers['uid=binary']
+        self.assertTrue(binnode.attrs['jpegPhoto'] == jpegdata)
+
+    def test_tree_modification(self):
+        root = LDAPNode('dc=my-domain,dc=com', props)
+        customers = root['ou=customers']
+
+        # Create new LDAPNode and add it to customers
+        customer = LDAPNode()
+        self.assertEqual(repr(customer), '<(dn not set) - False>')
+
+        customer.attrs['ou'] = 'customer3'
+        customer.attrs['description'] = 'customer3'
+        customer.attrs['objectClass'] = ['top', 'organizationalUnit']
+
+        # The already created node has not been attached to the tree, so
+        # rdn_attr is not known yet
+        self.assertEqual(customer.rdn_attr, None)
+
+        # Also no DN and no LDAP session yet
+        self.assertEqual(customer.DN, '')
+        self.assertTrue(customer.ldap_session is None)
+        self.assertEqual(customer.attrs['ou'], 'customer3')
+        self.assertEqual(
+            customer.attrs['objectClass'],
+            ['top', 'organizationalUnit']
+        )
+        self.assertEqual(customer.keys(), [])
+
+        # Tree has not changed yet
+        self.check_output("""
+        <dc=my-domain,dc=com - False>
+          <ou=customers,dc=my-domain,dc=com:ou=customers - False>
+            <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
+            <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
+            <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+            <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
+          <ou=demo,dc=my-domain,dc=com:ou=demo - False>
+        """, root.treerepr())
+
+        # Set already created customer
+        customers['ou=customer3'] = customer
+        self.assertEqual(
+            customer.DN,
+            'ou=customer3,ou=customers,dc=my-domain,dc=com'
+        )
+        self.assertEqual(customer.rdn_attr, 'ou')
+
+        # Now it got the LDAP session which is used by the whole tree
+        self.assertTrue(isinstance(customer.ldap_session, LDAPSession))
+        self.assertTrue(root.ldap_session is customer.ldap_session)
+
+        # Check added node internal DN
+        self.assertEqual(
+            customer._dn,
+            'ou=customer3,ou=customers,dc=my-domain,dc=com'
+        )
+
+        # Data has changed in memory, but not persisted yet to LDAP
+        self.assertEqual(customers.keys(), [
+            u'ou=customer1',
+            u'ou=customer2',
+            u'ou=n\xe4sty\\, customer',
+            u'uid=binary',
+            u'ou=customer3'
+        ])
+
+        # Now tree nodes from customer up to root are flagged changed after
+        # adding the new node
+        self.check_output("""
+        <dc=my-domain,dc=com - True>
+          <ou=customers,dc=my-domain,dc=com:ou=customers - True>
+            <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
+            <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
+            <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+            <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
+            <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
+          <ou=demo,dc=my-domain,dc=com:ou=demo - False>
+        """, root.treerepr())
+
+        # New entry has no childs, but was added to the parent. There
+        # was a bug where iteration tried to load from ldap at this stage.
+        # Lets test if this works
+        self.assertEqual(customer.keys(), [])
+
+        # The Container has changed...
+        self.assertTrue(customers.changed)
+
+        # ...but there's no action on the container since a child was added and
+        # the attributes of the contained has not been changed
+        self.assertEqual(customers._action, None)
+
+        # The added child has been flagged changed as well...
+        self.assertTrue(customer.changed)
+
+        # ...and now there's also the action set that it has to be added
+        self.assertTrue(customer._action is ACTION_ADD)
+
+        # Check the backend state, not added yet
+        res = customers.ldap_session.search(
+            '(objectClass=*)',
+            1,
+            baseDN=customers.DN,
+            force_reload=True
+        )
+        self.assertEqual(len(res), 4)
+
+        # On call the new entry is written to the directory
+        root()
+        res = customers.ldap_session.search(
+            '(objectClass=*)',
+            1,
+            baseDN=customers.DN,
+            force_reload=True
+        )
+        self.assertEqual(len(res), 5)
+
+        # All nodes are flagged unchanged again
+        self.check_output("""
+        <dc=my-domain,dc=com - False>
+          <ou=customers,dc=my-domain,dc=com:ou=customers - False>
+            <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
+            <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
+            <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+            <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
+            <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
+          <ou=demo,dc=my-domain,dc=com:ou=demo - False>
+        """, root.treerepr())
+
+        # Add a person for more modification and changed flag tests
+        person = LDAPNode()
+        person.attrs['objectClass'] = ['top', 'person']
+        person.attrs['sn'] = 'Mustermann'
+        person.attrs['cn'] = 'Max'
+        person.attrs['description'] = 'Initial Description'
+        customer['cn=max'] = person
+
+        self.assertEqual(customer.keys(), ['cn=max'])
+        self.assertEqual(
+            person.DN,
+            'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com'
+        )
+
+        # Again, not in directory yet
+        res = customer.ldap_session.search(
+            '(objectClass=person)',
+            1,
+            baseDN=customer.DN,
+            force_reload=True
+        )
+        self.assertEqual(len(res), 0)
+
+        # Change the container of the person
+        customer.attrs['street'] = 'foo'
+
+        # Tell the person to commit its changes. The container (customer3) is
+        # still changed because of its changed attributes
+        self.assertEqual(customer._added_children, set(['cn=max']))
+
+        person()
+        self.assertEqual(customer._added_children, set())
+        self.check_output("""
+        <dc=my-domain,dc=com - True>
+          <ou=customers,dc=my-domain,dc=com:ou=customers - True>
+            <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
+            <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
+            <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+            <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
+            <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
+              <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
+          <ou=demo,dc=my-domain,dc=com:ou=demo - False>
+        """, root.treerepr())
+
+        # Call customer now, whole tree unchanged again
+        customer()
+        self.check_output("""
+        <dc=my-domain,dc=com - False>
+          <ou=customers,dc=my-domain,dc=com:ou=customers - False>
+            <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
+            <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
+            <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+            <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
+            <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
+              <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
+          <ou=demo,dc=my-domain,dc=com:ou=demo - False>
+        """, root.treerepr())
+
+        # Change the person and customer again, and discard the attribute change
+        # of the customer. It must not delete the changed state of the whole
+        # tree, as the person is still changed
+        customer.attrs['street'] = 'foo'
+        person.attrs['description'] = 'foo'
+        self.check_output("""
+        <dc=my-domain,dc=com - True>
+          <ou=customers,dc=my-domain,dc=com:ou=customers - True>
+            <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
+            <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
+            <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+            <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
+            <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
+              <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - True>
+          <ou=demo,dc=my-domain,dc=com:ou=demo - False>
+        """, root.treerepr())
+
+        self.assertTrue(person.nodespaces['__attrs__'].changed)
+        self.assertTrue(person._changed)
+        self.assertTrue(customer.nodespaces['__attrs__'].changed)
+        self.assertTrue(customer._changed)
+
+        customer.attrs.load()
+
+        self.assertTrue(person.nodespaces['__attrs__'].changed)
+        self.assertTrue(person._changed)
+        self.assertFalse(customer.nodespaces['__attrs__'].changed)
+        self.assertTrue(customer._changed)
+
+        self.check_output("""
+        <dc=my-domain,dc=com - True>
+          <ou=customers,dc=my-domain,dc=com:ou=customers - True>
+            <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
+            <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
+            <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+            <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
+            <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
+              <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - True>
+          <ou=demo,dc=my-domain,dc=com:ou=demo - False>
+        """, root.treerepr())
+
+        # After calling person, whole tree is unchanged again
+        person()
+        self.check_output("""
+        <dc=my-domain,dc=com - False>
+          <ou=customers,dc=my-domain,dc=com:ou=customers - False>
+            <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
+            <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
+            <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
+            <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
+            <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
+              <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
+          <ou=demo,dc=my-domain,dc=com:ou=demo - False>
+        """, root.treerepr())
+
+        # Changing attributes of a node, where keys are not loaded, yet
+        dn = 'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com'
+        tmp = LDAPNode(dn, props=props)
+        tmp.attrs['description'] = 'Initial Description'
+        tmp()
+
+        # Check set child immediately after init time
+        tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
+        tmp['cn=child'] = LDAPNode()
+        self.assertEqual(tmp.keys(), [
+            u'ou=customer1', u'ou=customer2', u'ou=n\xe4sty\\, customer',
+            u'uid=binary', u'ou=customer3', u'cn=child'
+        ])
+
+        # Changing the rdn attribute on loaded nodes fails.
+        person.attrs['cn'] = 'foo'
+        err = self.expect_error(ldap.NAMING_VIOLATION, person.__call__)
+        self.assertEqual(err.message, {
+            'info': "value of naming attribute 'cn' is not present in entry",
+            'desc': 'Naming violation'
+        })
+
+        person.attrs.load()
+        self.assertEqual(person.attrs['cn'], 'Max')
+
+        # More attributes modification tests. Create Customer convenience query
+        # function for later tests.
+
+        def queryPersonDirectly():
+            return customer.ldap_session.search(
+                '(objectClass=person)',
+                1,
+                baseDN=customer.DN,
+                force_reload=True
+            )
+
+        res = queryPersonDirectly()
+        self.assertEqual(
+            res[0][0],
+            'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com'
+        )
+        self.assertEqual(sorted(res[0][1].items()), [
+            ('cn', ['Max']),
+            ('description', ['Initial Description']),
+            ('objectClass', ['top', 'person']),
+            ('sn', ['Mustermann'])
+        ])
+
+        # Modify this person. First look at the changed flags
+        self.assertEqual(
+            (root.changed, customer.changed, person.changed),
+            (False, False, False)
+        )
+        self.assertEqual(person._action, None)
+        self.assertFalse(person.attrs.changed)
+
 """
-Existent Child Nodes
---------------------
-
-Access existent child and it's attributes::
-
-    >>> customers = root['ou=customers']
-    >>> customers
-    <ou=customers,dc=my-domain,dc=com:ou=customers - False>
-
-    >>> customers.attrs.items()
-    [(u'objectClass', [u'top', u'organizationalUnit']),
-    (u'ou', u'customers'),
-    (u'description', u'customers'),
-    (u'businessCategory', u'customers_container')]
-
-    >>> customers.DN
-    u'ou=customers,dc=my-domain,dc=com'
-
-    >>> customers.name
-    u'ou=customers'
-
-    >>> customers.rdn_attr
-    u'ou'
-
-Customers child keys::
-
-    >>> customers.keys()
-    [u'ou=customer1', u'ou=customer2', u'ou=n\xe4sty\\, customer', u'uid=binary']
-
-Customer has not been changed::
-
-    >>> customers.changed
-    False
-
-Binary Data
------------
-
-Access existing binary data::
-
-    >>> customers = root['ou=customers']
-    >>> binnode = customers['uid=binary']
-
-    >>> binnode.attrs['jpegPhoto'][:20]
-    '\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x01,\x01,\x00\x00'
-
-    >>> len(binnode.attrs['jpegPhoto'])
-    2155
-
-Change binary data::
-
-    >>> jpegdata = open(os.path.join(os.path.dirname(__file__), 'testing',
-    ...                 'data', 'binary.jpg')).read()
-
-    >>> customers is binnode.parent
-    True
-
-    >>> binnode._action == ACTION_MODIFY
-    False
-
-    >>> customers._modified_children
-    set([])
-
-    >>> binnode.parent._modified_children
-    set([])
-
-    >>> customers._modified_children is binnode.parent._modified_children
-    True
-
-    >>> binnode.attrs['jpegPhoto'] = jpegdata
-
-    >>> binnode._action == ACTION_MODIFY
-    True
-
-    >>> customers._modified_children is binnode.parent._modified_children
-    True
-
-    >>> customers._modified_children
-    set([u'uid=binary'])
-
-    >>> binnode.parent._modified_children
-    set([u'uid=binary'])
-
-    >>> binnode()
-
-Reload::
-
-    >>> root = LDAPNode('dc=my-domain,dc=com', props)
-    >>> customers = root['ou=customers']
-    >>> binnode = customers['uid=binary']
-    >>> binnode.attrs['jpegPhoto'] == jpegdata
-    True
-
-Create New Node
----------------
-
-Create new LDAPNode and add it to customers::
-
-    >>> customer = LDAPNode()
-    >>> repr(customer)
-    '<(dn not set) - False>'
-
-    >>> customer.attrs['ou'] = 'customer3'
-    >>> customer.attrs['description'] = 'customer3'
-    >>> customer.attrs['objectClass'] = ['top', 'organizationalUnit']
-
-The already created node has not been attached to the tree, so rdn_attr is not
-known yet::
-
-    >>> print customer.rdn_attr
-    None
-
-Also no DN and no LDAP session yet::
-
-    >>> customer.DN
-    u''
-
-    >>> customer.ldap_session is None
-    True
-
-    >>> customer.attrs['ou']
-    u'customer3'
-
-    >>> customer.attrs['objectClass']
-    [u'top', u'organizationalUnit']
-
-    >>> customer.keys()
-    []
-
-Tree has not changed yet::
-
-    >>> root.printtree()
-    <dc=my-domain,dc=com - False>
-      <ou=customers,dc=my-domain,dc=com:ou=customers - False>
-        <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
-        <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
-        <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
-      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
-
-Set already created customer::
-
-    >>> customers['ou=customer3'] = customer
-    >>> customer.DN
-    u'ou=customer3,ou=customers,dc=my-domain,dc=com'
-
-    >>> customer.rdn_attr
-    u'ou'
-
-Now it got the LDAP session which is used by the whole tree::
-
-    >>> customer.ldap_session
-    <node.ext.ldap.session.LDAPSession object at ...>
-
-    >>> root.ldap_session is customer.ldap_session
-    True
-
-Check added node internal DN::
-
-    >>> customer._dn
-    u'ou=customer3,ou=customers,dc=my-domain,dc=com'
-
-Data has changed in memory, but not persisted yet to LDAP::
-
-    >>> customers.keys()
-    [u'ou=customer1',
-    u'ou=customer2',
-    u'ou=n\xe4sty\\, customer',
-    u'uid=binary',
-    u'ou=customer3']
-
-Now tree nodes from customer up to root are flagged changed after adding the
-new node::
-
-    >>> root.printtree()
-    <dc=my-domain,dc=com - True>
-      <ou=customers,dc=my-domain,dc=com:ou=customers - True>
-        <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
-        <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
-        <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
-        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
-      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
-
-New entry has no childs, but was added to the parent. There
-was a bug where iteration tried to load from ldap at this stage. Lets test
-if this works::
-
-    >>> customer.keys()
-    []
-
-The Container has changed...::
-
-    >>> customers.changed
-    True
-
-...but there's no action on the container since a child was added and the
-attributes of the contained has not been changed::
-
-    >>> print customers._action
-    None
-
-The added child has been flagged changed as well...::
-
-    >>> customer.changed
-    True
-
-...and now there's also the action set that it has to be added::
-
-    >>> customer._action is ACTION_ADD
-    True
-
-Check the backend state, not added yet::
-
-    >>> res = customers.ldap_session.search('(objectClass=*)',
-    ...                                     1,
-    ...                                     baseDN=customers.DN,
-    ...                                     force_reload=True)
-    >>> len(res)
-    4
-
-On call the new entry is written to the directory::
-
-    >>> root()
-    >>> res = customers.ldap_session.search('(objectClass=*)',
-    ...                                     1,
-    ...                                     baseDN=customers.DN,
-    ...                                     force_reload=True)
-    >>> len(res)
-    5
-
-All nodes are flagged unchanged again::
-
-    >>> root.printtree()
-    <dc=my-domain,dc=com - False>
-      <ou=customers,dc=my-domain,dc=com:ou=customers - False>
-        <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
-        <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
-        <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
-        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
-      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
-
-Add a person for more modification and changed flag tests::
-
-    >>> person = LDAPNode()
-    >>> person.attrs['objectClass'] = ['top', 'person']
-    >>> person.attrs['sn'] = 'Mustermann'
-    >>> person.attrs['cn'] = 'Max'
-    >>> person.attrs['description'] = 'Initial Description'
-    >>> customer['cn=max'] = person
-    >>> customer.keys()
-    [u'cn=max']
-
-    >>> person.DN
-    u'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com'
-
-Again, not in directory yet::
-
-    >>> res = customer.ldap_session.search('(objectClass=person)',
-    ...                                    1,
-    ...                                    baseDN=customer.DN,
-    ...                                    force_reload=True)
-    >>> len(res)
-    0
-
-Change the container of the person::
-
-    >>> customer.attrs['street'] = 'foo'
-
-Tell the person to commit its changes. The container (customer3) is still
-changed because of its changed attributes::
-
-    >>> customer._added_children
-    set([u'cn=max'])
-
-    >>> person()
-
-    >>> customer._added_children
-    set([])
-
-    >>> root.printtree()
-    <dc=my-domain,dc=com - True>
-      <ou=customers,dc=my-domain,dc=com:ou=customers - True>
-        <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
-        <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
-        <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
-        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
-          <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
-      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
-
-Call customer now, whole tree unchanged again::
-
-    >>> customer()
-    >>> root.printtree()
-    <dc=my-domain,dc=com - False>
-      <ou=customers,dc=my-domain,dc=com:ou=customers - False>
-        <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
-        <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
-        <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
-        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
-          <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
-      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
-
-Change the person and customer again, and discard the attribute change
-of the customer. It must not delete the changed state of the whole tree, as the
-person is still changed::
-
-    >>> customer.attrs['street'] = 'foo'
-    >>> person.attrs['description'] = 'foo'
-    >>> root.printtree()
-    <dc=my-domain,dc=com - True>
-      <ou=customers,dc=my-domain,dc=com:ou=customers - True>
-        <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
-        <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
-        <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
-        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
-          <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - True>
-      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
-
-    >>> person.nodespaces['__attrs__'].changed
-    True
-    >>> person._changed
-    True
-
-    >>> customer.nodespaces['__attrs__'].changed
-    True
-    >>> customer._changed
-    True
-
-    >>> customer.attrs.load()
-
-    >>> person.nodespaces['__attrs__'].changed
-    True
-    >>> person._changed
-    True
-
-    >>> customer.nodespaces['__attrs__'].changed
-    False
-    >>> customer._changed
-    True
-
-    >>> root.printtree()
-    <dc=my-domain,dc=com - True>
-      <ou=customers,dc=my-domain,dc=com:ou=customers - True>
-        <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
-        <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
-        <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
-        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - True>
-          <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - True>
-      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
-
-After calling person, whole tree is unchanged again::
-
-    >>> person()
-    >>> root.printtree()
-    <dc=my-domain,dc=com - False>
-      <ou=customers,dc=my-domain,dc=com:ou=customers - False>
-        <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
-        <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
-        <ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>
-        <uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>
-        <ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>
-          <cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com:cn=max - False>
-      <ou=demo,dc=my-domain,dc=com:ou=demo - False>
-
-Changing attributes of a node, where keys are not loaded, yet::
-
-    >>> dn = 'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com'
-    >>> tmp = LDAPNode(dn, props=props)
-    >>> tmp.attrs['description'] = 'Initial Description'
-    >>> tmp()
-
-Check set child immediately after init time::
-
-    >>> tmp = LDAPNode('ou=customers,dc=my-domain,dc=com', props=props)
-    >>> tmp['cn=child'] = LDAPNode()
-    >>> tmp.keys()
-    [u'ou=customer1', u'ou=customer2', u'ou=n\xe4sty\\, customer',
-    u'uid=binary', u'ou=customer3', u'cn=child']
-
-Changing the rdn attribute on loaded nodes fails.::
-
-    >>> person.attrs['cn'] = 'foo'
-    >>> person()
-    Traceback (most recent call last):
-      ...
-    NAMING_VIOLATION: {'info': u"value of naming attribute 'cn'
-    is not present in entry", 'desc': u'Naming violation'}
-
-    >>> person.attrs.load()
-    >>> person.attrs['cn']
-    u'Max'
-
-More attributes modification tests. Create Customer convenience query function
-for later tests.::
-
-    >>> def queryPersonDirectly():
-    ...     res = customer.ldap_session.search('(objectClass=person)',
-    ...                                        1,
-    ...                                        baseDN=customer.DN,
-    ...                                        force_reload=True)
-    ...     return res
-
-    >>> pprint(queryPersonDirectly())
-    [('cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com',
-      {'cn': ['Max'],
-       'description': ['Initial Description'],
-       'objectClass': ['top', 'person'],
-       'sn': ['Mustermann']})]
-
-Modify this person. First look at the changed flags::
-
-    >>> root.changed, customer.changed, person.changed
-    (False, False, False)
-
-    >>> print person._action
-    None
-
-    >>> person.attrs.changed
-    False
-
 Modify and check flags again::
 
     >>> person.attrs['description'] = 'Another description'
