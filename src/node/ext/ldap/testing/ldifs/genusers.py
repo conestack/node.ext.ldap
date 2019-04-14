@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import sys
 
 container_template = """\
@@ -23,14 +22,13 @@ userPassword: %(password)s
 ou = sys.argv.pop(1)
 n = int(sys.argv.pop(1))
 
-
-print container_template % dict(ou=ou)
+print(container_template % dict(ou=ou))
 for x in range(n):
-    print user_template % dict(
-            uid='uid%d' % x,
-            cn='cn%d' % x,
-            mail='uid%d@%s' % (x, ou),
-            ou=ou,
-            password='secret%d' % x,
-            sn='sn%d' % x,
-            ),
+    print(user_template % dict(
+        uid='uid%d' % x,
+        cn='cn%d' % x,
+        mail='uid%d@%s' % (x, ou),
+        ou=ou,
+        password='secret%d' % x,
+        sn='sn%d' % x,
+    ))

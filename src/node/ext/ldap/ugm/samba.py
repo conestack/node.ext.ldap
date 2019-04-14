@@ -40,17 +40,18 @@ sambaGroupMapping
 - description -------------> no default callback available
 - sambaSIDList ------------> no default callback available
 """
-import smbpasswd
+from passlib.hash import lmhash
+from passlib.hash import nthash
 import posix
 import time
 
 
 def sambaNTPassword(passwd):
-    return smbpasswd.nthash(passwd)
+    return nthash(passwd)
 
 
 def sambaLMPassword(passwd):
-    return smbpasswd.lmhash(passwd)
+    return lmhash(passwd)
 
 
 # net getlocalsid | net getlocalsid [domain]

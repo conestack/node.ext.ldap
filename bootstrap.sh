@@ -1,15 +1,26 @@
-#!/bin/sh
+#!/bin/bash
+set -e
 if [ -x "$(which python)" ]; then
     rm -r py2
-
     virtualenv --clear --no-site-packages -p python py2
-    ./py2/bin/pip install --upgrade pip setuptools zc.buildout
-    ./py2/bin/buildout
+    cd py2
+    cp ../ldap.cfg .
+    cp ../versions.cfg .
+    cp ../base.cfg .
+    cp ../buildout.cfg .
+    ./bin/pip install --upgrade pip setuptools zc.buildout
+    ./bin/buildout
+    cd ..
 fi
 if [ -x "$(which python3)" ]; then
     rm -r py3
-
     virtualenv --clear --no-site-packages -p python3 py3
-    ./py3/bin/pip install --upgrade pip setuptools zc.buildout
-    ./py3/bin/buildout
+    cd py3
+    cp ../ldap.cfg .
+    cp ../versions.cfg .
+    cp ../base.cfg .
+    cp ../buildout.cfg .
+    ./bin/pip install --upgrade pip setuptools zc.buildout
+    ./bin/buildout
+    cd ..
 fi

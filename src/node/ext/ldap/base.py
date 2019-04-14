@@ -30,7 +30,7 @@ def testLDAPConnectivity(server=None, port=None, props=None):
         lc.bind()
         lc.unbind()
         return 'success'
-    except ldap.LDAPError, error:
+    except ldap.LDAPError as error:
         return error
 
 
