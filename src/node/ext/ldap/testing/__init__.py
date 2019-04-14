@@ -287,7 +287,7 @@ ucfg = UsersConfig(
     baseDN='dc=my-domain,dc=com',
     attrmap={
         'id': 'sn',
-        'login': 'description',
+        'login': 'cn',
         'telephoneNumber': 'telephoneNumber',
         'rdn': 'ou',
         'sn': 'sn',
