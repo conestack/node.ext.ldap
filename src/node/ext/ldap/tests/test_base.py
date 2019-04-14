@@ -26,7 +26,7 @@ class TestBase(NodeTestCase):
         self.assertEqual(main(), 'success')
 
         sys.argv[-1] = '12346'
-        self.assertEqual(main().message, {
+        self.assertEqual(main().args[0], {
             'info': 'Transport endpoint is not connected',
             'errno': 107,
             'desc': "Can't contact LDAP server"
@@ -39,7 +39,7 @@ class TestBase(NodeTestCase):
 
         # Test node.ext.ldap base objects. Test LDAP connectivity
         self.assertEqual(testLDAPConnectivity('127.0.0.1', 12345), 'success')
-        self.assertEqual(testLDAPConnectivity('127.0.0.1', 12346).message, {
+        self.assertEqual(testLDAPConnectivity('127.0.0.1', 12346).args[0], {
             'info': 'Transport endpoint is not connected',
             'errno': 107,
             'desc': u"Can't contact LDAP server"}
@@ -100,7 +100,7 @@ class TestBase(NodeTestCase):
         )
         self.assertEqual(len(res), 3)
 
-        self.assertEqual(cookie, '')
+        self.assertEqual(cookie, b'')
 
         # Pagination search fails if cookie but no page size given
         res, cookie = communicator.search(
@@ -120,9 +120,9 @@ class TestBase(NodeTestCase):
 
         # Test inserting entries.
         entry = {
-            'cn': 'foo',
-            'sn': 'bar',
-            'objectclass': ('person', 'top'),
+            'cn': b'foo',
+            'sn': b'bar',
+            'objectclass': (b'person', b'top'),
         }
         dn = 'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com'
         communicator.add(dn, entry)
@@ -135,15 +135,15 @@ class TestBase(NodeTestCase):
         res = communicator.search('(cn=foo)', SUBTREE)
         self.assertEqual(res, [(
             'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
-            {'objectClass': ['person', 'top'], 'cn': ['foo'], 'sn': ['bar']}
+            {'objectClass': [b'person', b'top'], 'cn': [b'foo'], 'sn': [b'bar']}
         )])
 
         # Modify this entry and check the result.
-        communicator.modify(res[0][0], [(MOD_REPLACE, 'sn', 'baz')])
+        communicator.modify(res[0][0], [(MOD_REPLACE, 'sn', b'baz')])
         res = communicator.search('(cn=foo)', SUBTREE)
         self.assertEqual(res, [(
             'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
-            {'objectClass': ['person', 'top'], 'cn': ['foo'], 'sn': ['baz']}
+            {'objectClass': [b'person', b'top'], 'cn': [b'foo'], 'sn': [b'baz']}
         )])
 
         # Finally delete this entry and check the result.
@@ -160,9 +160,9 @@ class TestBase(NodeTestCase):
 
         # Add entry
         entry = {
-            'cn': 'foo',
-            'sn': 'bar',
-            'objectclass': ('person', 'top'),
+            'cn': b'foo',
+            'sn': b'bar',
+            'objectclass': (b'person', b'top'),
         }
         dn = 'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com'
         communicator.add(dn, entry)
@@ -174,7 +174,7 @@ class TestBase(NodeTestCase):
         res = communicator.search('(cn=foo)', SUBTREE)
         self.assertEqual(res, [(
             'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
-            {'objectClass': ['person', 'top'], 'cn': ['foo'], 'sn': ['bar']}
+            {'objectClass': [b'person', b'top'], 'cn': [b'foo'], 'sn': [b'bar']}
         )])
 
         # Delete entry

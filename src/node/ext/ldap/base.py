@@ -42,20 +42,28 @@ def md5digest(key):
     :return digest: hex digest.
     """
     m = hashlib.md5()
-    m.update(key)
+    m.update(ensure_bytes(key))
     return m.hexdigest()
 
 
-def decode_utf8(value):
+def ensure_text(value):
     if value and not isinstance(value, six.text_type):
         value = value.decode('utf-8')
     return value
 
 
-def encode_utf8(value):
+# B/C
+decode_utf8 = ensure_text
+
+
+def ensure_bytes(value):
     if value and isinstance(value, six.text_type):
         value = value.encode('utf-8')
     return value
+
+
+# B/C
+encode_utf8 = ensure_bytes
 
 
 class LDAPConnector(object):
@@ -94,6 +102,8 @@ class LDAPConnector(object):
             ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, self._tls_cacert_file)
         self._con = ldap.ldapobject.ReconnectLDAPObject(
             self._uri,
+            bytes_mode=False,
+            bytes_strictness='silent',
             retry_max=self._retry_max,
             retry_delay=self._retry_delay,
         )

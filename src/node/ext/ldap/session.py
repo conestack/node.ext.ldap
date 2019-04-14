@@ -76,7 +76,11 @@ class LDAPSession(object):
         # Let's bypass connector/communicator until they are sorted out
         if self._props.ignore_cert:
             ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
-        con = ldap.initialize(self._props.uri)
+        con = ldap.initialize(
+            self._props.uri,
+            bytes_mode=False,
+            bytes_strictness='silent'
+        )
         # Turning referrals off since they cause problems with MS Active
         # Directory More info: https://www.python-ldap.org/faq.html#usage
         con.set_option(ldap.OPT_REFERRALS, 0)
