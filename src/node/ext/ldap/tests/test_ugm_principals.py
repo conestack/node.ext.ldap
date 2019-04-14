@@ -4,6 +4,7 @@ from node.ext.ldap import LDAPNode
 from node.ext.ldap import ONELEVEL
 from node.ext.ldap import testing
 from node.ext.ldap.filter import LDAPFilter
+from node.ext.ldap.ugm import Group
 from node.ext.ldap.ugm import Groups
 from node.ext.ldap.ugm import GroupsConfig
 from node.ext.ldap.ugm import RolesConfig
@@ -18,6 +19,16 @@ from node.tests import NodeTestCase
 
 
 layer = testing.LDIF_principals
+gcfg = GroupsConfig(
+    baseDN='dc=my-domain,dc=com',
+    attrmap={
+        'id': 'cn',
+        'rdn': 'cn'
+    },
+    scope=ONELEVEL,
+    queryFilter='(objectClass=groupOfNames)',
+    objectClasses=['groupOfNames']
+)
 
 
 class TestUGMPrincipals(NodeTestCase):
@@ -428,213 +439,199 @@ class TestUGMPrincipals(NodeTestCase):
         self.assertEqual(len(users.storage.keys()), 0)
         self.assertEqual(len(users.context.storage.keys()), 0)
 
+    def test_group_basics(self):
+        props = testing.props
+        ucfg = testing.ucfg
+        users = Users(props, ucfg)
+
+        # A user does not know about it's groups if initialized directly
+        err = self.expect_error(
+            AttributeError,
+            lambda: users['Meier'].groups
+        )
+        self.assertEqual(str(err), "'NoneType' object has no attribute 'groups'")
+
+        # Create a LDAPGroups node and configure it
+        groups = Groups(props, gcfg)
+
+        self.assertEqual(groups.keys(), [u'group1', u'group2'])
+        self.assertEqual(groups.ids, [u'group1', u'group2'])
+
+        group = groups['group1']
+        self.assertTrue(isinstance(group, Group))
+
+        self.assertEqual(sorted(group.attrs.items()), [
+            ('member', [
+                u'cn=user3,ou=customers,dc=my-domain,dc=com',
+                u'cn=user2,ou=customers,dc=my-domain,dc=com'
+            ]),
+            ('rdn', u'group1')
+        ])
+
+        self.assertEqual(sorted(group.attrs.context.items()), [
+            (u'cn', u'group1'),
+            (u'member', [
+                u'cn=user3,ou=customers,dc=my-domain,dc=com',
+                u'cn=user2,ou=customers,dc=my-domain,dc=com'
+            ]),
+            (u'objectClass', [u'top', u'groupOfNames'])
+        ])
+
+        self.assertEqual(
+            groups.context.child_defaults,
+            {'objectClass': ['groupOfNames']}
+        )
+
+    def test_add_group(self):
+        props = testing.props
+        groups = Groups(props, gcfg)
+
+        group = groups.create('group3')
+        self.assertEqual(sorted(group.attrs.items()), [
+            ('member', ['cn=nobody']),
+            ('rdn', u'group3')
+        ])
+
+        self.assertEqual(sorted(group.attrs.context.items()), [
+            (u'cn', u'group3'),
+            (u'member', ['cn=nobody']),
+            (u'objectClass', [u'groupOfNames'])
+        ])
+
+        groups()
+        self.assertEqual(groups.ids, [u'group1', u'group2', u'group3'])
+
+        # XXX: dummy member should be created by default value callback,
+        #      currently a __setitem__ plumbing on groups object
+
+        res = groups.context.ldap_session.search(
+            queryFilter='cn=group3',
+            scope=ONELEVEL
+        )
+        self.assertEqual(res, [
+            ('cn=group3,dc=my-domain,dc=com', {
+                'member': ['cn=nobody'],
+                'objectClass': ['groupOfNames'],
+                'cn': ['group3']
+            })
+        ])
+
+        # Delete create group
+        del groups['group3']
+        groups()
+
+    def test_membership(self):
+        props = testing.props
+        groups = Groups(props, gcfg)
+
+        # Directly created groups object have no access to it's refering users
+        err = self.expect_error(
+            AttributeError,
+            lambda: groups['group1'].member_ids
+        )
+        self.assertEqual(str(err), "'NoneType' object has no attribute 'users'")
+
+        # Currently, the member relation is computed hardcoded and maps to
+        # object classes. This will propably change in future. Right now
+        # 'posigGroup', 'groupOfUniqueNames', and 'groupOfNames' are supported
+        self.assertEqual(member_format('groupOfUniqueNames'), 0)
+        self.assertEqual(member_attribute('groupOfUniqueNames'), 'uniqueMember')
+
+        self.assertEqual(member_format('groupOfNames'), 0)
+        self.assertEqual(member_attribute('groupOfNames'), 'member')
+
+        self.assertEqual(member_format('posixGroup'), 1)
+        self.assertEqual(member_attribute('posixGroup'), 'memberUid')
+
+        err = self.expect_error(Exception, member_format, 'foo')
+        self.assertEqual(str(err), 'Unknown format')
+        err = self.expect_error(Exception, member_attribute, 'foo')
+        self.assertEqual(str(err), 'Unknown member attribute')
+
+        self.assertEqual(groups['group1']._member_format, 0)
+        self.assertEqual(groups['group1']._member_attribute, 'member')
+
+        # Create a UGM object
+        ucfg = layer['ucfg']
+        ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg)
+
+        # Fetch users and groups
+        self.assertTrue(isinstance(ugm.users, Users))
+        self.assertTrue(isinstance(ugm.groups, Groups))
+
+        self.assertEqual(ugm.groups._key_attr, 'cn')
+
+        group_1 = ugm.groups['group1']
+        self.assertEqual(len(group_1.users), 2)
+        self.assertTrue(isinstance(group_1.users[0], User))
+        self.assertEqual(
+            sorted([it.name for it in group_1.users]),
+            [u'Müller', u'Schmidt']
+        )
+        group_2 = ugm.groups['group2']
+        self.assertEqual([it.name for it in group_2.users], [u'Umhauer'])
+
+        schmidt = ugm.users['Schmidt']
+        self.assertEqual(schmidt.group_ids, [u'group1'])
+        self.assertEqual(len(schmidt.groups), 1)
+        self.assertTrue(isinstance(schmidt.groups[0], Group))
+        self.assertEqual([it.name for it in schmidt.groups], [u'group1'])
+
+        # Add and remove user from group
+        group = ugm.groups['group1']
+        self.assertEqual(group.member_ids, [u'Schmidt', u'M\xfcller'])
+        self.assertEqual(
+            group.translate_key('Umhauer'),
+            u'cn=n\xe4sty\\, User,ou=customers,dc=my-domain,dc=com'
+        )
+
+        group.add('Umhauer')
+        self.assertEqual(sorted(group.attrs.items()), [
+            ('member', [
+                u'cn=user3,ou=customers,dc=my-domain,dc=com',
+                u'cn=user2,ou=customers,dc=my-domain,dc=com',
+                u'cn=n\xe4sty\\, User,ou=customers,dc=my-domain,dc=com'
+            ]),
+            ('rdn', u'group1')
+        ])
+        self.assertEqual(
+            group.member_ids,
+            [u'Schmidt', u'M\xfcller', u'Umhauer']
+        )
+        group()
+
+        del group['Umhauer']
+        self.assertEqual(group.member_ids, [u'Schmidt', u'M\xfcller'])
+
+        # Delete Group
+        groups = ugm.groups
+        group = groups.create('group3')
+        group.add('Schmidt')
+        groups()
+
+        self.assertEqual(
+            groups.keys(),
+            [u'group1', u'group2', u'group3']
+        )
+        self.assertEqual(len(groups.values()), 3)
+        self.assertTrue(isinstance(groups.values()[0], Group))
+        self.assertEqual(
+            [it.name for it in groups.values()],
+            [u'group1', u'group2', u'group3']
+        )
+        self.assertEqual(
+            [it.name for it in ugm.users['Schmidt'].groups],
+            [u'group1', u'group3']
+        )
+        self.assertEqual(group.member_ids, [u'Schmidt'])
+
+        del groups['group3']
+        groups()
+
+        self.assertEqual(groups.keys(), [u'group1', u'group2'])
+        self.assertEqual(ugm.users['Schmidt'].group_ids, ['group1'])
+
 """
-A user does not know about it's groups if initialized directly::
-
-    >>> users['Meier'].groups
-    Traceback (most recent call last):
-      ...
-    AttributeError: 'NoneType' object has no attribute 'groups'
-
-Create a LDAPGroups node and configure it::
-
-    >>> gcfg = GroupsConfig(
-    ...     baseDN='dc=my-domain,dc=com',
-    ...     attrmap={
-    ...         'id': 'cn',
-    ...         'rdn': 'cn',
-    ...     },
-    ...     scope=ONELEVEL,
-    ...     queryFilter='(objectClass=groupOfNames)',
-    ...     objectClasses=['groupOfNames'],
-    ... )
-
-    >>> groups = Groups(props, gcfg)
-    >>> groups.keys()
-    [u'group1', u'group2']
-
-    >>> groups.ids
-    [u'group1', u'group2']
-
-    >>> group = groups['group1']
-    >>> group
-    <Group object 'group1' at ...>
-
-    >>> group.attrs.items()
-    [('member', 
-    [u'cn=user3,ou=customers,dc=my-domain,dc=com', 
-    u'cn=user2,ou=customers,dc=my-domain,dc=com']), 
-    ('rdn', u'group1')]
-
-    >>> group.attrs.context.items()
-    [(u'objectClass', [u'top', u'groupOfNames']), 
-    (u'member', [u'cn=user3,ou=customers,dc=my-domain,dc=com', 
-    u'cn=user2,ou=customers,dc=my-domain,dc=com']), 
-    (u'cn', u'group1')]
-
-    >>> groups.context.child_defaults
-    {'objectClass': ['groupOfNames']}
-
-    >>> group = groups.create('group3')
-    >>> group.attrs.items()
-    [('rdn', u'group3'), ('member', ['cn=nobody'])]
-
-    >>> group.attrs.context.items()
-    [(u'cn', u'group3'), 
-    (u'member', ['cn=nobody']), 
-    (u'objectClass', [u'groupOfNames'])]
-
-    >>> groups()
-    >>> groups.ids
-    [u'group1', u'group2', u'group3']
-
-    # XXX: dummy member should be created by default value callback, currently
-    #      a __setitem__ plumbing on groups object
-
-    >>> groups.context.ldap_session.search(queryFilter='cn=group3',
-    ...                                    scope=ONELEVEL)
-    [('cn=group3,dc=my-domain,dc=com', 
-    {'member': ['cn=nobody'], 
-    'objectClass': ['groupOfNames'], 
-    'cn': ['group3']})]
-
-    >>> groups['group1']._member_format
-    0
-
-    >>> groups['group1']._member_attribute
-    'member'
-
-Directly created groups object have no access to it's refering users::
-
-    >>> groups['group1'].member_ids
-    Traceback (most recent call last):
-      ...
-    AttributeError: 'NoneType' object has no attribute 'users'
-
-Create a UGM object::
-
-    >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg)
-
-Currently, the member relation is computed hardcoded and maps to object classes.
-This will propably change in future. Right now 'posigGroup',
-'groupOfUniqueNames', and 'groupOfNames' are supported::
-
-    >>> member_format('groupOfUniqueNames')
-    0
-
-    >>> member_attribute('groupOfUniqueNames')
-    'uniqueMember'
-
-    >>> member_format('groupOfNames')
-    0
-
-    >>> member_attribute('groupOfNames')
-    'member'
-
-    >>> member_format('posixGroup')
-    1
-
-    >>> member_attribute('posixGroup')
-    'memberUid'
-
-    >>> member_format('foo')
-    Traceback (most recent call last):
-      ...
-    Exception: Unknown format
-
-    >>> member_attribute('foo')
-    Traceback (most recent call last):
-      ...
-    Exception: Unknown member attribute
-
-Fetch users and groups::
-
-    >>> ugm.users
-    <Users object 'users' at ...>
-
-    >>> ugm.groups
-    <Groups object 'groups' at ...>
-
-    >>> ugm.groups['group1'].users
-    [<User object 'Schmidt' at ...>, 
-    <User object 'M?ller' at ...>]
-
-    >>> ugm.groups['group2'].users
-    [<User object 'Umhauer' at ...>]
-
-    >>> ugm.groups._key_attr
-    'cn'
-
-    >>> ugm.users['Schmidt'].group_ids
-    [u'group1']
-
-    >>> ugm.users['Schmidt'].groups
-    [<Group object 'group1' at ...>]
-
-Add and remove user from group::
-
-    >>> group = ugm.groups['group1']
-    >>> group
-    <Group object 'group1' at ...>
-
-    >>> group.member_ids
-    [u'Schmidt', u'M\xfcller']
-
-    >>> group.translate_key('Umhauer')
-    u'cn=n\xe4sty\\, User,ou=customers,dc=my-domain,dc=com'
-
-    >>> group.add('Umhauer')
-    >>> group.attrs.items()
-    [('member', 
-    [u'cn=user3,ou=customers,dc=my-domain,dc=com', 
-    u'cn=user2,ou=customers,dc=my-domain,dc=com', 
-    u'cn=n\xe4sty\\, User,ou=customers,dc=my-domain,dc=com']), 
-    ('rdn', u'group1')]
-
-    >>> group.member_ids
-    [u'Schmidt', u'M\xfcller', u'Umhauer']
-
-    >>> group()
-
-    >>> del group['Umhauer']
-    >>> group.member_ids
-    [u'Schmidt', u'M\xfcller']
-
-Delete Group::
-
-    >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg)
-
-    >>> groups = ugm.groups
-    >>> group = groups.create('group4')
-    >>> group.add('Schmidt')
-    >>> groups()
-
-    >>> groups.keys()
-    [u'group1', u'group2', u'group3', u'group4']
-
-    >>> groups.values()
-    [<Group object 'group1' at ...>, 
-    <Group object 'group2' at ...>, 
-    <Group object 'group3' at ...>, 
-    <Group object 'group4' at ...>]
-
-    >>> ugm.users['Schmidt'].groups
-    [<Group object 'group1' at ...>, <Group object 'group4' at ...>]
-
-    >>> group.member_ids
-    [u'Schmidt']
-
-    >>> del groups['group4']
-    >>> groups()
-
-    >>> groups.values()
-    [<Group object 'group1' at ...>, 
-    <Group object 'group2' at ...>, 
-    <Group object 'group3' at ...>]
-
-    >>> ugm.users['Schmidt'].groups
-    [<Group object 'group1' at ...>]
-
 Test role mappings. Create container for roles.::
 
     >>> node = LDAPNode('dc=my-domain,dc=com', props)
