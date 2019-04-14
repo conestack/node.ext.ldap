@@ -35,6 +35,7 @@ from plumber import plumbing
 from zope.interface import implementer
 import ldap
 import logging
+import six
 import time
 
 logger = logging.getLogger('node.ext.ldap')
@@ -207,7 +208,7 @@ class LDAPUser(LDAPPrincipal, UgmUser):
         if self.parent.parent.ucfg.memberOfSupport:
             res = list()
             for dn in self.member_of_attr:
-                if not isinstance(dn, unicode):
+                if not isinstance(dn, six.text_type):
                     dn = dn.decode('utf-8')
                 if groups.context.DN not in dn:
                     # Skip DN outside groups base DN

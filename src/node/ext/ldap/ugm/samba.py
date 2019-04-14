@@ -43,14 +43,19 @@ sambaGroupMapping
 from passlib.hash import lmhash
 from passlib.hash import nthash
 import posix
+import six
 import time
 
 
 def sambaNTPassword(passwd):
+    if not isinstance(passwd, six.text_type):
+        passwd = passwd.decode('utf-8')
     return nthash(passwd)
 
 
 def sambaLMPassword(passwd):
+    if not isinstance(passwd, six.text_type):
+        passwd = passwd.decode('utf-8')
     return lmhash(passwd)
 
 

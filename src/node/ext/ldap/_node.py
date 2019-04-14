@@ -39,6 +39,7 @@ from plumber import plumb
 from plumber import plumbing
 from zope.deprecation import deprecated
 from zope.interface import implementer
+import six
 
 
 ACTION_ADD = 0
@@ -170,7 +171,7 @@ class LDAPStorage(OdictStorage):
         """
         if (name and not props) or (props and not name):
             raise ValueError(u"Wrong initialization.")
-        if name and not isinstance(name, unicode):
+        if name and not isinstance(name, six.text_type):
             name = name.decode(CHARACTER_ENCODING)
         self.__name__ = name
         self.__parent__ = None

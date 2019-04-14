@@ -94,7 +94,7 @@ class LDAPServerProperties(object):
         :param multivalued_attributes: Set of attributes names considered as
             multivalued to be returned as list.
         :param binary_attributes: Set of attributes names considered as binary.
-            (no unicode conversion)
+            (no text conversion)
         :param page_size: Oage size for LDAP search requests, defaults to 1000.
             Number of objects requested at once.
             In iterations after this number of objects a new search query is

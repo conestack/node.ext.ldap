@@ -8,6 +8,7 @@ from zope.component import queryUtility
 import hashlib
 import ldap
 import logging
+import six
 
 
 logger = logging.getLogger('node.ext.ldap')
@@ -46,13 +47,13 @@ def md5digest(key):
 
 
 def decode_utf8(value):
-    if value and not isinstance(value, unicode):
+    if value and not isinstance(value, six.text_type):
         value = value.decode('utf-8')
     return value
 
 
 def encode_utf8(value):
-    if value and isinstance(value, unicode):
+    if value and isinstance(value, six.text_type):
         value = value.encode('utf-8')
     return value
 
@@ -103,7 +104,7 @@ class LDAPConnector(object):
         if self._start_tls:
             # ignore in tests for now. nevertheless provide a test environment
             # for TLS and SSL later
-            self._con.start_tls_s()                        #pragma NO COVERAGE
+            self._con.start_tls_s()
         self._con.simple_bind_s(self._bindDN, self._bindPW)
         return self._con
 

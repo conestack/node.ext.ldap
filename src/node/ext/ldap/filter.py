@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from .base import encode_utf8
+from node.ext.ldap.base import encode_utf8
+import six
 
 
 # all special characters except * are escaped, that means * can be
@@ -134,7 +135,7 @@ def dict_to_filter(criteria, or_search=False, or_keys=None, or_values=None):
             values = [values]
         attrfilter = None
         for value in values:
-            if isinstance(value, unicode):
+            if isinstance(value, six.text_type):
                 value = encode_utf8(value)
             attr = ''.join(map(lambda x: ESCAPE_CHARS.get(x, x), attr))
             if isinstance(value, str):
