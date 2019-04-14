@@ -33,9 +33,9 @@ class TestUGMSambaUsers(NodeTestCase):
         self.assertTrue(password.startswith('{SSHA}'))
         self.assertEqual(
             ugm.users['uid0'].context.attrs['sambaLMPassword'],
-            u'DB6574A2642D294B9A0F5D12D8F612D0'
+            u'db6574a2642d294b9a0f5d12d8f612d0'
         )
         self.assertEqual(
             ugm.users['uid0'].context.attrs['sambaNTPassword'],
-            u'58D9F1588236EE9D4ED739E89FFCA25B'
+            u'58d9f1588236ee9d4ed739e89ffca25b'
         )

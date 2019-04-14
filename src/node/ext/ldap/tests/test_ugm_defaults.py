@@ -235,8 +235,8 @@ class TestUGMDefaults(NodeTestCase):
             (u'gidNumber', u'100'),
             (u'homeDirectory', u'/home/sambauser'),
             (u'objectClass', [u'account', u'posixAccount', u'sambaSamAccount']),
-            (u'sambaLMPassword', u'552902031BEDE9EFAAD3B435B51404EE'),
-            (u'sambaNTPassword', u'878D8014606CDA29677A44EFA1353FC7'),
+            (u'sambaLMPassword', u'552902031bede9efaad3b435b51404ee'),
+            (u'sambaNTPassword', u'878d8014606cda29677a44efa1353fc7'),
             (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-1202'),
             (u'uid', u'sambauser'),
             (u'uidNumber', u'100')

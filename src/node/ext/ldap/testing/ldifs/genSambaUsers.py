@@ -32,8 +32,8 @@ n = int(sys.argv.pop(1))
 print(container_template)
 for x in range(n):
     secret = 'secret%d' % x
-    nt_secret = nthash(secret)
-    lm_secret = lmhash(secret)
+    nt_secret = nthash.hash(secret)
+    lm_secret = lmhash.hash(secret)
     print(user_template % dict(
         uid='uid%d' % x,
         cn='cn%d' % x,
