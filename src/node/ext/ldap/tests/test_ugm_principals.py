@@ -644,7 +644,9 @@ class TestUGMPrincipals(NodeTestCase):
         self.assertEqual(groups.keys(), [u'group1', u'group2'])
         self.assertEqual(ugm.users['Schmidt'].group_ids, ['group1'])
 
-    def test_principal_roles(self):
+    def test_zzz_principal_roles(self):
+        # XXX: add users and groups before deleting them.
+        #      then we can remove ``zzz`` test ordering hack from function name
         props = testing.props
         ucfg = layer['ucfg']
 
@@ -824,118 +826,105 @@ class TestUGMPrincipals(NodeTestCase):
 
         ugm.roles_storage()
 
-"""
-If role not exists, an error is raised.::
+        # If role not exists, an error is raised.
+        err = self.expect_error(
+            ValueError,
+            group.remove_role,
+            'editor'
+        )
+        self.assertEqual(str(err), "Role not exists 'editor'")
 
-    >>> group.remove_role('editor')
-    Traceback (most recent call last):
-      ...
-    ValueError: Role not exists 'editor'
+        # If role is not granted, an error is raised.
+        err = self.expect_error(
+            ValueError,
+            group.remove_role,
+            'viewer'
+        )
+        self.assertEqual(str(err), "Principal does not has role 'viewer'")
 
-If role is not granted, an error is raised.::
+        # Roles return ``Role`` instances on ``__getitem__``
+        role = roles['viewer']
+        self.assertTrue(isinstance(role, Role))
 
-    >>> group.remove_role('viewer')
-    Traceback (most recent call last):
-      ...
-    ValueError: Principal does not has role 'viewer'
+        # Group keys are prefixed with 'group:'
+        self.assertEqual(role.member_ids, [u'Meier', u'group:group1'])
 
-Roles return ``Role`` instances on ``__getitem__``::
+        # ``__getitem__`` of ``Role`` returns ``User`` or ``Group`` instance,
+        # depending on key.
+        self.assertTrue(isinstance(role['Meier'], User))
+        self.assertTrue(isinstance(role['group:group1'], Group))
 
-    >>> role = roles['viewer']
-    >>> role
-    <Role object 'viewer' at ...>
+        # A KeyError is raised when trying to access an inexistent role member.
+        self.expect_error(KeyError, role.__getitem__, 'inexistent')
 
-Group keys are prefixed with 'group:'.::
+        # A KeyError is raised when trying to delete an inexistent role member.
+        self.expect_error(KeyError, role.__delitem__, 'inexistent')
 
-    >>> role.member_ids
-    [u'Meier', u'group:group1']
+        # Delete user and check if roles are removed.
+        self.check_output("""
+        <class 'node.ext.ldap.ugm._api.Ugm'>: None
+          <class 'node.ext.ldap.ugm._api.Users'>: users
+            <class 'node.ext.ldap.ugm._api.User'>: Meier
+            <class 'node.ext.ldap.ugm._api.User'>: M?ller
+            <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+            <class 'node.ext.ldap.ugm._api.User'>: Umhauer
+          <class 'node.ext.ldap.ugm._api.Groups'>: groups
+            <class 'node.ext.ldap.ugm._api.Group'>: group1
+              <class 'node.ext.ldap.ugm._api.User'>: M?ller
+              <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+            <class 'node.ext.ldap.ugm._api.Group'>: group2
+              <class 'node.ext.ldap.ugm._api.User'>: Umhauer
+        """, ugm.treerepr())
 
-``__getitem__`` of ``Role`` returns ``User`` or ``Group`` instance, depending
-on key.::
+        self.check_output("""
+        <class 'node.ext.ldap.ugm._api.Roles'>: roles
+          <class 'node.ext.ldap.ugm._api.Role'>: viewer
+            <class 'node.ext.ldap.ugm._api.User'>: Meier
+            <class 'node.ext.ldap.ugm._api.Group'>: group1
+              <class 'node.ext.ldap.ugm._api.User'>: M?ller
+              <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+        """, roles.treerepr())
 
-    >>> role['Meier']
-    <User object 'Meier' at ...>
+        users = ugm.users
+        del users['Meier']
+        self.check_output("""
+        <class 'node.ext.ldap.ugm._api.Roles'>: roles
+          <class 'node.ext.ldap.ugm._api.Role'>: viewer
+            <class 'node.ext.ldap.ugm._api.Group'>: group1
+              <class 'node.ext.ldap.ugm._api.User'>: M?ller
+              <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+        """, roles.treerepr())
 
-    >>> role['group:group1']
-    <Group object 'group1' at ...>
-
-A KeyError is raised when trying to access an inexistent role member.::
-
-    >>> role['inexistent']
-    Traceback (most recent call last):
-      ...
-    KeyError: u'inexistent'
-
-A KeyError is raised when trying to delete an inexistent role member.::
-
-    >>> del role['inexistent']
-    Traceback (most recent call last):
-      ...
-    KeyError: u'inexistent'
-
-Delete user and check if roles are removed.::
-
-    >>> ugm.printtree()
-    <class 'node.ext.ldap.ugm._api.Ugm'>: None
-      <class 'node.ext.ldap.ugm._api.Users'>: users
-        <class 'node.ext.ldap.ugm._api.User'>: Meier
-        <class 'node.ext.ldap.ugm._api.User'>: M?ller
-        <class 'node.ext.ldap.ugm._api.User'>: Schmidt
-        <class 'node.ext.ldap.ugm._api.User'>: Umhauer
-      <class 'node.ext.ldap.ugm._api.Groups'>: groups
-        <class 'node.ext.ldap.ugm._api.Group'>: group1
+        self.assertEqual(
+            users.storage.keys(),
+            [u'Schmidt', u'Müller', u'Umhauer']
+        )
+        self.assertEqual(
+            users.keys(),
+            [u'Müller', u'Schmidt', u'Umhauer']
+        )
+        self.check_output("""
+        <class 'node.ext.ldap.ugm._api.Users'>: users
           <class 'node.ext.ldap.ugm._api.User'>: M?ller
           <class 'node.ext.ldap.ugm._api.User'>: Schmidt
-        <class 'node.ext.ldap.ugm._api.Group'>: group2
           <class 'node.ext.ldap.ugm._api.User'>: Umhauer
-        <class 'node.ext.ldap.ugm._api.Group'>: group3
+        """, users.treerepr())
 
-    >>> roles.printtree()
-    <class 'node.ext.ldap.ugm._api.Roles'>: roles
-      <class 'node.ext.ldap.ugm._api.Role'>: viewer
-        <class 'node.ext.ldap.ugm._api.User'>: Meier
-        <class 'node.ext.ldap.ugm._api.Group'>: group1
-          <class 'node.ext.ldap.ugm._api.User'>: M?ller
-          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+        # Delete group and check if roles are removed.
+        del ugm.groups['group1']
+        self.check_output("""
+        <class 'node.ext.ldap.ugm._api.Roles'>: roles
+        """, roles.treerepr())
 
-    >>> users = ugm.users
-    >>> del users['Meier']
-    >>> roles.printtree()
-    <class 'node.ext.ldap.ugm._api.Roles'>: roles
-      <class 'node.ext.ldap.ugm._api.Role'>: viewer
-        <class 'node.ext.ldap.ugm._api.Group'>: group1
-          <class 'node.ext.ldap.ugm._api.User'>: M?ller
-          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+        self.check_output("""
+        <class 'node.ext.ldap.ugm._api.Ugm'>: None
+          <class 'node.ext.ldap.ugm._api.Users'>: users
+            <class 'node.ext.ldap.ugm._api.User'>: M?ller
+            <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+            <class 'node.ext.ldap.ugm._api.User'>: Umhauer
+          <class 'node.ext.ldap.ugm._api.Groups'>: groups
+            <class 'node.ext.ldap.ugm._api.Group'>: group2
+              <class 'node.ext.ldap.ugm._api.User'>: Umhauer
+        """, ugm.treerepr())
 
-    >>> users.storage.keys()
-    [u'Schmidt', u'M\xfcller', u'Umhauer']
-
-    >>> users.keys()
-    [u'M\xfcller', u'Schmidt', u'Umhauer']
-
-    >>> users.printtree()
-    <class 'node.ext.ldap.ugm._api.Users'>: users
-      <class 'node.ext.ldap.ugm._api.User'>: M?ller
-      <class 'node.ext.ldap.ugm._api.User'>: Schmidt
-      <class 'node.ext.ldap.ugm._api.User'>: Umhauer
-
-Delete group and check if roles are removed.::
-
-    >>> del ugm.groups['group1']
-    >>> roles.printtree()
-    <class 'node.ext.ldap.ugm._api.Roles'>: roles
-
-    >>> ugm.printtree()
-    <class 'node.ext.ldap.ugm._api.Ugm'>: None
-      <class 'node.ext.ldap.ugm._api.Users'>: users
-        <class 'node.ext.ldap.ugm._api.User'>: M?ller
-        <class 'node.ext.ldap.ugm._api.User'>: Schmidt
-        <class 'node.ext.ldap.ugm._api.User'>: Umhauer
-      <class 'node.ext.ldap.ugm._api.Groups'>: groups
-        <class 'node.ext.ldap.ugm._api.Group'>: group2
-          <class 'node.ext.ldap.ugm._api.User'>: Umhauer
-        <class 'node.ext.ldap.ugm._api.Group'>: group3
-
-    >>> ugm()
-
-"""
+        ugm()
