@@ -1,11 +1,15 @@
 #!/bin/sh
+if [ -x "$(which python)" ]; then
+    rm -r py2
 
-# see https://community.plone.org/t/not-using-bootstrap-py-as-default/620
-for dir in lib include local bin; do
-    if [ -d "$dir" ]; then
-        rm -r "$dir"
-    fi
-done
-virtualenv --clear .
-./bin/pip install --upgrade pip setuptools zc.buildout
-./bin/buildout
+    virtualenv --clear --no-site-packages -p python py2
+    ./py2/bin/pip install --upgrade pip setuptools zc.buildout
+    ./py2/bin/buildout
+fi
+if [ -x "$(which python3)" ]; then
+    rm -r py3
+
+    virtualenv --clear --no-site-packages -p python3 py3
+    ./py3/bin/pip install --upgrade pip setuptools zc.buildout
+    ./py3/bin/buildout
+fi
