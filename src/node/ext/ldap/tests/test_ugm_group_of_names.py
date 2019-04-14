@@ -1,31 +1,28 @@
 from node.ext.ldap import testing
-from node.tests import NodeTestCase
-from node.ext.ldap.ugm import Ugm
-from node.ext.ldap.ugm import Users
-from node.ext.ldap.ugm import User
+from node.ext.ldap.ugm import Group
 from node.ext.ldap.ugm import Groups
+from node.ext.ldap.ugm import Ugm
+from node.ext.ldap.ugm import User
+from node.ext.ldap.ugm import Users
 from node.ext.ldap.ugm._api import PrincipalAliasedAttributes
+from node.tests import NodeTestCase
 import ldap
 
 
 layer = testing.LDIF_groupOfNames
 
 
+def create_ugm():
+    props = layer['props']
+    ucfg = layer['ucfg']
+    gcfg = layer['gcfg']
+    rcfg = None  # XXX: later
+    return Ugm(name='ugm', parent=None, props=props, ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
+
+
 def group_of_names_ugm(fn):
     def wrapper(self):
-        props = layer['props']
-        ucfg = layer['ucfg']
-        gcfg = layer['gcfg']
-        rcfg = None  # XXX: later
-        ugm = Ugm(
-            name='ugm',
-            parent=None,
-            props=props,
-            ucfg=ucfg,
-            gcfg=gcfg,
-            rcfg=rcfg
-        )
-        fn(self, ugm)
+        fn(self, create_ugm())
     return wrapper
 
 
@@ -188,275 +185,228 @@ class TestUGMGroupOfNames(NodeTestCase):
         del users['sepp']
         ugm()
 
-"""
-Groups object::
-
-    >>> groups = ugm.groups
-    >>> groups.keys()
-    [u'group0', u'group1', u'group2']
-
-    >>> group_0 = groups['group0']
-    >>> group_1 = groups['group1']
-    >>> group_2 = groups['group2']
-
-    >>> group_0
-    <Group object 'group0' at ...>
-
-    >>> group_0.__class__
-    <class 'node.ext.ldap.ugm._api.Group'>
-
-    >>> group_0.attrs
-    Aliased <LDAPNodeAttributes object 'cn=group0' at ...>
-
-    >>> group_0.attrs.items()
-    [('member', [u'cn=nobody']), ('rdn', u'group0')]
-
-    >>> group_1.attrs.items()
-    [('member', [u'cn=nobody', u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com']), 
-    ('rdn', u'group1')]
-
-Add a group::
-
-    >>> group = groups.create('group99', id='group99')
-    >>> group
-    <Group object 'group99' at ...>
-
-    >>> ugm()
-    >>> ugm.printtree()
-    <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
-      <class 'node.ext.ldap.ugm._api.Users'>: users
-        <class 'node.ext.ldap.ugm._api.User'>: uid0
-        <class 'node.ext.ldap.ugm._api.User'>: uid1
-        <class 'node.ext.ldap.ugm._api.User'>: uid2
-        <class 'node.ext.ldap.ugm._api.User'>: sepp
-      <class 'node.ext.ldap.ugm._api.Groups'>: groups
-        <class 'node.ext.ldap.ugm._api.Group'>: group0
-        <class 'node.ext.ldap.ugm._api.Group'>: group1
-          <class 'node.ext.ldap.ugm._api.User'>: uid1
-        <class 'node.ext.ldap.ugm._api.Group'>: group2
-          <class 'node.ext.ldap.ugm._api.User'>: uid1
-          <class 'node.ext.ldap.ugm._api.User'>: uid2
-        <class 'node.ext.ldap.ugm._api.Group'>: group99
-
-    >>> ugm.groups['group99']
-    <Group object 'group99' at ...>
-
-A group returns the members ids as keys::
-
-    >>> group_0.member_ids
-    []
-
-    >> group_1.member_ids
-    [u'uid1']
-
-    >> group_2.member_ids
-    [u'uid1', u'uid2']
-
-The member users are fetched via ``__getitem__``::
-
-    >>> group_1['uid1']
-    <User object 'uid1' at ...>
-
-    >>> group_1['uid1'] is user_1
-    True
-
-Querying a group for a non-member results in a KeyError::
-
-    >>> group_0['uid1']
-    Traceback (most recent call last):
-      ...
-    KeyError: u'uid1'
-
-Deleting inexistend member from group fails::
-
-    >>> del group_0['inexistent']
-    Traceback (most recent call last):
-      ...
-    KeyError: u'inexistent'
-
-``__setitem__`` is prohibited::
-
-    >>> group_1['uid0'] = users['uid0']
-    Traceback (most recent call last):
-      ...
-    NotImplementedError: Group does not implement ``__setitem__``
-
-Members are added via ``add``::
-
-    >>> group_1.add('uid0')
-    >>> group_1.keys()
-    [u'uid1', u'uid0']
-
-    >>> group_1.member_ids
-    [u'uid1', u'uid0']
-
-    >>> group_1['uid0']
-    <User object 'uid0' at ...>
-
-    >>> group_1.users
-    [<User object 'uid1' at ...>, <User object 'uid0' at ...>]
-
-    >>> group_1()
-
-Let's take a fresh view on ldap whether this really happened::
-
-    >>> ugm_fresh = Ugm(name='ugm', parent=None, props=props,
-    ...                 ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
-    >>> ugm_fresh.groups['group1'].keys()
-    [u'uid1', u'uid0']
-
-Members are removed via ``delitem``::
-
-    >>> del group_1['uid0']
-    >>> ugm_fresh = Ugm(name='ugm', parent=None, props=props,
-    ...                 ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
-    >>> ugm_fresh.groups['group1'].keys()
-    [u'uid1']
-
-A user knows its groups::
-
-    >>> user_0.groups
-    []
-
-    >>> user_1.groups
-    [<Group object 'group1' at ...>, <Group object 'group2' at ...>]
-
-    >>> user_2.groups
-    [<Group object 'group2' at ...>]
-
-    >>> user_1.group_ids
-    [u'group1', u'group2']
-
-    >>> user_2.group_ids
-    [u'group2']
-
-Recreate UGM object::
-
-    >>> ugm = Ugm(name='ugm', parent=None, props=props,
-    ...           ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
-    >>> users = ugm.users
-    >>> groups = ugm.groups
-
-Test search function::
-
-    >>> users.search(criteria={'login': 'cn0'})
-    [u'uid0']
-
-    >>> groups.search(criteria={'id': 'group2'})
-    [u'group2']
-
-There's an ids property on principals base class::
-
-    >>> users.ids
-    [u'uid0', u'uid1', u'uid2', u'sepp']
-
-    >>> groups.ids
-    [u'group0', u'group1', u'group2', u'group99']
-
-Add now user to some groups and then delete user, check whether user is removed
-from all this groups.::
-
-    >>> ugm = Ugm(name='ugm', parent=None, props=props,
-    ...           ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
-    >>> users = ugm.users
-    >>> groups = ugm.groups
-
-    >>> groups['group0'].add('sepp')
-    >>> groups['group1'].add('sepp')
-    >>> ugm()
-
-    >>> user.groups
-    [<Group object 'group0' at ...>, <Group object 'group1' at ...>]
-
-    >>> user.group_ids
-    [u'group0', u'group1']
-
-    >>> ugm.printtree()
-    <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
-      <class 'node.ext.ldap.ugm._api.Users'>: users
-        <class 'node.ext.ldap.ugm._api.User'>: uid0
-        <class 'node.ext.ldap.ugm._api.User'>: uid1
-        <class 'node.ext.ldap.ugm._api.User'>: uid2
-        <class 'node.ext.ldap.ugm._api.User'>: sepp
-      <class 'node.ext.ldap.ugm._api.Groups'>: groups
-        <class 'node.ext.ldap.ugm._api.Group'>: group0
-          <class 'node.ext.ldap.ugm._api.User'>: sepp
-        <class 'node.ext.ldap.ugm._api.Group'>: group1
-          <class 'node.ext.ldap.ugm._api.User'>: sepp
-          <class 'node.ext.ldap.ugm._api.User'>: uid1
-        <class 'node.ext.ldap.ugm._api.Group'>: group2
-          <class 'node.ext.ldap.ugm._api.User'>: uid1
-          <class 'node.ext.ldap.ugm._api.User'>: uid2
-        <class 'node.ext.ldap.ugm._api.Group'>: group99
-
-    >>> del users['sepp']
-    >>> ugm()
-    >>> ugm.printtree()
-    <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
-      <class 'node.ext.ldap.ugm._api.Users'>: users
-        <class 'node.ext.ldap.ugm._api.User'>: uid0
-        <class 'node.ext.ldap.ugm._api.User'>: uid1
-        <class 'node.ext.ldap.ugm._api.User'>: uid2
-      <class 'node.ext.ldap.ugm._api.Groups'>: groups
-        <class 'node.ext.ldap.ugm._api.Group'>: group0
-        <class 'node.ext.ldap.ugm._api.Group'>: group1
-          <class 'node.ext.ldap.ugm._api.User'>: uid1
-        <class 'node.ext.ldap.ugm._api.Group'>: group2
-          <class 'node.ext.ldap.ugm._api.User'>: uid1
-          <class 'node.ext.ldap.ugm._api.User'>: uid2
-        <class 'node.ext.ldap.ugm._api.Group'>: group99
-
-Delete Group::
-
-    >>> del groups['group99']
-    >>> ugm()
-    >>> ugm.printtree()
-    <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
-      <class 'node.ext.ldap.ugm._api.Users'>: users
-        <class 'node.ext.ldap.ugm._api.User'>: uid0
-        <class 'node.ext.ldap.ugm._api.User'>: uid1
-        <class 'node.ext.ldap.ugm._api.User'>: uid2
-      <class 'node.ext.ldap.ugm._api.Groups'>: groups
-        <class 'node.ext.ldap.ugm._api.Group'>: group0
-        <class 'node.ext.ldap.ugm._api.Group'>: group1
-          <class 'node.ext.ldap.ugm._api.User'>: uid1
-        <class 'node.ext.ldap.ugm._api.Group'>: group2
-          <class 'node.ext.ldap.ugm._api.User'>: uid1
-          <class 'node.ext.ldap.ugm._api.User'>: uid2
-
-MemberOf Support::
-
-    >>> users = ugm.users
-    >>> users.context.search(queryFilter='(memberOf=*)')
-    [u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com', 
-    u'uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com']
-
-    >>> users.context.search(attrlist=['memberOf'])
-    [(u'uid=uid0,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {}),
-    (u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {u'memberOf':
-    [u'cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
-    u'cn=group3,ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com',
-    u'cn=group1,ou=groups,ou=groupOfNames,dc=my-domain,dc=com']}),
-    (u'uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {u'memberOf':
-    [u'cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
-    u'cn=group3,ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com']})]
-
-    >>> ugm.ucfg.memberOfSupport = True
-    >>> ugm.gcfg.memberOfSupport = True
-
-    >>> users['uid1'].groups
-    [<Group object 'group2' at ...>, 
-    <Group object 'group1' at ...>]
-
-    >>> users['uid1'].group_ids
-    [u'group2', u'group1']
-
-    >>> groups['group1'].member_ids
-    [u'uid1']
-
-    >>> groups['group2'].member_ids
-    [u'uid1', u'uid2']
-
-    >>> ugm.ucfg.memberOfSupport = False
-    >>> ugm.gcfg.memberOfSupport = False
-"""
+    @group_of_names_ugm
+    def test_fetch_groups(self, ugm):
+        groups = ugm.groups
+        self.assertEqual(groups.keys(), [u'group0', u'group1', u'group2'])
+
+        group_0 = groups['group0']
+        group_1 = groups['group1']
+        group_2 = groups['group2']
+
+        self.assertEqual(groups.values(), [group_0, group_1, group_2])
+        self.assertTrue(isinstance(group_0, Group))
+        self.assertTrue(isinstance(group_0.attrs, PrincipalAliasedAttributes))
+        self.assertEqual(sorted(group_0.attrs.items()), [
+            ('member', [u'cn=nobody']),
+            ('rdn', u'group0')
+        ])
+        self.assertEqual(sorted(group_1.attrs.items()), [
+            ('member', [u'cn=nobody', u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com']),
+            ('rdn', u'group1')
+        ])
+
+    @group_of_names_ugm
+    def test_add_group(self, ugm):
+        groups = ugm.groups
+        group = groups.create('group99', id='group99')
+        self.assertTrue(isinstance(group, Group))
+
+        ugm()
+        self.check_output("""
+        <class 'node.ext.ldap.ugm._api.Groups'>: groups
+          <class 'node.ext.ldap.ugm._api.Group'>: group0
+          <class 'node.ext.ldap.ugm._api.Group'>: group1
+            <class 'node.ext.ldap.ugm._api.User'>: uid1
+          <class 'node.ext.ldap.ugm._api.Group'>: group2
+            <class 'node.ext.ldap.ugm._api.User'>: uid1
+            <class 'node.ext.ldap.ugm._api.User'>: uid2
+          <class 'node.ext.ldap.ugm._api.Group'>: group99
+        """, groups.treerepr())
+
+        # Delete already created group
+        del groups['group99']
+        ugm()
+        self.check_output("""
+        <class 'node.ext.ldap.ugm._api.Groups'>: groups
+          <class 'node.ext.ldap.ugm._api.Group'>: group0
+          <class 'node.ext.ldap.ugm._api.Group'>: group1
+            <class 'node.ext.ldap.ugm._api.User'>: uid1
+          <class 'node.ext.ldap.ugm._api.Group'>: group2
+            <class 'node.ext.ldap.ugm._api.User'>: uid1
+            <class 'node.ext.ldap.ugm._api.User'>: uid2
+        """, groups.treerepr())
+
+    @group_of_names_ugm
+    def test_group_memebership(self, ugm):
+        users = ugm.users
+        groups = ugm.groups
+
+        # A group returns the members ids as keys
+        group_0 = groups['group0']
+        group_1 = groups['group1']
+        group_2 = groups['group2']
+        self.assertEqual(group_0.member_ids, [])
+        self.assertEqual(group_1.member_ids, ['uid1'])
+        self.assertEqual(group_2.member_ids, ['uid1', 'uid2'])
+
+        # The member users are fetched via ``__getitem__``
+        user_1 = ugm.users['uid1']
+        self.assertTrue(user_1 is group_1['uid1'])
+
+        # Querying a group for a non-member results in a KeyError
+        self.expect_error(KeyError, group_0.__getitem__, 'uid1')
+
+        # Deleting inexistend member from group fails
+        self.expect_error(KeyError, group_0.__delitem__, 'inexistent')
+
+        # ``__setitem__`` is prohibited
+        err = self.expect_error(
+            NotImplementedError,
+            group_1.__setitem__,
+            'uid0',
+            users['uid0']
+        )
+        self.assertEqual(str(err), 'Group does not implement ``__setitem__``')
+
+        # Members are added via ``add``
+        group_1.add('uid0')
+        self.assertEqual(group_1.keys(), [u'uid1', u'uid0'])
+        self.assertEqual(group_1.member_ids, [u'uid1', u'uid0'])
+        self.assertTrue(group_1['uid0'] is ugm.users['uid0'])
+        self.assertEqual(group_1.users, [users['uid1'], users['uid0']])
+
+        group_1()
+
+        # Let's take a fresh view on ldap whether this really happened
+        ugm_fresh = create_ugm()
+        self.assertEqual(ugm_fresh.groups['group1'].keys(), [u'uid1', u'uid0'])
+
+        # Members are removed via ``delitem``
+        del group_1['uid0']
+        ugm_fresh = create_ugm()
+        self.assertEqual(ugm_fresh.groups['group1'].keys(), [u'uid1'])
+
+        user_0 = ugm_fresh.users['uid0']
+        user_1 = ugm_fresh.users['uid1']
+        user_2 = ugm_fresh.users['uid2']
+
+        # A user knows its groups
+        self.assertEqual(user_0.groups, [])
+        self.assertEqual(
+            user_1.groups,
+            [ugm_fresh.groups['group1'], ugm_fresh.groups['group2']]
+        )
+        self.assertEqual(user_2.groups, [ugm_fresh.groups['group2']])
+        self.assertEqual(user_1.group_ids, [u'group1', u'group2'])
+        self.assertEqual(user_2.group_ids, [u'group2'])
+
+    @group_of_names_ugm
+    def test_search(self, ugm):
+        users = ugm.users
+        groups = ugm.groups
+
+        # Test search function
+        self.assertEqual(users.search(criteria={'login': 'cn0'}), [u'uid0'])
+        self.assertEqual(groups.search(criteria={'id': 'group2'}), [u'group2'])
+
+    @group_of_names_ugm
+    def test_ids(self, ugm):
+        users = ugm.users
+        groups = ugm.groups
+
+        # There's an ids property on principals base class
+        self.assertEqual(users.ids, [u'uid0', u'uid1', u'uid2'])
+        self.assertEqual(groups.ids, [u'group0', u'group1', u'group2'])
+
+    @group_of_names_ugm
+    def test_membership_assignment(self, ugm):
+        users = ugm.users
+        groups = ugm.groups
+
+        # Add user to some groups and then delete user, check whether user
+        # is removed from all this groups.
+        user = users.create(
+            'sepp',
+            cn='Sepp',
+            sn='Bla',
+            mail='baz@bar.com'
+        )
+        groups['group0'].add('sepp')
+        groups['group1'].add('sepp')
+        ugm()
+
+        self.assertEqual(user.groups, [groups['group0'], groups['group1']])
+        self.assertEqual(user.group_ids, [u'group0', u'group1'])
+        self.check_output("""
+        <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
+          <class 'node.ext.ldap.ugm._api.Users'>: users
+            <class 'node.ext.ldap.ugm._api.User'>: uid0
+            <class 'node.ext.ldap.ugm._api.User'>: uid1
+            <class 'node.ext.ldap.ugm._api.User'>: uid2
+            <class 'node.ext.ldap.ugm._api.User'>: sepp
+          <class 'node.ext.ldap.ugm._api.Groups'>: groups
+            <class 'node.ext.ldap.ugm._api.Group'>: group0
+              <class 'node.ext.ldap.ugm._api.User'>: sepp
+            <class 'node.ext.ldap.ugm._api.Group'>: group1
+              <class 'node.ext.ldap.ugm._api.User'>: sepp
+              <class 'node.ext.ldap.ugm._api.User'>: uid1
+            <class 'node.ext.ldap.ugm._api.Group'>: group2
+              <class 'node.ext.ldap.ugm._api.User'>: uid1
+              <class 'node.ext.ldap.ugm._api.User'>: uid2
+        """, ugm.treerepr())
+
+        del users['sepp']
+        ugm()
+        self.check_output("""
+        <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
+          <class 'node.ext.ldap.ugm._api.Users'>: users
+            <class 'node.ext.ldap.ugm._api.User'>: uid0
+            <class 'node.ext.ldap.ugm._api.User'>: uid1
+            <class 'node.ext.ldap.ugm._api.User'>: uid2
+          <class 'node.ext.ldap.ugm._api.Groups'>: groups
+            <class 'node.ext.ldap.ugm._api.Group'>: group0
+            <class 'node.ext.ldap.ugm._api.Group'>: group1
+              <class 'node.ext.ldap.ugm._api.User'>: uid1
+            <class 'node.ext.ldap.ugm._api.Group'>: group2
+              <class 'node.ext.ldap.ugm._api.User'>: uid1
+              <class 'node.ext.ldap.ugm._api.User'>: uid2
+        """, ugm.treerepr())
+
+    @group_of_names_ugm
+    def test_member_of_support(self, ugm):
+        users = ugm.users
+        groups = ugm.groups
+
+        self.assertEqual(users.context.search(queryFilter='(memberOf=*)'), [
+            u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com',
+            u'uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com'
+        ])
+
+        self.assertEqual(users.context.search(attrlist=['memberOf']), [
+            (u'uid=uid0,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {}),
+            (u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {
+                u'memberOf': [
+                    u'cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
+                    u'cn=group3,ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com',
+                    u'cn=group1,ou=groups,ou=groupOfNames,dc=my-domain,dc=com'
+                ]
+            }),
+            (u'uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {
+                u'memberOf': [
+                    u'cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
+                    u'cn=group3,ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com'
+                ]
+            })
+        ])
+
+        ugm.ucfg.memberOfSupport = True
+        ugm.gcfg.memberOfSupport = True
+
+        self.assertEqual(users['uid1'].groups, [groups['group2'], groups['group1']])
+        self.assertEqual(users['uid1'].group_ids, [u'group2', u'group1'])
+        self.assertEqual(groups['group1'].member_ids, [u'uid1'])
+        self.assertEqual(groups['group2'].member_ids, [u'uid1', u'uid2'])
+
+        ugm.ucfg.memberOfSupport = False
+        ugm.gcfg.memberOfSupport = False
