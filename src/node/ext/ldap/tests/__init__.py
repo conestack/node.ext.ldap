@@ -15,6 +15,7 @@ def test_suite():
     from node.ext.ldap.tests import test_ugm_group_of_names
     from node.ext.ldap.tests import test_ugm_posix_groups
     from node.ext.ldap.tests import test_ugm_principals
+    from node.ext.ldap.tests import test_ugm_samba_users
 
     suite = unittest.TestSuite()
 
@@ -30,6 +31,7 @@ def test_suite():
     suite.addTest(unittest.findTestCases(test_ugm_group_of_names))
     suite.addTest(unittest.findTestCases(test_ugm_posix_groups))
     suite.addTest(unittest.findTestCases(test_ugm_principals))
+    suite.addTest(unittest.findTestCases(test_ugm_samba_users))
 
     return suite
 
