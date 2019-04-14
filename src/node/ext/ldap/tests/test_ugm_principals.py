@@ -7,6 +7,8 @@ from node.ext.ldap.filter import LDAPFilter
 from node.ext.ldap.ugm import Group
 from node.ext.ldap.ugm import Groups
 from node.ext.ldap.ugm import GroupsConfig
+from node.ext.ldap.ugm import Role
+from node.ext.ldap.ugm import Roles
 from node.ext.ldap.ugm import RolesConfig
 from node.ext.ldap.ugm import Ugm
 from node.ext.ldap.ugm import User
@@ -28,6 +30,17 @@ gcfg = GroupsConfig(
     scope=ONELEVEL,
     queryFilter='(objectClass=groupOfNames)',
     objectClasses=['groupOfNames']
+)
+rcfg = RolesConfig(
+    baseDN='ou=roles,dc=my-domain,dc=com',
+    attrmap={
+        'id': 'cn',
+        'rdn': 'cn'
+    },
+    scope=ONELEVEL,
+    queryFilter='(objectClass=groupOfNames)',
+    objectClasses=['groupOfNames'],
+    defaults={}
 )
 
 
@@ -631,212 +644,187 @@ class TestUGMPrincipals(NodeTestCase):
         self.assertEqual(groups.keys(), [u'group1', u'group2'])
         self.assertEqual(ugm.users['Schmidt'].group_ids, ['group1'])
 
+    def test_principal_roles(self):
+        props = testing.props
+        ucfg = layer['ucfg']
+
+        # Test role mappings. Create container for roles if not exists.
+        node = LDAPNode('dc=my-domain,dc=com', props)
+        node['ou=roles'] = LDAPNode()
+        node['ou=roles'].attrs['objectClass'] = ['organizationalUnit']
+        node()
+
+        # Test accessing unconfigured roles.
+        ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg, rcfg=None)
+        user = ugm.users['Meier']
+        self.assertEqual(ugm.roles(user), [])
+
+        err = self.expect_error(
+            ValueError,
+            ugm.add_role,
+            'viewer',
+            user
+        )
+        self.assertEqual(str(err), 'Role support not configured properly')
+
+        err = self.expect_error(
+            ValueError,
+            ugm.remove_role,
+            'viewer',
+            user
+        )
+        self.assertEqual(str(err), 'Role support not configured properly')
+
+        # Configure role config represented by object class 'groupOfNames'
+        ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
+
+        roles = ugm._roles
+        self.assertTrue(isinstance(roles, Roles))
+
+        # No roles yet.
+        self.check_output("""
+        <class 'node.ext.ldap.ugm._api.Roles'>: roles
+        """, roles.treerepr())
+
+        # Test roles for users.
+        user = ugm.users['Meier']
+        self.assertEqual(ugm.roles(user), [])
+
+        # Add role for user, role gets created if not exists.
+        ugm.add_role('viewer', user)
+        self.assertEqual(roles.keys(), [u'viewer'])
+
+        role = roles[u'viewer']
+        self.assertTrue(isinstance(role, Role))
+        self.assertEqual(role.member_ids, [u'Meier'])
+
+        self.check_output("""
+        <class 'node.ext.ldap.ugm._api.Roles'>: roles
+          <class 'node.ext.ldap.ugm._api.Role'>: viewer
+            <class 'node.ext.ldap.ugm._api.User'>: Meier
+        """, roles.treerepr())
+
+        ugm.roles_storage()
+
+        # Query roles for principal via ugm object.
+        self.assertEqual(ugm.roles(user), ['viewer'])
+
+        # Query roles for principal directly.
+        self.assertEqual(user.roles, ['viewer'])
+
+        # Add some roles for 'Schmidt'.
+        user = ugm.users['Schmidt']
+        user.add_role('viewer')
+        user.add_role('editor')
+
+        self.check_output("""
+        <class 'node.ext.ldap.ugm._api.Roles'>: roles
+          <class 'node.ext.ldap.ugm._api.Role'>: viewer
+            <class 'node.ext.ldap.ugm._api.User'>: Meier
+            <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+          <class 'node.ext.ldap.ugm._api.Role'>: editor
+            <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+        """, roles.treerepr())
+
+        self.assertEqual(user.roles, ['viewer', 'editor'])
+
+        ugm.roles_storage()
+
+        # Remove role 'viewer'.
+        ugm.remove_role('viewer', user)
+        self.check_output("""
+        <class 'node.ext.ldap.ugm._api.Roles'>: roles
+          <class 'node.ext.ldap.ugm._api.Role'>: viewer
+            <class 'node.ext.ldap.ugm._api.User'>: Meier
+          <class 'node.ext.ldap.ugm._api.Role'>: editor
+            <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+        """, roles.treerepr())
+
+        # Remove role 'editor', No other principal left, remove role as well.
+        user.remove_role('editor')
+        self.assertEqual(roles.storage.keys(), ['viewer'])
+        self.assertEqual(roles.context._deleted_children, set([u'cn=editor']))
+        self.assertEqual(roles.keys(), [u'viewer'])
+        self.check_output("""
+        <class 'node.ext.ldap.ugm._api.Roles'>: roles
+          <class 'node.ext.ldap.ugm._api.Role'>: viewer
+            <class 'node.ext.ldap.ugm._api.User'>: Meier
+        """, roles.treerepr())
+
+        ugm.roles_storage()
+
+        # Test roles for group.
+        group = ugm.groups['group1']
+        self.assertEqual(ugm.roles(group), [])
+
+        ugm.add_role('viewer', group)
+        self.check_output("""
+        <class 'node.ext.ldap.ugm._api.Roles'>: roles
+          <class 'node.ext.ldap.ugm._api.Role'>: viewer
+            <class 'node.ext.ldap.ugm._api.User'>: Meier
+            <class 'node.ext.ldap.ugm._api.Group'>: group1
+              <class 'node.ext.ldap.ugm._api.User'>: M?ller
+              <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+        """, roles.treerepr())
+
+        self.assertEqual(ugm.roles(group), ['viewer'])
+        self.assertEqual(group.roles, ['viewer'])
+
+        group = ugm.groups['group2']
+        group.add_role('viewer')
+        group.add_role('editor')
+
+        self.check_output("""
+        <class 'node.ext.ldap.ugm._api.Roles'>: roles
+          <class 'node.ext.ldap.ugm._api.Role'>: viewer
+            <class 'node.ext.ldap.ugm._api.User'>: Meier
+            <class 'node.ext.ldap.ugm._api.Group'>: group1
+              <class 'node.ext.ldap.ugm._api.User'>: M?ller
+              <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+            <class 'node.ext.ldap.ugm._api.Group'>: group2
+              <class 'node.ext.ldap.ugm._api.User'>: Umhauer
+          <class 'node.ext.ldap.ugm._api.Role'>: editor
+            <class 'node.ext.ldap.ugm._api.Group'>: group2
+              <class 'node.ext.ldap.ugm._api.User'>: Umhauer
+        """, roles.treerepr())
+
+        ugm.roles_storage()
+
+        # If role already granted, an error is raised.
+        err = self.expect_error(
+            ValueError,
+            group.add_role,
+            'editor'
+        )
+        self.assertEqual(str(err), "Principal already has role 'editor'")
+        self.assertEqual(group.roles, ['viewer', 'editor'])
+
+        ugm.remove_role('viewer', group)
+        self.check_output("""
+        <class 'node.ext.ldap.ugm._api.Roles'>: roles
+          <class 'node.ext.ldap.ugm._api.Role'>: viewer
+            <class 'node.ext.ldap.ugm._api.User'>: Meier
+            <class 'node.ext.ldap.ugm._api.Group'>: group1
+              <class 'node.ext.ldap.ugm._api.User'>: M?ller
+              <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+          <class 'node.ext.ldap.ugm._api.Role'>: editor
+            <class 'node.ext.ldap.ugm._api.Group'>: group2
+              <class 'node.ext.ldap.ugm._api.User'>: Umhauer
+        """, roles.treerepr())
+
+        group.remove_role('editor')
+        self.check_output("""
+        <class 'node.ext.ldap.ugm._api.Roles'>: roles
+          <class 'node.ext.ldap.ugm._api.Role'>: viewer
+            <class 'node.ext.ldap.ugm._api.User'>: Meier
+            <class 'node.ext.ldap.ugm._api.Group'>: group1
+              <class 'node.ext.ldap.ugm._api.User'>: M?ller
+              <class 'node.ext.ldap.ugm._api.User'>: Schmidt
+        """, roles.treerepr())
+
+        ugm.roles_storage()
+
 """
-Test role mappings. Create container for roles.::
-
-    >>> node = LDAPNode('dc=my-domain,dc=com', props)
-    >>> node['ou=roles'] = LDAPNode()
-    >>> node['ou=roles'].attrs['objectClass'] = ['organizationalUnit']
-    >>> node()
-
-Test accessing unconfigured roles.::
-
-    >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg, rcfg=None)
-    >>> user = ugm.users['Meier']
-    >>> ugm.roles(user)
-    []
-
-    >>> ugm.add_role('viewer', user)
-    Traceback (most recent call last):
-      ...
-    ValueError: Role support not configured properly
-
-    >>> ugm.remove_role('viewer', user)
-    Traceback (most recent call last):
-      ...
-    ValueError: Role support not configured properly
-
-Configure role config represented by object class 'groupOfNames'::
-
-    >>> rcfg = RolesConfig(
-    ...     baseDN='ou=roles,dc=my-domain,dc=com',
-    ...     attrmap={
-    ...         'id': 'cn',
-    ...         'rdn': 'cn',
-    ...     },
-    ...     scope=ONELEVEL,
-    ...     queryFilter='(objectClass=groupOfNames)',
-    ...     objectClasses=['groupOfNames'],
-    ...     defaults={},
-    ... )
-
-    >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
-
-    >>> roles = ugm._roles
-    >>> roles
-    <Roles object 'roles' at ...>
-
-No roles yet.::
-
-    >>> roles.printtree()
-    <class 'node.ext.ldap.ugm._api.Roles'>: roles
-
-Test roles for users.::
-
-    >>> user = ugm.users['Meier']
-    >>> ugm.roles(user)
-    []
-
-Add role for user, role gets created if not exists.::
-
-    >>> ugm.add_role('viewer', user)
-
-    >>> roles.keys()
-    [u'viewer']
-
-    >>> role = roles[u'viewer']
-    >>> role
-    <Role object 'viewer' at ...>
-
-    >>> role.member_ids
-    [u'Meier']
-
-    >>> roles.printtree()
-    <class 'node.ext.ldap.ugm._api.Roles'>: roles
-      <class 'node.ext.ldap.ugm._api.Role'>: viewer
-        <class 'node.ext.ldap.ugm._api.User'>: Meier
-
-    >>> ugm.roles_storage()
-
-Query roles for principal via ugm object.::
-
-    >>> ugm.roles(user)
-    ['viewer']
-
-Query roles for principal directly.::
-
-    >>> user.roles
-    ['viewer']
-
-Add some roles for 'Schmidt'.::
-
-    >>> user = ugm.users['Schmidt']
-    >>> user.add_role('viewer')
-    >>> user.add_role('editor')
-
-    >>> roles.printtree()
-    <class 'node.ext.ldap.ugm._api.Roles'>: roles
-      <class 'node.ext.ldap.ugm._api.Role'>: viewer
-        <class 'node.ext.ldap.ugm._api.User'>: Meier
-        <class 'node.ext.ldap.ugm._api.User'>: Schmidt
-      <class 'node.ext.ldap.ugm._api.Role'>: editor
-        <class 'node.ext.ldap.ugm._api.User'>: Schmidt
-
-    >>> user.roles
-    ['viewer', 'editor']
-
-    >>> ugm.roles_storage()
-
-Remove role 'viewer'.::
-
-    >>> ugm.remove_role('viewer', user)
-    >>> roles.printtree()
-    <class 'node.ext.ldap.ugm._api.Roles'>: roles
-      <class 'node.ext.ldap.ugm._api.Role'>: viewer
-        <class 'node.ext.ldap.ugm._api.User'>: Meier
-      <class 'node.ext.ldap.ugm._api.Role'>: editor
-        <class 'node.ext.ldap.ugm._api.User'>: Schmidt
-
-Remove role 'editor', No other principal left, remove role as well.::
-
-    >>> user.remove_role('editor')
-
-    >>> roles.storage.keys()
-    ['viewer']
-
-    >>> roles.context._deleted_children
-    set([u'cn=editor'])
-
-    >>> roles.keys()
-    [u'viewer']
-
-    >>> roles.printtree()
-    <class 'node.ext.ldap.ugm._api.Roles'>: roles
-      <class 'node.ext.ldap.ugm._api.Role'>: viewer
-        <class 'node.ext.ldap.ugm._api.User'>: Meier
-
-    >>> ugm.roles_storage()
-
-Test roles for group.::
-
-    >>> group = ugm.groups['group1']
-    >>> ugm.roles(group)
-    []
-
-    >>> ugm.add_role('viewer', group)
-    >>> roles.printtree()
-    <class 'node.ext.ldap.ugm._api.Roles'>: roles
-      <class 'node.ext.ldap.ugm._api.Role'>: viewer
-        <class 'node.ext.ldap.ugm._api.User'>: Meier
-        <class 'node.ext.ldap.ugm._api.Group'>: group1
-          <class 'node.ext.ldap.ugm._api.User'>: M?ller
-          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
-
-    >>> ugm.roles(group)
-    ['viewer']
-
-    >>> group.roles
-    ['viewer']
-
-    >>> group = ugm.groups['group3']
-    >>> group.add_role('viewer')
-    >>> group.add_role('editor')
-
-    >>> roles.printtree()
-    <class 'node.ext.ldap.ugm._api.Roles'>: roles
-      <class 'node.ext.ldap.ugm._api.Role'>: viewer
-        <class 'node.ext.ldap.ugm._api.User'>: Meier
-        <class 'node.ext.ldap.ugm._api.Group'>: group1
-          <class 'node.ext.ldap.ugm._api.User'>: M?ller
-          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
-        <class 'node.ext.ldap.ugm._api.Group'>: group3
-      <class 'node.ext.ldap.ugm._api.Role'>: editor
-        <class 'node.ext.ldap.ugm._api.Group'>: group3
-
-    >>> ugm.roles_storage()
-
-If role already granted, an error is raised.::
-
-    >>> group.add_role('editor')
-    Traceback (most recent call last):
-      ...
-    ValueError: Principal already has role 'editor'
-
-    >>> group.roles
-    ['viewer', 'editor']
-
-    >>> ugm.remove_role('viewer', group)
-    >>> roles.printtree()
-    <class 'node.ext.ldap.ugm._api.Roles'>: roles
-      <class 'node.ext.ldap.ugm._api.Role'>: viewer
-        <class 'node.ext.ldap.ugm._api.User'>: Meier
-        <class 'node.ext.ldap.ugm._api.Group'>: group1
-          <class 'node.ext.ldap.ugm._api.User'>: M?ller
-          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
-      <class 'node.ext.ldap.ugm._api.Role'>: editor
-        <class 'node.ext.ldap.ugm._api.Group'>: group3
-
-    >>> group.remove_role('editor')
-    >>> roles.printtree()
-    <class 'node.ext.ldap.ugm._api.Roles'>: roles
-      <class 'node.ext.ldap.ugm._api.Role'>: viewer
-        <class 'node.ext.ldap.ugm._api.User'>: Meier
-        <class 'node.ext.ldap.ugm._api.Group'>: group1
-          <class 'node.ext.ldap.ugm._api.User'>: M?ller
-          <class 'node.ext.ldap.ugm._api.User'>: Schmidt
-
-    >>> ugm.roles_storage()
-
 If role not exists, an error is raised.::
 
     >>> group.remove_role('editor')
