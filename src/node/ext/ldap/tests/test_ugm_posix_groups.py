@@ -163,6 +163,10 @@ class TestUGMPosixGroups(NodeTestCase):
         self.assertEqual(users.authenticate('uid0', 'secret0'), u'uid0')
         self.assertFalse(users['uid0'].expired)
 
+        # Invalid expiration field data
+        users.expiresAttr = 'uid'
+        self.assertFalse(users.authenticate('uid0', 'secret0'))
+
         # XXX: figure out shadowInactive -> PAM and samba seem to ignore -> configuration?
         # users['uid0'].context.attrs['shadowInactive'] = u'99999'
 
@@ -196,6 +200,10 @@ class TestUGMPosixGroups(NodeTestCase):
 
         ugm.users.passwd('uid0', 'secret0', 'bar')
         self.assertEqual(ugm.users.authenticate('uid0', 'bar'), 'uid0')
+
+        ugm.users.expiresAttr = 'shadowExpire'
+        ugm.users.passwd('uid0', 'bar', 'secret0')
+        self.assertEqual(ugm.users.authenticate('uid0', 'secret0'), 'uid0')
 
     @posix_groups_ugm
     def test_add_user(self, ugm):

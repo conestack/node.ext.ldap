@@ -17,6 +17,7 @@ from node.behaviors import OdictStorage
 from node.ext.ldap import BASE
 from node.ext.ldap import LDAPSession
 from node.ext.ldap import ONELEVEL
+from node.ext.ldap.base import ensure_text
 from node.ext.ldap.events import LDAPNodeAddedEvent
 from node.ext.ldap.events import LDAPNodeCreatedEvent
 from node.ext.ldap.events import LDAPNodeDetachedEvent
@@ -83,7 +84,7 @@ class LDAPAttributesBehavior(Behavior):
             attrlist=attrlist
         )
         # result length must be 1
-        if len(entry) != 1:
+        if len(entry) != 1:  # pragma: no cover
             raise RuntimeError(
                 "Fatal. Expected entry does not exist "
                 "or more than one entry found"
@@ -113,7 +114,7 @@ class LDAPAttributesBehavior(Behavior):
     def __setitem__(_next, self, key, val):
         if not self.is_binary(key):
             val = decode(val)
-        key = decode(key)
+        key = ensure_text(key)
         _next(self, key, val)
         self._set_attrs_modified()
 
@@ -206,8 +207,7 @@ class LDAPStorage(OdictStorage):
     @finalize
     def __getitem__(self, key):
         # nodes are created for keys, if they do not already exist in memory
-        if isinstance(key, bytes):
-            key = decode(key)
+        key = ensure_text(key)
         try:
             return self.storage[key]
         except KeyError:
@@ -230,8 +230,7 @@ class LDAPStorage(OdictStorage):
 
     @finalize
     def __setitem__(self, key, val):
-        if isinstance(key, bytes):
-            key = decode(key)
+        key = ensure_text(key)
         if not isinstance(val, LDAPNode):
             # create one from whatever we got
             # XXX: raise KeyError instead of trying to create node
@@ -270,8 +269,7 @@ class LDAPStorage(OdictStorage):
     @finalize
     def __delitem__(self, key):
         # do not delete immediately. Just mark LDAPNode to be deleted.
-        if isinstance(key, bytes):
-            key = decode(key)
+        key = ensure_text(key)
         # value not persistent yet, remove from storage and add list
         if key in self._added_children:
             del self.storage[key]
@@ -304,7 +302,7 @@ class LDAPStorage(OdictStorage):
             if isinstance(res, tuple):
                 res, cookie = res
             for dn, _ in res:
-                key = decode(explode_dn(dn)[0])
+                key = ensure_text(explode_dn(dn)[0])
                 # do not yield if node is supposed to be deleted
                 if key not in self._deleted_children:
                     yield key
@@ -443,7 +441,7 @@ class LDAPStorage(OdictStorage):
                 attrlist=['']
             )
             # this probably never happens
-            if len(res) != 1:
+            if len(res) != 1:  # pragma: no cover
                 raise RuntimeError()
             return True
         except NO_SUCH_OBJECT:

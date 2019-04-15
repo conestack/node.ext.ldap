@@ -111,6 +111,9 @@ class TestUGMPrincipals(NodeTestCase):
 
         # And attributes
         self.assertTrue(isinstance(mueller.attrs, PrincipalAliasedAttributes))
+        self.check_output("""
+        Aliased <LDAPNodeAttributes object 'cn=user2' at ...>
+        """, repr(mueller.attrs))
         context_attrs = sorted(mueller.attrs.context.items())
         self.assertEqual(context_attrs[:-1], [
             (u'cn', u'user2'),
@@ -307,6 +310,9 @@ class TestUGMPrincipals(NodeTestCase):
 
         # By default, search function is paginated. To control the LDAP search
         # behavior in more detail, ``raw_search`` can be used
+        results = users.raw_search()
+        self.assertEqual(results, [u'Meier', u'Müller', u'Schmidt', u'Umhauer'])
+
         results, cookie = users.raw_search(page_size=3, cookie='')
         self.assertEqual(results, [u'Meier', u'Müller', u'Schmidt'])
 

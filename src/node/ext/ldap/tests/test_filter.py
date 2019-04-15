@@ -74,6 +74,10 @@ class TestFilter(NodeTestCase):
         )
 
         self.assertTrue('objectClass' in filter)
+        self.assertEqual(
+            repr(filter),
+            "LDAPFilter('(|(objectClass=personä)(objectClass=someä))')"
+        )
 
     def test_LDAPDictFilter(self):
         # LDAPDictFilter inherits from LDAPFilter and provides converting dict

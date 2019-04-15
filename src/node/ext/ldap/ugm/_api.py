@@ -483,7 +483,7 @@ class LDAPPrincipals(OdictStorage):
             res = self.context.search(criteria=criteria, attrlist=attrlist)
             if not res:
                 raise KeyError(key)
-            if len(res) > 1:
+            if len(res) > 1:  # pragma: no cover
                 msg = u'More than one principal with id "{0}" found.'
                 logger.warning(msg.format(key))
             prdn = res[0][1]['rdn']
@@ -574,8 +574,6 @@ class LDAPPrincipals(OdictStorage):
 
     @default
     def _unalias_list(self, lst):
-        if lst is None:
-            return None
         unalias = self.principal_attraliaser.unalias
         return [unalias(x) for x in lst]
 
@@ -606,7 +604,7 @@ class LDAPPrincipals(OdictStorage):
                 page_size=page_size,
                 cookie=cookie
             )
-        except ldap.NO_SUCH_OBJECT:
+        except ldap.NO_SUCH_OBJECT:  # pragma: no cover
             return []
         if type(results) is tuple:
             results, cookie = results
@@ -725,7 +723,7 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
         res = self.context.search(criteria=criteria, attrlist=attrlist)
         if not res:
             return ensure_text(login)
-        if len(res) > 1:
+        if len(res) > 1:  # pragma: no cover
             msg = u'More than one principal with login "{0}" found.'
             logger.warning(msg.format(login))
         return ensure_text(res[0][1][self._key_attr][0])
@@ -743,11 +741,11 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
             attrlist.append(self.expiresAttr)
         try:
             res = self.context.search(criteria=criteria, attrlist=attrlist)
-        except ldap.NO_SUCH_OBJECT:
+        except ldap.NO_SUCH_OBJECT:  # pragma: no cover
             return False
         if not res:
             return False
-        if len(res) > 1:
+        if len(res) > 1:  # pragma: no cover
             msg = u'More than one principal with login "{0}" found.'
             logger.warning(msg.format(user_id))
         if self.expiresAttr:
@@ -781,7 +779,7 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
         res = self.context.search(criteria=criteria, attrlist=attrlist)
         if not res:
             raise KeyError(id)
-        if len(res) > 1:
+        if len(res) > 1:  # pragma: no cover
             msg = u'More than one principal with login "{0}" found.'
             logger.warning(msg.format(user_id))
         user_dn = res[0][1]['dn']

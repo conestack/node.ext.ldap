@@ -51,11 +51,12 @@ class TestNode(NodeTestCase):
         )
         self.assertEqual(str(err), 'Wrong initialization.')
 
-        root = LDAPNode('dc=my-domain,dc=com', props)
+        # DN gets automatically converted to text if necessary
+        root = LDAPNode(b'dc=my-domain,dc=com', props)
         self.assertEqual(repr(root), '<dc=my-domain,dc=com - False>')
 
         # The non-unicode name got decoded
-        self.assertEqual(root.name, 'dc=my-domain,dc=com')
+        self.assertEqual(root.name, u'dc=my-domain,dc=com')
         self.assertEqual(root.rdn_attr, 'dc')
 
         # Check exists

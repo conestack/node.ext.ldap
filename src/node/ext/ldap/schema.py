@@ -22,7 +22,7 @@ class LDAPSchemaInfo(object):
             'cn=subschema',
             attrlist=['*', '+']
         )
-        if len(res) != 1:
+        if len(res) != 1:  # pragma: no cover
             raise ValueError('subschema not found')
         self._subschema = ldap.schema.SubSchema(ldap.cidict.cidict(res[0][1]))
         return self._subschema

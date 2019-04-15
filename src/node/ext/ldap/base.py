@@ -59,7 +59,7 @@ def ensure_bytes(value):
 
 
 def ensure_bytes_py2(value):
-    if six.PY2 and value and isinstance(value, six.text_type):
+    if six.PY2 and value and isinstance(value, six.text_type):  # pragma: no cover
         value = value.encode('utf-8')
     return value
 
@@ -94,9 +94,9 @@ class LDAPConnector(object):
     def bind(self):
         """Bind to Server and return the Connection Object.
         """
-        if self._ignore_cert:
+        if self._ignore_cert:  # pragma: no cover
             ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
-        elif self._tls_cacert_file:
+        elif self._tls_cacert_file:  # pragma: no cover
             ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, self._tls_cacert_file)
         self._con = ldap.ldapobject.ReconnectLDAPObject(
             self._uri,
@@ -109,7 +109,7 @@ class LDAPConnector(object):
         # Directory More info: https://www.python-ldap.org/faq.html#usage
         self._con.set_option(ldap.OPT_REFERRALS, 0)
         self._con.protocol_version = self.protocol
-        if self._start_tls:
+        if self._start_tls:  # pragma: no cover
             # ignore in tests for now. nevertheless provide a test environment
             # for TLS and SSL later
             self._con.start_tls_s()
@@ -155,7 +155,7 @@ class LDAPCommunicator(object):
                         repr(cacheprovider)
                     )
                 )
-            else:
+            else:  # pragma: no cover
                 logger.debug(
                     u"LDAP Caching activated for instance '{0:s}'.".format(
                         repr(self._cache),
@@ -294,5 +294,5 @@ def main():
     return res
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()
