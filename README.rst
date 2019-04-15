@@ -1131,7 +1131,7 @@ Dependencies
 
 - python-ldap
 
-- smbpasswd
+- passlib
 
 - argparse
 

@@ -4,6 +4,9 @@ History
 1.0b9 (unreleased)
 ------------------
 
+- Remove ``smbpasswd`` dependency. Use ``passlib`` instead.
+  [rnix]
+
 - Use ``bytes_mode=False`` when using ``python-ldap``. This is the default
   behavior in python 3 and handles everything as unicode/text except
   entry attribute values.
