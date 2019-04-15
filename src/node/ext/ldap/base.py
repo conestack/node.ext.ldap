@@ -66,6 +66,12 @@ def ensure_bytes(value):
 encode_utf8 = ensure_bytes
 
 
+def ensure_bytes_py2(value):
+    if six.PY2 and value and isinstance(value, six.text_type):
+        value = value.encode('utf-8')
+    return value
+
+
 class LDAPConnector(object):
     """Object is responsible for the LDAP connection.
 

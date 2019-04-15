@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from node.ext.ldap.base import encode_utf8
+from node.ext.ldap.base import ensure_bytes_py2
 import six
 
 
@@ -15,15 +15,17 @@ ESCAPE_CHARS = {
     '\x00': '\\00',
 }
 
+string_type = basestring if six.PY2 else str
+
 
 class LDAPFilter(object):
 
     def __init__(self, queryFilter=None):
         if queryFilter is not None \
-                and not isinstance(queryFilter, basestring) \
+                and not isinstance(queryFilter, string_type) \
                 and not isinstance(queryFilter, LDAPFilter):
             raise TypeError('Query filter must be LDAPFilter or string')
-        queryFilter = encode_utf8(queryFilter)
+        queryFilter = ensure_bytes_py2(queryFilter)
         self._filter = queryFilter
         if isinstance(queryFilter, LDAPFilter):
             self._filter = str(queryFilter)
@@ -34,11 +36,11 @@ class LDAPFilter(object):
         res = ''
         if isinstance(other, LDAPFilter):
             other = str(other)
-        elif not isinstance(other, basestring):
-            raise TypeError(u"unsupported operand type")
+        elif not isinstance(other, string_type):
+            raise TypeError('unsupported operand type')
         us = str(self)
         if us and other:
-            res = '(&%s%s)' % (us, other)
+            res = '(&{}{})'.format(us, other)
         elif us:
             res = us
         elif other:
@@ -51,11 +53,11 @@ class LDAPFilter(object):
         res = ''
         if isinstance(other, LDAPFilter):
             other = str(other)
-        elif not isinstance(other, basestring):
-            raise TypeError(u"unsupported operand type")
+        elif not isinstance(other, string_type):
+            raise TypeError('unsupported operand type')
         us = str(self)
         if us and other:
-            res = '(|%s%s)' % (us, other)
+            res = '(|{}{})'.format(us, other)
         return LDAPFilter(res)
 
     def __contains__(self, attr):
@@ -65,7 +67,7 @@ class LDAPFilter(object):
         return self._filter and self._filter or ''
 
     def __repr__(self):
-        return "LDAPFilter('%s')" % (self._filter,)
+        return "LDAPFilter('{}')".format(self._filter)
 
 
 class LDAPDictFilter(LDAPFilter):
@@ -80,13 +82,19 @@ class LDAPDictFilter(LDAPFilter):
     def __str__(self):
         if not self.criteria:
             return ''
-        return str(dict_to_filter(self.criteria,
-                                  or_search=self.or_search,
-                                  or_keys=self.or_keys,
-                                  or_values=self.or_values))
+        return str(dict_to_filter(
+            self.criteria,
+            or_search=self.or_search,
+            or_keys=self.or_keys,
+            or_values=self.or_values
+        ))
 
     def __repr__(self):
-        return "LDAPDictFilter(criteria=%r)" % (self.criteria,)
+        cr = [
+            "'{}': '{}'".format(ensure_bytes_py2(k), ensure_bytes_py2(v))
+            for k, v in sorted(self.criteria.items())
+        ]
+        return 'LDAPDictFilter(criteria={{{}}})'.format(', '.join(cr))
 
 
 class LDAPRelationFilter(LDAPFilter):
@@ -109,9 +117,7 @@ class LDAPRelationFilter(LDAPFilter):
         existing = [x for x in self.gattrs]
         for k, vals in parsedRelation.items():
             for v in vals:
-                if (str(v) == '' or
-                    str(k) == '' or
-                    str(k) not in existing):
+                if (str(v) == '' or str(k) == '' or str(k) not in existing):
                     continue
                 dictionary[str(v)] = self.gattrs[str(k)]
         self.dictionary = dictionary
@@ -120,7 +126,7 @@ class LDAPRelationFilter(LDAPFilter):
         return ''
 
     def __repr__(self):
-        return "LDAPRelationFilter('%s')" % (str(self),)
+        return "LDAPRelationFilter('{}')".format(str(self))
 
 
 def dict_to_filter(criteria, or_search=False, or_keys=None, or_values=None):
@@ -129,18 +135,17 @@ def dict_to_filter(criteria, or_search=False, or_keys=None, or_values=None):
     or_keys = (or_keys is None) and or_search or or_keys
     or_values = (or_values is None) and or_search or or_values
     _filter = None
-    for attr, values in criteria.items():
-        attr = encode_utf8(attr)
+    for attr, values in sorted(criteria.items()):
+        attr = ensure_bytes_py2(attr)
         if not isinstance(values, list):
             values = [values]
         attrfilter = None
         for value in values:
-            if isinstance(value, six.text_type):
-                value = encode_utf8(value)
-            attr = ''.join(map(lambda x: ESCAPE_CHARS.get(x, x), attr))
+            value = ensure_bytes_py2(value)
+            attr = ''.join([ESCAPE_CHARS.get(x, x) for x in attr])
             if isinstance(value, str):
-                value = ''.join(map(lambda x: ESCAPE_CHARS.get(x, x), value))
-            valuefilter = LDAPFilter('(%s=%s)' % (attr, value))
+                value = ''.join([ESCAPE_CHARS.get(x, x) for x in value])
+            valuefilter = LDAPFilter('({}={})'.format(attr, value))
             if attrfilter is None:
                 attrfilter = valuefilter
                 continue
