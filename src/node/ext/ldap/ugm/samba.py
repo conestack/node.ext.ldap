@@ -40,9 +40,9 @@ sambaGroupMapping
 - description -------------> no default callback available
 - sambaSIDList ------------> no default callback available
 """
+from node.ext.ldap.ugm import posix
 from passlib.hash import lmhash
 from passlib.hash import nthash
-import posix
 import time
 
 

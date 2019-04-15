@@ -10,6 +10,7 @@ from node.ext.ldap.ugm import Users
 from node.ext.ldap.ugm._api import ACCOUNT_EXPIRED
 from node.ext.ldap.ugm._api import PrincipalAliasedAttributes
 from node.tests import NodeTestCase
+from odict import odict
 import ldap
 
 
@@ -79,13 +80,13 @@ class TestUGMPosixGroups(NodeTestCase):
         self.assertEqual(user_0.attrs['login'], 'cn0')
 
         # XXX: LDAPNodeAttributes.items does not return consistent results if
-        #      attrmap points to same attribute twice ('login' missing here)
+        #      attrmap points to same attribute multiple times
         self.assertEqual(sorted(user_0.attrs.items()), [
-            ('cn', u'cn0'),
             ('gidNumber', u'0'),
             ('homeDirectory', u'/home/uid0'),
+            ('login', u'cn0'),
+            ('rdn', u'uid0'),
             ('sn', u'sn0'),
-            ('uid', u'uid0'),
             ('uidNumber', u'0')
         ])
 
@@ -180,7 +181,7 @@ class TestUGMPosixGroups(NodeTestCase):
             'foo',
             'bar'
         )
-        self.assertEqual(err.message, {
+        self.assertEqual(err.args[0], {
             'info': 'unwilling to verify old password',
             'desc': 'Server is unwilling to perform'
         })
@@ -508,10 +509,10 @@ class TestUGMPosixGroups(NodeTestCase):
         gcfg = layer['gcfg']
         rcfg = RolesConfig(
             baseDN='ou=roles,dc=my-domain,dc=com',
-            attrmap={
-                'id': 'cn',
-                'rdn': 'cn'
-            },
+            attrmap=odict((
+                ('rdn', 'cn'),
+                ('id', 'cn')
+            )),
             scope=SUBTREE,
             queryFilter='(objectClass=posixGroup)',
             objectClasses=['posixGroup'],
@@ -530,7 +531,7 @@ class TestUGMPosixGroups(NodeTestCase):
         user = ugm.users['uid2']
         user.add_role('viewer')
         user.add_role('editor')
-        self.assertEqual(user.roles, ['editor', 'viewer'])
+        self.assertEqual(sorted(user.roles), ['editor', 'viewer'])
 
         ugm.roles_storage()
         ugm.remove_role('viewer', user)

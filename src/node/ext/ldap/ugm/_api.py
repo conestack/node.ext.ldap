@@ -11,7 +11,7 @@ from node.behaviors import OdictStorage
 from node.behaviors import Storage
 from node.behaviors.alias import DictAliaser
 from node.ext.ldap._node import LDAPNode
-from node.ext.ldap.base import decode_utf8
+from node.ext.ldap.base import ensure_text
 from node.ext.ldap.interfaces import ILDAPGroupsConfig as IGroupsConfig
 from node.ext.ldap.interfaces import ILDAPUsersConfig as IUsersConfig
 from node.ext.ldap.scope import BASE
@@ -53,6 +53,8 @@ class AccountExpired(object):
 
     def __nonzero__(self):
         return False
+
+    __bool__ = __nonzero__
 
     def __repr__(self):
         return 'ACCOUNT_EXPIRED'
@@ -145,8 +147,10 @@ class AliasedPrincipal(Behavior):
 
     @default
     def principal_attributes_factory(self, name=None, parent=None):
-        aliased_attrs = PrincipalAliasedAttributes(self.context.attrs,
-                                                   self.attraliaser)
+        aliased_attrs = PrincipalAliasedAttributes(
+            self.context.attrs,
+            self.attraliaser
+        )
         return aliased_attrs
 
     attributes_factory = finalize(principal_attributes_factory)
@@ -187,7 +191,7 @@ class LDAPPrincipal(AliasedPrincipal):
         """
         entry = self.context.ldap_session.search(
             scope=BASE,
-            baseDN=self.context.DN.encode('utf-8'),
+            baseDN=self.context.DN,
             force_reload=self.context._reload,
             attrlist=['memberOf'])
         return entry[0][1].get('memberOf', list())
@@ -262,7 +266,7 @@ class LDAPGroupMapping(Behavior):
 
     @override
     def __getitem__(self, key):
-        key = decode_utf8(key)
+        key = ensure_text(key)
         if key not in self:
             raise KeyError(key)
         return self.related_principals(key)[key]
@@ -270,7 +274,7 @@ class LDAPGroupMapping(Behavior):
     @override
     @locktree
     def __delitem__(self, key):
-        key = decode_utf8(key)
+        key = ensure_text(key)
         if key not in self:
             raise KeyError(key)
         if self._member_format == FORMAT_DN:
@@ -291,7 +295,7 @@ class LDAPGroupMapping(Behavior):
 
     @override
     def __contains__(self, key):
-        key = decode_utf8(key)
+        key = ensure_text(key)
         for uid in self:
             if uid == key:
                 return True
@@ -300,7 +304,7 @@ class LDAPGroupMapping(Behavior):
     @default
     @locktree
     def add(self, key):
-        key = decode_utf8(key)
+        key = ensure_text(key)
         if key not in self.member_ids:
             val = self.translate_key(key)
             # self.context.attrs[self._member_attribute].append won't work here
@@ -448,7 +452,7 @@ class LDAPPrincipals(OdictStorage):
         #     raise KeyError(dn)
         try:
             search = self.context.ldap_session.search
-            res = search(baseDN=dn.encode('utf-8'))[0]
+            res = search(baseDN=dn)[0]
             return res[1][self._key_attr][0].decode('utf-8')
         except ldap.NO_SUCH_OBJECT:
             raise KeyError(dn)
@@ -469,7 +473,7 @@ class LDAPPrincipals(OdictStorage):
     @default
     @locktree
     def __getitem__(self, key):
-        key = decode_utf8(key)
+        key = ensure_text(key)
         try:
             return self.storage[key]
         except KeyError:
@@ -506,7 +510,7 @@ class LDAPPrincipals(OdictStorage):
             prdn = principal[1]['rdn']
             if prdn in self.context._deleted_children:
                 continue
-            yield principal[1][self._key_attr][0]
+            yield ensure_text(principal[1][self._key_attr][0])
         for principal in self.context._added_children:
             yield self.context[principal].attrs[self._key_attr]
 
@@ -561,8 +565,8 @@ class LDAPPrincipals(OdictStorage):
     @default
     def _alias_dict(self, dct):
         ret = dict()
-        for key, val in self.principal_attraliaser.iteritems():
-            for k, v in dct.iteritems():
+        for key, val in six.iteritems(self.principal_attraliaser):
+            for k, v in six.iteritems(dct):
                 if val == k:
                     ret[key] = v
         return ret
@@ -580,7 +584,7 @@ class LDAPPrincipals(OdictStorage):
             return None
         unalias = self.principal_attraliaser.unalias
         unaliased_dct = dict(
-            [(unalias(key), val) for key, val in dct.iteritems()])
+            [(unalias(key), val) for key, val in six.iteritems(dct)])
         return unaliased_dct
 
     @default
@@ -610,8 +614,7 @@ class LDAPPrincipals(OdictStorage):
             for _, att in results:
                 principal_id = att[self._key_attr][0]
                 aliased = self._alias_dict(att)
-                keys = aliased.keys()
-                for key in keys:
+                for key in list(aliased.keys()):
                     if key not in attrlist:
                         del aliased[key]
                 _results.append((principal_id, aliased))
@@ -732,7 +735,7 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
         if id is not None:
             # bbb. deprecated usage
             login = id
-        user_id = self.id_for_login(decode_utf8(login))
+        user_id = self.id_for_login(ensure_text(login))
         criteria = {self._key_attr: user_id}
         attrlist = ['dn']
         if self.expiresAttr:
@@ -761,13 +764,13 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
                 return ACCOUNT_EXPIRED
         user_dn = res[0][1]['dn']
         session = self.context.ldap_session
-        authenticated = session.authenticate(user_dn.encode('utf-8'), pw)
+        authenticated = session.authenticate(user_dn, pw)
         return authenticated and user_id or False
 
     @default
     @debug
     def passwd(self, id, oldpw, newpw):
-        user_id = self.id_for_login(decode_utf8(id))
+        user_id = self.id_for_login(ensure_text(id))
         criteria = {self._key_attr: user_id}
         attrlist = ['dn']
         if self.expiresAttr:
@@ -862,7 +865,7 @@ class LDAPGroups(LDAPGroupsMapping):
     @override
     @locktree
     def __delitem__(self, key):
-        key = decode_utf8(key)
+        key = ensure_text(key)
         group = self[key]
         parent = self.parent
         if parent and parent.rcfg is not None:
@@ -945,7 +948,7 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
     @override
     @locktree
     def __getitem__(self, key):
-        key = decode_utf8(key)
+        key = ensure_text(key)
         if key not in self:
             raise KeyError(key)
         principals = self.related_principals(key)
@@ -956,7 +959,7 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
     @override
     @locktree
     def __delitem__(self, key):
-        key = decode_utf8(key)
+        key = ensure_text(key)
         if key not in self:
             raise KeyError(key)
         principals = self.related_principals(key)

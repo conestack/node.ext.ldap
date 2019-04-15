@@ -74,9 +74,9 @@ class TestUGMGroupOfNames(NodeTestCase):
         self.assertEqual(user_0.attrs['login'], 'cn0')
 
         # XXX: LDAPNodeAttributes.items does not return consistent results if
-        #      attrmap points to same attribute twice ('login' missing here)
+        #      attrmap points to same attribute multiple times
         self.assertEqual(sorted(user_0.attrs.items()), [
-            ('cn', u'cn0'),
+            ('login', u'cn0'),
             ('mail', u'uid0@groupOfNames.com'),
             ('rdn', u'uid0'),
             ('sn', u'sn0')
@@ -122,7 +122,7 @@ class TestUGMGroupOfNames(NodeTestCase):
             'foo',
             'bar'
         )
-        self.assertEqual(err.message, {
+        self.assertEqual(err.args[0], {
             'info': 'unwilling to verify old password',
             'desc': 'Server is unwilling to perform'
         })

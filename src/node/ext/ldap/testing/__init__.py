@@ -284,27 +284,27 @@ props = LDAPProps(
 # base users config
 ucfg = UsersConfig(
     baseDN='dc=my-domain,dc=com',
-    attrmap={
-        'id': 'sn',
-        'login': 'cn',
-        'telephoneNumber': 'telephoneNumber',
-        'rdn': 'ou',
-        'sn': 'sn',
-    },
+    attrmap=odict((
+        ('rdn', 'ou'),
+        ('id', 'sn'),
+        ('login', 'cn'),
+        ('telephoneNumber', 'telephoneNumber'),
+        ('sn', 'sn')
+    )),
     scope=SUBTREE,
     queryFilter='(&(objectClass=person)(!(objectClass=inetOrgPerson)))',
     objectClasses=['person'])
 
 
 # inetOrgPerson r/w attrs
-inetOrgPerson_attrmap = {
-    'id': 'uid',
-    'login': 'uid',
-    'cn': 'cn',
-    'rdn': 'uid',
-    'sn': 'sn',
-    'mail': 'mail',
-},
+inetOrgPerson_attrmap = odict((
+    ('rdn', 'uid'),
+    ('id', 'uid'),
+    ('login', 'uid'),
+    ('cn', 'cn'),
+    ('sn', 'sn'),
+    ('mail', 'mail')
+)),
 
 
 # users config for 300-users data.
@@ -424,21 +424,21 @@ ldif_layer['users2000'] = LDIF_users2000
 
 # Users and groups
 
-groupOfNamesUcfgAttrmap = {
-    'id': 'uid',
-    'login': 'cn',
-    'rdn': 'uid',
-    'cn': 'cn',
-    'sn': 'sn',
-    'mail': 'mail',
-}
+groupOfNamesUcfgAttrmap = odict((
+    ('rdn', 'uid'),
+    ('id', 'uid'),
+    ('login', 'cn'),
+    ('cn', 'cn'),
+    ('sn', 'sn'),
+    ('mail', 'mail')
+))
 
 
-groupOfNamesGcfgAttrmap = {
-    'id': 'cn',
-    'rdn': 'cn',
-    'businessCategory': 'businessCategory',
-}
+groupOfNamesGcfgAttrmap = odict((
+    ('rdn', 'cn'),
+    ('id', 'cn'),
+    ('businessCategory', 'businessCategory')
+))
 
 
 LDIF_groupOfNames = Ldif(
@@ -575,23 +575,23 @@ ldif_layer['groupOfNames_1000_1000'] = LDIF_groupOfNames_1000_1000
 
 # Users and groups (posix)
 
-posixGroupsUcfgAttrmap = {
-    'id': 'uid',
-    'login': 'cn',
-    'rdn': 'uid',
-    'cn': 'cn',
-    'sn': 'sn',
-    'uidNumber': 'uidNumber',
-    'gidNumber': 'gidNumber',
-    'homeDirectory': 'homeDirectory',
-}
+posixGroupsUcfgAttrmap = odict((
+    ('rdn', 'uid'),
+    ('id', 'uid'),
+    ('login', 'cn'),
+    ('cn', 'cn'),
+    ('sn', 'sn'),
+    ('uidNumber', 'uidNumber'),
+    ('gidNumber', 'gidNumber'),
+    ('homeDirectory', 'homeDirectory')
+))
 
 
-posixGroupsGcfgAttrmap = {
-    'id': 'cn',
-    'rdn': 'cn',
-    'gidNumber': 'gidNumber',
-}
+posixGroupsGcfgAttrmap = odict((
+    ('rdn', 'cn'),
+    ('id', 'cn'),
+    ('gidNumber', 'gidNumber')
+))
 
 
 LDIF_posixGroups = Ldif(
@@ -640,14 +640,14 @@ ldif_layer['posixGroups_10_10'] = LDIF_posixGroups_10_10
 
 # users (samba)
 
-sambaUsersUcfgAttrmap = {
-    'id': 'uid',
-    'login': 'uid',
-    'rdn': 'uid',
-    'sambaSID': 'sambaSID',
-    'sambaNTPassword': 'sambaNTPassword',
-    'sambaLMPassword': 'sambaLMPassword',
-}
+sambaUsersUcfgAttrmap = odict((
+    ('rdn', 'uid'),
+    ('id', 'uid'),
+    ('login', 'uid'),
+    ('sambaSID', 'sambaSID'),
+    ('sambaNTPassword', 'sambaNTPassword'),
+    ('sambaLMPassword', 'sambaLMPassword')
+))
 
 
 LDIF_sambaUsers = Ldif(

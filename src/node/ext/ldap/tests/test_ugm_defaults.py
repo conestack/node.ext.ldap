@@ -10,6 +10,7 @@ from node.ext.ldap.ugm import shadow
 from node.ext.ldap.ugm import Users
 from node.ext.ldap.ugm import UsersConfig
 from node.tests import NodeTestCase
+from odict import odict
 
 
 layer = testing.LDIF_data
@@ -66,10 +67,10 @@ class TestUGMDefaults(NodeTestCase):
     def test_posix_account(self, props):
         ucfg = UsersConfig(
             baseDN='ou=defaults,dc=my-domain,dc=com',
-            attrmap={
-                'id': 'cn',
-                'rdn': 'cn'
-            },
+            attrmap=odict((
+                ('rdn', 'cn'),
+                ('id', 'cn')
+            )),
             scope=SUBTREE,
             queryFilter='(objectClass=posixAccount)',
             objectClasses=['account', 'posixAccount'],
@@ -90,10 +91,10 @@ class TestUGMDefaults(NodeTestCase):
         defaults.creation_defaults['posixAccount']['loginShell'] = posix.loginShell
         ucfg = UsersConfig(
             baseDN='ou=defaults,dc=my-domain,dc=com',
-            attrmap={
-                'id': 'uid',
-                'rdn': 'uid'
-            },
+            attrmap=odict((
+                ('rdn', 'uid'),
+                ('id', 'uid')
+            )),
             scope=SUBTREE,
             queryFilter='(objectClass=posixAccount)',
             objectClasses=['account', 'posixAccount'],
@@ -117,10 +118,10 @@ class TestUGMDefaults(NodeTestCase):
     def test_posix_group(self, props):
         gcfg = GroupsConfig(
             baseDN='ou=defaults,dc=my-domain,dc=com',
-            attrmap={
-                'id': 'cn',
-                'rdn': 'cn'
-            },
+            attrmap=odict((
+                ('rdn', 'cn'),
+                ('id', 'cn')
+            )),
             scope=SUBTREE,
             queryFilter='(objectClass=posixGroup)',
             objectClasses=['posixGroup'],
@@ -140,10 +141,10 @@ class TestUGMDefaults(NodeTestCase):
     def test_shadow_account(self, props):
         ucfg = UsersConfig(
             baseDN='ou=defaults,dc=my-domain,dc=com',
-            attrmap={
-                'id': 'uid',
-                'rdn': 'uid'
-            },
+            attrmap=odict((
+                ('rdn', 'uid'),
+                ('id', 'uid')
+            )),
             scope=SUBTREE,
             queryFilter='(objectClass=shadowAccount)',
             objectClasses=['account', 'shadowAccount'],
@@ -168,10 +169,10 @@ class TestUGMDefaults(NodeTestCase):
 
         ucfg = UsersConfig(
             baseDN='ou=defaults,dc=my-domain,dc=com',
-            attrmap={
-                'id': 'uid',
-                'rdn': 'uid'
-            },
+            attrmap=odict((
+                ('rdn', 'uid'),
+                ('id', 'uid')
+            )),
             scope=SUBTREE,
             queryFilter='(objectClass=shadowAccount)',
             objectClasses=['account', 'shadowAccount'],
@@ -204,10 +205,10 @@ class TestUGMDefaults(NodeTestCase):
     def test_samba_account(self, props):
         ucfg = UsersConfig(
             baseDN='ou=defaults,dc=my-domain,dc=com',
-            attrmap={
-                'id': 'cn',
-                'rdn': 'cn'
-            },
+            attrmap=odict((
+                ('rdn', 'cn'),
+                ('id', 'cn')
+            )),
             scope=SUBTREE,
             queryFilter='(objectClass=sambaSamAccount)',
             objectClasses=['account', 'posixAccount', 'sambaSamAccount'],
@@ -251,10 +252,10 @@ class TestUGMDefaults(NodeTestCase):
 
         ucfg = UsersConfig(
             baseDN='ou=defaults,dc=my-domain,dc=com',
-            attrmap={
-                'id': 'cn',
-                'rdn': 'cn'
-            },
+            attrmap=odict((
+                ('rdn', 'cn'),
+                ('id', 'cn')
+            )),
             scope=SUBTREE,
             queryFilter='(objectClass=sambaSamAccount)',
             objectClasses=['account', 'posixAccount', 'sambaSamAccount'],
@@ -286,10 +287,10 @@ class TestUGMDefaults(NodeTestCase):
     def test_samba_group(self, props):
         gcfg = GroupsConfig(
             baseDN='ou=defaults,dc=my-domain,dc=com',
-            attrmap={
-                'id': 'cn',
-                'rdn': 'cn'
-            },
+            attrmap=odict((
+                ('rdn', 'cn'),
+                ('id', 'cn')
+            )),
             scope=SUBTREE,
             queryFilter='(objectClass=sambaGroupMapping)',
             objectClasses=['posixGroup', 'sambaGroupMapping'],

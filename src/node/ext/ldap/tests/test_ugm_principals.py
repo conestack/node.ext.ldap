@@ -18,25 +18,26 @@ from node.ext.ldap.ugm._api import member_attribute
 from node.ext.ldap.ugm._api import member_format
 from node.ext.ldap.ugm._api import PrincipalAliasedAttributes
 from node.tests import NodeTestCase
+from odict import odict
 
 
 layer = testing.LDIF_principals
 gcfg = GroupsConfig(
     baseDN='dc=my-domain,dc=com',
-    attrmap={
-        'id': 'cn',
-        'rdn': 'cn'
-    },
+    attrmap=odict((
+        ('rdn', 'cn'),
+        ('id', 'cn')
+    )),
     scope=ONELEVEL,
     queryFilter='(objectClass=groupOfNames)',
     objectClasses=['groupOfNames']
 )
 rcfg = RolesConfig(
     baseDN='ou=roles,dc=my-domain,dc=com',
-    attrmap={
-        'id': 'cn',
-        'rdn': 'cn'
-    },
+    attrmap=odict((
+        ('rdn', 'cn'),
+        ('id', 'cn')
+    )),
     scope=ONELEVEL,
     queryFilter='(objectClass=groupOfNames)',
     objectClasses=['groupOfNames'],
@@ -54,13 +55,13 @@ class TestUGMPrincipals(NodeTestCase):
         # Create a LDAPUsers node and configure it. In addition to the key
         # attribute, the login attribute also needs to be unique, which will
         # be checked upon calling ids() the first time
-        self.assertEqual(ucfg.attrmap, {
-            'telephoneNumber': 'telephoneNumber',
-            'login': 'cn',
-            'rdn': 'ou',
-            'id': 'sn',
-            'sn': 'sn'
-        })
+        self.assertEqual(sorted(ucfg.attrmap.items()), [
+            ('id', 'sn'),
+            ('login', 'cn'),
+            ('rdn', 'ou'),
+            ('sn', 'sn'),
+            ('telephoneNumber', 'telephoneNumber')
+        ])
 
         # Query all user ids. Set ``cn`` as login attribute. In this case,
         # values are unique and therefore suitable as login attr
@@ -102,7 +103,7 @@ class TestUGMPrincipals(NodeTestCase):
         )
 
         # The '?' is just ``__repr__`` going to ascii, the id is in proper unicode
-        self.check_output("<User object 'M?ller' at ...>", repr(mueller))
+        self.check_output("<User object 'M...ller' at ...>", repr(mueller))
         self.assertEqual(mueller.id, u'Müller')
 
         # A user has a login
@@ -127,7 +128,7 @@ class TestUGMPrincipals(NodeTestCase):
         # Query all user nodes
         self.check_output("""
         [<User object 'Meier' at ...>,
-        <User object 'M?ller' at ...>,
+        <User object 'M...ller' at ...>,
         <User object 'Schmidt' at ...>,
         <User object 'Umhauer' at ...>]
         """, str([users[id] for id in sorted(users.keys())]))
@@ -182,13 +183,13 @@ class TestUGMPrincipals(NodeTestCase):
         props = testing.props
         add_ucfg = UsersConfig(
             baseDN='ou=customers,dc=my-domain,dc=com',
-            attrmap={
-                'id': 'sn',
-                'login': 'cn',
-                'rdn': 'cn',
-                'telephoneNumber': 'telephoneNumber',
-                'sn': 'sn',
-            },
+            attrmap=odict((
+                ('rdn', 'cn'),
+                ('id', 'sn'),
+                ('login', 'cn'),
+                ('telephoneNumber', 'telephoneNumber'),
+                ('sn', 'sn')
+            )),
             scope=ONELEVEL,
             queryFilter='(objectClass=person)',
             objectClasses=['top', 'person'],
@@ -219,7 +220,7 @@ class TestUGMPrincipals(NodeTestCase):
 
         self.assertEqual(sorted(user.attrs.items()), [
             ('id', u'newid'),
-            ('login', u'newcn'),
+            ('rdn', u'newcn'),
             ('telephoneNumber', u'123')
         ])
 
@@ -240,7 +241,10 @@ class TestUGMPrincipals(NodeTestCase):
             users.create,
             'newid'
         )
-        self.assertEqual(str(err), 'u"Principal with id \'newid\' already exists."')
+        self.assertEqual(
+            str(err).replace('u"', '"'),
+            '"Principal with id \'newid\' already exists."'
+        )
 
         err = self.expect_error(
             ValueError,
@@ -308,7 +312,7 @@ class TestUGMPrincipals(NodeTestCase):
 
         results, cookie = users.raw_search(page_size=3, cookie=cookie)
         self.assertEqual(results, [u'Umhauer'])
-        self.assertEqual(cookie, '')
+        self.assertEqual(cookie, b'')
 
         # Only attributes defined in attrmap can be queried
         self.expect_error(
@@ -362,7 +366,7 @@ class TestUGMPrincipals(NodeTestCase):
         self.check_output("""
         <class 'node.ext.ldap.ugm._api.Users'>: None
           <class 'node.ext.ldap.ugm._api.User'>: Meier
-          <class 'node.ext.ldap.ugm._api.User'>: M?ller
+          <class 'node.ext.ldap.ugm._api.User'>: M...ller
           <class 'node.ext.ldap.ugm._api.User'>: Schmidt
           <class 'node.ext.ldap.ugm._api.User'>: Umhauer
         """, users.treerepr())
@@ -523,9 +527,9 @@ class TestUGMPrincipals(NodeTestCase):
         )
         self.assertEqual(res, [
             ('cn=group3,dc=my-domain,dc=com', {
-                'member': ['cn=nobody'],
-                'objectClass': ['groupOfNames'],
-                'cn': ['group3']
+                'member': [b'cn=nobody'],
+                'objectClass': [b'groupOfNames'],
+                'cn': [b'group3']
             })
         ])
 
@@ -595,7 +599,7 @@ class TestUGMPrincipals(NodeTestCase):
         self.assertEqual(group.member_ids, [u'Schmidt', u'M\xfcller'])
         self.assertEqual(
             group.translate_key('Umhauer'),
-            u'cn=n\xe4sty\\, User,ou=customers,dc=my-domain,dc=com'
+            u'cn=nästy\\, User,ou=customers,dc=my-domain,dc=com'
         )
 
         group.add('Umhauer')
@@ -603,7 +607,7 @@ class TestUGMPrincipals(NodeTestCase):
             ('member', [
                 u'cn=user3,ou=customers,dc=my-domain,dc=com',
                 u'cn=user2,ou=customers,dc=my-domain,dc=com',
-                u'cn=n\xe4sty\\, User,ou=customers,dc=my-domain,dc=com'
+                u'cn=nästy\\, User,ou=customers,dc=my-domain,dc=com'
             ]),
             ('rdn', u'group1')
         ])
@@ -765,7 +769,7 @@ class TestUGMPrincipals(NodeTestCase):
           <class 'node.ext.ldap.ugm._api.Role'>: viewer
             <class 'node.ext.ldap.ugm._api.User'>: Meier
             <class 'node.ext.ldap.ugm._api.Group'>: group1
-              <class 'node.ext.ldap.ugm._api.User'>: M?ller
+              <class 'node.ext.ldap.ugm._api.User'>: M...ller
               <class 'node.ext.ldap.ugm._api.User'>: Schmidt
         """, roles.treerepr())
 
@@ -781,7 +785,7 @@ class TestUGMPrincipals(NodeTestCase):
           <class 'node.ext.ldap.ugm._api.Role'>: viewer
             <class 'node.ext.ldap.ugm._api.User'>: Meier
             <class 'node.ext.ldap.ugm._api.Group'>: group1
-              <class 'node.ext.ldap.ugm._api.User'>: M?ller
+              <class 'node.ext.ldap.ugm._api.User'>: M...ller
               <class 'node.ext.ldap.ugm._api.User'>: Schmidt
             <class 'node.ext.ldap.ugm._api.Group'>: group2
               <class 'node.ext.ldap.ugm._api.User'>: Umhauer
@@ -807,7 +811,7 @@ class TestUGMPrincipals(NodeTestCase):
           <class 'node.ext.ldap.ugm._api.Role'>: viewer
             <class 'node.ext.ldap.ugm._api.User'>: Meier
             <class 'node.ext.ldap.ugm._api.Group'>: group1
-              <class 'node.ext.ldap.ugm._api.User'>: M?ller
+              <class 'node.ext.ldap.ugm._api.User'>: M...ller
               <class 'node.ext.ldap.ugm._api.User'>: Schmidt
           <class 'node.ext.ldap.ugm._api.Role'>: editor
             <class 'node.ext.ldap.ugm._api.Group'>: group2
@@ -820,7 +824,7 @@ class TestUGMPrincipals(NodeTestCase):
           <class 'node.ext.ldap.ugm._api.Role'>: viewer
             <class 'node.ext.ldap.ugm._api.User'>: Meier
             <class 'node.ext.ldap.ugm._api.Group'>: group1
-              <class 'node.ext.ldap.ugm._api.User'>: M?ller
+              <class 'node.ext.ldap.ugm._api.User'>: M...ller
               <class 'node.ext.ldap.ugm._api.User'>: Schmidt
         """, roles.treerepr())
 
@@ -865,12 +869,12 @@ class TestUGMPrincipals(NodeTestCase):
         <class 'node.ext.ldap.ugm._api.Ugm'>: None
           <class 'node.ext.ldap.ugm._api.Users'>: users
             <class 'node.ext.ldap.ugm._api.User'>: Meier
-            <class 'node.ext.ldap.ugm._api.User'>: M?ller
+            <class 'node.ext.ldap.ugm._api.User'>: M...ller
             <class 'node.ext.ldap.ugm._api.User'>: Schmidt
             <class 'node.ext.ldap.ugm._api.User'>: Umhauer
           <class 'node.ext.ldap.ugm._api.Groups'>: groups
             <class 'node.ext.ldap.ugm._api.Group'>: group1
-              <class 'node.ext.ldap.ugm._api.User'>: M?ller
+              <class 'node.ext.ldap.ugm._api.User'>: M...ller
               <class 'node.ext.ldap.ugm._api.User'>: Schmidt
             <class 'node.ext.ldap.ugm._api.Group'>: group2
               <class 'node.ext.ldap.ugm._api.User'>: Umhauer
@@ -881,7 +885,7 @@ class TestUGMPrincipals(NodeTestCase):
           <class 'node.ext.ldap.ugm._api.Role'>: viewer
             <class 'node.ext.ldap.ugm._api.User'>: Meier
             <class 'node.ext.ldap.ugm._api.Group'>: group1
-              <class 'node.ext.ldap.ugm._api.User'>: M?ller
+              <class 'node.ext.ldap.ugm._api.User'>: M...ller
               <class 'node.ext.ldap.ugm._api.User'>: Schmidt
         """, roles.treerepr())
 
@@ -891,7 +895,7 @@ class TestUGMPrincipals(NodeTestCase):
         <class 'node.ext.ldap.ugm._api.Roles'>: roles
           <class 'node.ext.ldap.ugm._api.Role'>: viewer
             <class 'node.ext.ldap.ugm._api.Group'>: group1
-              <class 'node.ext.ldap.ugm._api.User'>: M?ller
+              <class 'node.ext.ldap.ugm._api.User'>: M...ller
               <class 'node.ext.ldap.ugm._api.User'>: Schmidt
         """, roles.treerepr())
 
@@ -905,7 +909,7 @@ class TestUGMPrincipals(NodeTestCase):
         )
         self.check_output("""
         <class 'node.ext.ldap.ugm._api.Users'>: users
-          <class 'node.ext.ldap.ugm._api.User'>: M?ller
+          <class 'node.ext.ldap.ugm._api.User'>: M...ller
           <class 'node.ext.ldap.ugm._api.User'>: Schmidt
           <class 'node.ext.ldap.ugm._api.User'>: Umhauer
         """, users.treerepr())
@@ -919,7 +923,7 @@ class TestUGMPrincipals(NodeTestCase):
         self.check_output("""
         <class 'node.ext.ldap.ugm._api.Ugm'>: None
           <class 'node.ext.ldap.ugm._api.Users'>: users
-            <class 'node.ext.ldap.ugm._api.User'>: M?ller
+            <class 'node.ext.ldap.ugm._api.User'>: M...ller
             <class 'node.ext.ldap.ugm._api.User'>: Schmidt
             <class 'node.ext.ldap.ugm._api.User'>: Umhauer
           <class 'node.ext.ldap.ugm._api.Groups'>: groups
