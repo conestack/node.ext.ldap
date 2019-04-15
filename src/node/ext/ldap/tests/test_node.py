@@ -142,7 +142,7 @@ class TestNode(NodeTestCase):
 
         self.assertEqual(
             binnode.attrs['jpegPhoto'][:20],
-            '\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x01,\x01,\x00\x00'
+            b'\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x01,\x01,\x00\x00'
         )
         self.assertEqual(len(binnode.attrs['jpegPhoto']), 2155)
 
@@ -151,7 +151,7 @@ class TestNode(NodeTestCase):
             os.path.dirname(__file__),
             '..', 'testing', 'data', 'binary.jpg'
         )
-        with open(path) as f:
+        with open(path, 'rb') as f:
             jpegdata = f.read()
 
         self.assertTrue(customers is binnode.parent)
@@ -435,7 +435,7 @@ class TestNode(NodeTestCase):
         # Changing the rdn attribute on loaded nodes fails.
         person.attrs['cn'] = 'foo'
         err = self.expect_error(ldap.NAMING_VIOLATION, person.__call__)
-        self.assertEqual(err.message, {
+        self.assertEqual(err.args[0], {
             'info': "value of naming attribute 'cn' is not present in entry",
             'desc': 'Naming violation'
         })
@@ -460,10 +460,10 @@ class TestNode(NodeTestCase):
             'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com'
         )
         self.assertEqual(sorted(res[0][1].items()), [
-            ('cn', ['Max']),
-            ('description', ['Initial Description']),
-            ('objectClass', ['top', 'person']),
-            ('sn', ['Mustermann'])
+            ('cn', [b'Max']),
+            ('description', [b'Initial Description']),
+            ('objectClass', [b'top', b'person']),
+            ('sn', [b'Mustermann'])
         ])
 
         # Modify this person. First look at the changed flags
@@ -499,10 +499,10 @@ class TestNode(NodeTestCase):
             'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com'
         )
         self.assertEqual(sorted(res[0][1].items()), [
-            ('cn', ['Max']),
-            ('description', ['Another description']),
-            ('objectClass', ['top', 'person']),
-            ('sn', ['Mustermann'])
+            ('cn', [b'Max']),
+            ('description', [b'Another description']),
+            ('objectClass', [b'top', b'person']),
+            ('sn', [b'Mustermann'])
         ])
 
         # Check removing of an attribute
@@ -525,9 +525,9 @@ class TestNode(NodeTestCase):
             'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com'
         )
         self.assertEqual(sorted(res[0][1].items()), [
-            ('cn', ['Max']),
-            ('objectClass', ['top', 'person']),
-            ('sn', ['Mustermann'])
+            ('cn', [b'Max']),
+            ('objectClass', [b'top', b'person']),
+            ('sn', [b'Mustermann'])
         ])
         self.assertEqual(
             (root.changed, customer.changed, person.changed, person.attrs.changed),
@@ -548,25 +548,23 @@ class TestNode(NodeTestCase):
             'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com'
         )
         self.assertEqual(sorted(res[0][1].items()), [
-            ('cn', ['Max']),
-            ('description', ['Brandnew description']),
-            ('objectClass', ['top', 'person']),
-            ('sn', ['Mustermann'])
+            ('cn', [b'Max']),
+            ('description', [b'Brandnew description']),
+            ('objectClass', [b'top', b'person']),
+            ('sn', [b'Mustermann'])
         ])
         self.assertEqual(
             (root.changed, customer.changed, person.changed, person.attrs.changed),
             (False, False, False, False)
         )
 
-        # Attribute with non-ascii unicode returns as is
         person.attrs['sn'] = u'i\u0107'
         person()
-        self.assertEqual(queryPersonDirectly()[0][1]['sn'][0], 'i\xc4\x87')
+        self.assertEqual(queryPersonDirectly()[0][1]['sn'][0], b'i\xc4\x87')
 
-        # Attribute with non-ascii str (utf8) returns as unicode
-        person.attrs['sn'] = 'i\xc4\x87'
+        person.attrs['sn'] = b'i\xc4\x87'
         person()
-        self.assertEqual(queryPersonDirectly()[0][1]['sn'][0], 'i\xc4\x87')
+        self.assertEqual(queryPersonDirectly()[0][1]['sn'][0], b'i\xc4\x87')
 
         # XXX: Don't test this until we have proper binary attr support
         # Attribute with utf16 str fails
@@ -929,7 +927,7 @@ class TestNode(NodeTestCase):
             u'uid=binary,ou=customers,dc=my-domain,dc=com'
         ])
 
-        self.assertEqual(cookie, '')
+        self.assertEqual(cookie, b'')
 
         # Lets add a default search filter.
         filter = LDAPFilter('(objectClass=organizationalUnit)')
@@ -1085,7 +1083,7 @@ class TestNode(NodeTestCase):
         )
         self.assertEqual(
             str(relation),
-            '(|(description=customers)(businessCategory=customers))'
+            '(|(businessCategory=customers)(description=customers))'
         )
         self.assertEqual(sorted(node.search(relation=relation)), [
             u'ou=customer1,ou=customers,dc=my-domain,dc=com',

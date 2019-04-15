@@ -78,16 +78,16 @@ class LDAPAttributesBehavior(Behavior):
         # fetch attributes for ldap_node
         entry = ldap_node.ldap_session.search(
             scope=BASE,
-            baseDN=ldap_node.DN.encode('utf-8'),
+            baseDN=ldap_node.DN,
             force_reload=ldap_node._reload,
             attrlist=attrlist,
         )
         # result length must be 1
         if len(entry) != 1:
-            raise RuntimeError(                            #pragma NO COVERAGE
-                u"Fatal. Expected entry does not exist "   #pragma NO COVERAGE
-                u"or more than one entry found"            #pragma NO COVERAGE
-            )                                              #pragma NO COVERAGE
+            raise RuntimeError(
+                "Fatal. Expected entry does not exist "
+                "or more than one entry found"
+            )
         # read attributes from result and set to self
         attrs = entry[0][1]
         for key, item in attrs.items():
@@ -206,7 +206,7 @@ class LDAPStorage(OdictStorage):
     @finalize
     def __getitem__(self, key):
         # nodes are created for keys, if they do not already exist in memory
-        if isinstance(key, str):
+        if isinstance(key, bytes):
             key = decode(key)
         try:
             return self.storage[key]
@@ -217,7 +217,7 @@ class LDAPStorage(OdictStorage):
             try:
                 res = self.ldap_session.search(
                     scope=BASE,
-                    baseDN=val.DN.encode('utf-8'),
+                    baseDN=val.DN,
                     attrlist=[''],  # no need for attrs
                 )
                 # remember DN
@@ -230,7 +230,7 @@ class LDAPStorage(OdictStorage):
 
     @finalize
     def __setitem__(self, key, val):
-        if isinstance(key, str):
+        if isinstance(key, bytes):
             key = decode(key)
         if not isinstance(val, LDAPNode):
             # create one from whatever we got
@@ -243,7 +243,7 @@ class LDAPStorage(OdictStorage):
         try:
             self.ldap_session.search(
                 scope=BASE,
-                baseDN=val.DN.encode('utf-8'),
+                baseDN=val.DN,
                 attrlist=[''],  # no need for attrs
             )
         except (NO_SUCH_OBJECT, INVALID_DN_SYNTAX):
@@ -270,7 +270,7 @@ class LDAPStorage(OdictStorage):
     @finalize
     def __delitem__(self, key):
         # do not delete immediately. Just mark LDAPNode to be deleted.
-        if isinstance(key, str):
+        if isinstance(key, bytes):
             key = decode(key)
         # value not persistent yet, remove from storage and add list
         if key in self._added_children:
@@ -293,7 +293,7 @@ class LDAPStorage(OdictStorage):
             try:
                 res = self.ldap_session.search(
                     scope=ONELEVEL,
-                    baseDN=encode(self.DN),
+                    baseDN=self.DN,
                     attrlist=[''],
                     page_size=self._page_size,
                     cookie=cookie,
@@ -341,11 +341,12 @@ class LDAPStorage(OdictStorage):
 
     @finalize
     def __repr__(self):
-        dn = self.DN.encode('ascii', 'replace') or '(dn not set)'
+        dn = self.DN or u'(dn not set)'
         if self.parent is None:
-            return "<%s - %s>" % (dn, self.changed)
-        name = self.name.encode('ascii', 'replace')
-        return "<%s:%s - %s>" % (dn, name, self.changed)
+            ret = u'<{} - {}>'.format(dn, self.changed)
+        else:
+            ret = u'<{}:{} - {}>'.format(dn, self.name, self.changed)
+        return decode(ret.encode('ascii', 'replace'))
 
     __str__ = finalize(__repr__)
 
@@ -439,12 +440,12 @@ class LDAPStorage(OdictStorage):
         try:
             res = self.ldap_session.search(
                 scope=BASE,
-                baseDN=self.DN.encode('utf-8'),
+                baseDN=self.DN,
                 attrlist=['']
             )
             # this probably never happens
             if len(res) != 1:
-                raise RuntimeError()                        #pragma NO COVERAGE
+                raise RuntimeError()
             return True
         except NO_SUCH_OBJECT:
             return False
@@ -458,7 +459,7 @@ class LDAPStorage(OdictStorage):
         if not dn.endswith(base_dn):
             raise ValueError(u'Invalid base DN')
         dn = dn[:len(dn) - len(base_dn)].strip(',')
-        for rdn in reversed(explode_dn(encode(dn))):
+        for rdn in reversed(explode_dn(dn)):
             try:
                 node = node[rdn]
             except KeyError:
@@ -503,7 +504,7 @@ class LDAPStorage(OdictStorage):
         matches = self.ldap_session.search(
             str(_filter),
             self.search_scope,
-            baseDN=encode(self.DN),
+            baseDN=self.DN,
             force_reload=self._reload,
             attrlist=list(attrset),
             page_size=page_size,
@@ -522,7 +523,7 @@ class LDAPStorage(OdictStorage):
             dn = decode(dn)
             if attrlist is not None:
                 resattr = dict()
-                for k, v in attrs.iteritems():
+                for k, v in six.iteritems(attrs):
                     if k in attrlist:
                         # Check binary binary attribute directly from root
                         # data to avoid initing attrs for a simple search.
@@ -533,7 +534,7 @@ class LDAPStorage(OdictStorage):
                 if 'dn' in attrlist:
                     resattr[u'dn'] = dn
                 if 'rdn' in attrlist:
-                    rdn = explode_dn(encode(dn))[0]
+                    rdn = explode_dn(dn)[0]
                     resattr[u'rdn'] = decode(rdn)
                 if get_nodes:
                     res.append((self.node_by_dn(dn, strict=True), resattr))
@@ -609,7 +610,7 @@ class LDAPStorage(OdictStorage):
         except AttributeError:
             raise ValueError(u"No attributes found on vessel, cannot convert")
         node = LDAPNode()
-        for key, val in attrs.iteritems():
+        for key, val in six.iteritems(attrs):
             node.attrs[key] = val
         return node
 
@@ -620,8 +621,8 @@ class LDAPStorage(OdictStorage):
         for key, value in self.attrs.items():
             if not self.attrs.is_binary(key):
                 value = encode(value)
-            attrs[encode(key)] = value
-        self.ldap_session.add(encode(self.DN), attrs)
+            attrs[key] = value
+        self.ldap_session.add(self.DN, attrs)
 
     @default
     def _ldap_modify(self):
@@ -631,7 +632,7 @@ class LDAPStorage(OdictStorage):
         for key in orgin:
             # MOD_DELETE
             if key not in self.attrs:
-                moddef = (MOD_DELETE, encode(key), None)
+                moddef = (MOD_DELETE, key, None)
                 modlist.append(moddef)
         for key in self.attrs:
             # MOD_ADD
@@ -639,20 +640,20 @@ class LDAPStorage(OdictStorage):
             if not self.attrs.is_binary(key):
                 value = encode(value)
             if key not in orgin:
-                moddef = (MOD_ADD, encode(key), value)
+                moddef = (MOD_ADD, key, value)
                 modlist.append(moddef)
             # MOD_REPLACE
             elif self.attrs[key] != orgin[key]:
-                moddef = (MOD_REPLACE, encode(key), value)
+                moddef = (MOD_REPLACE, key, value)
                 modlist.append(moddef)
         if modlist:
-            self.ldap_session.modify(encode(self.DN), modlist)
+            self.ldap_session.modify(self.DN, modlist)
 
     @default
     def _ldap_delete(self):
         # delete self from the ldap-directory.
         del self.parent.storage[self.name]
-        self.ldap_session.delete(encode(self.DN))
+        self.ldap_session.delete(self.DN)
 
     @default
     @property
