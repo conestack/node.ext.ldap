@@ -61,7 +61,7 @@ class LDAPSession(object):
         if page_size:
             res, cookie = res
         # ActiveDirectory returns entries with dn None, which can be ignored
-        res = filter(lambda x: x[0] is not None, res)
+        res = [x for x in res if x[0] is not None]
         if page_size:
             return res, cookie
         return res

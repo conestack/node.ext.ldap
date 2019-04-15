@@ -45,9 +45,9 @@ class TestSession(NodeTestCase):
 
         # Add an entry
         entry = {
-            'cn': 'foo',
-            'sn': 'bar',
-            'objectclass': ('person', 'top'),
+            'cn': b'foo',
+            'sn': b'bar',
+            'objectclass': (b'person', b'top'),
         }
         dn = 'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com'
         session.add(dn, entry)
@@ -58,21 +58,21 @@ class TestSession(NodeTestCase):
         res = session.search('(cn=foo)', SUBTREE)
         self.assertEqual(res, [(
             'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
-            {'objectClass': ['person', 'top'], 'cn': ['foo'], 'sn': ['bar']}
+            {'objectClass': [b'person', b'top'], 'cn': [b'foo'], 'sn': [b'bar']}
         )])
 
-        session.modify(res[0][0], [(MOD_REPLACE, 'sn', 'baz')])
+        session.modify(res[0][0], [(MOD_REPLACE, 'sn', b'baz')])
         res = session.search('(cn=foo)', SUBTREE)
         self.assertEqual(res, [(
             'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
-            {'objectClass': ['person', 'top'], 'cn': ['foo'], 'sn': ['baz']}
+            {'objectClass': [b'person', b'top'], 'cn': [b'foo'], 'sn': [b'baz']}
         )])
 
         # Query only specific attributes
         res = session.search('(cn=foo)', SUBTREE, attrlist=('sn',))
         self.assertEqual(res, [(
             'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
-            {'sn': ['baz']}
+            {'sn': [b'baz']}
         )])
 
         # And only the attributes without the values
@@ -93,7 +93,7 @@ class TestSession(NodeTestCase):
         session = LDAPSession(LDAPProps())
         res = session.checkServerProperties()
         self.assertEqual(res[0], False)
-        self.assertEqual(res[1].message, {
+        self.assertEqual(res[1].args[0], {
             'info': 'Transport endpoint is not connected',
             'errno': 107,
             'desc': "Can't contact LDAP server"
