@@ -38,6 +38,7 @@ import logging
 import six
 import time
 
+
 logger = logging.getLogger('node.ext.ldap')
 
 # group member format
@@ -193,7 +194,8 @@ class LDAPPrincipal(AliasedPrincipal):
             scope=BASE,
             baseDN=self.context.DN,
             force_reload=self.context._reload,
-            attrlist=['memberOf'])
+            attrlist=['memberOf']
+        )
         return entry[0][1].get('memberOf', list())
 
 
@@ -212,8 +214,7 @@ class LDAPUser(LDAPPrincipal, UgmUser):
         if self.parent.parent.ucfg.memberOfSupport:
             res = list()
             for dn in self.member_of_attr:
-                if not isinstance(dn, six.text_type):
-                    dn = dn.decode('utf-8')
+                dn = ensure_text(dn)
                 if groups.context.DN not in dn:
                     # Skip DN outside groups base DN
                     continue
@@ -327,7 +328,7 @@ class LDAPGroupMapping(Behavior):
                 attrlist = [users._key_attr]
                 matches_generator = users.context.batched_search(
                     criteria=criteria,
-                    attrlist=attrlist,
+                    attrlist=attrlist
                 )
                 return [
                     att[users._key_attr][0] for _, att in matches_generator
@@ -453,7 +454,7 @@ class LDAPPrincipals(OdictStorage):
         try:
             search = self.context.ldap_session.search
             res = search(baseDN=dn)[0]
-            return res[1][self._key_attr][0].decode('utf-8')
+            return ensure_text(res[1][self._key_attr][0])
         except ldap.NO_SUCH_OBJECT:
             raise KeyError(dn)
 
@@ -489,7 +490,7 @@ class LDAPPrincipals(OdictStorage):
             if prdn in self.context._deleted_children:
                 raise KeyError(key)
             dn = res[0][0]
-            path = explode_dn(dn.encode('utf-8'))[:len(self.context.DN.split(',')) * -1]
+            path = explode_dn(dn)[:len(self.context.DN.split(',')) * -1]
             context = self.context
             for rdn in reversed(path):
                 context = context[rdn]
@@ -718,16 +719,16 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
     @default
     def id_for_login(self, login):
         if not self._login_attr:
-            return login
+            return ensure_text(login)
         criteria = {self._login_attr: login}
         attrlist = [self._key_attr]
         res = self.context.search(criteria=criteria, attrlist=attrlist)
         if not res:
-            return login
+            return ensure_text(login)
         if len(res) > 1:
             msg = u'More than one principal with login "{0}" found.'
             logger.warning(msg.format(login))
-        return res[0][1][self._key_attr][0]
+        return ensure_text(res[0][1][self._key_attr][0])
 
     @default
     @debug
@@ -735,7 +736,7 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
         if id is not None:
             # bbb. deprecated usage
             login = id
-        user_id = self.id_for_login(ensure_text(login))
+        user_id = self.id_for_login(login)
         criteria = {self._key_attr: user_id}
         attrlist = ['dn']
         if self.expiresAttr:
@@ -756,8 +757,10 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
                 expired = calculate_expired(self.expiresUnit, expires)
             except ValueError:
                 # unknown expires field data
-                msg = u"Accound expiration flag for user '{0}' " + \
-                      u"contains unknown data"
+                msg = (
+                    u"Accound expiration flag for user '{0}' "
+                    u"contains unknown data"
+                )
                 logger.error(msg.format(id))
                 return False
             if expired:
@@ -770,7 +773,7 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
     @default
     @debug
     def passwd(self, id, oldpw, newpw):
-        user_id = self.id_for_login(ensure_text(id))
+        user_id = self.id_for_login(id)
         criteria = {self._key_attr: user_id}
         attrlist = ['dn']
         if self.expiresAttr:
@@ -905,7 +908,7 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
         groups = ugm.groups
         ret = [key for key in users]
         for key in groups:
-            ret.append('group:%s' % key)
+            ret.append('group:{}'.format(key))
         return ret
 
     @default
@@ -923,7 +926,7 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
             group_members = list()
             for dn in members:
                 try:
-                    group_members.append('group:%s' % groups.idbydn(dn, True))
+                    group_members.append('group:{}'.format(groups.idbydn(dn, True)))
                 except KeyError:
                     pass
             members = user_members + group_members
@@ -1117,7 +1120,7 @@ class LDAPUgm(UgmBase):
         if role is None:
             role = roles.create(rolename)
         if uid in role.member_ids:
-            raise ValueError(u"Principal already has role '%s'" % rolename)
+            raise ValueError(u"Principal already has role '{}'".format(rolename))
         role.add(uid)
 
     @default
@@ -1129,9 +1132,9 @@ class LDAPUgm(UgmBase):
             raise ValueError(u"Role support not configured properly")
         role = roles.get(rolename)
         if role is None:
-            raise ValueError(u"Role not exists '%s'" % rolename)
+            raise ValueError(u"Role not exists '{}'".format(rolename))
         if uid not in role.member_ids:
-            raise ValueError(u"Principal does not has role '%s'" % rolename)
+            raise ValueError(u"Principal does not has role '{}'".format(rolename))
         del role[uid]
         if not role.member_ids:
             parent = role.parent
@@ -1155,7 +1158,7 @@ class LDAPUgm(UgmBase):
     def _principal_id(self, principal):
         uid = principal.name
         if isinstance(principal, Group):
-            uid = 'group:%s' % uid
+            uid = 'group:{}'.format(uid)
         return uid
 
     @default

@@ -16,8 +16,12 @@ class LDAPSchemaInfo(object):
         connector = LDAPConnector(props=self._props)
         communicator = LDAPCommunicator(connector)
         communicator.bind()
-        res = communicator.search('(objectclass=*)', ldap.SCOPE_BASE,
-                                  'cn=subschema', attrlist=['*', '+'])
+        res = communicator.search(
+            '(objectclass=*)',
+            ldap.SCOPE_BASE,
+            'cn=subschema',
+            attrlist=['*', '+']
+        )
         if len(res) != 1:
             raise ValueError('subschema not found')
         self._subschema = ldap.schema.SubSchema(ldap.cidict.cidict(res[0][1]))

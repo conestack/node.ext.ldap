@@ -8,8 +8,6 @@ import ldap
 
 class LDAPSession(object):
     """LDAP Session binds always.
-
-    all strings must be utf8 encoded!
     """
 
     def __init__(self, props):
@@ -33,15 +31,10 @@ class LDAPSession(object):
 
     @baseDN.setter
     def baseDN(self, baseDN):
-        """baseDN must be utf8-encoded.
-        """
         self._communicator.baseDN = baseDN
 
     def ensure_connection(self):
         """If LDAP directory is down, bind again and retry given function.
-
-        XXX: * Improve retry logic
-             * Extend LDAPSession object to handle Fallback server(s)
         """
         if self._communicator._con is None:
             self._communicator.bind()
@@ -55,9 +48,16 @@ class LDAPSession(object):
             # '(objectClass=*)'
             queryFilter = '(objectClass=*)'
         self.ensure_connection()
-        res = self._communicator.search(queryFilter, scope, baseDN,
-                                        force_reload, attrlist, attrsonly,
-                                        page_size, cookie)
+        res = self._communicator.search(
+            queryFilter,
+            scope,
+            baseDN,
+            force_reload,
+            attrlist,
+            attrsonly,
+            page_size,
+            cookie
+        )
         if page_size:
             res, cookie = res
         # ActiveDirectory returns entries with dn None, which can be ignored

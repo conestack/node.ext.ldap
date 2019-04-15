@@ -68,7 +68,7 @@ class TestUGMPrincipals(NodeTestCase):
         users = Users(props, ucfg)
         self.assertEqual(
             users.ids,
-            [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
+            [u'Meier', u'Müller', u'Schmidt', u'Umhauer']
         )
 
         # Principals idbydn
@@ -202,7 +202,7 @@ class TestUGMPrincipals(NodeTestCase):
 
         self.assertEqual(
             sorted(users.ids),
-            [u'M\xfcller', u'Schmidt', u'Umhauer', u'sn_binary']
+            [u'Müller', u'Schmidt', u'Umhauer', u'sn_binary']
         )
 
         user = users.create(
@@ -290,14 +290,14 @@ class TestUGMPrincipals(NodeTestCase):
 
         self.assertEqual(
             sorted(users.search()),
-            [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
+            [u'Meier', u'Müller', u'Schmidt', u'Umhauer']
         )
 
         self.assertEqual(users.search(attrlist=['login']), [
             (u'Meier', {'login': [u'user1']}),
-            (u'M\xfcller', {'login': [u'user2']}),
+            (u'Müller', {'login': [u'user2']}),
             (u'Schmidt', {'login': [u'user3']}),
-            (u'Umhauer', {'login': [u'n\xe4sty, User']})
+            (u'Umhauer', {'login': [u'nästy, User']})
         ])
 
         self.assertEqual(
@@ -308,7 +308,7 @@ class TestUGMPrincipals(NodeTestCase):
         # By default, search function is paginated. To control the LDAP search
         # behavior in more detail, ``raw_search`` can be used
         results, cookie = users.raw_search(page_size=3, cookie='')
-        self.assertEqual(results, [u'Meier', u'M\xfcller', u'Schmidt'])
+        self.assertEqual(results, [u'Meier', u'Müller', u'Schmidt'])
 
         results, cookie = users.raw_search(page_size=3, cookie=cookie)
         self.assertEqual(results, [u'Umhauer'])
@@ -344,7 +344,7 @@ class TestUGMPrincipals(NodeTestCase):
         users.context.search_filter = filter
         self.assertEqual(
             users.search(),
-            [u'Meier', u'M\xfcller', u'Schmidt', u'Umhauer']
+            [u'Meier', u'Müller', u'Schmidt', u'Umhauer']
         )
 
         filter = LDAPFilter('(objectClass=person)')
@@ -596,7 +596,7 @@ class TestUGMPrincipals(NodeTestCase):
 
         # Add and remove user from group
         group = ugm.groups['group1']
-        self.assertEqual(group.member_ids, [u'Schmidt', u'M\xfcller'])
+        self.assertEqual(group.member_ids, [u'Schmidt', u'Müller'])
         self.assertEqual(
             group.translate_key('Umhauer'),
             u'cn=nästy\\, User,ou=customers,dc=my-domain,dc=com'
@@ -613,12 +613,12 @@ class TestUGMPrincipals(NodeTestCase):
         ])
         self.assertEqual(
             group.member_ids,
-            [u'Schmidt', u'M\xfcller', u'Umhauer']
+            [u'Schmidt', u'Müller', u'Umhauer']
         )
         group()
 
         del group['Umhauer']
-        self.assertEqual(group.member_ids, [u'Schmidt', u'M\xfcller'])
+        self.assertEqual(group.member_ids, [u'Schmidt', u'Müller'])
 
         # Delete Group
         groups = ugm.groups

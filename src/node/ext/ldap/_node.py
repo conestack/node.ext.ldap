@@ -80,7 +80,7 @@ class LDAPAttributesBehavior(Behavior):
             scope=BASE,
             baseDN=ldap_node.DN,
             force_reload=ldap_node._reload,
-            attrlist=attrlist,
+            attrlist=attrlist
         )
         # result length must be 1
         if len(entry) != 1:
@@ -218,7 +218,7 @@ class LDAPStorage(OdictStorage):
                 res = self.ldap_session.search(
                     scope=BASE,
                     baseDN=val.DN,
-                    attrlist=[''],  # no need for attrs
+                    attrlist=['']  # no need for attrs
                 )
                 # remember DN
                 val._dn = res[0][0]
@@ -244,7 +244,7 @@ class LDAPStorage(OdictStorage):
             self.ldap_session.search(
                 scope=BASE,
                 baseDN=val.DN,
-                attrlist=[''],  # no need for attrs
+                attrlist=['']  # no need for attrs
             )
         except (NO_SUCH_OBJECT, INVALID_DN_SYNTAX):
             # the value is not yet in the directory
@@ -296,7 +296,7 @@ class LDAPStorage(OdictStorage):
                     baseDN=self.DN,
                     attrlist=[''],
                     page_size=self._page_size,
-                    cookie=cookie,
+                    cookie=cookie
                 )
             except NO_SUCH_OBJECT:
                 # happens if not persisted yet
@@ -310,7 +310,6 @@ class LDAPStorage(OdictStorage):
                     yield key
             if not cookie:
                 break
-
         # also yield keys of children not persisted yet.
         for key in self._added_children:
             yield key
@@ -464,8 +463,10 @@ class LDAPStorage(OdictStorage):
                 node = node[rdn]
             except KeyError:
                 if strict:
-                    raise ValueError(u'Tree contains no node by given DN. '
-                                     u'Failed at RDN {}'.format(rdn))
+                    raise ValueError(
+                        u'Tree contains no node by given DN. '
+                        u'Failed at RDN {}'.format(rdn)
+                    )
                 return None
         return node
 
@@ -481,11 +482,12 @@ class LDAPStorage(OdictStorage):
         # Create queryFilter from all filter definitions
         # filter for this search ANDed with the default filters defined on self
         search_filter = LDAPFilter(queryFilter)
-        search_filter &= LDAPDictFilter(criteria,
-                                        or_search=or_search,
-                                        or_keys=or_keys,
-                                        or_values=or_values,
-                                        )
+        search_filter &= LDAPDictFilter(
+            criteria,
+            or_search=or_search,
+            or_keys=or_keys,
+            or_values=or_values
+        )
         _filter = LDAPFilter(self.search_filter)
         _filter &= LDAPDictFilter(self.search_criteria)
         _filter &= search_filter
@@ -508,7 +510,7 @@ class LDAPStorage(OdictStorage):
             force_reload=self._reload,
             attrlist=list(attrset),
             page_size=page_size,
-            cookie=cookie,
+            cookie=cookie
         )
         if type(matches) is tuple:
             matches, cookie = matches
@@ -585,8 +587,9 @@ class LDAPStorage(OdictStorage):
         """
         if key is None:
             if self.changed:
-                raise RuntimeError(u"Invalid tree state. Try to invalidate "
-                                   u"changed node.")
+                raise RuntimeError(
+                    u"Invalid tree state. Try to invalidate changed node."
+                )
             self.storage.clear()
             self.attrs.load()
             # XXX: needs to get unset again somwhere
@@ -597,7 +600,8 @@ class LDAPStorage(OdictStorage):
             if child.changed:
                 raise RuntimeError(
                     u"Invalid tree state. Try to invalidate "
-                    u"changed child node '%s'." % (key,))
+                    u"changed child node '{}'.".format(key)
+                )
             del self.storage[key]
         except KeyError:
             pass

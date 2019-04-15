@@ -52,18 +52,10 @@ def ensure_text(value):
     return value
 
 
-# B/C
-decode_utf8 = ensure_text
-
-
 def ensure_bytes(value):
     if value and isinstance(value, six.text_type):
         value = value.encode('utf-8')
     return value
-
-
-# B/C
-encode_utf8 = ensure_bytes
 
 
 def ensure_bytes_py2(value):
@@ -111,7 +103,7 @@ class LDAPConnector(object):
             bytes_mode=False,
             bytes_strictness='silent',
             retry_max=self._retry_max,
-            retry_delay=self._retry_delay,
+            retry_delay=self._retry_delay
         )
         # Turning referrals off since they cause problems with MS Active
         # Directory More info: https://www.python-ldap.org/faq.html#usage
