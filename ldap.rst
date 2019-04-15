@@ -1,7 +1,6 @@
 LDAP
 ====
 
-
 LDAP in general
 ---------------
 

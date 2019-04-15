@@ -4,7 +4,26 @@ History
 1.0b9 (unreleased)
 ------------------
 
-- No changes yet.
+- Use ``bytes_mode=False`` when using ``python-ldap``. This is the default
+  behavior in python 3 and handles everything as unicode/text except
+  entry attribute values.
+  For more details see https://www.python-ldap.org/en/latest/bytes_mode.html
+  [rnix]
+
+- Add ``ensure_bytes_py2`` in ``node.ext.ldap.base``.
+  [rnix]
+
+- Rename ``decode_utf8`` to ``ensure_text`` in ``node.ext.ldap.base``.
+  [rnix]
+
+- Rename ``encode_utf8`` to ``ensure_bytes`` in ``node.ext.ldap.base``.
+  [rnix]
+
+- Python 3 Support.
+  [rnix, reinhardt]
+
+- Convert doctests to unittests.
+  [rnix]
 
 
 1.0b8 (2018-10-22)

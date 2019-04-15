@@ -1175,3 +1175,5 @@ Contributors
 - Asko Soukka
 
 - Alex Milosz Sielicki
+
+- Manuel Reinhardt

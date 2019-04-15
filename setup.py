@@ -57,7 +57,6 @@ setup(
     ],
     extras_require={
         'test': [
-            'interlude',
             'plone.testing',
             'zope.configuration',
             'zope.testing',
