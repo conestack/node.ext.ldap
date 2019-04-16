@@ -4,6 +4,9 @@ History
 1.0b9 (unreleased)
 ------------------
 
+- Fix problem with missing LDAP batching cookie in search.
+  [jensens]
+
 - Remove ``smbpasswd`` dependency. Use ``passlib`` instead.
   [rnix]
 

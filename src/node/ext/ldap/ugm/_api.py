@@ -606,7 +606,7 @@ class LDAPPrincipals(OdictStorage):
             )
         except ldap.NO_SUCH_OBJECT:  # pragma: no cover
             return []
-        if type(results) is tuple:
+        if isinstance(results, tuple):
             results, cookie = results
         if attrlist is not None:
             _results = list()
@@ -630,7 +630,7 @@ class LDAPPrincipals(OdictStorage):
         result = []
         cookie = None
         while True:
-            chunk, cookie = self.raw_search(
+            chunk_cookie = self.raw_search(
                 criteria=criteria,
                 attrlist=attrlist,
                 exact_match=exact_match,
@@ -638,6 +638,10 @@ class LDAPPrincipals(OdictStorage):
                 page_size=self.context.ldap_session._props.page_size,
                 cookie=cookie
             )
+            if isinstance(chunk_cookie, tuple):
+                chunk, cookie = chunk_cookie
+            else:
+                chunk, cookie = chunk_cookie, None
             result += chunk
             if not cookie:
                 break
