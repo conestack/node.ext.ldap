@@ -605,6 +605,7 @@ class LDAPPrincipals(OdictStorage):
                 cookie=cookie
             )
         except ldap.NO_SUCH_OBJECT:  # pragma: no cover
+            logger.debug("ldap.NO_SUCH_OBJECT")
             return []
         if isinstance(results, tuple):
             results, cookie = results
