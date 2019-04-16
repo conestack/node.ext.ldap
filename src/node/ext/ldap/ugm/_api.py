@@ -11,7 +11,7 @@ from node.behaviors import OdictStorage
 from node.behaviors import Storage
 from node.behaviors.alias import DictAliaser
 from node.ext.ldap._node import LDAPNode
-from node.ext.ldap.base import decode_utf8
+from node.ext.ldap.base import ensure_text
 from node.ext.ldap.interfaces import ILDAPGroupsConfig as IGroupsConfig
 from node.ext.ldap.interfaces import ILDAPUsersConfig as IUsersConfig
 from node.ext.ldap.scope import BASE
@@ -35,7 +35,9 @@ from plumber import plumbing
 from zope.interface import implementer
 import ldap
 import logging
+import six
 import time
+
 
 logger = logging.getLogger('node.ext.ldap')
 
@@ -52,6 +54,8 @@ class AccountExpired(object):
 
     def __nonzero__(self):
         return False
+
+    __bool__ = __nonzero__
 
     def __repr__(self):
         return 'ACCOUNT_EXPIRED'
@@ -144,8 +148,10 @@ class AliasedPrincipal(Behavior):
 
     @default
     def principal_attributes_factory(self, name=None, parent=None):
-        aliased_attrs = PrincipalAliasedAttributes(self.context.attrs,
-                                                   self.attraliaser)
+        aliased_attrs = PrincipalAliasedAttributes(
+            self.context.attrs,
+            self.attraliaser
+        )
         return aliased_attrs
 
     attributes_factory = finalize(principal_attributes_factory)
@@ -186,9 +192,10 @@ class LDAPPrincipal(AliasedPrincipal):
         """
         entry = self.context.ldap_session.search(
             scope=BASE,
-            baseDN=self.context.DN.encode('utf-8'),
+            baseDN=self.context.DN,
             force_reload=self.context._reload,
-            attrlist=['memberOf'])
+            attrlist=['memberOf']
+        )
         return entry[0][1].get('memberOf', list())
 
 
@@ -207,8 +214,7 @@ class LDAPUser(LDAPPrincipal, UgmUser):
         if self.parent.parent.ucfg.memberOfSupport:
             res = list()
             for dn in self.member_of_attr:
-                if not isinstance(dn, unicode):
-                    dn = dn.decode('utf-8')
+                dn = ensure_text(dn)
                 if groups.context.DN not in dn:
                     # Skip DN outside groups base DN
                     continue
@@ -261,7 +267,7 @@ class LDAPGroupMapping(Behavior):
 
     @override
     def __getitem__(self, key):
-        key = decode_utf8(key)
+        key = ensure_text(key)
         if key not in self:
             raise KeyError(key)
         return self.related_principals(key)[key]
@@ -269,7 +275,7 @@ class LDAPGroupMapping(Behavior):
     @override
     @locktree
     def __delitem__(self, key):
-        key = decode_utf8(key)
+        key = ensure_text(key)
         if key not in self:
             raise KeyError(key)
         if self._member_format == FORMAT_DN:
@@ -290,7 +296,7 @@ class LDAPGroupMapping(Behavior):
 
     @override
     def __contains__(self, key):
-        key = decode_utf8(key)
+        key = ensure_text(key)
         for uid in self:
             if uid == key:
                 return True
@@ -299,7 +305,7 @@ class LDAPGroupMapping(Behavior):
     @default
     @locktree
     def add(self, key):
-        key = decode_utf8(key)
+        key = ensure_text(key)
         if key not in self.member_ids:
             val = self.translate_key(key)
             # self.context.attrs[self._member_attribute].append won't work here
@@ -322,7 +328,7 @@ class LDAPGroupMapping(Behavior):
                 attrlist = [users._key_attr]
                 matches_generator = users.context.batched_search(
                     criteria=criteria,
-                    attrlist=attrlist,
+                    attrlist=attrlist
                 )
                 return [
                     att[users._key_attr][0] for _, att in matches_generator
@@ -447,8 +453,8 @@ class LDAPPrincipals(OdictStorage):
         #     raise KeyError(dn)
         try:
             search = self.context.ldap_session.search
-            res = search(baseDN=dn.encode('utf-8'))[0]
-            return res[1][self._key_attr][0].decode('utf-8')
+            res = search(baseDN=dn)[0]
+            return ensure_text(res[1][self._key_attr][0])
         except ldap.NO_SUCH_OBJECT:
             raise KeyError(dn)
 
@@ -468,7 +474,7 @@ class LDAPPrincipals(OdictStorage):
     @default
     @locktree
     def __getitem__(self, key):
-        key = decode_utf8(key)
+        key = ensure_text(key)
         try:
             return self.storage[key]
         except KeyError:
@@ -477,14 +483,14 @@ class LDAPPrincipals(OdictStorage):
             res = self.context.search(criteria=criteria, attrlist=attrlist)
             if not res:
                 raise KeyError(key)
-            if len(res) > 1:
+            if len(res) > 1:  # pragma: no cover
                 msg = u'More than one principal with id "{0}" found.'
                 logger.warning(msg.format(key))
             prdn = res[0][1]['rdn']
             if prdn in self.context._deleted_children:
                 raise KeyError(key)
             dn = res[0][0]
-            path = explode_dn(dn.encode('utf-8'))[:len(self.context.DN.split(',')) * -1]
+            path = explode_dn(dn)[:len(self.context.DN.split(',')) * -1]
             context = self.context
             for rdn in reversed(path):
                 context = context[rdn]
@@ -505,7 +511,7 @@ class LDAPPrincipals(OdictStorage):
             prdn = principal[1]['rdn']
             if prdn in self.context._deleted_children:
                 continue
-            yield principal[1][self._key_attr][0]
+            yield ensure_text(principal[1][self._key_attr][0])
         for principal in self.context._added_children:
             yield self.context[principal].attrs[self._key_attr]
 
@@ -560,16 +566,14 @@ class LDAPPrincipals(OdictStorage):
     @default
     def _alias_dict(self, dct):
         ret = dict()
-        for key, val in self.principal_attraliaser.iteritems():
-            for k, v in dct.iteritems():
+        for key, val in six.iteritems(self.principal_attraliaser):
+            for k, v in six.iteritems(dct):
                 if val == k:
                     ret[key] = v
         return ret
 
     @default
     def _unalias_list(self, lst):
-        if lst is None:
-            return None
         unalias = self.principal_attraliaser.unalias
         return [unalias(x) for x in lst]
 
@@ -579,7 +583,7 @@ class LDAPPrincipals(OdictStorage):
             return None
         unalias = self.principal_attraliaser.unalias
         unaliased_dct = dict(
-            [(unalias(key), val) for key, val in dct.iteritems()])
+            [(unalias(key), val) for key, val in six.iteritems(dct)])
         return unaliased_dct
 
     @default
@@ -600,7 +604,7 @@ class LDAPPrincipals(OdictStorage):
                 page_size=page_size,
                 cookie=cookie
             )
-        except ldap.NO_SUCH_OBJECT:
+        except ldap.NO_SUCH_OBJECT:  # pragma: no cover
             return []
         if type(results) is tuple:
             results, cookie = results
@@ -609,8 +613,7 @@ class LDAPPrincipals(OdictStorage):
             for _, att in results:
                 principal_id = att[self._key_attr][0]
                 aliased = self._alias_dict(att)
-                keys = aliased.keys()
-                for key in keys:
+                for key in list(aliased.keys()):
                     if key not in attrlist:
                         del aliased[key]
                 _results.append((principal_id, aliased))
@@ -714,16 +717,16 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
     @default
     def id_for_login(self, login):
         if not self._login_attr:
-            return login
+            return ensure_text(login)
         criteria = {self._login_attr: login}
         attrlist = [self._key_attr]
         res = self.context.search(criteria=criteria, attrlist=attrlist)
         if not res:
-            return login
-        if len(res) > 1:
+            return ensure_text(login)
+        if len(res) > 1:  # pragma: no cover
             msg = u'More than one principal with login "{0}" found.'
             logger.warning(msg.format(login))
-        return res[0][1][self._key_attr][0]
+        return ensure_text(res[0][1][self._key_attr][0])
 
     @default
     @debug
@@ -731,18 +734,18 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
         if id is not None:
             # bbb. deprecated usage
             login = id
-        user_id = self.id_for_login(decode_utf8(login))
+        user_id = self.id_for_login(login)
         criteria = {self._key_attr: user_id}
         attrlist = ['dn']
         if self.expiresAttr:
             attrlist.append(self.expiresAttr)
         try:
             res = self.context.search(criteria=criteria, attrlist=attrlist)
-        except ldap.NO_SUCH_OBJECT:
+        except ldap.NO_SUCH_OBJECT:  # pragma: no cover
             return False
         if not res:
             return False
-        if len(res) > 1:
+        if len(res) > 1:  # pragma: no cover
             msg = u'More than one principal with login "{0}" found.'
             logger.warning(msg.format(user_id))
         if self.expiresAttr:
@@ -752,21 +755,23 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
                 expired = calculate_expired(self.expiresUnit, expires)
             except ValueError:
                 # unknown expires field data
-                msg = u"Accound expiration flag for user '{0}' " + \
-                      u"contains unknown data"
+                msg = (
+                    u"Accound expiration flag for user '{0}' "
+                    u"contains unknown data"
+                )
                 logger.error(msg.format(id))
                 return False
             if expired:
                 return ACCOUNT_EXPIRED
         user_dn = res[0][1]['dn']
         session = self.context.ldap_session
-        authenticated = session.authenticate(user_dn.encode('utf-8'), pw)
+        authenticated = session.authenticate(user_dn, pw)
         return authenticated and user_id or False
 
     @default
     @debug
     def passwd(self, id, oldpw, newpw):
-        user_id = self.id_for_login(decode_utf8(id))
+        user_id = self.id_for_login(id)
         criteria = {self._key_attr: user_id}
         attrlist = ['dn']
         if self.expiresAttr:
@@ -774,7 +779,7 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
         res = self.context.search(criteria=criteria, attrlist=attrlist)
         if not res:
             raise KeyError(id)
-        if len(res) > 1:
+        if len(res) > 1:  # pragma: no cover
             msg = u'More than one principal with login "{0}" found.'
             logger.warning(msg.format(user_id))
         user_dn = res[0][1]['dn']
@@ -861,7 +866,7 @@ class LDAPGroups(LDAPGroupsMapping):
     @override
     @locktree
     def __delitem__(self, key):
-        key = decode_utf8(key)
+        key = ensure_text(key)
         group = self[key]
         parent = self.parent
         if parent and parent.rcfg is not None:
@@ -901,7 +906,7 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
         groups = ugm.groups
         ret = [key for key in users]
         for key in groups:
-            ret.append('group:%s' % key)
+            ret.append('group:{}'.format(key))
         return ret
 
     @default
@@ -919,7 +924,7 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
             group_members = list()
             for dn in members:
                 try:
-                    group_members.append('group:%s' % groups.idbydn(dn, True))
+                    group_members.append('group:{}'.format(groups.idbydn(dn, True)))
                 except KeyError:
                     pass
             members = user_members + group_members
@@ -944,7 +949,7 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
     @override
     @locktree
     def __getitem__(self, key):
-        key = decode_utf8(key)
+        key = ensure_text(key)
         if key not in self:
             raise KeyError(key)
         principals = self.related_principals(key)
@@ -955,7 +960,7 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
     @override
     @locktree
     def __delitem__(self, key):
-        key = decode_utf8(key)
+        key = ensure_text(key)
         if key not in self:
             raise KeyError(key)
         principals = self.related_principals(key)
@@ -1113,7 +1118,7 @@ class LDAPUgm(UgmBase):
         if role is None:
             role = roles.create(rolename)
         if uid in role.member_ids:
-            raise ValueError(u"Principal already has role '%s'" % rolename)
+            raise ValueError(u"Principal already has role '{}'".format(rolename))
         role.add(uid)
 
     @default
@@ -1125,9 +1130,9 @@ class LDAPUgm(UgmBase):
             raise ValueError(u"Role support not configured properly")
         role = roles.get(rolename)
         if role is None:
-            raise ValueError(u"Role not exists '%s'" % rolename)
+            raise ValueError(u"Role not exists '{}'".format(rolename))
         if uid not in role.member_ids:
-            raise ValueError(u"Principal does not has role '%s'" % rolename)
+            raise ValueError(u"Principal does not has role '{}'".format(rolename))
         del role[uid]
         if not role.member_ids:
             parent = role.parent
@@ -1151,7 +1156,7 @@ class LDAPUgm(UgmBase):
     def _principal_id(self, principal):
         uid = principal.name
         if isinstance(principal, Group):
-            uid = 'group:%s' % uid
+            uid = 'group:{}'.format(uid)
         return uid
 
     @default

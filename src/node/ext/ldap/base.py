@@ -8,6 +8,7 @@ from zope.component import queryUtility
 import hashlib
 import ldap
 import logging
+import six
 
 
 logger = logging.getLogger('node.ext.ldap')
@@ -30,7 +31,7 @@ def testLDAPConnectivity(server=None, port=None, props=None):
         lc.bind()
         lc.unbind()
         return 'success'
-    except ldap.LDAPError, error:
+    except ldap.LDAPError as error:
         return error
 
 
@@ -41,18 +42,24 @@ def md5digest(key):
     :return digest: hex digest.
     """
     m = hashlib.md5()
-    m.update(key)
+    m.update(ensure_bytes(key))
     return m.hexdigest()
 
 
-def decode_utf8(value):
-    if value and not isinstance(value, unicode):
+def ensure_text(value):
+    if value and not isinstance(value, six.text_type):
         value = value.decode('utf-8')
     return value
 
 
-def encode_utf8(value):
-    if value and isinstance(value, unicode):
+def ensure_bytes(value):
+    if value and isinstance(value, six.text_type):
+        value = value.encode('utf-8')
+    return value
+
+
+def ensure_bytes_py2(value):
+    if six.PY2 and value and isinstance(value, six.text_type):  # pragma: no cover
         value = value.encode('utf-8')
     return value
 
@@ -87,23 +94,25 @@ class LDAPConnector(object):
     def bind(self):
         """Bind to Server and return the Connection Object.
         """
-        if self._ignore_cert:
+        if self._ignore_cert:  # pragma: no cover
             ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
-        elif self._tls_cacert_file:
+        elif self._tls_cacert_file:  # pragma: no cover
             ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, self._tls_cacert_file)
         self._con = ldap.ldapobject.ReconnectLDAPObject(
             self._uri,
+            bytes_mode=False,
+            bytes_strictness='silent',
             retry_max=self._retry_max,
-            retry_delay=self._retry_delay,
+            retry_delay=self._retry_delay
         )
         # Turning referrals off since they cause problems with MS Active
         # Directory More info: https://www.python-ldap.org/faq.html#usage
         self._con.set_option(ldap.OPT_REFERRALS, 0)
         self._con.protocol_version = self.protocol
-        if self._start_tls:
+        if self._start_tls:  # pragma: no cover
             # ignore in tests for now. nevertheless provide a test environment
             # for TLS and SSL later
-            self._con.start_tls_s()                        #pragma NO COVERAGE
+            self._con.start_tls_s()
         self._con.simple_bind_s(self._bindDN, self._bindPW)
         return self._con
 
@@ -146,7 +155,7 @@ class LDAPCommunicator(object):
                         repr(cacheprovider)
                     )
                 )
-            else:
+            else:  # pragma: no cover
                 logger.debug(
                     u"LDAP Caching activated for instance '{0:s}'.".format(
                         repr(self._cache),
@@ -277,11 +286,13 @@ def main():
     """
     import sys
     if len(sys.argv) < 3:
-        print 'usage: python base.py [server] [port]'
+        res = 'usage: python base.py [server] [port]'
     else:
         server, port = sys.argv[1:]
-        print testLDAPConnectivity(server, int(port))
+        res = testLDAPConnectivity(server, int(port))
+    print(res)
+    return res
 
 
-if __name__ == "__main__":
-    main()                                                  #pragma NO COVERAGE
+if __name__ == "__main__":  # pragma: no cover
+    main()

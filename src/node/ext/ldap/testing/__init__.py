@@ -39,13 +39,13 @@ def read_env(layer):
         tmpdir = tempfile.mkdtemp()
         layer['externalpidfile'] = False
     layer['confdir'] = tmpdir
-    layer['dbdir'] = "%s/openldap-data" % (layer['confdir'],)
-    layer['slapdconf'] = "%s/slapd.conf" % (layer['confdir'],)
+    layer['dbdir'] = "%s/openldap-data" % layer['confdir']
+    layer['slapdconf'] = "%s/slapd.conf" % layer['confdir']
     layer['binddn'] = "cn=Manager,%s" % LDAPSUFFIX
     layer['suffix'] = LDAPSUFFIX
     layer['bindpw'] = "secret"
     layer['slapddb'] = SLAPDDB
-    print tmpdir
+    print(tmpdir)
 
 
 slapdconf_template = """\
@@ -119,7 +119,7 @@ class SlapdConf(Layer):
             )
         os.mkdir(dbdir)
         self['props'] = props
-        print "SlapdConf set up."
+        print("SlapdConf set up.")
 
     def tearDown(self):
         """remove our traces
@@ -127,7 +127,7 @@ class SlapdConf(Layer):
         read_env(self)
         shutil.rmtree(self['confdir'])
         del self['confdir']
-        print "SlapdConf torn down."
+        print("SlapdConf torn down.")
 
 
 schema = [
@@ -164,37 +164,37 @@ class Slapd(LDAPLayer):
     def setUp(self, args=['-d', '0']):
         """start slapd
         """
-        print "\nStarting LDAP server: ",
+        print("\nStarting LDAP server: ")
         read_env(self)
         cmd = [self.slapdbin, '-f', self['slapdconf'], '-h', self['uris']]
         cmd += args
-        print ' '.join(cmd)
+        print(' '.join(cmd))
         self.slapd = subprocess.Popen(cmd)
         time.sleep(1)
-        print "done."
+        print("done.")
 
     def tearDown(self):
         """stop the previously started slapd
         """
-        print "\nStopping LDAP Server: ",
+        print("\nStopping LDAP Server: ")
         read_env(self)
         if self['externalpidfile']:
             # case testldap server started via node.ext.ldap.main.slapd
-            path = os.path.join(                            #pragma NO COVERAGE
-                self['confdir'], 'slapd.pid')               #pragma NO COVERAGE
-            with open(path) as pidfile:                     #pragma NO COVERAGE
-                pid = int(pidfile.read())                   #pragma NO COVERAGE
+            path = os.path.join(
+                self['confdir'], 'slapd.pid')
+            with open(path) as pidfile:
+                pid = int(pidfile.read())
         else:
             pid = self.slapd.pid
         os.kill(pid, 15)
         if self.slapd is not None:
-            print "waiting for slapd to terminate...",
+            print("waiting for slapd to terminate...")
             self.slapd.wait()
-        print "done."
-        print "Whiping ldap data directory %s: " % (self['dbdir'],),
+        print("done.")
+        print("Whiping ldap data directory %s: " % self['dbdir'])
         for file in os.listdir(self['dbdir']):
             os.remove('%s/%s' % (self['dbdir'], file))
-        print "done."
+        print("done.")
 
 
 SLAPD = Slapd()
@@ -228,27 +228,26 @@ class Ldif(LDAPLayer):
         read_env(self)
         self['ucfg'] = self.ucfg
         self['gcfg'] = self.gcfg
-        print
         for ldif in self.ldifs:
-            print "Adding ldif %s: " % (ldif,),
+            print("Adding ldif %s: " % ldif)
             cmd = [self.ldapaddbin, '-f', ldif, '-x', '-D', self['binddn'],
                    '-w', self['bindpw'], '-c', '-a', '-H', self['uris']]
             retcode = subprocess.call(cmd)
-            print "done. %s" % retcode
+            print("done. %s" % retcode)
 
     def tearDown(self):
         """remove previously added ldifs
         """
         read_env(self)
         for ldif in self.ldifs:
-            print "Removing ldif %s recursively: " % (ldif,),
+            print("Removing ldif %s recursively: " % ldif)
             with open(ldif) as ldif:
                 dns = [x.strip().split(' ', 1)[1] for x in ldif if
                        x.startswith('dn: ')]
             cmd = [self.ldapdeletebin, '-x', '-D', self['binddn'], '-c', '-r',
                    '-w', self['bindpw'], '-H', self['uris']] + dns
             retcode = subprocess.call(cmd, stderr=subprocess.PIPE)
-            print "done. %s" % retcode
+            print("done. %s" % retcode)
         for key in ('ucfg', 'gcfg'):
             if key in self:
                 del self[key]
@@ -257,13 +256,13 @@ class Ldif(LDAPLayer):
             # XXX: fails to pop global registry in Zope 2. Why?
             try:
                 zca.popGlobalRegistry()
-                print 80 * '*'
-                print "pop global registry"
-            except Exception, e:
-                print 80 * '*'
-                print "pop global registry failed"
-                print e
-                print 80 * '*'
+                print(80 * '*')
+                print("pop global registry")
+            except Exception as e:
+                print(80 * '*')
+                print("pop global registry failed")
+                print(e)
+                print(80 * '*')
 
 
 ldif_layer = odict()
@@ -285,27 +284,27 @@ props = LDAPProps(
 # base users config
 ucfg = UsersConfig(
     baseDN='dc=my-domain,dc=com',
-    attrmap={
-        'id': 'sn',
-        'login': 'description',
-        'telephoneNumber': 'telephoneNumber',
-        'rdn': 'ou',
-        'sn': 'sn',
-    },
+    attrmap=odict((
+        ('rdn', 'ou'),
+        ('id', 'sn'),
+        ('login', 'cn'),
+        ('telephoneNumber', 'telephoneNumber'),
+        ('sn', 'sn')
+    )),
     scope=SUBTREE,
     queryFilter='(&(objectClass=person)(!(objectClass=inetOrgPerson)))',
     objectClasses=['person'])
 
 
 # inetOrgPerson r/w attrs
-inetOrgPerson_attrmap = {
-    'id': 'uid',
-    'login': 'uid',
-    'cn': 'cn',
-    'rdn': 'uid',
-    'sn': 'sn',
-    'mail': 'mail',
-},
+inetOrgPerson_attrmap = odict((
+    ('rdn', 'uid'),
+    ('id', 'uid'),
+    ('login', 'uid'),
+    ('cn', 'cn'),
+    ('sn', 'sn'),
+    ('mail', 'mail')
+)),
 
 
 # users config for 300-users data.
@@ -425,21 +424,21 @@ ldif_layer['users2000'] = LDIF_users2000
 
 # Users and groups
 
-groupOfNamesUcfgAttrmap = {
-    'id': 'uid',
-    'login': 'cn',
-    'rdn': 'uid',
-    'cn': 'cn',
-    'sn': 'sn',
-    'mail': 'mail',
-}
+groupOfNamesUcfgAttrmap = odict((
+    ('rdn', 'uid'),
+    ('id', 'uid'),
+    ('login', 'cn'),
+    ('cn', 'cn'),
+    ('sn', 'sn'),
+    ('mail', 'mail')
+))
 
 
-groupOfNamesGcfgAttrmap = {
-    'id': 'cn',
-    'rdn': 'cn',
-    'businessCategory': 'businessCategory',
-}
+groupOfNamesGcfgAttrmap = odict((
+    ('rdn', 'cn'),
+    ('id', 'cn'),
+    ('businessCategory', 'businessCategory')
+))
 
 
 LDIF_groupOfNames = Ldif(
@@ -576,23 +575,23 @@ ldif_layer['groupOfNames_1000_1000'] = LDIF_groupOfNames_1000_1000
 
 # Users and groups (posix)
 
-posixGroupsUcfgAttrmap = {
-    'id': 'uid',
-    'login': 'cn',
-    'rdn': 'uid',
-    'cn': 'cn',
-    'sn': 'sn',
-    'uidNumber': 'uidNumber',
-    'gidNumber': 'gidNumber',
-    'homeDirectory': 'homeDirectory',
-}
+posixGroupsUcfgAttrmap = odict((
+    ('rdn', 'uid'),
+    ('id', 'uid'),
+    ('login', 'cn'),
+    ('cn', 'cn'),
+    ('sn', 'sn'),
+    ('uidNumber', 'uidNumber'),
+    ('gidNumber', 'gidNumber'),
+    ('homeDirectory', 'homeDirectory')
+))
 
 
-posixGroupsGcfgAttrmap = {
-    'id': 'cn',
-    'rdn': 'cn',
-    'gidNumber': 'gidNumber',
-}
+posixGroupsGcfgAttrmap = odict((
+    ('rdn', 'cn'),
+    ('id', 'cn'),
+    ('gidNumber', 'gidNumber')
+))
 
 
 LDIF_posixGroups = Ldif(
@@ -641,14 +640,14 @@ ldif_layer['posixGroups_10_10'] = LDIF_posixGroups_10_10
 
 # users (samba)
 
-sambaUsersUcfgAttrmap = {
-    'id': 'uid',
-    'login': 'uid',
-    'rdn': 'uid',
-    'sambaSID': 'sambaSID',
-    'sambaNTPassword': 'sambaNTPassword',
-    'sambaLMPassword': 'sambaLMPassword',
-}
+sambaUsersUcfgAttrmap = odict((
+    ('rdn', 'uid'),
+    ('id', 'uid'),
+    ('login', 'uid'),
+    ('sambaSID', 'sambaSID'),
+    ('sambaNTPassword', 'sambaNTPassword'),
+    ('sambaLMPassword', 'sambaLMPassword')
+))
 
 
 LDIF_sambaUsers = Ldif(

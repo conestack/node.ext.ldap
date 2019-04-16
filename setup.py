@@ -47,7 +47,7 @@ setup(
     install_requires=[
         'setuptools',
         'python-ldap>=2.4.14',
-        'smbpasswd',
+        'passlib',
         'argparse',
         'bda.cache',
         'odict>=1.6.1',
@@ -57,7 +57,6 @@ setup(
     ],
     extras_require={
         'test': [
-            'interlude',
             'plone.testing',
             'zope.configuration',
             'zope.testing',

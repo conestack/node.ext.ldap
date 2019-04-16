@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-
+from passlib.hash import lmhash
+from passlib.hash import nthash
 import sys
-import smbpasswd
 
 container_template = """\
 dn: ou=sambaUsers,dc=my-domain,dc=com
@@ -29,19 +29,19 @@ userPassword: %(pwd)s
 
 n = int(sys.argv.pop(1))
 
-print container_template
+print(container_template)
 for x in range(n):
     secret = 'secret%d' % x
-    nt_secret = smbpasswd.nthash(secret)
-    lm_secret = smbpasswd.lmhash(secret)
-    print user_template % dict(
-            uid='uid%d' % x,
-            cn='cn%d' % x,
-            uid_num=str(x),
-            gid_num=str(x),
-            home_dir='/home/uid%d' % x,
-            sid='12345-%d' % x,
-            pwd=secret,
-            ntpwd=nt_secret,
-            lmpwd=lm_secret,
-            ),
+    nt_secret = nthash.hash(secret)
+    lm_secret = lmhash.hash(secret)
+    print(user_template % dict(
+        uid='uid%d' % x,
+        cn='cn%d' % x,
+        uid_num=str(x),
+        gid_num=str(x),
+        home_dir='/home/uid%d' % x,
+        sid='12345-%d' % x,
+        pwd=secret,
+        ntpwd=nt_secret,
+        lmpwd=lm_secret,
+    ))

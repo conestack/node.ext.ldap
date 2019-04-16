@@ -55,7 +55,8 @@ class LDAPServerProperties(object):
         retry_delay=10.0,
         multivalued_attributes=MULTIVALUED_DEFAULTS,
         binary_attributes=BINARY_DEFAULTS,
-        page_size=1000):
+        page_size=1000
+    ):
         """Take the connection properties as arguments.
 
         SSL/TLS still unsupported.
@@ -94,7 +95,7 @@ class LDAPServerProperties(object):
         :param multivalued_attributes: Set of attributes names considered as
             multivalued to be returned as list.
         :param binary_attributes: Set of attributes names considered as binary.
-            (no unicode conversion)
+            (no text conversion)
         :param page_size: Oage size for LDAP search requests, defaults to 1000.
             Number of objects requested at once.
             In iterations after this number of objects a new search query is
@@ -104,7 +105,7 @@ class LDAPServerProperties(object):
             # old school
             self.server = server or 'localhost'
             self.port = port or 389
-            uri = "ldap://%s:%d/" % (self.server, self.port)
+            uri = 'ldap://{}:{}/'.format(self.server, self.port)
         self.uri = uri
         self.user = user
         self.password = password
@@ -121,6 +122,7 @@ class LDAPServerProperties(object):
         self.multivalued_attributes = multivalued_attributes
         self.binary_attributes = binary_attributes
         self.page_size = page_size
+
 
 # B/C
 LDAPProps = LDAPServerProperties

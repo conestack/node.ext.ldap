@@ -1131,7 +1131,7 @@ Dependencies
 
 - python-ldap
 
-- smbpasswd
+- passlib
 
 - argparse
 
@@ -1175,3 +1175,5 @@ Contributors
 - Asko Soukka
 
 - Alex Milosz Sielicki
+
+- Manuel Reinhardt

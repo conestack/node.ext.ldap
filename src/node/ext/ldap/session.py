@@ -8,8 +8,6 @@ import ldap
 
 class LDAPSession(object):
     """LDAP Session binds always.
-
-    all strings must be utf8 encoded!
     """
 
     def __init__(self, props):
@@ -33,15 +31,10 @@ class LDAPSession(object):
 
     @baseDN.setter
     def baseDN(self, baseDN):
-        """baseDN must be utf8-encoded.
-        """
         self._communicator.baseDN = baseDN
 
     def ensure_connection(self):
         """If LDAP directory is down, bind again and retry given function.
-
-        XXX: * Improve retry logic
-             * Extend LDAPSession object to handle Fallback server(s)
         """
         if self._communicator._con is None:
             self._communicator.bind()
@@ -55,13 +48,20 @@ class LDAPSession(object):
             # '(objectClass=*)'
             queryFilter = '(objectClass=*)'
         self.ensure_connection()
-        res = self._communicator.search(queryFilter, scope, baseDN,
-                                        force_reload, attrlist, attrsonly,
-                                        page_size, cookie)
+        res = self._communicator.search(
+            queryFilter,
+            scope,
+            baseDN,
+            force_reload,
+            attrlist,
+            attrsonly,
+            page_size,
+            cookie
+        )
         if page_size:
             res, cookie = res
         # ActiveDirectory returns entries with dn None, which can be ignored
-        res = filter(lambda x: x[0] is not None, res)
+        res = [x for x in res if x[0] is not None]
         if page_size:
             return res, cookie
         return res
@@ -74,9 +74,13 @@ class LDAPSession(object):
         """Verify credentials, but don't rebind the session to that user
         """
         # Let's bypass connector/communicator until they are sorted out
-        if self._props.ignore_cert:
+        if self._props.ignore_cert:  # pragma: no cover
             ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
-        con = ldap.initialize(self._props.uri)
+        con = ldap.initialize(
+            self._props.uri,
+            bytes_mode=False,
+            bytes_strictness='silent'
+        )
         # Turning referrals off since they cause problems with MS Active
         # Directory More info: https://www.python-ldap.org/faq.html#usage
         con.set_option(ldap.OPT_REFERRALS, 0)

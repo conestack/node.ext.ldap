@@ -23,6 +23,6 @@ before_install:
 install:
   - ./bin/buildout -N -t 3 -c travis.cfg
 script:
-  - bin/coverage run --source=./src/node/ext/ldap bin/test
+  - bin/coverage run --source=./src/node/ext/ldap --omit=./src/node/ext/ldap/main.py bin/test
 after_success:
   - bin/coveralls

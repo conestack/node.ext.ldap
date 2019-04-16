@@ -8,6 +8,8 @@
 /.pydevproject.bak
 /.settings
 /.vscode/
+/py2/
+/py3/
 /bin/
 /coverage/
 /develop-eggs/

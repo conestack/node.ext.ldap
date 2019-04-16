@@ -115,7 +115,7 @@ def slapd():
         # XXX should check for distinct slapd
         checkslapd = 'ps ax| grep slapd| grep -v grep -q'
         if not subprocess.call(checkslapd, shell=True) == 1:
-            print u"LDAP already running. abort."
+            print(u"LDAP already running. abort.")
             sys.exit(2)
         startslapd(layer, ns.ldiflayer)
     else:
