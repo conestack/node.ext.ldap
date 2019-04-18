@@ -8,7 +8,7 @@ History
   [jensens]
 
 - Fix problem with missing LDAP batching cookie in search.
-  [jensens]
+  [jensens, rnix]
 
 - Remove ``smbpasswd`` dependency. Use ``passlib`` instead.
   [rnix]
