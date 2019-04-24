@@ -605,8 +605,9 @@ class LDAPPrincipals(OdictStorage):
                 cookie=cookie
             )
         except ldap.NO_SUCH_OBJECT:  # pragma: no cover
+            logger.debug("LDAPPrincipals.raw_search: ldap.NO_SUCH_OBJECT")
             return []
-        if type(results) is tuple:
+        if isinstance(results, tuple):
             results, cookie = results
         if attrlist is not None:
             _results = list()
@@ -628,7 +629,7 @@ class LDAPPrincipals(OdictStorage):
     def search(self, criteria=None, attrlist=None,
                exact_match=False, or_search=False):
         result = []
-        cookie = None
+        cookie = ''
         while True:
             chunk, cookie = self.raw_search(
                 criteria=criteria,

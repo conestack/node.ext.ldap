@@ -4,6 +4,12 @@ History
 1.0b9 (unreleased)
 ------------------
 
+- Add debug-level logging if search fails with no-such-object.
+  [jensens]
+
+- Fix problem with missing LDAP batching cookie in search.
+  [jensens, rnix]
+
 - Remove ``smbpasswd`` dependency. Use ``passlib`` instead.
   [rnix]
 
