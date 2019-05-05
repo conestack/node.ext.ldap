@@ -506,7 +506,8 @@ class TestNode(NodeTestCase):
             ('sn', [b'Mustermann'])
         ])
 
-        # Check removing of an attribute
+        # Check removing of an attribute. This can be done by calling
+        # __delitem__
         self.assertEqual(
             (root.changed, customer.changed, person.changed, person.attrs.changed),
             (False, False, False, False)
@@ -517,9 +518,8 @@ class TestNode(NodeTestCase):
             (root.changed, customer.changed, person.changed, person.attrs.changed),
             (True, True, True, True)
         )
+        person()
 
-        # We can call a node in the middle
-        customer()
         res = queryPersonDirectly()
         self.assertEqual(
             res[0][0],
@@ -530,10 +530,55 @@ class TestNode(NodeTestCase):
             ('objectClass', [b'top', b'person']),
             ('sn', [b'Mustermann'])
         ])
+
+        # Attributes are also removed by setting and empty string or UNSET.
+        # Most LDAP implementations not allow setting empty values, thus
+        # we delete the entire attribute in this case
+        person.attrs['description'] = 'foo'
+        person()
+
+        res = queryPersonDirectly()
+        self.assertEqual(res[0][1]['description'], [b'foo'])
+
+        person.attrs['description'] = ''
+        person()
+
+        res = queryPersonDirectly()
+        self.assertFalse('description' in res[0][1])
+
+        # Setting the description again with no value has no effect, it just
+        # gets ignored
+        person.attrs['description'] = ''
         self.assertEqual(
             (root.changed, customer.changed, person.changed, person.attrs.changed),
             (False, False, False, False)
         )
+
+        # We can call a node somewhere in the middle
+        person.attrs['sn'] = 'Musterfrau'
+        self.assertEqual(
+            (root.changed, customer.changed, person.changed, person.attrs.changed),
+            (True, True, True, True)
+        )
+
+        customer()
+        res = queryPersonDirectly()
+        self.assertEqual(
+            res[0][0],
+            'cn=max,ou=customer3,ou=customers,dc=my-domain,dc=com'
+        )
+        self.assertEqual(sorted(res[0][1].items()), [
+            ('cn', [b'Max']),
+            ('objectClass', [b'top', b'person']),
+            ('sn', [b'Musterfrau'])
+        ])
+        self.assertEqual(
+            (root.changed, customer.changed, person.changed, person.attrs.changed),
+            (False, False, False, False)
+        )
+
+        # Reset sn
+        person.attrs['sn'] = 'Mustermann'
 
         # Check adding of an attribute
         person.attrs['description'] = u'Brandnew description'

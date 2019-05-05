@@ -33,6 +33,7 @@ from node.utils import CHARACTER_ENCODING
 from node.utils import debug
 from node.utils import decode
 from node.utils import encode
+from node.utils import UNSET
 from plumber import Behavior
 from plumber import default
 from plumber import finalize
@@ -112,6 +113,10 @@ class LDAPAttributesBehavior(Behavior):
 
     @plumb
     def __setitem__(_next, self, key, val):
+        if val in ['', UNSET]:
+            if key in self:
+                del self[key]
+            return
         if not self.is_binary(key):
             val = decode(val)
         key = ensure_text(key)

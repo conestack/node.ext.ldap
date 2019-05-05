@@ -4,6 +4,11 @@ History
 1.0b9 (unreleased)
 ------------------
 
+- Remove attribute from entry if setting it's value to ``node.utils.UNSET`` or
+  empty string. Most LDAP implementations not allow setting empty values, thus
+  we delete the entire attribute in this case.
+  [rnix]
+
 - Add debug-level logging if search fails with no-such-object.
   [jensens]
 
