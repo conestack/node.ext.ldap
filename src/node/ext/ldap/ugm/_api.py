@@ -180,6 +180,18 @@ class AliasedPrincipal(Behavior):
     @default
     @locktree
     def __call__(self):
+        # add object classes from creation defaults. if missing.
+        # happens if object classes are added after principals were already
+        # created with another set of default object classes or if editing
+        # existing principals from a database not created with this
+        # API/configuration.
+        attrs = self.context.attrs
+        ocs = attrs['objectClass']
+        ocs = [ocs] if isinstance(ocs, six.text_type) else ocs
+        default_ocs = self.parent.context.child_defaults['objectClass']
+        if set(ocs) != set(default_ocs):
+            new_ocs = list(set(ocs).union(set(default_ocs)))
+            attrs['objectClass'] = new_ocs
         self.context()
 
 

@@ -143,6 +143,33 @@ class TestUGMPrincipals(NodeTestCase):
             '<cn=n?sty\, User,ou=customers,dc=my-domain,dc=com:cn=n?sty\, User - False>'
         ])
 
+        # test object classes changes in config
+        self.assertEqual(
+            users.context.child_defaults['objectClass'],
+            ['person']
+        )
+        users.context.child_defaults['objectClass'] = [
+            'person',
+            'extensibleObject'
+        ]
+        self.assertEqual(
+            mueller.context.attrs['objectClass'],
+            ['top', 'person']
+        )
+        mueller()
+        self.assertEqual(
+            sorted(mueller.context.attrs['objectClass']),
+            ['extensibleObject', 'person', 'top']
+        )
+        # note, by default, existing object classes missing in configured
+        # creation default object classes are NOT removed.
+        users.context.child_defaults['objectClass'] = ['person']
+        mueller()
+        self.assertEqual(
+            sorted(mueller.context.attrs['objectClass']),
+            ['extensibleObject', 'person', 'top']
+        )
+
     def test_authentication(self):
         props = testing.props
         ucfg = testing.ucfg
@@ -557,19 +584,21 @@ class TestUGMPrincipals(NodeTestCase):
         # Currently, the member relation is computed hardcoded and maps to
         # object classes. This will propably change in future. Right now
         # 'posigGroup', 'groupOfUniqueNames', and 'groupOfNames' are supported
-        self.assertEqual(member_format('groupOfUniqueNames'), 0)
-        self.assertEqual(member_attribute('groupOfUniqueNames'), 'uniqueMember')
+        self.assertEqual(member_format(['groupOfUniqueNames']), 0)
+        self.assertEqual(member_attribute(['groupOfUniqueNames']), 'uniqueMember')
 
-        self.assertEqual(member_format('groupOfNames'), 0)
-        self.assertEqual(member_attribute('groupOfNames'), 'member')
+        self.assertEqual(member_format(['groupOfNames']), 0)
+        self.assertEqual(member_attribute(['groupOfNames']), 'member')
 
-        self.assertEqual(member_format('posixGroup'), 1)
-        self.assertEqual(member_attribute('posixGroup'), 'memberUid')
+        self.assertEqual(member_format(['posixGroup']), 1)
+        self.assertEqual(member_attribute(['posixGroup']), 'memberUid')
 
         err = self.expect_error(Exception, member_format, 'foo')
-        self.assertEqual(str(err), 'Unknown format')
+        expected = 'Can not lookup member format for object-classes: foo'
+        self.assertEqual(str(err), expected)
         err = self.expect_error(Exception, member_attribute, 'foo')
-        self.assertEqual(str(err), 'Unknown member attribute')
+        expected = 'Can not lookup member attribute for object-classes: foo'
+        self.assertEqual(str(err), expected)
 
         self.assertEqual(groups['group1']._member_format, 0)
         self.assertEqual(groups['group1']._member_attribute, 'member')

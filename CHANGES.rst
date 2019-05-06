@@ -10,6 +10,9 @@ History
 - Increase Exception verbosity to ease debugging.
   [jensens]
 
+- Add missing object classes from principal config when persisting principals.
+  [rnix]
+
 - Remove attribute from entry if setting it's value to ``node.utils.UNSET`` or
   empty string. Most LDAP implementations not allow setting empty values, thus
   we delete the entire attribute in this case.
