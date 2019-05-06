@@ -4,6 +4,12 @@ History
 1.0b9 (unreleased)
 ------------------
 
+- Refactor mapping from object-class to format and attributes to increase readability.
+  [jensens]
+
+- Increase Exception verbosity to ease debugging.
+  [jensens]
+
 - Remove attribute from entry if setting it's value to ``node.utils.UNSET`` or
   empty string. Most LDAP implementations not allow setting empty values, thus
   we delete the entire attribute in this case.

@@ -45,6 +45,27 @@ logger = logging.getLogger('node.ext.ldap')
 FORMAT_DN = 0
 FORMAT_UID = 1
 
+# mapping from object-class to properties
+MEMBER_LOOKUP_BY_CLASS = {
+    'groupOfNames': {
+        'format': FORMAT_DN,
+        'attribute': 'member',
+    },
+    'groupOfUniqueNames': {
+        'format': FORMAT_DN,
+        'attribute': 'uniqueMember',
+    },
+    'posixGroup': {
+        'format': FORMAT_UID,
+        'attribute': 'memberUid',
+    },
+    'group': {
+        'format': FORMAT_DN,
+        'attribute': 'member',
+    },
+}
+
+
 # expiration unit
 EXPIRATION_DAYS = 0
 EXPIRATION_SECONDS = 1
@@ -806,28 +827,26 @@ class Users(object):
     pass
 
 
-def member_format(obj_cl):
-    if 'groupOfNames' in obj_cl:
-        return FORMAT_DN
-    if 'groupOfUniqueNames' in obj_cl:
-        return FORMAT_DN
-    if 'posixGroup' in obj_cl:
-        return FORMAT_UID
-    if 'group' in obj_cl:
-        return FORMAT_DN
-    raise Exception(u"Unknown format")
+def member_format(object_classes):
+    for object_class in MEMBER_LOOKUP_BY_CLASS:
+        if object_class in object_classes:
+            return MEMBER_LOOKUP_BY_CLASS[object_class]['format']
+    raise Exception(
+        u"Can not lookup member format for object-classes: {0}".format(
+            object_classes,
+        )
+    )
 
 
-def member_attribute(obj_cl):
-    if 'groupOfNames' in obj_cl:
-        return 'member'
-    if 'groupOfUniqueNames' in obj_cl:
-        return 'uniqueMember'
-    if 'posixGroup' in obj_cl:
-        return 'memberUid'
-    if 'group' in obj_cl:
-        return 'member'  # XXX: check AD!
-    raise Exception(u"Unknown member attribute")
+def member_attribute(object_classes):
+    for object_class in MEMBER_LOOKUP_BY_CLASS:
+        if object_class in object_classes:
+            return MEMBER_LOOKUP_BY_CLASS[object_class]['attribute']
+    raise Exception(
+        u"Can not lookup member attribute for object-classes: {0}".format(
+            object_classes,
+        )
+    )
 
 
 class LDAPGroupsMapping(LDAPPrincipals, UgmGroups):
