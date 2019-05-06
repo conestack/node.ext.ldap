@@ -4,6 +4,9 @@ History
 1.0b9 (unreleased)
 ------------------
 
+- Add missing object classes from principal config when persisting principals.
+  [rnix]
+
 - Remove attribute from entry if setting it's value to ``node.utils.UNSET`` or
   empty string. Most LDAP implementations not allow setting empty values, thus
   we delete the entire attribute in this case.

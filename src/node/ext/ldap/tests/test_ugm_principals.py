@@ -143,6 +143,33 @@ class TestUGMPrincipals(NodeTestCase):
             '<cn=n?sty\, User,ou=customers,dc=my-domain,dc=com:cn=n?sty\, User - False>'
         ])
 
+        # test object classes changes in config
+        self.assertEqual(
+            users.context.child_defaults['objectClass'],
+            ['person']
+        )
+        users.context.child_defaults['objectClass'] = [
+            'person',
+            'extensibleObject'
+        ]
+        self.assertEqual(
+            mueller.context.attrs['objectClass'],
+            ['top', 'person']
+        )
+        mueller()
+        self.assertEqual(
+            sorted(mueller.context.attrs['objectClass']),
+            ['extensibleObject', 'person', 'top']
+        )
+        # note, by default, existing object classes missing in configured
+        # creation default object classes are NOT removed.
+        users.context.child_defaults['objectClass'] = ['person']
+        mueller()
+        self.assertEqual(
+            sorted(mueller.context.attrs['objectClass']),
+            ['extensibleObject', 'person', 'top']
+        )
+
     def test_authentication(self):
         props = testing.props
         ucfg = testing.ucfg
