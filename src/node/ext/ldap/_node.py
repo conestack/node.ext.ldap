@@ -41,7 +41,10 @@ from plumber import plumb
 from plumber import plumbing
 from zope.deprecation import deprecated
 from zope.interface import implementer
+import logging
 import six
+
+logger = logging.getLogger('node.ext.ldap')
 
 
 ACTION_ADD = 0
@@ -459,7 +462,8 @@ class LDAPStorage(OdictStorage):
         root = node = self.root
         base_dn = root.name
         if not dn.endswith(base_dn):
-            raise ValueError(u'Invalid base DN')
+            raise ValueError(
+                u'Invalid DN "{0}" for given base DN "{1}"'.format(dn, base_dn))
         dn = dn[:len(dn) - len(base_dn)].strip(',')
         for rdn in reversed(explode_dn(dn)):
             try:
@@ -506,6 +510,7 @@ class LDAPStorage(OdictStorage):
             else:
                 _filter &= LDAPRelationFilter(relation_node, relation)
         # perform the backend search
+        logger.debug("LDAP search with filter: \n{0}".format(_filter))
         matches = self.ldap_session.search(
             str(_filter),
             self.search_scope,
