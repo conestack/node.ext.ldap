@@ -893,7 +893,10 @@ class TestNode(NodeTestCase):
             node.node_by_dn,
             'ou=customers,dc=invalid_base,dc=com'
         )
-        self.assertEqual(str(err), 'Invalid base DN')
+        self.assertEqual(
+            str(err),
+            'Invalid DN "ou=customers,dc=invalid_base,dc=com" for given base DN "dc=my-domain,dc=com"'
+        )
         self.assertEqual(
             repr(node.node_by_dn('dc=my-domain,dc=com')),
             '<dc=my-domain,dc=com - False>'
