@@ -185,13 +185,17 @@ class AliasedPrincipal(Behavior):
         # created with another set of default object classes or if editing
         # existing principals from a database not created with this
         # API/configuration.
-        attrs = self.context.attrs
-        ocs = attrs['objectClass']
+        ocs = self.context.attrs['objectClass']
         ocs = [ocs] if isinstance(ocs, six.text_type) else ocs
-        default_ocs = self.parent.context.child_defaults['objectClass']
-        if set(ocs) != set(default_ocs):
-            new_ocs = list(set(ocs).union(set(default_ocs)))
-            attrs['objectClass'] = new_ocs
+        ocsc = len(ocs)
+        for oc in self.parent.context.child_defaults['objectClass']:
+            if oc not in ocs:
+                ocs.append(oc)
+        # reset object classes only if changed to avoid unnecessary write
+        # operations to LDAP backend
+        if ocsc != len(ocs):
+            self.context.attrs['objectClass'] = ocs
+        # finally persist
         self.context()
 
 
