@@ -1,7 +1,7 @@
 History
 =======
 
-1.0b9 (unreleased)
+1.0b9 (2019-05-07)
 ------------------
 
 - Refactor mapping from object-class to format and attributes to increase readability.
