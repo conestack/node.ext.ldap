@@ -4,7 +4,8 @@ History
 1.0b10 (unreleased)
 -------------------
 
-- Nothing changed yet.
+- Fix cache key generation.
+  [rnix]
 
 
 1.0b9 (2019-05-07)

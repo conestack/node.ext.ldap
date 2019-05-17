@@ -46,6 +46,18 @@ def md5digest(key):
     return m.hexdigest()
 
 
+def cache_key(parts):
+    def dec(p):
+        if isinstance(p, bytes):
+            p = p.decode('utf-8')
+        elif isinstance(p, list) or isinstance(p, tuple):
+            p = u'-'.join([dec(_) for _ in p])
+        elif not isinstance(p, six.text_type):
+            p = six.text_type(p)
+        return p
+    return u'-'.join([dec(p) for p in parts])
+
+
 def ensure_text(value):
     if value and not isinstance(value, six.text_type):
         value = value.decode('utf-8')
@@ -237,11 +249,9 @@ class LDAPCommunicator(object):
                 page_size,
                 cookie
             ]
-            key = '-'.join([str(_) for _ in key_items])
-            key = md5digest(key)
             return self._cache.getData(
                 _search,
-                key,
+                md5digest(cache_key(key_items)),
                 force_reload,
                 args
             )

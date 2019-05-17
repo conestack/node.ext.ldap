@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from bda.cache.nullcache import NullCacheManager
 from ldap import MOD_REPLACE
 from node.ext.ldap import LDAPCommunicator
@@ -5,6 +6,7 @@ from node.ext.ldap import LDAPConnector
 from node.ext.ldap import LDAPProps
 from node.ext.ldap import SUBTREE
 from node.ext.ldap import testing
+from node.ext.ldap.base import cache_key
 from node.ext.ldap.base import main
 from node.ext.ldap.base import testLDAPConnectivity
 from node.tests import NodeTestCase
@@ -183,3 +185,25 @@ class TestBase(NodeTestCase):
         self.assertEqual(res, [])
 
         communicator.unbind()
+
+    def test_cache_key(self):
+        key = cache_key([
+            u'hällo',
+            b'w\xc3\xb6rld',
+            0,
+            None,
+            True,
+            False,
+            [
+                u'hällo',
+                b'w\xc3\xb6rld',
+                0,
+                None,
+                True,
+                False
+            ]
+        ])
+        self.assertEqual(
+            key,
+            u'hällo-wörld-0-None-True-False-hällo-wörld-0-None-True-False'
+        )
