@@ -49,8 +49,8 @@ def md5digest(key):
 def cache_key(parts):
     def dec(p):
         if isinstance(p, bytes):
-            p = p.decode('utf-8')
-        elif isinstance(p, list) or isinstance(p, tuple):
+            p = p.decode('utf-8', 'replace')
+        elif isinstance(p, (list, tuple)):
             p = u'-'.join([dec(_) for _ in p])
         elif not isinstance(p, six.text_type):
             p = six.text_type(p)
