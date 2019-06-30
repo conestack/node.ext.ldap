@@ -1177,3 +1177,5 @@ Contributors
 - Alex Milosz Sielicki
 
 - Manuel Reinhardt
+
+- Philip Bauer

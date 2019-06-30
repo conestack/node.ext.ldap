@@ -1,11 +1,11 @@
 History
 =======
 
-1.0b10 (unreleased)
+1.0b10 (2019-06-30)
 -------------------
 
 - Fix cache key generation.
-  [rnix]
+  [rnix, pbauer]
 
 
 1.0b9 (2019-05-07)
