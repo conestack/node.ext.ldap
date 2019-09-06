@@ -649,7 +649,10 @@ class LDAPPrincipals(OdictStorage):
         if attrlist is not None:
             _results = list()
             for _, att in results:
-                principal_id = att[self._key_attr][0]
+                try:
+                    principal_id = att[self._key_attr][0]
+                except (KeyError, IndexError):
+                    continue
                 aliased = self._alias_dict(att)
                 for key in list(aliased.keys()):
                     if key not in attrlist:
