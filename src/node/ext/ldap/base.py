@@ -222,14 +222,18 @@ class LDAPCommunicator(object):
             # in case we do pagination of results
             if type(attrlist) in (list, tuple):
                 attrlist = [str(_) for _ in attrlist]
-            msgid = self._con.search_ext(
-                baseDN,
-                scope,
-                queryFilter,
-                attrlist,
-                attrsonly,
-                serverctrls=serverctrls
-            )
+            try:
+                msgid = self._con.search_ext(
+                    baseDN,
+                    scope,
+                    queryFilter,
+                    attrlist,
+                    attrsonly,
+                    serverctrls=serverctrls
+                )
+            except ldap.LDAPError as e:
+                logger.warn(str(e))
+                return []
             rtype, results, rmsgid, rctrls = self._con.result3(msgid)
             ctype = ldap.controls.libldap.SimplePagedResultsControl.controlType
             pctrls = [c for c in rctrls if c.controlType == ctype]
