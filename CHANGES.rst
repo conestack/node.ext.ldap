@@ -1,7 +1,7 @@
 History
 =======
 
-1.0b11 (unreleased)
+1.0b11 (2019-09-08)
 -------------------
 
 - Return empty search result list when an LDAP error occurs.
