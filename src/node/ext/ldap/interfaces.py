@@ -94,6 +94,11 @@ class ILDAPPrincipalsConfig(Interface):
         '(openldap) for Group membership resolution where appropriate.'
     )
 
+    memberOfExternalGroupDNs = Attribute(
+        'BaseDNs to consider as valid besides the configured groups DN. '
+        'List of DNs. Defaults to empty list.'
+    )
+
     # XXX: currently expiresAttr only gets considered for user authentication
     #      group and role expiration is not implemented yet.
     expiresAttr = Attribute(

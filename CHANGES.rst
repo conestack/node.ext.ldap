@@ -1,10 +1,11 @@
 History
 =======
 
-1.0b12 (unreleased)
+1.0b13 (unreleased)
 -------------------
 
-- No changes yet.
+- Support for group DNs in ``memberOf`` attribute that are outside of the UGMs configured group.
+  [jensens]
 
 
 1.0b11 (2019-09-08)

@@ -411,5 +411,24 @@ class TestUGMGroupOfNames(NodeTestCase):
         self.assertEqual(groups['group1'].member_ids, [u'uid1'])
         self.assertEqual(groups['group2'].member_ids, [u'uid1', u'uid2'])
 
+        # test ugm tree external groups
+
+        ugm.ucfg.memberOfExternalGroupDNs = ["ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com"]
+        ugm.gcfg.memberOfExternalGroupDNs = ["ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com"]
+
+        # external can not be handled by this ugm tree
+        self.assertNotIn('group3', groups)
+
+        self.assertEqual(users['uid1'].groups, [groups['group2'], groups['group1']])
+
+        # but they are listed in group_ids
+        self.assertEqual(
+            sorted(users['uid1'].group_ids),
+            [u"group1", u'group2', u'group3'],
+        )
+        self.assertEqual(groups['group1'].member_ids, [u'uid1'])
+        self.assertEqual(groups['group2'].member_ids, [u'uid1', u'uid2'])
+
+
         ugm.ucfg.memberOfSupport = False
         ugm.gcfg.memberOfSupport = False
