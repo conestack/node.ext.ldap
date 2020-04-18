@@ -99,7 +99,8 @@ class PrincipalsConfig(object):
         defaults={},
         strict=True,
         memberOfSupport=False,
-        memberOfExternalGroupDNs= [],
+        recursiveGroups=False,
+        memberOfExternalGroupDNs=[],
         expiresAttr=None,
         expiresUnit=EXPIRATION_DAYS
     ):
@@ -111,6 +112,7 @@ class PrincipalsConfig(object):
         self.defaults = defaults
         self.strict = strict
         self.memberOfSupport = memberOfSupport
+        self.recursiveGroups = recursiveGroups
         self.memberOfExternalGroupDNs = memberOfExternalGroupDNs
         # XXX: currently expiresAttr only gets considered for user
         #      authentication group and role expiration is not implemented yet.
@@ -281,6 +283,10 @@ class LDAPUser(LDAPPrincipal, UgmUser):
         else:
             member_format = groups._member_format
             attribute = groups._member_attribute
+            # Support LDAP_MATCHING_RULE_IN_CHAIN (recursive/nested groups)
+            # See https://msdn.microsoft.com/en-us/library/aa746475(v=vs.85).aspx
+            if self.parent.parent.ucfg.recursiveGroups:
+                attribute += ':1.2.840.113556.1.4.1941:'
             if member_format == FORMAT_DN:
                 criteria = {attribute: self.context.DN}
             elif member_format == FORMAT_UID:

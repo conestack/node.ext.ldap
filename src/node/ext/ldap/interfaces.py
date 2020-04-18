@@ -94,6 +94,12 @@ class ILDAPPrincipalsConfig(Interface):
         '(openldap) for Group membership resolution where appropriate.'
     )
 
+    recursiveGroups = Attribute(
+        'Flag whether to use LDAP_MATCHING_RULE_IN_CHAIN when searching '
+        'for membership in groups. This is only used when not using memberOf. '
+        'See https://msdn.microsoft.com/en-us/library/aa746475(v=vs.85).aspx'
+    )
+
     memberOfExternalGroupDNs = Attribute(
         'BaseDNs to consider as valid besides the configured groups DN. '
         'List of DNs. Defaults to empty list.'
