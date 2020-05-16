@@ -4,7 +4,8 @@ History
 1.0b12 (unreleased)
 -------------------
 
-- No changes yet.
+- Implement ``invalidate`` on ``node.ext.ldap.ugm._api.Ugm``.
+  [rnix, 2020-05-16]
 
 
 1.0b11 (2019-09-08)

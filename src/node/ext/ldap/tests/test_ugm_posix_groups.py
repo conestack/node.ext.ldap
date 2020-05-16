@@ -97,19 +97,19 @@ class TestUGMPosixGroups(NodeTestCase):
             'foo',
             object()
         )
-        self.assertEqual(str(err), 'User does not implement ``__setitem__``')
+        self.assertEqual(str(err), 'User does not support ``__setitem__``')
         err = self.expect_error(
             NotImplementedError,
             user_0.__delitem__,
             'foo'
         )
-        self.assertEqual(str(err), 'User does not implement ``__delitem__``')
+        self.assertEqual(str(err), 'User does not support ``__delitem__``')
         err = self.expect_error(
             NotImplementedError,
             user_0.__getitem__,
             'foo'
         )
-        self.assertEqual(str(err), 'User does not implement ``__getitem__``')
+        self.assertEqual(str(err), 'User does not support ``__getitem__``')
         self.assertEqual(user_0.keys(), [])
 
     @posix_groups_ugm
@@ -345,7 +345,7 @@ class TestUGMPosixGroups(NodeTestCase):
             'uid0',
             users['uid0']
         )
-        self.assertEqual(str(err), 'Group does not implement ``__setitem__``')
+        self.assertEqual(str(err), 'Group does not support ``__setitem__``')
 
         # Members are added via ``add``
         group_0.add('uid1')
