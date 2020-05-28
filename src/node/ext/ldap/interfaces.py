@@ -95,7 +95,7 @@ class ILDAPPrincipalsConfig(Interface):
     )
 
     recursiveGroups = Attribute(
-        'Flag whether to use LDAP_MATCHING_RULE_IN_CHAIN when searching '
+        'AD only. Flag whether to use LDAP_MATCHING_RULE_IN_CHAIN when searching '
         'for membership in groups. This is only used when not using memberOf. '
         'See https://msdn.microsoft.com/en-us/library/aa746475(v=vs.85).aspx'
     )
