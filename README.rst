@@ -56,18 +56,21 @@ object:
 .. code-block:: pycon
 
     >>> from node.ext.ldap import LDAPProps
-    >>> props = LDAPProps(uri='ldap://localhost:12345/',
-    ...                   user='cn=Manager,dc=my-domain,dc=com',
-    ...                   password='secret',
-    ...                   cache=False)
+
+    >>> props = LDAPProps(
+    ...     uri='ldap://localhost:12345/',
+    ...     user='cn=Manager,dc=my-domain,dc=com',
+    ...     password='secret',
+    ...     cache=False
+    ... )
 
 Test server connectivity with ``node.ext.ldap.testLDAPConnectivity``:
 
 .. code-block:: pycon
 
     >>> from node.ext.ldap import testLDAPConnectivity
-    >>> testLDAPConnectivity(props=props)
-    'success'
+
+    >>> assert testLDAPConnectivity(props=props) == 'success'
 
 
 LDAP Connection
@@ -81,16 +84,16 @@ higher abstractions, see below:
 .. code-block:: pycon
 
     >>> from node.ext.ldap import LDAPConnector
+    >>> import ldap
+
     >>> connector = LDAPConnector(props=props)
-    >>> connector
-    <node.ext.ldap.base.LDAPConnector object at ...>
 
 Calling ``bind`` creates and returns the LDAP connection:
 
 .. code-block:: pycon
 
-    >>> connector.bind()
-    <ldap.ldapobject.ReconnectLDAPObject instance at ...>
+    >>> conn = connector.bind()
+    >>> assert isinstance(conn, ldap.ldapobject.ReconnectLDAPObject)
 
 Calling ``unbind`` destroys the connection:
 
@@ -111,9 +114,8 @@ directory.
 .. code-block:: pycon
 
     >>> from node.ext.ldap import LDAPCommunicator
+
     >>> communicator = LDAPCommunicator(connector)
-    >>> communicator
-    <node.ext.ldap.base.LDAPCommunicator object at ...>
 
 Bind to server:
 
@@ -132,7 +134,8 @@ Adding directory entry:
     ...         'sn': 'Mustermann',
     ...         'userPassword': 'secret',
     ...         'objectClass': ['person'],
-    ...     })
+    ...     }
+    ... )
 
 Set default search DN:
 
@@ -145,39 +148,61 @@ Search in directory:
 .. code-block:: pycon
 
     >>> import node.ext.ldap
-    >>> communicator.search('(objectClass=person)', node.ext.ldap.SUBTREE)
-    [('cn=foo,ou=demo,dc=my-domain,dc=com',
-    {'objectClass': ['person'],
-    'userPassword': ['secret'],
-    'cn': ['foo'],
-    'sn': ['Mustermann']})]
+
+    >>> res = communicator.search(
+    ...     '(objectClass=person)',
+    ...     node.ext.ldap.SUBTREE
+    ... )
+
+    >>> assert res == [(
+    ...     'cn=foo,ou=demo,dc=my-domain,dc=com',
+    ...     {
+    ...         'objectClass': ['person'],
+    ...         'userPassword': ['secret'],
+    ...         'cn': ['foo'],
+    ...         'sn': ['Mustermann']
+    ...     }
+    ... )]
 
 Modify directory entry:
 
 .. code-block:: pycon
 
     >>> from ldap import MOD_REPLACE
-    >>> communicator.modify('cn=foo,ou=demo,dc=my-domain,dc=com',
-    ...                     [(MOD_REPLACE, 'sn', 'Musterfrau')])
 
-    >>> communicator.search('(objectClass=person)',
-    ...                     node.ext.ldap.SUBTREE,
-    ...                     attrlist=['cn'])
-    [('cn=foo,ou=demo,dc=my-domain,dc=com',
-    {'cn': ['foo']})]
+    >>> communicator.modify(
+    ...     'cn=foo,ou=demo,dc=my-domain,dc=com',
+    ...     [(MOD_REPLACE, 'sn', 'Musterfrau')]
+    ... )
+
+    >>> res = communicator.search(
+    ...     '(objectClass=person)',
+    ...     node.ext.ldap.SUBTREE,
+    ...     attrlist=['cn']
+    ... )
+
+    >>> assert res == [('cn=foo,ou=demo,dc=my-domain,dc=com', {'cn': ['foo']})]
 
 Change the password of a directory entry which represents a user:
 
 .. code-block:: pycon
 
     >>> communicator.passwd(
-    ...     'cn=foo,ou=demo,dc=my-domain,dc=com', 'secret', '12345')
+    ...     'cn=foo,ou=demo,dc=my-domain,dc=com',
+    ...     'secret',
+    ...     '12345'
+    ... )
 
-    >>> communicator.search('(objectClass=person)',
-    ...                     node.ext.ldap.SUBTREE,
-    ...                     attrlist=['userPassword'])
-    [('cn=foo,ou=demo,dc=my-domain,dc=com',
-    {'userPassword': ['{SSHA}...']})]
+    >>> res = communicator.search(
+    ...     '(objectClass=person)',
+    ...     node.ext.ldap.SUBTREE,
+    ...     attrlist=['userPassword']
+    ... )
+
+    >>> assert res == [(
+    ...     'cn=foo,ou=demo,dc=my-domain,dc=com',
+    ...     {'userPassword': ['{SSHA}...']}
+    ... )]
 
 Delete directory entry:
 
@@ -185,8 +210,12 @@ Delete directory entry:
 
     >>> communicator.delete('cn=foo,ou=demo,dc=my-domain,dc=com')
 
-    >>> communicator.search('(objectClass=person)', node.ext.ldap.SUBTREE)
-    []
+    >>> res = communicator.search(
+    ...     '(objectClass=person)',
+    ...     node.ext.ldap.SUBTREE
+    ... )
+
+    >>> assert res == []
 
 Close connection:
 
@@ -208,14 +237,16 @@ Instantiate ``LDAPSession`` object. Expects ``LDAPProps`` instance:
 .. code-block:: pycon
 
     >>> from node.ext.ldap import LDAPSession
+
     >>> session = LDAPSession(props)
 
 LDAP session has a convenience to check given properties:
 
 .. code-block:: pycon
 
-    >>> session.checkServerProperties()
-    (True, 'OK')
+    >>> res = session.checkServerProperties()
+
+    >>> assert res == (True, 'OK')
 
 Set default search DN for session:
 
@@ -227,11 +258,16 @@ Search in directory:
 
 .. code-block:: pycon
 
-    >>> session.search()
-    [('ou=demo,dc=my-domain,dc=com',
-    {'objectClass': ['top', 'organizationalUnit'],
-    'ou': ['demo'],
-    'description': ['Demo organizational unit']})]
+    >>> res = session.search()
+
+    >>> assert res == [
+    ...     ('ou=demo,dc=my-domain,dc=com',
+    ...     {
+    ...         'objectClass': ['top', 'organizationalUnit'],
+    ...         'ou': ['demo'],
+    ...         'description': ['Demo organizational unit']
+    ...     }
+    ... )]
 
 Add directory entry:
 
@@ -244,7 +280,8 @@ Add directory entry:
     ...         'sn': 'Mustermann',
     ...         'userPassword': 'secret',
     ...         'objectClass': ['person'],
-    ...     })
+    ...     }
+    ... )
 
 Change the password of a directory entry which represents a user:
 
@@ -256,28 +293,39 @@ Authenticate a specific user:
 
 .. code-block:: pycon
 
-    >>> session.authenticate('cn=foo,ou=demo,dc=my-domain,dc=com', '12345')
-    True
+    >>> res = session.authenticate('cn=foo,ou=demo,dc=my-domain,dc=com', '12345')
+
+    >>> assert res is True
 
 Modify directory entry:
 
 .. code-block:: pycon
 
-    >>> session.modify('cn=foo,ou=demo,dc=my-domain,dc=com',
-    ...                [(MOD_REPLACE, 'sn', 'Musterfrau')])
+    >>> session.modify(
+    ...     'cn=foo,ou=demo,dc=my-domain,dc=com',
+    ...     [(MOD_REPLACE, 'sn', 'Musterfrau')]
+    ... )
 
-    >>> session.search('(objectClass=person)',
-    ...                node.ext.ldap.SUBTREE,
-    ...                attrlist=['cn'])
-    [('cn=foo,ou=demo,dc=my-domain,dc=com', {'cn': ['foo']})]
+    >>> res = session.search(
+    ...     '(objectClass=person)',
+    ...     node.ext.ldap.SUBTREE,
+    ...     attrlist=['cn']
+    ... )
+
+    >>> assert res == [(
+    ...     'cn=foo,ou=demo,dc=my-domain,dc=com',
+    ...     {'cn': ['foo']}
+    ... )]
 
 Delete directory entry:
 
 .. code-block:: pycon
 
     >>> session.delete('cn=foo,ou=demo,dc=my-domain,dc=com')
-    >>> session.search('(objectClass=person)', node.ext.ldap.SUBTREE)
-    []
+
+    >>> res = session.search('(objectClass=person)', node.ext.ldap.SUBTREE)
+
+    >>> assert res == []
 
 Close session:
 
@@ -299,6 +347,7 @@ instance:
 .. code-block:: pycon
 
     >>> from node.ext.ldap import LDAPNode
+
     >>> root = LDAPNode('ou=demo,dc=my-domain,dc=com', props=props)
 
 Every LDAP node has a DN and a RDN:
@@ -311,7 +360,7 @@ Every LDAP node has a DN and a RDN:
     >>> root.rdn_attr
     u'ou'
 
-Check whether created node exists in the database::
+Check whether created node exists in the database:
 
 .. code-block:: pycon
 
@@ -467,25 +516,36 @@ bool operators '&' and '|':
 .. code-block:: pycon
 
     >>> from node.ext.ldap import LDAPFilter
+
     >>> filter = LDAPFilter('(objectClass=person)')
     >>> filter |= LDAPFilter('(objectClass=groupOfNames)')
-    >>> sorted(root.search(queryFilter=filter))
-    [u'cn=group1,ou=demo,dc=my-domain,dc=com',
-    u'cn=group2,ou=demo,dc=my-domain,dc=com',
-    u'cn=person1,ou=demo,dc=my-domain,dc=com',
-    u'cn=person2,ou=demo,dc=my-domain,dc=com',
-    u'cn=person3,ou=demo,dc=my-domain,dc=com',
-    u'cn=person4,ou=demo,dc=my-domain,dc=com',
-    u'cn=person5,ou=demo,dc=my-domain,dc=com']
+
+    >>> res = sorted(root.search(queryFilter=filter))
+
+    >>> assert res == [
+    ...     u'cn=group1,ou=demo,dc=my-domain,dc=com',
+    ...     u'cn=group2,ou=demo,dc=my-domain,dc=com',
+    ...     u'cn=person1,ou=demo,dc=my-domain,dc=com',
+    ...     u'cn=person2,ou=demo,dc=my-domain,dc=com',
+    ...     u'cn=person3,ou=demo,dc=my-domain,dc=com',
+    ...     u'cn=person4,ou=demo,dc=my-domain,dc=com',
+    ...     u'cn=person5,ou=demo,dc=my-domain,dc=com'
+    ... ]
 
 Define multiple criteria LDAP filter:
 
 .. code-block:: pycon
 
     >>> from node.ext.ldap import LDAPDictFilter
-    >>> filter = LDAPDictFilter({'objectClass': ['person'], 'cn': 'person1'})
-    >>> root.search(queryFilter=filter)
-    [u'cn=person1,ou=demo,dc=my-domain,dc=com']
+
+    >>> filter = LDAPDictFilter({
+    ...     'objectClass': ['person'],
+    ...     'cn': 'person1'
+    ... })
+
+    >>> res = root.search(queryFilter=filter)
+
+    >>> assert res == [u'cn=person1,ou=demo,dc=my-domain,dc=com']
 
 Define a relation LDAP filter. In this case we build a relation between group
 'cn' and person 'businessCategory':
@@ -493,12 +553,17 @@ Define a relation LDAP filter. In this case we build a relation between group
 .. code-block:: pycon
 
     >>> from node.ext.ldap import LDAPRelationFilter
+
     >>> filter = LDAPRelationFilter(root['cn=group1'], 'cn:businessCategory')
-    >>> root.search(queryFilter=filter)
-    [u'cn=person2,ou=demo,dc=my-domain,dc=com',
-    u'cn=person3,ou=demo,dc=my-domain,dc=com',
-    u'cn=person4,ou=demo,dc=my-domain,dc=com',
-    u'cn=person5,ou=demo,dc=my-domain,dc=com']
+
+    >>> res = root.search(queryFilter=filter)
+
+    >>> assert res == [
+    ...     u'cn=person2,ou=demo,dc=my-domain,dc=com',
+    ...     u'cn=person3,ou=demo,dc=my-domain,dc=com',
+    ...     u'cn=person4,ou=demo,dc=my-domain,dc=com',
+    ...     u'cn=person5,ou=demo,dc=my-domain,dc=com'
+    ... ]
 
 Different LDAP filter types can be combined:
 
@@ -572,6 +637,7 @@ Define the default search scope:
 .. code-block:: pycon
 
     >>> from node.ext.ldap import SUBTREE
+
     >>> root.search_scope = SUBTREE
 
 Define default search filter, could be of type LDAPFilter, LDAPDictFilter,
@@ -580,9 +646,13 @@ LDAPRelationFilter or string:
 .. code-block:: pycon
 
     >>> root.search_filter = LDAPFilter('objectClass=groupOfNames')
-    >>> root.search()
-    [u'cn=group1,ou=demo,dc=my-domain,dc=com',
-    u'cn=group2,ou=demo,dc=my-domain,dc=com']
+
+    >>> res = root.search()
+
+    >>> assert res == [
+    ...     u'cn=group1,ou=demo,dc=my-domain,dc=com',
+    ...     u'cn=group2,ou=demo,dc=my-domain,dc=com'
+    ... ]
 
     >>> root.search_filter = None
 
@@ -591,24 +661,34 @@ Define default search criteria as dict:
 .. code-block:: pycon
 
     >>> root.search_criteria = {'objectClass': 'person'}
-    >>> root.search()
-    [u'cn=person1,ou=demo,dc=my-domain,dc=com',
-    u'cn=person2,ou=demo,dc=my-domain,dc=com',
-    u'cn=person3,ou=demo,dc=my-domain,dc=com',
-    u'cn=person4,ou=demo,dc=my-domain,dc=com',
-    u'cn=person5,ou=demo,dc=my-domain,dc=com']
+
+    >>> res = root.search()
+
+    >>> assert res == [
+    ...     u'cn=person1,ou=demo,dc=my-domain,dc=com',
+    ...     u'cn=person2,ou=demo,dc=my-domain,dc=com',
+    ...     u'cn=person3,ou=demo,dc=my-domain,dc=com',
+    ...     u'cn=person4,ou=demo,dc=my-domain,dc=com',
+    ...     u'cn=person5,ou=demo,dc=my-domain,dc=com'
+    ... ]
 
 Define default search relation:
 
 .. code-block:: pycon
 
-    >>> root.search_relation = \
-    ...     LDAPRelationFilter(root['cn=group1'], 'cn:businessCategory')
-    >>> root.search()
-    [u'cn=person2,ou=demo,dc=my-domain,dc=com',
-    u'cn=person3,ou=demo,dc=my-domain,dc=com',
-    u'cn=person4,ou=demo,dc=my-domain,dc=com',
-    u'cn=person5,ou=demo,dc=my-domain,dc=com']
+    >>> root.search_relation = LDAPRelationFilter(
+    ...     root['cn=group1'],
+    ...     'cn:businessCategory'
+    ... )
+
+    >>> res = root.search()
+
+    >>> assert res == [
+    ...     u'cn=person2,ou=demo,dc=my-domain,dc=com',
+    ...     u'cn=person3,ou=demo,dc=my-domain,dc=com',
+    ...     u'cn=person4,ou=demo,dc=my-domain,dc=com',
+    ...     u'cn=person5,ou=demo,dc=my-domain,dc=com'
+    ... ]
 
 Again, like with the keyword arguments, multiple defined defaults are '&'
 combined:
@@ -617,8 +697,10 @@ combined:
 
     # empty result, there are no groups with group 'cn' as 'description'
     >>> root.search_criteria = {'objectClass': 'group'}
-    >>> root.search()
-    []
+
+    >>> res = root.search()
+
+    >>> assert res == []
 
 
 JSON Serialization
@@ -635,6 +717,7 @@ Serialize children:
 .. code-block:: pycon
 
     >>> from node.serializer import serialize
+
     >>> json_dump = serialize(root.values())
 
 Clear and persist root:
@@ -642,6 +725,7 @@ Clear and persist root:
 .. code-block:: pycon
 
     >>> root.clear()
+
     >>> root()
 
 Deserialize JSON dump:
@@ -649,6 +733,7 @@ Deserialize JSON dump:
 .. code-block:: pycon
 
     >>> from node.serializer import deserialize
+
     >>> deserialize(json_dump, root=root)
     [<cn=person1,ou=demo,dc=my-domain,dc=com:cn=person1 - True>,
     <cn=person2,ou=demo,dc=my-domain,dc=com:cn=person2 - True>,
@@ -694,36 +779,57 @@ can be deserialized later:
 
 .. code-block:: pycon
 
-    >>> serialize(container)
-    '{"__node__":
-    {"attrs": {"objectClass": ["organizationalUnit"],
-    "ou": "container"},
-    "children":
-    [{"__node__":
-    {"attrs":
-    {"objectClass": ["person", "inetOrgPerson"],
-    "userPassword": "secret",
-    "sn": "Mustermann", "cn": "person1"},
-    "class": "node.ext.ldap._node.LDAPNode",
-    "name": "cn=person1"}}],
-    "class": "node.ext.ldap._node.LDAPNode",
-    "name": "ou=container"}}'
+    >>> serialized = serialize(container)
+
+    >>> assert serialized == (
+    ...     '{'
+    ...         '"__node__": {'
+    ...             '"attrs": {'
+    ...                 '"objectClass": ["organizationalUnit"], '
+    ...                 '"ou": "container"'
+    ...             '}, '
+    ...             '"children": [{'
+    ...                 '"__node__": {'
+    ...                     '"attrs": {'
+    ...                         '"objectClass": ["person", "inetOrgPerson"], '
+    ...                         '"userPassword": "secret", '
+    ...                         '"sn": "Mustermann", '
+    ...                         '"cn": "person1"'
+    ...                     '},'
+    ...                     '"class": "node.ext.ldap._node.LDAPNode", '
+    ...                     '"name": "cn=person1"'
+    ...                 '}'
+    ...             '}], '
+    ...             '"class": "node.ext.ldap._node.LDAPNode", '
+    ...             '"name": "ou=container"'
+    ...         '}'
+    ...     '}'
+    ... )
 
 Serialize in simple mode is better readable, but not deserialzable any more:
 
 .. code-block:: pycon
 
-    >>> serialize(container, simple_mode=True)
-    '{"attrs":
-    {"objectClass": ["organizationalUnit"],
-    "ou": "container"},
-    "name": "ou=container",
-    "children":
-    [{"name": "cn=person1",
-    "attrs": {"objectClass": ["person", "inetOrgPerson"],
-    "userPassword": "secret",
-    "sn": "Mustermann",
-    "cn": "person1"}}]}'
+    >>> serialized = serialize(container, simple_mode=True)
+
+    >>> assert serialized == (
+    ...     '{'
+    ...         '"attrs": {'
+    ...             '"objectClass": ["organizationalUnit"], '
+    ...             '"ou": "container"'
+    ...         '}, '
+    ...         '"name": "ou=container", '
+    ...         '"children": [{'
+    ...             '"name": "cn=person1", '
+    ...             '"attrs": {'
+    ...                 '"objectClass": ["person", "inetOrgPerson"], '
+    ...                 '"userPassword": "secret", '
+    ...                 '"sn": "Mustermann", '
+    ...                 '"cn": "person1"'
+    ...             '}'
+    ...         '}]'
+    ...     '}'
+    ... )
 
 
 User and Group management
@@ -736,12 +842,10 @@ an API for User and Group management. The API follows the contract of
 .. code-block:: pycon
 
     >>> from node.ext.ldap import ONELEVEL
-    >>> from node.ext.ldap.ugm import (
-    ...     UsersConfig,
-    ...     GroupsConfig,
-    ...     RolesConfig,
-    ...     Ugm,
-    ... )
+    >>> from node.ext.ldap.ugm import UsersConfig
+    >>> from node.ext.ldap.ugm import GroupsConfig
+    >>> from node.ext.ldap.ugm import RolesConfig
+    >>> from node.ext.ldap.ugm import Ugm
 
 Instantiate users, groups and roles configuration. They are based on
 ``PrincipalsConfig`` class and expect this settings:
@@ -851,8 +955,6 @@ Instantiate ``Ugm`` object:
 .. code-block:: pycon
 
     >>> ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
-    >>> ugm
-    <Ugm object 'None' at ...>
 
 The Ugm object has 2 children, the users container and the groups container.
 The are accessible via node API, but also on ``users`` respective ``groups``
@@ -930,13 +1032,16 @@ Add new User:
     >>> user = ugm.users.create('person99', sn='Person 99')
     >>> user()
 
-    >>> ugm.users.keys()
-    [u'person1',
-    u'person2',
-    u'person3',
-    u'person4',
-    u'person5',
-    u'person99']
+    >>> res = ugm.users.keys()
+
+    >>> assert res == [
+    ...     u'person1',
+    ...     u'person2',
+    ...     u'person3',
+    ...     u'person4',
+    ...     u'person5',
+    ...     u'person99'
+    ... ]
 
 Delete User:
 
@@ -944,12 +1049,16 @@ Delete User:
 
     >>> del ugm.users['person99']
     >>> ugm.users()
-    >>> ugm.users.keys()
-    [u'person1',
-    u'person2',
-    u'person3',
-    u'person4',
-    u'person5']
+
+    >>> res = ugm.users.keys()
+
+    >>> assert res == [
+    ...     u'person1',
+    ...     u'person2',
+    ...     u'person3',
+    ...     u'person4',
+    ...     u'person5'
+    ... ]
 
 Fetch Group:
 
@@ -961,8 +1070,9 @@ Group members:
 
 .. code-block:: pycon
 
-    >>> group.member_ids
-    [u'person1', u'person2']
+    >>> res = group.member_ids
+
+    >>> assert res == [u'person1', u'person2']
 
     >>> group.users
     [<User object 'person1' at ...>, <User object 'person2' at ...>]
@@ -972,16 +1082,20 @@ Add group member:
 .. code-block:: pycon
 
     >>> group.add('person3')
-    >>> group.member_ids
-    [u'person1', u'person2', u'person3']
+
+    >>> member_ids = group.member_ids
+
+    >>> assert member_ids == [u'person1', u'person2', u'person3']
 
 Delete group member:
 
 .. code-block:: pycon
 
     >>> del group['person3']
-    >>> group.member_ids
-    [u'person1', u'person2']
+
+    >>> member_ids = group.member_ids
+
+    >>> assert member_ids == [u'person1', u'person2']
 
 Group attribute manipulation works the same way as on user objects.
 
@@ -1008,15 +1122,17 @@ Query roles for user via ugm:
 
 .. code-block:: pycon
 
-    >>> sorted(ugm.roles(user))
-    ['editor', 'viewer']
+    >>> roles = sorted(ugm.roles(user))
+
+    >>> assert roles == ['editor', 'viewer']
 
 Query roles directly:
 
 .. code-block:: pycon
 
-    >>> sorted(user.roles)
-    ['editor', 'viewer']
+    >>> roles = sorted(user.roles)
+
+    >>> assert roles == ['editor', 'viewer']
 
 Call UGM to persist roles:
 
@@ -1029,16 +1145,20 @@ Delete role via ugm:
 .. code-block:: pycon
 
     >>> ugm.remove_role('viewer', user)
-    >>> user.roles
-    ['editor']
+
+    >>> roles = user.roles
+
+    >>> assert roles == ['editor']
 
 Delete role directly:
 
 .. code-block:: pycon
 
     >>> user.remove_role('editor')
-    >>> user.roles
-    []
+
+    >>> roles = user.roles
+
+    >>> assert roles == []
 
 Call UGM to persist roles:
 
@@ -1057,13 +1177,16 @@ Add roles:
 .. code-block:: pycon
 
     >>> ugm.add_role('viewer', group)
+
     >>> group.add_role('editor')
 
-    >>> sorted(ugm.roles(group))
-    ['editor', 'viewer']
+    >>> roles = sorted(ugm.roles(group))
 
-    >>> sorted(group.roles)
-    ['editor', 'viewer']
+    >>> assert roles == ['editor', 'viewer']
+
+    >>> roles = sorted(group.roles)
+
+    >>> assert roles == ['editor', 'viewer']
 
     >>> ugm()
 
@@ -1072,9 +1195,12 @@ Remove roles:
 .. code-block:: pycon
 
     >>> ugm.remove_role('viewer', group)
+
     >>> group.remove_role('editor')
-    >>> group.roles
-    []
+
+    >>> roles = group.roles
+
+    >>> assert roles == []
 
     >>> ugm()
 
@@ -1110,12 +1236,14 @@ configure it. Then you need to provide the factory utility:
 
 .. code-block:: pycon
 
-    >>> # Dummy registry.
-    >>> from zope.component import registry
+    >>> from zope.interface import registry
+
     >>> components = registry.Components('comps')
 
     >>> from node.ext.ldap.cache import MemcachedProviderFactory
+
     >>> cache_factory = MemcachedProviderFactory()
+
     >>> components.registerUtility(cache_factory)
 
 In case of multiple memcached backends on various IPs and ports initialization
@@ -1123,11 +1251,13 @@ of the factory looks like this:
 
 .. code-block:: pycon
 
-    >>> # Dummy registry.
     >>> components = registry.Components('comps')
 
-    >>> cache_factory = MemcachedProviderFactory(servers=['10.0.0.10:22122',
-    ...                                                   '10.0.0.11:22322'])
+    >>> cache_factory = MemcachedProviderFactory(servers=[
+    ...     '10.0.0.10:22122',
+    ...     '10.0.0.11:22322'
+    ... ])
+
     >>> components.registerUtility(cache_factory)
 
 

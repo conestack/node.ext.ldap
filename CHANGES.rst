@@ -2,7 +2,7 @@ History
 =======
 
 1.0rc1 (unreleased)
-...................
+-------------------
 
 - No changes yet.
 
