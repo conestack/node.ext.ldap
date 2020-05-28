@@ -4,7 +4,7 @@ sudo: false
 cache:
   pip: true
   directories:
-  - eggs
+    - $HOME/buildout-cache
 python:
   - 2.7
   - 3.6
@@ -13,13 +13,19 @@ python:
 addons:
   apt:
     packages:
-    - libsasl2-dev
-    - libssl-dev
-    - libdb-dev
+      - libsasl2-dev
+      - libssl-dev
+      - libdb-dev
 before_install:
-  - pip install --upgrade pip setuptools zc.buildout coveralls createcoverage
+  - mkdir -p $HOME/buildout-cache/{eggs,downloads}
+  - mkdir $HOME/.buildout
+  - echo "[buildout]" > $HOME/.buildout/default.cfg
+  - echo "download-cache = $HOME/buildout-cache/downloads" >> $HOME/.buildout/default.cfg
+  - echo "eggs-directory = $HOME/buildout-cache/eggs" >> $HOME/.buildout/default.cfg
+  - virtualenv .
+  - bin/pip install --upgrade pip setuptools zc.buildout coveralls createcoverage
 install:
-  - buildout -N -t 3 -c travis.cfg
+  - ./bin/buildout -N -t 3 -c travis.cfg
 script:
   - bin/coverage run --source=./src/node/ext/ldap --omit=./src/node/ext/ldap/main.py bin/test
 after_success:
