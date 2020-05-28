@@ -4,6 +4,17 @@
 .. image:: https://coveralls.io/repos/bluedynamics/node.ext.ldap/badge.svg?branch=master&service=github
     :target: https://coveralls.io/github/bluedynamics/node.ext.ldap?branch=master
 
+.. image:: https://img.shields.io/pypi/v/node.ext.ldap
+        :alt: Latest stable release on PyPI
+        :target: https://pypi.org/project/node.ext.ldap/
+
+.. image:: https://img.shields.io/pypi/pyversions/node.ext.ldap
+        :alt: Supported Python versions
+
+.. image:: https://img.shields.io/pypi/wheel/node.ext.ldap
+        :alt: Wheel support`
+
+
 Overview
 ========
 

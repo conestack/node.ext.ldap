@@ -293,7 +293,9 @@ ucfg = UsersConfig(
     )),
     scope=SUBTREE,
     queryFilter='(&(objectClass=person)(!(objectClass=inetOrgPerson)))',
-    objectClasses=['person'])
+    objectClasses=['person'],
+    memberOfExternalGroupDNs=[],
+)
 
 
 # inetOrgPerson r/w attrs

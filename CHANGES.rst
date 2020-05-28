@@ -4,17 +4,20 @@ History
 1.0b12 (unreleased)
 -------------------
 
-- Ensure ``LDAPPrincipals._login_attr`` to have a value. This way
+- Make sure ``LDAPPrincipals._login_attr`` has a value. This way
   ``LDAPUsers.id_for_login`` always returns the principal id as stored in the
   database.
-  [rnix, 2020-05-28]
+  [rnix]
 
 - Improve value comparison in ``LDAPAttributesBehavior.__setitem__`` to avoid
   unicode warnings.
-  [rnix, 2020-05-28]
+  [rnix]
 
 - Implement ``invalidate`` on ``node.ext.ldap.ugm._api.Ugm``.
-  [rnix, 2020-05-16]
+  [rnix]
+
+- Support for group DNs in ``memberOf`` attribute that are outside of the UGMs configured group.
+  [jensens]
 
 
 1.0b11 (2019-09-08)

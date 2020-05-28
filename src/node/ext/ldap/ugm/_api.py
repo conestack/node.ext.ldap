@@ -89,10 +89,21 @@ ACCOUNT_EXPIRED = AccountExpired()
 
 class PrincipalsConfig(object):
 
-    def __init__(self, baseDN='', attrmap={}, scope=ONELEVEL, queryFilter='',
-                 objectClasses=[], defaults={}, strict=True,
-                 memberOfSupport=False, expiresAttr=None,
-                 expiresUnit=EXPIRATION_DAYS):
+    def __init__(
+        self,
+        baseDN='',
+        attrmap={},
+        scope=ONELEVEL,
+        queryFilter='',
+        objectClasses=[],
+        defaults={},
+        strict=True,
+        memberOfSupport=False,
+        recursiveGroups=False,
+        memberOfExternalGroupDNs=[],
+        expiresAttr=None,
+        expiresUnit=EXPIRATION_DAYS
+    ):
         self.baseDN = baseDN
         self.attrmap = attrmap
         self.scope = scope
@@ -101,6 +112,8 @@ class PrincipalsConfig(object):
         self.defaults = defaults
         self.strict = strict
         self.memberOfSupport = memberOfSupport
+        self.recursiveGroups = recursiveGroups
+        self.memberOfExternalGroupDNs = memberOfExternalGroupDNs
         # XXX: currently expiresAttr only gets considered for user
         #      authentication group and role expiration is not implemented yet.
         self.expiresAttr = expiresAttr
@@ -242,17 +255,23 @@ class LDAPUser(LDAPPrincipal, UgmUser):
     @property
     def groups(self):
         groups = self.parent.parent.groups
-        return [groups[uid] for uid in self.group_ids]
+        return [groups[uid] for uid in self.group_ids if uid in groups]
 
     @default
     @property
     def group_ids(self):
         groups = self.parent.parent.groups
         if self.parent.parent.ucfg.memberOfSupport:
+            group_dns = [groups.context.DN]
+            group_dns += self.parent.parent.ucfg.memberOfExternalGroupDNs
             res = list()
             for dn in self.member_of_attr:
                 dn = ensure_text(dn)
-                if groups.context.DN not in dn:
+                matching_group_dns = {
+                    gdn for gdn in group_dns
+                    if dn.endswith(gdn)
+                }
+                if not matching_group_dns:
                     # Skip DN outside groups base DN
                     continue
                 try:
@@ -264,6 +283,10 @@ class LDAPUser(LDAPPrincipal, UgmUser):
         else:
             member_format = groups._member_format
             attribute = groups._member_attribute
+            # Support LDAP_MATCHING_RULE_IN_CHAIN (recursive/nested groups)
+            # See https://msdn.microsoft.com/en-us/library/aa746475(v=vs.85).aspx
+            if self.parent.parent.ucfg.recursiveGroups:
+                attribute += ':1.2.840.113556.1.4.1941:'
             if member_format == FORMAT_DN:
                 criteria = {attribute: self.context.DN}
             elif member_format == FORMAT_UID:

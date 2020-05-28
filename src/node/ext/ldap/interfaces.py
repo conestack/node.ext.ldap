@@ -94,6 +94,17 @@ class ILDAPPrincipalsConfig(Interface):
         '(openldap) for Group membership resolution where appropriate.'
     )
 
+    recursiveGroups = Attribute(
+        'AD only. Flag whether to use LDAP_MATCHING_RULE_IN_CHAIN when searching '
+        'for membership in groups. This is only used when not using memberOf. '
+        'See https://msdn.microsoft.com/en-us/library/aa746475(v=vs.85).aspx'
+    )
+
+    memberOfExternalGroupDNs = Attribute(
+        'BaseDNs to consider as valid besides the configured groups DN. '
+        'List of DNs. Defaults to empty list.'
+    )
+
     # XXX: currently expiresAttr only gets considered for user authentication
     #      group and role expiration is not implemented yet.
     expiresAttr = Attribute(
