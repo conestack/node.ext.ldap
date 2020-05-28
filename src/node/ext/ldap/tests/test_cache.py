@@ -5,7 +5,7 @@ from node.ext.ldap.cache import MemcachedProviderFactory
 from node.ext.ldap.cache import nullcacheProviderFactory
 from node.ext.ldap.interfaces import ICacheProviderFactory
 from node.tests import NodeTestCase
-from zope.component import registry
+from zope.interface import registry
 
 
 class TestCache(NodeTestCase):

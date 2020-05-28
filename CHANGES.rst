@@ -4,6 +4,15 @@ History
 1.0b12 (unreleased)
 -------------------
 
+- Ensure ``LDAPPrincipals._login_attr`` to have a value. This way
+  ``LDAPUsers.id_for_login`` always returns the principal id as stored in the
+  database.
+  [rnix, 2020-05-28]
+
+- Improve value comparison in ``LDAPAttributesBehavior.__setitem__`` to avoid
+  unicode warnings.
+  [rnix, 2020-05-28]
+
 - Implement ``invalidate`` on ``node.ext.ldap.ugm._api.Ugm``.
   [rnix, 2020-05-16]
 

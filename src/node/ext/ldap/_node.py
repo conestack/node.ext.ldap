@@ -116,7 +116,7 @@ class LDAPAttributesBehavior(Behavior):
 
     @plumb
     def __setitem__(_next, self, key, val):
-        if val in [u'', b'', UNSET]:
+        if not val and not isinstance(val, (list, tuple)):
             if key in self:
                 del self[key]
             return
