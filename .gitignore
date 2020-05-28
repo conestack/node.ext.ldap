@@ -22,5 +22,6 @@
 /local/
 /parts/
 /share/
+/build/
 /src/node.ext.ldap.egg-info
 /pip-selfcheck.json
