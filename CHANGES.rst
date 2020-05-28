@@ -1,7 +1,7 @@
 History
 =======
 
-1.0b12 (unreleased)
+1.0b12 (2020-05-28)
 -------------------
 
 - Make sure ``LDAPPrincipals._login_attr`` has a value. This way

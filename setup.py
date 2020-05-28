@@ -13,7 +13,7 @@ def read_file(name):
         return f.read()
 
 
-version = '1.0b12.dev0'
+version = '1.0b12'
 shortdesc = 'LDAP/AD convenience with Node-trees based on python-ldap'
 longdesc = '\n\n'.join([read_file(name) for name in [
     'README.rst',
@@ -33,9 +33,9 @@ setup(
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python',
         'Topic :: System :: Systems Administration :: Authentication/Directory :: LDAP',
     ],
