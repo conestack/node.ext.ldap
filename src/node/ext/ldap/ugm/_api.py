@@ -491,9 +491,8 @@ class LDAPPrincipals(OdictStorage):
         self._key_attr = cfg.attrmap['id']
         if self._key_attr not in cfg.attrmap:
             cfg.attrmap[self._key_attr] = self._key_attr
-        self._login_attr = None
-        if cfg.attrmap.get('login') \
-                and cfg.attrmap['login'] != cfg.attrmap['id']:
+        self._login_attr = cfg.attrmap['id']
+        if cfg.attrmap.get('login'):
             self._login_attr = cfg.attrmap['login']
         self.expiresAttr = getattr(cfg, 'expiresAttr', None)
         self.expiresUnit = getattr(cfg, 'expiresUnit', None)
@@ -780,8 +779,6 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
 
     @default
     def id_for_login(self, login):
-        if not self._login_attr:
-            return ensure_text(login)
         criteria = {self._login_attr: login}
         attrlist = [self._key_attr]
         res = self.context.search(criteria=criteria, attrlist=attrlist)
@@ -1238,4 +1235,9 @@ class LDAPUgm(UgmBase):
     OdictStorage,
 )
 class Ugm(object):
-    pass
+
+    def invalidate(self, key=None):
+        if key is None:
+            self.storage.clear()
+            return
+        del self.storage[key]
