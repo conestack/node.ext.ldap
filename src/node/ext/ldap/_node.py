@@ -33,7 +33,6 @@ from node.utils import CHARACTER_ENCODING
 from node.utils import debug
 from node.utils import decode
 from node.utils import encode
-from node.utils import UNSET
 from plumber import Behavior
 from plumber import default
 from plumber import finalize
@@ -461,7 +460,7 @@ class LDAPStorage(OdictStorage):
         """
         root = node = self.root
         base_dn = root.name
-        if not dn.endswith(base_dn):
+        if not dn.lower().endswith(base_dn.lower()):
             raise ValueError(
                 u'Invalid DN "{0}" for given base DN "{1}"'.format(dn, base_dn))
         dn = dn[:len(dn) - len(base_dn)].strip(',')

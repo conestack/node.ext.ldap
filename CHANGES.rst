@@ -4,7 +4,8 @@ History
 1.0rc1 (unreleased)
 -------------------
 
-- No changes yet.
+- Fix DN comparison in ``LDAPStorage.node_by_dn`` to ignore case sensitivity.
+  [rnix]
 
 
 1.0b12 (2020-05-28)
