@@ -31,7 +31,7 @@ History
 -------------------
 
 - Return empty search result list when an LDAP error occurs.
-  Fixes `issue #50 <https://github.com/bluedynamics/node.ext.ldap/issues/50>`_.
+  Fixes `issue #50 <https://github.com/conestack/node.ext.ldap/issues/50>`_.
   [maurits]
 
 - Skip objects that were found in LDAP while searching on several attributes but don't contain the required attribute.
