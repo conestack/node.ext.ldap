@@ -4,6 +4,9 @@ History
 1.0rc1 (unreleased)
 -------------------
 
+- Allow to generate MD5 hashes in FIPS enabled environments.
+  [frapell]
+
 - Fix DN comparison in ``LDAPStorage.node_by_dn`` to ignore case sensitivity.
   [rnix]
 
