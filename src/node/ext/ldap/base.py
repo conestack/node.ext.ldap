@@ -41,7 +41,10 @@ def md5digest(key):
     :param key: Key to create a md5 hex digest for.
     :return digest: hex digest.
     """
-    m = hashlib.md5()
+    try:
+        m = hashlib.md5()
+    except ValueError:
+        m = hashlib.md5(usedforsecurity=False)
     m.update(ensure_bytes(key))
     return m.hexdigest()
 
