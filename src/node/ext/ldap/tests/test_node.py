@@ -257,7 +257,7 @@ class TestNode(NodeTestCase):
           <ou=demo,dc=my-domain,dc=com:ou=demo - False>
         """, root.treerepr())
 
-        # New entry has no childs, but was added to the parent. There
+        # New entry has no children, but was added to the parent. There
         # was a bug where iteration tried to load from ldap at this stage.
         # Lets test if this works
         self.assertEqual(customer.keys(), [])
@@ -930,7 +930,7 @@ class TestNode(NodeTestCase):
         self.assertEqual(node.search_criteria, None)
         self.assertEqual(node.search_relation, None)
 
-        # Search with no arguments given return childs keys
+        # Search with no arguments given return children keys
         self.assertEqual(sorted(node.search()), [
             'ou=customers,dc=my-domain,dc=com',
             'ou=demo,dc=my-domain,dc=com'

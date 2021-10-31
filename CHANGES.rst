@@ -4,6 +4,10 @@ History
 1.0rc1 (unreleased)
 -------------------
 
+- Rename deprecated ``allow_non_node_childs`` to ``allow_non_node_children``
+  on ``PrincipalAliasedAttributes``.
+  [rnix]
+
 - Allow to generate MD5 hashes in FIPS enabled environments.
   [frapell]
 

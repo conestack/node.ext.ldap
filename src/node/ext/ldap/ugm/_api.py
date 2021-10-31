@@ -149,7 +149,7 @@ class RolesConfig(PrincipalsConfig):
     Storage,
 )
 class PrincipalAliasedAttributes(object):
-    allow_non_node_childs = True
+    allow_non_node_children = True
 
     def __init__(self, context, aliaser=None):
         """
