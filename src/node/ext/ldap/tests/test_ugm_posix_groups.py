@@ -186,8 +186,12 @@ class TestUGMPosixGroups(NodeTestCase):
             'bar'
         )
         self.assertEqual(err.args[0], {
-            'info': 'unwilling to verify old password',
-            'desc': 'Server is unwilling to perform'
+            'msgtype': 120,
+            'msgid': 4,
+            'result': 53,
+            'desc': 'Server is unwilling to perform',
+            'ctrls': [],
+            'info': 'unwilling to verify old password'
         })
 
         self.expect_error(

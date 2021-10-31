@@ -29,9 +29,11 @@ class TestBase(NodeTestCase):
 
         sys.argv[-1] = '12346'
         self.assertEqual(main().args[0], {
-            'info': 'Transport endpoint is not connected',
+            'result': -1,
+            'desc': "Can't contact LDAP server",
             'errno': 107,
-            'desc': "Can't contact LDAP server"
+            'ctrls': [],
+            'info': 'Transport endpoint is not connected'
         })
 
         sys.argv = []
@@ -42,10 +44,12 @@ class TestBase(NodeTestCase):
         # Test node.ext.ldap base objects. Test LDAP connectivity
         self.assertEqual(testLDAPConnectivity('127.0.0.1', 12345), 'success')
         self.assertEqual(testLDAPConnectivity('127.0.0.1', 12346).args[0], {
-            'info': 'Transport endpoint is not connected',
+            'result': -1,
+            'desc': "Can't contact LDAP server",
             'errno': 107,
-            'desc': u"Can't contact LDAP server"}
-        )
+            'ctrls': [],
+            'info': 'Transport endpoint is not connected'
+        })
 
         # LDAP credentials
         host = "127.0.0.1"

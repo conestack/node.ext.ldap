@@ -437,8 +437,12 @@ class TestNode(NodeTestCase):
         person.attrs['cn'] = 'foo'
         err = self.expect_error(ldap.NAMING_VIOLATION, person.__call__)
         self.assertEqual(err.args[0], {
-            'info': "value of naming attribute 'cn' is not present in entry",
-            'desc': 'Naming violation'
+            'msgtype': 103,
+            'msgid': 92,
+            'result': 64,
+            'desc': 'Naming violation',
+            'ctrls': [],
+            'info': "value of naming attribute 'cn' is not present in entry"
         })
 
         person.attrs.load()

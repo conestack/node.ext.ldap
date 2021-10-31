@@ -94,7 +94,9 @@ class TestSession(NodeTestCase):
         res = session.checkServerProperties()
         self.assertEqual(res[0], False)
         self.assertEqual(res[1].args[0], {
-            'info': 'Transport endpoint is not connected',
+            'result': -1,
+            'desc': "Can't contact LDAP server",
             'errno': 107,
-            'desc': "Can't contact LDAP server"
+            'ctrls': [],
+            'info': 'Transport endpoint is not connected'
         })
