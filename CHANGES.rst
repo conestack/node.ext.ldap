@@ -1,7 +1,7 @@
 History
 =======
 
-1.0rc1 (unreleased)
+1.0rc1 (2021-11-08)
 -------------------
 
 - Rename deprecated ``allow_non_node_childs`` to ``allow_non_node_children``

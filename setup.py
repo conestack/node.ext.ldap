@@ -13,7 +13,7 @@ def read_file(name):
         return f.read()
 
 
-version = '1.0rc1.dev0'
+version = '1.0rc1'
 shortdesc = 'LDAP/AD convenience with Node-trees based on python-ldap'
 longdesc = '\n\n'.join([read_file(name) for name in [
     'README.rst',
@@ -55,10 +55,10 @@ setup(
         'passlib',
         'argparse',
         'bda.cache',
-        'odict>=1.6.1',
+        'odict>=1.8.0',
         'plumber>=1.4',
-        'node>=0.9.20',
-        'node.ext.ugm>=0.9.9',
+        'node>=0.9.28',
+        'node.ext.ugm>=0.9.13',
     ],
     extras_require={
         'test': [
