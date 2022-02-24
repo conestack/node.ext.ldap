@@ -38,29 +38,27 @@ class TestUGMDefaults(NodeTestCase):
 
     def test_defaults(self):
         # Creation defaults
-        self.assertEqual(defaults.creation_defaults, {
-            'shadowAccount': {
-                'uid': posix.uid
-            },
-            'posixGroup': {
-                'gidNumber': posix.gidNumber,
-                'cn': posix.cn
-            },
-            'sambaGroupMapping': {
-                'sambaGroupType': samba.sambaGroupType,
-                'gidNumber': posix.gidNumber,
-                'sambaSID': samba.sambaGroupSID
-            },
-            'posixAccount': {
-                'gidNumber': posix.gidNumber,
-                'homeDirectory': posix.homeDirectory,
-                'uidNumber': posix.uidNumber,
-                'cn': posix.cn,
-                'uid': posix.uid
-            },
-            'sambaSamAccount': {
-                'sambaSID': samba.sambaUserSID
-            }
+        self.assertEqual(defaults.creation_defaults['posixAccount'], {
+            'gidNumber': posix.gidNumber,
+            'homeDirectory': posix.homeDirectory,
+            'uidNumber': posix.uidNumber,
+            'cn': posix.cn,
+            'uid': posix.uid
+        })
+        self.assertEqual(defaults.creation_defaults['posixGroup'], {
+            'gidNumber': posix.gidNumber,
+            'cn': posix.cn
+        })
+        self.assertEqual(defaults.creation_defaults['sambaGroupMapping'], {
+            'sambaGroupType': samba.sambaGroupType,
+            'gidNumber': posix.gidNumber,
+            'sambaSID': samba.sambaGroupSID
+        })
+        self.assertEqual(defaults.creation_defaults['sambaSamAccount'], {
+            'sambaSID': samba.sambaUserSID
+        })
+        self.assertEqual(defaults.creation_defaults['shadowAccount'], {
+            'uid': posix.uid
         })
 
     @defaults_container
