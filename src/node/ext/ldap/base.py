@@ -137,6 +137,8 @@ class LDAPConnector(object):
         self._con.unbind_s()
         self._con = None
 
+    def __del__(self):
+        self.unbind()
 
 class LDAPCommunicator(object):
     """Class LDAPCommunicator is responsible for the communication with the
