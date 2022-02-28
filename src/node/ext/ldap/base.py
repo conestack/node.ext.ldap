@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from distutils.command.sdist import sdist
+from webbrowser import get
+from xml.dom.minidom import Attr
 from bda.cache import ICacheManager
 from bda.cache.interfaces import INullCacheProvider
 from node.ext.ldap.cache import nullcacheProviderFactory
@@ -105,6 +108,7 @@ class LDAPConnector(object):
         self._tls_cacert_file = props.tls_cacertfile
         self._retry_max = props.retry_max
         self._retry_delay = props.retry_delay
+        self._con = None
 
     def bind(self):
         """Bind to Server and return the Connection Object.
@@ -134,7 +138,12 @@ class LDAPConnector(object):
     def unbind(self):
         """Unbind from Server.
         """
-        self._con.unbind_s()
+        if self._con is None:
+            return
+        try:
+            self._con.unbind_s()
+        except AttributeError:
+            logger.exception("Unbind not successful.")
         self._con = None
 
     def __del__(self):
