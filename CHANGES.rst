@@ -1,7 +1,7 @@
 History
 =======
 
-1.0rc2 (unreleased)
+1.0rc2 (2022-03-01)
 -------------------
 
 - Fix #61: Close open connections to LDAP on GC.
