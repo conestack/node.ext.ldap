@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-from distutils.command.sdist import sdist
-from webbrowser import get
-from xml.dom.minidom import Attr
 from bda.cache import ICacheManager
 from bda.cache.interfaces import INullCacheProvider
 from node.ext.ldap.cache import nullcacheProviderFactory
