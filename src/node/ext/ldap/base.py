@@ -105,6 +105,7 @@ class LDAPConnector(object):
         self._tls_cacert_file = props.tls_cacertfile
         self._retry_max = props.retry_max
         self._retry_delay = props.retry_delay
+        self._con = None
 
     def bind(self):
         """Bind to Server and return the Connection Object.
@@ -134,9 +135,16 @@ class LDAPConnector(object):
     def unbind(self):
         """Unbind from Server.
         """
-        self._con.unbind_s()
+        if self._con is None:
+            return
+        try:
+            self._con.unbind_s()
+        except AttributeError:
+            logger.exception("Unbind not successful.")
         self._con = None
 
+    def __del__(self):
+        self.unbind()
 
 class LDAPCommunicator(object):
     """Class LDAPCommunicator is responsible for the communication with the

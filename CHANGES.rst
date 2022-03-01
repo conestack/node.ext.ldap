@@ -4,7 +4,8 @@ History
 1.0rc2 (unreleased)
 -------------------
 
-- No changes yet.
+- Fix #61: Close open connections to LDAP on GC.
+  [jensens]
 
 
 1.0rc1 (2021-11-08)
