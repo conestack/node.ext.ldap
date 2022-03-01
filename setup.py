@@ -29,6 +29,7 @@ setup(
     description=shortdesc,
     long_description=longdesc,
     classifiers=[
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
