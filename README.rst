@@ -1,12 +1,16 @@
+.. image:: https://img.shields.io/pypi/v/node.ext.ldap.svg
+    :target: https://pypi.python.org/pypi/node.ext.ldap
+    :alt: Latest PyPI version
+
+.. image:: https://img.shields.io/pypi/dm/node.ext.ldap.svg
+    :target: https://pypi.python.org/pypi/node.ext.ldap
+    :alt: Number of PyPI downloads
+
 .. image:: https://travis-ci.org/bluedynamics/node.ext.ldap.svg?branch=master
     :target: https://travis-ci.org/bluedynamics/node.ext.ldap
 
-.. image:: https://coveralls.io/repos/bluedynamics/node.ext.ldap/badge.svg?branch=master&service=github
+.. image:: https://coveralls.io/repos/github/bluedynamics/node.ext.ldap/badge.svg?branch=master
     :target: https://coveralls.io/github/bluedynamics/node.ext.ldap?branch=master
-
-.. image:: https://img.shields.io/pypi/v/node.ext.ldap
-        :alt: Latest stable release on PyPI
-        :target: https://pypi.org/project/node.ext.ldap/
 
 
 Overview

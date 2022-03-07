@@ -58,8 +58,8 @@ setup(
         'bda.cache',
         'odict>=1.8.0',
         'plumber>=1.4',
-        'node>=0.9.28',
-        'node.ext.ugm>=0.9.13',
+        'node>0.999',
+        'node.ext.ugm>0.9.13',
     ],
     extras_require={
         'test': [
