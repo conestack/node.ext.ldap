@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 from ldap.dn import explode_dn
-from node.behaviors import Adopt
 from node.behaviors import Alias
 from node.behaviors import Attributes
 from node.behaviors import DefaultInit
-from node.behaviors import NodeChildValidate
+from node.behaviors import MappingAdopt
+from node.behaviors import MappingConstraints
+from node.behaviors import MappingNode
+from node.behaviors import MappingStorage
 from node.behaviors import Nodespaces
-from node.behaviors import Nodify
 from node.behaviors import OdictStorage
-from node.behaviors import Storage
 from node.behaviors.alias import DictAliaser
 from node.ext.ldap._node import LDAPNode
 from node.ext.ldap.base import ensure_text
@@ -143,13 +143,13 @@ class RolesConfig(PrincipalsConfig):
 
 @plumbing(
     Alias,
-    NodeChildValidate,
-    Adopt,
-    Nodify,
-    Storage,
+    MappingConstraints,
+    MappingAdopt,
+    MappingNode,
+    MappingStorage,
 )
 class PrincipalAliasedAttributes(object):
-    allow_non_node_children = True
+    child_constraints = None
 
     def __init__(self, context, aliaser=None):
         """
@@ -317,7 +317,7 @@ class LDAPUser(LDAPPrincipal, UgmUser):
     LDAPUser,
     Nodespaces,
     Attributes,
-    Nodify,
+    MappingNode,
 )
 class User(object):
     pass
@@ -460,10 +460,10 @@ class LDAPGroup(LDAPGroupMapping, LDAPPrincipal, UgmGroup):
 
 @plumbing(
     LDAPGroup,
-    NodeChildValidate,
+    MappingConstraints,
     Nodespaces,
     Attributes,
-    Nodify,
+    MappingNode,
 )
 class Group(object):
     pass
@@ -856,11 +856,11 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
 
 @plumbing(
     LDAPUsers,
-    NodeChildValidate,
+    MappingConstraints,
     Nodespaces,
-    Adopt,
+    MappingAdopt,
     Attributes,
-    Nodify,
+    MappingNode,
 )
 class Users(object):
     pass
@@ -938,11 +938,11 @@ class LDAPGroups(LDAPGroupsMapping):
 
 @plumbing(
     LDAPGroups,
-    NodeChildValidate,
+    MappingConstraints,
     Nodespaces,
-    Adopt,
+    MappingAdopt,
     Attributes,
-    Nodify,
+    MappingNode,
 )
 class Groups(object):
     pass
@@ -1041,10 +1041,10 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
 
 @plumbing(
     LDAPRole,
-    NodeChildValidate,
+    MappingConstraints,
     Nodespaces,
     Attributes,
-    Nodify,
+    MappingNode,
 )
 class Role(object):
     pass
@@ -1056,11 +1056,11 @@ class LDAPRoles(LDAPGroupsMapping):
 
 @plumbing(
     LDAPRoles,
-    NodeChildValidate,
+    MappingConstraints,
     Nodespaces,
-    Adopt,
+    MappingAdopt,
     Attributes,
-    Nodify,
+    MappingNode,
 )
 class Roles(object):
     pass
@@ -1226,12 +1226,12 @@ class LDAPUgm(UgmBase):
 
 @plumbing(
     LDAPUgm,
-    NodeChildValidate,
+    MappingConstraints,
     Nodespaces,
-    Adopt,
+    MappingAdopt,
     Attributes,
     DefaultInit,
-    Nodify,
+    MappingNode,
     OdictStorage,
 )
 class Ugm(object):

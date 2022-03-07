@@ -5,14 +5,14 @@ from ldap import MOD_DELETE
 from ldap import MOD_REPLACE
 from ldap import NO_SUCH_OBJECT
 from ldap.functions import explode_dn
-from node.behaviors import Adopt
 from node.behaviors import Attributes
 from node.behaviors import AttributesLifecycle
 from node.behaviors import Lifecycle
+from node.behaviors import MappingAdopt
+from node.behaviors import MappingConstraints
+from node.behaviors import MappingNode
 from node.behaviors import NodeAttributes
-from node.behaviors import NodeChildValidate
 from node.behaviors import Nodespaces
-from node.behaviors import Nodify
 from node.behaviors import OdictStorage
 from node.ext.ldap import BASE
 from node.ext.ldap import LDAPSession
@@ -678,9 +678,9 @@ class LDAPStorage(OdictStorage):
     Nodespaces,
     Attributes,
     Lifecycle,
-    NodeChildValidate,
-    Adopt,
-    Nodify,
+    MappingConstraints,
+    MappingAdopt,
+    MappingNode,
     LDAPStorage)
 class LDAPNode(object):
     events = {

@@ -4,7 +4,23 @@ History
 1.0rc3 (unreleased)
 -------------------
 
-- Nothing changed yet.
+- Replace deprecated use of ``Storage`` by ``MappingStorage``.
+  [rnix]
+
+- Replace deprecated use of ``IStorage`` by ``IMappingStorage``.
+  [rnix]
+
+- Replace deprecated use of ``Nodify`` by ``MappingNode``.
+  [rnix]
+
+- Replace deprecated use of ``NodeChildValidate`` by ``MappingConstraints``.
+  [rnix]
+
+- Replace deprecated use of ``Adopt`` by ``MappingAdopt``.
+  [rnix]
+
+- Replace deprecated use of ``allow_non_node_children`` by ``child_constraints``.
+  [rnix]
 
 
 1.0rc2 (2022-03-01)

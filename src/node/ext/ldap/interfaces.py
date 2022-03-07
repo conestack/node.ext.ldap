@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
+from node.interfaces import IMappingStorage
 from node.interfaces import INodeAddedEvent
 from node.interfaces import INodeCreatedEvent
 from node.interfaces import INodeDetachedEvent
 from node.interfaces import INodeModifiedEvent
 from node.interfaces import INodeRemovedEvent
-from node.interfaces import IStorage
 from zope.interface import Attribute
 from zope.interface import Interface
 
@@ -128,7 +128,7 @@ class ILDAPGroupsConfig(ILDAPPrincipalsConfig):
     """
 
 
-class ILDAPStorage(IStorage):
+class ILDAPStorage(IMappingStorage):
     """A LDAP Node.
     """
 
