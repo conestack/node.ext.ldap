@@ -381,16 +381,16 @@ class TestNode(NodeTestCase):
           <ou=demo,dc=my-domain,dc=com:ou=demo - False>
         """, root.treerepr())
 
-        self.assertTrue(person.nodespaces['__attrs__'].changed)
+        self.assertTrue(person.__attrs__.changed)
         self.assertTrue(person._changed)
-        self.assertTrue(customer.nodespaces['__attrs__'].changed)
+        self.assertTrue(customer.__attrs__.changed)
         self.assertTrue(customer._changed)
 
         customer.attrs.load()
 
-        self.assertTrue(person.nodespaces['__attrs__'].changed)
+        self.assertTrue(person.__attrs__.changed)
         self.assertTrue(person._changed)
-        self.assertFalse(customer.nodespaces['__attrs__'].changed)
+        self.assertFalse(customer.__attrs__.changed)
         self.assertTrue(customer._changed)
 
         self.check_output("""

@@ -7,7 +7,6 @@ from node.behaviors import MappingAdopt
 from node.behaviors import MappingConstraints
 from node.behaviors import MappingNode
 from node.behaviors import MappingStorage
-from node.behaviors import Nodespaces
 from node.behaviors import OdictStorage
 from node.behaviors.alias import DictAliaser
 from node.ext.ldap._node import LDAPNode
@@ -146,8 +145,7 @@ class RolesConfig(PrincipalsConfig):
     MappingConstraints,
     MappingAdopt,
     MappingNode,
-    MappingStorage,
-)
+    MappingStorage)
 class PrincipalAliasedAttributes(object):
     child_constraints = None
 
@@ -315,10 +313,8 @@ class LDAPUser(LDAPPrincipal, UgmUser):
 
 @plumbing(
     LDAPUser,
-    Nodespaces,
     Attributes,
-    MappingNode,
-)
+    MappingNode)
 class User(object):
     pass
 
@@ -461,10 +457,8 @@ class LDAPGroup(LDAPGroupMapping, LDAPPrincipal, UgmGroup):
 @plumbing(
     LDAPGroup,
     MappingConstraints,
-    Nodespaces,
     Attributes,
-    MappingNode,
-)
+    MappingNode)
 class Group(object):
     pass
 
@@ -857,11 +851,9 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
 @plumbing(
     LDAPUsers,
     MappingConstraints,
-    Nodespaces,
     MappingAdopt,
     Attributes,
-    MappingNode,
-)
+    MappingNode)
 class Users(object):
     pass
 
@@ -939,11 +931,9 @@ class LDAPGroups(LDAPGroupsMapping):
 @plumbing(
     LDAPGroups,
     MappingConstraints,
-    Nodespaces,
     MappingAdopt,
     Attributes,
-    MappingNode,
-)
+    MappingNode)
 class Groups(object):
     pass
 
@@ -1042,10 +1032,8 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
 @plumbing(
     LDAPRole,
     MappingConstraints,
-    Nodespaces,
     Attributes,
-    MappingNode,
-)
+    MappingNode)
 class Role(object):
     pass
 
@@ -1057,11 +1045,9 @@ class LDAPRoles(LDAPGroupsMapping):
 @plumbing(
     LDAPRoles,
     MappingConstraints,
-    Nodespaces,
     MappingAdopt,
     Attributes,
-    MappingNode,
-)
+    MappingNode)
 class Roles(object):
     pass
 
@@ -1227,13 +1213,11 @@ class LDAPUgm(UgmBase):
 @plumbing(
     LDAPUgm,
     MappingConstraints,
-    Nodespaces,
     MappingAdopt,
     Attributes,
     DefaultInit,
     MappingNode,
-    OdictStorage,
-)
+    OdictStorage)
 class Ugm(object):
 
     def invalidate(self, key=None):

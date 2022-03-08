@@ -4,6 +4,9 @@ History
 1.0rc3 (unreleased)
 -------------------
 
+- Remove usage of ``Nodespaces`` behavior.
+  [rnix]
+
 - Replace deprecated use of ``Storage`` by ``MappingStorage``.
   [rnix]
 

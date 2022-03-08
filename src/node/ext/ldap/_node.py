@@ -12,7 +12,6 @@ from node.behaviors import MappingAdopt
 from node.behaviors import MappingConstraints
 from node.behaviors import MappingNode
 from node.behaviors import NodeAttributes
-from node.behaviors import Nodespaces
 from node.behaviors import OdictStorage
 from node.ext.ldap import BASE
 from node.ext.ldap import LDAPSession
@@ -333,8 +332,8 @@ class LDAPStorage(OdictStorage):
                 self.parent._deleted_children.remove(self.name)
                 self._ldap_delete()
             try:
-                self.nodespaces['__attrs__'].changed = False
-            except KeyError:
+                self.__attrs__.changed = False
+            except AttributeError:
                 pass
             self.changed = False
             self._action = None
@@ -419,11 +418,11 @@ class LDAPStorage(OdictStorage):
                 return
             # check whether attributes has changed, cannot unset changed if so
             try:
-                # access attrs nodespace directly to avoid recursion error
-                if self.nodespaces['__attrs__'].changed:
+                # access __attrs__ directly to avoid recursion error
+                if self.__attrs__.changed:
                     return
             # No attributes loaded yet, ignore
-            except KeyError:
+            except AttributeError:
                 pass
             # finally unset changed flag
             self._changed = False
@@ -675,7 +674,6 @@ class LDAPStorage(OdictStorage):
 
 
 @plumbing(
-    Nodespaces,
     Attributes,
     Lifecycle,
     MappingConstraints,
