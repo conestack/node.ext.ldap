@@ -57,9 +57,9 @@ setup(
         'argparse',
         'bda.cache',
         'odict>=1.8.0',
-        'plumber>=1.4',
-        'node>0.999',
-        'node.ext.ugm>0.9.13',
+        'plumber',
+        'node',
+        'node.ext.ugm',
     ],
     extras_require={
         'test': [
