@@ -207,7 +207,7 @@ class TestNode(NodeTestCase):
         self.assertEqual(customer.keys(), [])
 
         # Tree has not changed yet
-        self.check_output("""
+        self.check_output(r"""
         <dc=my-domain,dc=com - False>
           <ou=customers,dc=my-domain,dc=com:ou=customers - False>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -246,7 +246,7 @@ class TestNode(NodeTestCase):
 
         # Now tree nodes from customer up to root are flagged changed after
         # adding the new node
-        self.check_output("""
+        self.check_output(r"""
         <dc=my-domain,dc=com - True>
           <ou=customers,dc=my-domain,dc=com:ou=customers - True>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -295,7 +295,7 @@ class TestNode(NodeTestCase):
         self.assertEqual(len(res), 5)
 
         # All nodes are flagged unchanged again
-        self.check_output("""
+        self.check_output(r"""
         <dc=my-domain,dc=com - False>
           <ou=customers,dc=my-domain,dc=com:ou=customers - False>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -338,7 +338,7 @@ class TestNode(NodeTestCase):
 
         person()
         self.assertEqual(customer._added_children, set())
-        self.check_output("""
+        self.check_output(r"""
         <dc=my-domain,dc=com - True>
           <ou=customers,dc=my-domain,dc=com:ou=customers - True>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -352,7 +352,7 @@ class TestNode(NodeTestCase):
 
         # Call customer now, whole tree unchanged again
         customer()
-        self.check_output("""
+        self.check_output(r"""
         <dc=my-domain,dc=com - False>
           <ou=customers,dc=my-domain,dc=com:ou=customers - False>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -369,7 +369,7 @@ class TestNode(NodeTestCase):
         # tree, as the person is still changed
         customer.attrs['street'] = 'foo'
         person.attrs['description'] = 'foo'
-        self.check_output("""
+        self.check_output(r"""
         <dc=my-domain,dc=com - True>
           <ou=customers,dc=my-domain,dc=com:ou=customers - True>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -393,7 +393,7 @@ class TestNode(NodeTestCase):
         self.assertFalse(customer.__attrs__.changed)
         self.assertTrue(customer._changed)
 
-        self.check_output("""
+        self.check_output(r"""
         <dc=my-domain,dc=com - True>
           <ou=customers,dc=my-domain,dc=com:ou=customers - True>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -407,7 +407,7 @@ class TestNode(NodeTestCase):
 
         # After calling person, whole tree is unchanged again
         person()
-        self.check_output("""
+        self.check_output(r"""
         <dc=my-domain,dc=com - False>
           <ou=customers,dc=my-domain,dc=com:ou=customers - False>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -649,7 +649,7 @@ class TestNode(NodeTestCase):
         customerattrempty.attrs['userPassword'] = 'fooo'
 
         # Check deleting of entries
-        self.check_output("""
+        self.check_output(r"""
         <dc=my-domain,dc=com - True>
           <ou=customers,dc=my-domain,dc=com:ou=customers - True>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -673,7 +673,7 @@ class TestNode(NodeTestCase):
         self.assertEqual(customer._deleted_children, set(['cn=max']))
         self.assertEqual(customer.keys(), [])
 
-        self.check_output("""
+        self.check_output(r"""
         <dc=my-domain,dc=com - True>
           <ou=customers,dc=my-domain,dc=com:ou=customers - True>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -690,7 +690,7 @@ class TestNode(NodeTestCase):
         self.assertEqual(customer._deleted_children, set())
         self.assertEqual(queryPersonDirectly(), [])
 
-        self.check_output("""
+        self.check_output(r"""
         <dc=my-domain,dc=com - True>
           <ou=customers,dc=my-domain,dc=com:ou=customers - True>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -716,7 +716,7 @@ class TestNode(NodeTestCase):
             (False, False, False)
         )
 
-        self.check_output("""
+        self.check_output(r"""
         <dc=my-domain,dc=com - False>
           <ou=customers,dc=my-domain,dc=com:ou=customers - False>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -786,7 +786,7 @@ class TestNode(NodeTestCase):
 
         # Test invalidation. Initialize node
         node = LDAPNode('ou=customers,dc=my-domain,dc=com', props)
-        self.check_output("""
+        self.check_output(r"""
         <ou=customers,dc=my-domain,dc=com - False>
           <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
           <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
@@ -801,7 +801,7 @@ class TestNode(NodeTestCase):
         self.assertEqual(node.storage, odict())
 
         # Reload entries
-        self.check_output("""
+        self.check_output(r"""
         <ou=customers,dc=my-domain,dc=com - False>
           <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
           <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
@@ -839,40 +839,40 @@ class TestNode(NodeTestCase):
 
         # Reload all children and check node state
         self.assertEqual([repr(it) for it in node.values()], [
-            '<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>',
-            '<ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>',
-            '<ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>',
-            '<uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>',
-            '<ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>',
-            '<cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>'
+            r'<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>',
+            r'<ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>',
+            r'<ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>',
+            r'<uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>',
+            r'<ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>',
+            r'<cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>'
         ])
         self.assertEqual([repr(it) for it in node.storage.values()], [
-            '<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>',
-            '<ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>',
-            '<ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>',
-            '<uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>',
-            '<ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>',
-            '<cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>'
+            r'<ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>',
+            r'<ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>',
+            r'<ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>',
+            r'<uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>',
+            r'<ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>',
+            r'<cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>'
         ])
 
         # Invalidate with given key invalidates only child
         node.invalidate('ou=customer1')
         self.assertEqual([repr(it) for it in node.storage.values()], [
-            '<ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>',
-            '<ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>',
-            '<uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>',
-            '<ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>',
-            '<cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>'
+            r'<ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>',
+            r'<ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>',
+            r'<uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>',
+            r'<ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>',
+            r'<cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>'
         ])
 
         # Invalidate key not in memory does nothing
         node.invalidate('ou=notexistent')
         self.assertEqual([repr(it) for it in node.storage.values()], [
-            '<ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>',
-            '<ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>',
-            '<uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>',
-            '<ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>',
-            '<cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>'
+            r'<ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>',
+            r'<ou=n?sty\, customer,ou=customers,dc=my-domain,dc=com:ou=n?sty\, customer - False>',
+            r'<uid=binary,ou=customers,dc=my-domain,dc=com:uid=binary - False>',
+            r'<ou=customer3,ou=customers,dc=my-domain,dc=com:ou=customer3 - False>',
+            r'<cn=customer99,ou=customers,dc=my-domain,dc=com:cn=customer99 - False>'
         ])
 
         # Invalidate changed child fails
