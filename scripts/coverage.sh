@@ -14,7 +14,7 @@ $COVERAGE_BIN run \
     --omit=src/node/ext/ldap/main.py \
     -m node.ext.ldap.tests.__init__
 
-venv/bin/coverage report --fail-under=99
+$COVERAGE_BIN report --fail-under=99
 
 unsetenv
 
