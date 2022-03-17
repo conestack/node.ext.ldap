@@ -1,13 +1,6 @@
+exclude Makefile
 include *.rst
-include *.sh
-include .coveragerc
-include buildout.cfg
-include ldap.cfg
-include travis.cfg
-include versions.cfg
-exclude base.cfg
-recursive-include src *
+prune mk
+prune scripts
 recursive-exclude src *.pyc *.pyo
-recursive-exclude  docs *
-recursive-exclude  scripts *
-
+recursive-include src *

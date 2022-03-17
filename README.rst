@@ -1,3 +1,6 @@
+node.ext.ldap
+=============
+
 .. image:: https://img.shields.io/pypi/v/node.ext.ldap.svg
     :target: https://pypi.python.org/pypi/node.ext.ldap
     :alt: Latest PyPI version
@@ -6,11 +9,9 @@
     :target: https://pypi.python.org/pypi/node.ext.ldap
     :alt: Number of PyPI downloads
 
-.. image:: https://travis-ci.org/bluedynamics/node.ext.ldap.svg?branch=master
-    :target: https://travis-ci.org/bluedynamics/node.ext.ldap
-
-.. image:: https://coveralls.io/repos/github/bluedynamics/node.ext.ldap/badge.svg?branch=master
-    :target: https://coveralls.io/github/bluedynamics/node.ext.ldap?branch=master
+.. image:: https://github.com/conestack/node.ext.ldap/actions/workflows/test.yaml/badge.svg
+    :target: https://github.com/conestack/node.ext.ldap/actions/workflows/test.yaml
+    :alt: Test node.ext.ldap
 
 
 Overview
@@ -1281,15 +1282,6 @@ Dependencies
 - node.ext.ugm
 
 - bda.cache
-
-
-Notes on python-ldap
---------------------
-
-There are different compile issues on different platforms. If you experience
-problems with ``python-ldap``, make sure it is available in the python
-environment you run buildout in, so it won't be fetched and built by buildout
-itself.
 
 
 Contributors

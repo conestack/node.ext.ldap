@@ -13,7 +13,7 @@ def read_file(name):
         return f.read()
 
 
-version = '1.0rc3.dev0'
+version = '1.0.dev0'
 shortdesc = 'LDAP/AD convenience with Node-trees based on python-ldap'
 longdesc = '\n\n'.join([read_file(name) for name in [
     'README.rst',
@@ -30,15 +30,17 @@ setup(
     long_description=longdesc,
     classifiers=[
         'Development Status :: 5 - Production/Stable',
-        'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
+        'Intended Audience :: Developers',
         'Operating System :: OS Independent',
+        'Topic :: Software Development',
+        'Topic :: System :: Systems Administration :: Authentication/Directory :: LDAP',
+        'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python',
-        'Topic :: System :: Systems Administration :: Authentication/Directory :: LDAP',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10'
     ],
     keywords='ldap authentication node tree access users groups',
     author='Node Contributors',
@@ -51,15 +53,15 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'setuptools',
-        'python-ldap>=2.4.14',
-        'passlib',
         'argparse',
         'bda.cache',
-        'odict>=1.8.0',
-        'plumber',
-        'node',
+        'node>=1.0',
         'node.ext.ugm',
+        'odict>=1.8.0',
+        'passlib',
+        'plumber',
+        'python-ldap>=2.4.14',
+        'setuptools',
     ],
     extras_require={
         'test': [

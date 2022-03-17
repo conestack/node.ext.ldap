@@ -1,7 +1,7 @@
 History
 =======
 
-1.0rc3 (unreleased)
+1.0 (unreleased)
 -------------------
 
 - Remove usage of ``Nodespaces`` behavior.
