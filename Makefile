@@ -75,7 +75,7 @@ $(VENV_SENTINEL): $(SENTINEL)
 	@echo "Setup Python Virtual Environment under '$(VENV_FOLDER)'"
 	@echo "Interpreter used for Virtual Environment is '$(PYTHON)'"
 	virtualenv --clear -p $(PYTHON) $(VENV_FOLDER)
-	@test -z "$(GET_PIP)" && @$(PIP_BIN) install -U pip
+	@test -z "$(GET_PIP)" && $(PIP_BIN) install -U pip
 	@test -z "$(GET_PIP)" || curl $(GET_PIP) -o get-pip.py
 	@test -z "$(GET_PIP)" \
 		|| $(VENV_FOLDER)/bin/python get-pip.py --ignore-installed
