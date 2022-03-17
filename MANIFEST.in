@@ -1,6 +1,5 @@
 exclude Makefile
 include *.rst
-prune mk
 prune scripts
 recursive-exclude src *.pyc *.pyo
 recursive-include src *

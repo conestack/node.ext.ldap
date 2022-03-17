@@ -68,6 +68,7 @@ setup(
             'plone.testing',
             'zope.configuration',
             'zope.testing',
+            'zope.testrunner'
         ]
     },
     entry_points="""

@@ -20,6 +20,48 @@ $(SENTINEL):
 	@echo "Sentinels for the Makefile process." > $(SENTINEL)
 
 ###############################################################################
+# openldap
+###############################################################################
+
+OPENLDAP_VERSION?="2.4.59"
+OPENLDAP_URL?="https://www.openldap.org/software/download/OpenLDAP/openldap-release/"
+OPENLDAP_DIR?=$(shell echo $(realpath .))/openldap
+OPENLDAP_ENV?="PATH=/usr/local/bin:/usr/bin:/bin"
+
+OPENLDAP_SENTINEL:=$(SENTINEL_FOLDER)/openldap.sentinel
+$(OPENLDAP_SENTINEL): $(SENTINEL)
+	@echo "Building openldap server in '$(OPENLDAP_DIR)'"
+	@test -d $(OPENLDAP_DIR) || curl -o openldap-$(OPENLDAP_VERSION).tgz \
+		$(OPENLDAP_URL)/openldap-$(OPENLDAP_VERSION).tgz
+	@test -d $(OPENLDAP_DIR) || tar xf openldap-$(OPENLDAP_VERSION).tgz
+	@test -d $(OPENLDAP_DIR) || rm openldap-$(OPENLDAP_VERSION).tgz
+	@test -d $(OPENLDAP_DIR) || mv openldap-$(OPENLDAP_VERSION) $(OPENLDAP_DIR)
+	@env -i -C $(OPENLDAP_DIR) $(OPENLDAP_ENV) bash -c \
+		'./configure \
+			--with-tls \
+			--enable-slapd=yes \
+			--enable-overlays \
+			--prefix=$(OPENLDAP_DIR) \
+		&& make depend \
+		&& make -j4 \
+		&& make install'
+	@touch $(OPENLDAP_SENTINEL)
+
+.PHONY: openldap
+openldap: $(OPENLDAP_SENTINEL)
+
+.PHONY: openldap-dirty
+openldap-dirty:
+	@test -d $(OPENLDAP_DIR) \
+		&& env -i -C $(OPENLDAP_DIR) $(OPENLDAP_ENV) bash -c 'make clean'
+	@rm -f $(OPENLDAP_SENTINEL)
+
+.PHONY: openldap-clean
+openldap-clean:
+	@rm -f $(OPENLDAP_SENTINEL)
+	@rm -rf $(OPENLDAP_DIR)
+
+###############################################################################
 # venv
 ###############################################################################
 
@@ -30,7 +72,7 @@ PIP_BIN:=$(VENV_FOLDER)/bin/pip
 VENV_SENTINEL:=$(SENTINEL_FOLDER)/venv.sentinel
 $(VENV_SENTINEL): $(SENTINEL)
 	@echo "Setup Python Virtual Environment under '$(VENV_FOLDER)'"
-	@$(PYTHON) -m venv $(VENV_FOLDER)
+	virtualenv --clear --no-site-packages -p $(PYTHON) $(VENV_FOLDER)
 	@$(PIP_BIN) install -U pip setuptools wheel
 	@touch $(VENV_SENTINEL)
 
@@ -46,15 +88,40 @@ venv-clean: venv-dirty
 	@rm -rf $(VENV_FOLDER)
 
 ###############################################################################
-# install
+# python-ldap
 ###############################################################################
 
-include mk/python-ldap.mk
+PYTHON_LDAP_SENTINEL:=$(SENTINEL_FOLDER)/python-ldap.sentinel
+$(PYTHON_LDAP_SENTINEL): $(VENV_SENTINEL) $(OPENLDAP_SENTINEL)
+	@$(PIP_BIN) install \
+		--force-reinstall \
+		--no-use-pep517 \
+		--global-option=build_ext \
+		--global-option="-I$(OPENLDAP_DIR)/include" \
+		--global-option="-L$(OPENLDAP_DIR)/lib" \
+		--global-option="-R$(OPENLDAP_DIR)/lib" \
+		python-ldap
+	@touch $(PYTHON_LDAP_SENTINEL)
+
+.PHONY: python-ldap
+python-ldap: $(PYTHON_LDAP_SENTINEL)
+
+.PHONY: python-ldap-dirty
+python-ldap-dirty:
+	@rm -f $(PYTHON_LDAP_SENTINEL)
+
+.PHONY: python-ldap-clean
+python-ldap-clean: python-ldap-dirty
+	@test -e $(PIP_BIN) && $(PIP_BIN) uninstall -y python-ldap
+
+###############################################################################
+# install
+###############################################################################
 
 PIP_PACKAGES=.installed.txt
 
 INSTALL_SENTINEL:=$(SENTINEL_FOLDER)/install.sentinel
-$(INSTALL_SENTINEL): python-ldap
+$(INSTALL_SENTINEL): $(PYTHON_LDAP_SENTINEL)
 	@echo "Install python packages"
 	@$(PIP_BIN) install -e .[test]
 	@$(PIP_BIN) freeze > $(PIP_PACKAGES)
@@ -77,7 +144,8 @@ SYSTEM_DEPENDENCIES?=\
 	libsasl2-dev \
 	libssl-dev \
 	libdb-dev \
-	libltdl-dev
+	libltdl-dev \
+	python-virtualenv
 
 .PHONY: system-dependencies
 system-dependencies:
@@ -90,7 +158,7 @@ system-dependencies:
 # test
 ###############################################################################
 
-TEST_COMMAND?=venv/bin/python -m node.ext.ldap.tests.__init__
+TEST_COMMAND?=scripts/test.sh
 
 .PHONY: test
 test: $(INSTALL_SENTINEL)
@@ -102,10 +170,7 @@ test: $(INSTALL_SENTINEL)
 # coverage
 ###############################################################################
 
-COVERAGE_COMMAND?=venv/bin/coverage run \
-	--source=./src/node/ext/ldap \
-	--omit=./src/node/ext/ldap/main.py \
-	-m node.ext.ldap.tests.__init__
+COVERAGE_COMMAND?=scripts/coverage.sh
 
 .PHONY: coverage
 coverage: $(INSTALL_SENTINEL)
@@ -121,7 +186,7 @@ coverage-clean:
 # clean
 ###############################################################################
 
-CLEAN_TARGETS?=
+CLEAN_TARGETS?=openldap
 
 .PHONY: clean
 clean: venv-clean coverage-clean

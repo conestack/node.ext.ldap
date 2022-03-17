@@ -1,6 +1,9 @@
 *.pyc
-.coverage
+/.coverage
+/.installed.txt
+/.sentinels/
 /dist/
 /htmlcov/
+/openldap/
 /src/node.ext.ldap.egg-info
 /venv/
