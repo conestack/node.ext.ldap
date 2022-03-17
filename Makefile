@@ -68,14 +68,18 @@ openldap-clean:
 PYTHON?=python3
 VENV_FOLDER?=venv
 PIP_BIN:=$(VENV_FOLDER)/bin/pip
+GET_PIP?=
 
 VENV_SENTINEL:=$(SENTINEL_FOLDER)/venv.sentinel
 $(VENV_SENTINEL): $(SENTINEL)
 	@echo "Setup Python Virtual Environment under '$(VENV_FOLDER)'"
 	@echo "Interpreter used for Virtual Environment is '$(PYTHON)'"
 	virtualenv --clear -p $(PYTHON) $(VENV_FOLDER)
-	@curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-	@$(VENV_FOLDER)/bin/python get-pip.py --ignore-installed
+	@test -z "$(GET_PIP)" && @$(PIP_BIN) install -U pip
+	@test -z "$(GET_PIP)" || curl $(GET_PIP) -o get-pip.py
+	@test -z "$(GET_PIP)" \
+		|| @$(VENV_FOLDER)/bin/python get-pip.py --ignore-installed
+	@test -e get-pip.py && rm get-pip.py
 	@$(PIP_BIN) install wheel setuptools
 	@touch $(VENV_SENTINEL)
 
