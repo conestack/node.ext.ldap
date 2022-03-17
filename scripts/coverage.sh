@@ -3,8 +3,13 @@ source ./scripts/env.sh
 
 setenv
 
-venv/bin/python --version
-venv/bin/coverage run \
+#PYTHON_BIN=venv/bin/python
+PYTHON_BIN=python
+#COVERAGE_BIN=venv/bin/coverage
+COVERAGE_BIN=coverage
+
+$PYTHON_BIN --version
+$COVERAGE_BIN run \
     --source=src/node/ext/ldap \
     --omit=src/node/ext/ldap/main.py \
     -m node.ext.ldap.tests.__init__
