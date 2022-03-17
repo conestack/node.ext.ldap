@@ -72,7 +72,7 @@ PIP_BIN:=$(VENV_FOLDER)/bin/pip
 VENV_SENTINEL:=$(SENTINEL_FOLDER)/venv.sentinel
 $(VENV_SENTINEL): $(SENTINEL)
 	@echo "Setup Python Virtual Environment under '$(VENV_FOLDER)'"
-	virtualenv --clear --no-site-packages -p $(PYTHON) $(VENV_FOLDER)
+	virtualenv --clear -p $(PYTHON) $(VENV_FOLDER)
 	@$(PIP_BIN) install -U pip setuptools wheel
 	@touch $(VENV_SENTINEL)
 
@@ -123,7 +123,7 @@ PIP_PACKAGES=.installed.txt
 INSTALL_SENTINEL:=$(SENTINEL_FOLDER)/install.sentinel
 $(INSTALL_SENTINEL): $(PYTHON_LDAP_SENTINEL)
 	@echo "Install python packages"
-	@$(PIP_BIN) install -e .[test]
+	@$(PIP_BIN) install --no-use-pep517 -e .[test]
 	@$(PIP_BIN) freeze > $(PIP_PACKAGES)
 	@touch $(INSTALL_SENTINEL)
 
@@ -145,7 +145,7 @@ SYSTEM_DEPENDENCIES?=\
 	libssl-dev \
 	libdb-dev \
 	libltdl-dev \
-	python-virtualenv
+	virtualenv
 
 .PHONY: system-dependencies
 system-dependencies:

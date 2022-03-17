@@ -3,6 +3,7 @@ source ./scripts/env.sh
 
 setenv
 
+venv/bin/python --version
 venv/bin/coverage run \
     --source=src/node/ext/ldap \
     --omit=src/node/ext/ldap/main.py \

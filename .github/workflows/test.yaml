@@ -11,7 +11,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ubuntu-latest
+        os:
+          -ubuntu-latest
 
         python:
           - "2.7"
@@ -32,7 +33,7 @@ jobs:
         run: make system-dependencies
 
       - name: Install project
-        run: make install
+        run: PYTHON=python make install
 
       - name: Run tests an collect code coverage
         run: make coverage
