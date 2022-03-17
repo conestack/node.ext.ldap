@@ -4,6 +4,9 @@ History
 1.0 (unreleased)
 -------------------
 
+- Call ``ensure_connection`` in ``LDAPSession.delete``.
+  [rnix]
+
 - Remove usage of ``Nodespaces`` behavior.
   [rnix]
 

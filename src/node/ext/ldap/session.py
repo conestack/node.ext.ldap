@@ -110,6 +110,7 @@ class LDAPSession(object):
         return result
 
     def delete(self, dn):
+        self.ensure_connection()
         self._communicator.delete(dn)
 
     def passwd(self, userdn, oldpw, newpw):

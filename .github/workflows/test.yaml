@@ -33,7 +33,9 @@ jobs:
         run: make system-dependencies
 
       - name: Install project
-        run: PYTHON=python make install
+        run: |
+          export PYTHON=$(which python)
+          make install
 
       - name: Run tests an collect code coverage
         run: make coverage

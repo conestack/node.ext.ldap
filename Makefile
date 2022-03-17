@@ -72,6 +72,7 @@ PIP_BIN:=$(VENV_FOLDER)/bin/pip
 VENV_SENTINEL:=$(SENTINEL_FOLDER)/venv.sentinel
 $(VENV_SENTINEL): $(SENTINEL)
 	@echo "Setup Python Virtual Environment under '$(VENV_FOLDER)'"
+	@echo "Interpreter used for Virtual Environment is '$(PYTHON)'"
 	virtualenv --clear -p $(PYTHON) $(VENV_FOLDER)
 	@$(PIP_BIN) install -U pip setuptools wheel
 	@touch $(VENV_SENTINEL)
