@@ -78,7 +78,7 @@ $(VENV_SENTINEL): $(SENTINEL)
 	@test -z "$(GET_PIP)" && @$(PIP_BIN) install -U pip
 	@test -z "$(GET_PIP)" || curl $(GET_PIP) -o get-pip.py
 	@test -z "$(GET_PIP)" \
-		|| @$(VENV_FOLDER)/bin/python get-pip.py --ignore-installed
+		|| $(VENV_FOLDER)/bin/python get-pip.py --ignore-installed
 	@test -e get-pip.py && rm get-pip.py
 	@$(PIP_BIN) install wheel setuptools
 	@touch $(VENV_SENTINEL)
