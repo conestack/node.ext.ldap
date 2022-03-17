@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          -ubuntu-latest
+          - ubuntu-latest
 
         python:
           - "2.7"
