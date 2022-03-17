@@ -74,7 +74,7 @@ $(VENV_SENTINEL): $(SENTINEL)
 	@echo "Setup Python Virtual Environment under '$(VENV_FOLDER)'"
 	@echo "Interpreter used for Virtual Environment is '$(PYTHON)'"
 	virtualenv --clear -p $(PYTHON) $(VENV_FOLDER)
-	@$(PIP_BIN) install -U pip setuptools wheel six
+	@$(PIP_BIN) install setuptools wheel six
 	@touch $(VENV_SENTINEL)
 
 .PHONY: venv
