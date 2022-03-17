@@ -40,16 +40,17 @@ jobs:
       - name: Install system dependencies
         run: make system-dependencies
 
-      - name: Define get pip for python 2
+      - name: Install project with python 2
         if: matrix.python == '2.7'
-        run: export GET_PIP=https://bootstrap.pypa.io/pip/2.7/get-pip.py
-
-      - name: Define get pip for python 3
-        if: matrix.python != '2.7'
-        run: export GET_PIP=https://bootstrap.pypa.io/get-pip.py
-
-      - name: Install project
         run: |
+          export GET_PIP=https://bootstrap.pypa.io/pip/2.7/get-pip.py
+          export PYTHON=$(which python)
+          make install
+
+      - name: Install project with python 3
+        if: matrix.python != '2.7'
+        run: |
+          export GET_PIP=https://bootstrap.pypa.io/get-pip.py
           export PYTHON=$(which python)
           make install
 
