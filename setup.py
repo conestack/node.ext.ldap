@@ -65,6 +65,7 @@ setup(
     ],
     extras_require={
         'test': [
+            'coverage',
             'plone.testing',
             'zope.configuration',
             'zope.testing',

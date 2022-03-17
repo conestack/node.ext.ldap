@@ -5,10 +5,10 @@ setenv
 
 venv/bin/coverage run \
     --source=src/node/ext/ldap \
-    -m zope.testrunner --auto-color --auto-progress \
-    --test-path=src \
+    --omit=src/node/ext/ldap/main.py \
+    -m node.ext.ldap.tests.__init__
 
-venv/bin/coverage report
+venv/bin/coverage report --fail-under=99
 
 unsetenv
 
