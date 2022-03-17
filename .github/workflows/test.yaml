@@ -34,7 +34,6 @@ jobs:
 
       - name: Install project
         run: |
-          pip install -U pip
           export PYTHON=$(which python)
           make install
 
