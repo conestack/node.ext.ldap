@@ -29,29 +29,15 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Install python2-dev
-        if: matrix.python == '2.7'
-        run: sudo apt-get install python2-dev
+#      - name: Install python2-dev
+#        if: matrix.python == '2.7'
+#        run: sudo apt-get install python2-dev
 
       - name: Install system dependencies
         run: make system-dependencies
 
       - name: Install project
         run: make install
-
-#      - name: Install project with python 2
-#        if: matrix.python == '2.7'
-#        run: |
-#          export GET_PIP=https://bootstrap.pypa.io/pip/2.7/get-pip.py
-#          export PYTHON=$(which python)
-#          make install
-#
-#      - name: Install project with python 3
-#        if: matrix.python != '2.7'
-#        run: |
-#          export GET_PIP=https://bootstrap.pypa.io/get-pip.py
-#          export PYTHON=$(which python)
-#          make install
 
       - name: Run tests an collect code coverage
         run: make coverage

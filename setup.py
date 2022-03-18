@@ -55,13 +55,10 @@ setup(
     install_requires=[
         'argparse',
         'bda.cache',
-        'node>=1.0',
-        'node.ext.ugm',
-        'odict>=1.8.0',
+        'node.ext.ugm>=1.0',
         'passlib',
-        'plumber',
         'python-ldap>=2.4.14',
-        'setuptools',
+        'setuptools'
     ],
     extras_require={
         'test': [
