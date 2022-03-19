@@ -65,27 +65,34 @@ openldap-clean:
 # venv
 ###############################################################################
 
-PYTHON?=python3
+# Flag whether to skip virtual env creation and use host python instead.
+# Needed for github actions.
+USE_HOST_PYTHON?=
+
+HOST_PYTHON?=python3
+HOST_PIP?=pip
 VENV_FOLDER?=venv
-#PIP_BIN?=$(VENV_FOLDER)/bin/pip
-PIP_BIN?=pip
-GET_PIP?=
+
+# Define bin folder and python binary. Leave bin folder empty if using host
+# Python, expecting all commands in PATH.
+ifeq ($(USE_HOST_PYTHON),)
+PYTHON_BIN?=$(VENV_FOLDER)/bin/python
+PIP_BIN?=$(VENV_FOLDER)/bin/pip
+else
+PYTHON_BIN?=$(HOST_PYTHON)
+PIP_BIN?=$(HOST_PIP)
+endif
 
 VENV_SENTINEL:=$(SENTINEL_FOLDER)/venv.sentinel
 $(VENV_SENTINEL): $(SENTINEL)
-	@echo "Do nothing"
+ifeq ($(USE_HOST_PYTHON),)
+	@echo "Setup Python Virtual Environment under '$(VENV_FOLDER)'"
+	@$(HOST_PYTHON) -m venv $(VENV_FOLDER)
+	@$(PIP_BIN) install -U pip setuptools wheel
+else
+	@echo "Skip Python Virtual Environment Setup. Use Host Python instead"
 	@touch $(VENV_SENTINEL)
-
-#	@echo "Setup Python Virtual Environment under '$(VENV_FOLDER)'"
-#	@echo "Interpreter used for Virtual Environment is '$(PYTHON)'"
-#	virtualenv --clear -p $(PYTHON) $(VENV_FOLDER)
-#	@test -z "$(GET_PIP)" && $(PIP_BIN) install -U pip
-#	@test -z "$(GET_PIP)" || curl $(GET_PIP) -o get-pip.py
-#	@test -z "$(GET_PIP)" \
-#		|| $(VENV_FOLDER)/bin/python get-pip.py --ignore-installed
-#	@test -e get-pip.py && rm get-pip.py
-#	@$(PIP_BIN) install wheel setuptools
-#	@touch $(VENV_SENTINEL)
+endif
 
 .PHONY: venv
 venv: $(VENV_SENTINEL)
@@ -96,7 +103,9 @@ venv-dirty:
 
 .PHONY: venv-clean
 venv-clean: venv-dirty
+ifeq ($(USE_HOST_PYTHON),)
 	@rm -rf $(VENV_FOLDER)
+endif
 
 ###############################################################################
 # python-ldap
@@ -129,13 +138,13 @@ python-ldap-clean: python-ldap-dirty
 # install
 ###############################################################################
 
-PIP_PACKAGES=.installed.txt
+INSTALLED_PACKAGES=.installed.txt
 
 INSTALL_SENTINEL:=$(SENTINEL_FOLDER)/install.sentinel
 $(INSTALL_SENTINEL): $(PYTHON_LDAP_SENTINEL)
 	@echo "Install python packages"
 	@$(PIP_BIN) install -e .[test]
-	@$(PIP_BIN) freeze > $(PIP_PACKAGES)
+	@$(PIP_BIN) freeze > $(INSTALLED_PACKAGES)
 	@touch $(INSTALL_SENTINEL)
 
 .PHONY: install
@@ -155,8 +164,7 @@ SYSTEM_DEPENDENCIES?=\
 	libsasl2-dev \
 	libssl-dev \
 	libdb-dev \
-	libltdl-dev \
-	virtualenv
+	libltdl-dev
 
 .PHONY: system-dependencies
 system-dependencies:
@@ -175,11 +183,19 @@ TEST_COMMAND?=scripts/test.sh
 test: $(INSTALL_SENTINEL)
 	@echo "Run tests"
 	@test -z "$(TEST_COMMAND)" && echo "No test command defined"
-	@test -z "$(TEST_COMMAND)" || bash -c "$(TEST_COMMAND)"
+	@test -z "$(TEST_COMMAND)" || bash -c \
+		'export PYTHON_BIN=$(PYTHON_BIN) \
+		&& $(TEST_COMMAND)'
 
 ###############################################################################
 # coverage
 ###############################################################################
+
+ifeq ($(USE_HOST_PYTHON),)
+COVERAGE_BIN?=$(VENV_FOLDER)/bin/coverage
+else
+COVERAGE_BIN?=coverage
+endif
 
 COVERAGE_COMMAND?=scripts/coverage.sh
 
@@ -187,7 +203,10 @@ COVERAGE_COMMAND?=scripts/coverage.sh
 coverage: $(INSTALL_SENTINEL)
 	@echo "Run coverage"
 	@test -z "$(COVERAGE_COMMAND)" && echo "No coverage command defined"
-	@test -z "$(COVERAGE_COMMAND)" || bash -c "$(COVERAGE_COMMAND)"
+	@test -z "$(COVERAGE_COMMAND)" || bash -c \
+		'export PYTHON_BIN=$(PYTHON_BIN) \
+		&& export COVERAGE_BIN=$(COVERAGE_BIN) \
+		&& $(COVERAGE_COMMAND)'
 
 .PHONY: coverage-clean
 coverage-clean:

@@ -29,15 +29,11 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-#      - name: Install python2-dev
-#        if: matrix.python == '2.7'
-#        run: sudo apt-get install python2-dev
-
       - name: Install system dependencies
         run: make system-dependencies
 
       - name: Install project
-        run: make install
+        run: USE_HOST_PYTHON=1 HOST_PYTHON=python make install
 
       - name: Run tests an collect code coverage
-        run: make coverage
+        run: USE_HOST_PYTHON=1 HOST_PYTHON=python make coverage
