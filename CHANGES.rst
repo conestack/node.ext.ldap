@@ -1,8 +1,8 @@
 History
 =======
 
-1.0 (unreleased)
--------------------
+1.0 (2022-03-19)
+----------------
 
 - Call ``ensure_connection`` in ``LDAPSession.delete``.
   [rnix]
