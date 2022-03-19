@@ -91,8 +91,8 @@ ifeq ($(USE_HOST_PYTHON),)
 	@$(PIP_BIN) install -U pip setuptools wheel
 else
 	@echo "Skip Python Virtual Environment Setup. Use Host Python instead"
-	@touch $(VENV_SENTINEL)
 endif
+	@touch $(VENV_SENTINEL)
 
 .PHONY: venv
 venv: $(VENV_SENTINEL)
