@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
+from setuptools import find_packages
+from setuptools import setup
 import codecs
 import os
-import sys
-
-from setuptools import find_packages, setup
 
 
 def read_file(name):
@@ -13,23 +12,6 @@ def read_file(name):
     ) as f:
         return f.read()
 
-def get_install_requires():
-
-    packages = [
-        'bda.cache',
-        'node.ext.ugm>=1.0',
-        'passlib',
-        'python-ldap>=2.4.14',
-        'setuptools',
-        'argparse'
-    ]
-
-    if sys.version_info >= (3,2):
-        packages.remove('argparse')
-    
-    return packages
-
-install_requires = get_install_requires()
 
 version = '1.1.dev0'
 shortdesc = 'LDAP/AD convenience with Node-trees based on python-ldap'
@@ -70,7 +52,14 @@ setup(
     namespace_packages=['node', 'node.ext'],
     include_package_data=True,
     zip_safe=False,
-    install_requires=install_requires,
+    install_requires=[
+        'argparse',
+        'bda.cache',
+        'node.ext.ugm>=1.0',
+        'passlib',
+        'python-ldap>=2.4.14',
+        'setuptools'
+    ],
     extras_require={
         'test': [
             'coverage',
