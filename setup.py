@@ -53,7 +53,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'argparse',
+        'argparse;python_version<"3.2"',
         'bda.cache',
         'node.ext.ugm>=1.0',
         'passlib',
