@@ -1260,7 +1260,7 @@ class TestNode(NodeTestCase):
         eventtest = root.detach('ou=eventtest01')
         self.assertEqual(
             events,
-            ['Detached <ou=eventtest01,dc=my-domain,dc=com:ou=eventtest01 - True>']
+            ['Detached <ou=eventtest01 - True>']
         )
         events = list()
 

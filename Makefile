@@ -143,6 +143,10 @@ INSTALLED_PACKAGES=.installed.txt
 INSTALL_SENTINEL:=$(SENTINEL_FOLDER)/install.sentinel
 $(INSTALL_SENTINEL): $(PYTHON_LDAP_SENTINEL)
 	@echo "Install python packages"
+
+	@$(PIP_BIN) install https://github.com/conestack/odict/archive/master.zip
+	@$(PIP_BIN) install https://github.com/conestack/node/archive/master.zip
+
 	@$(PIP_BIN) install -e .[test]
 	@$(PIP_BIN) freeze > $(INSTALLED_PACKAGES)
 	@touch $(INSTALL_SENTINEL)
