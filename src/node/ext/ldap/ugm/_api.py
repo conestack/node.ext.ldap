@@ -1065,6 +1065,7 @@ class LDAPUgm(UgmBase):
         :param gcfg: GroupsConfig instance.
         :param rcfg: RolesConfig instance.
         """
+        # XXX: remove name and parent once using ``NodeInit`` behavior
         self.__name__ = name
         self.__parent__ = parent
         self.props = props
