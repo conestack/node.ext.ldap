@@ -37,14 +37,14 @@ class TestNode(NodeTestCase):
     def test_basics(self):
         # Create the root node. The Root node expects the initial base DN as
         # name and the server properties
-        err = self.expect_error(
+        err = self.expectError(
             ValueError,
             LDAPNode,
             'dc=my-domain,dc=com'
         )
         self.assertEqual(str(err), 'Wrong initialization.')
 
-        err = self.expect_error(
+        err = self.expectError(
             ValueError,
             LDAPNode,
             props=props
@@ -104,7 +104,7 @@ class TestNode(NodeTestCase):
         self.assertEqual(root.keys(), ['ou=customers', 'ou=demo'])
 
         # Access inexistent child
-        self.expect_error(KeyError, root.__getitem__, 'foo')
+        self.expectError(KeyError, root.__getitem__, 'foo')
 
     def test_child_basics(self):
         # Access existent child and it's attributes
@@ -207,7 +207,7 @@ class TestNode(NodeTestCase):
         self.assertEqual(customer.keys(), [])
 
         # Tree has not changed yet
-        self.check_output(r"""
+        self.checkOutput(r"""
         <dc=my-domain,dc=com - False>
           <ou=customers,dc=my-domain,dc=com:ou=customers - False>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -246,7 +246,7 @@ class TestNode(NodeTestCase):
 
         # Now tree nodes from customer up to root are flagged changed after
         # adding the new node
-        self.check_output(r"""
+        self.checkOutput(r"""
         <dc=my-domain,dc=com - True>
           <ou=customers,dc=my-domain,dc=com:ou=customers - True>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -295,7 +295,7 @@ class TestNode(NodeTestCase):
         self.assertEqual(len(res), 5)
 
         # All nodes are flagged unchanged again
-        self.check_output(r"""
+        self.checkOutput(r"""
         <dc=my-domain,dc=com - False>
           <ou=customers,dc=my-domain,dc=com:ou=customers - False>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -338,7 +338,7 @@ class TestNode(NodeTestCase):
 
         person()
         self.assertEqual(customer._added_children, set())
-        self.check_output(r"""
+        self.checkOutput(r"""
         <dc=my-domain,dc=com - True>
           <ou=customers,dc=my-domain,dc=com:ou=customers - True>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -352,7 +352,7 @@ class TestNode(NodeTestCase):
 
         # Call customer now, whole tree unchanged again
         customer()
-        self.check_output(r"""
+        self.checkOutput(r"""
         <dc=my-domain,dc=com - False>
           <ou=customers,dc=my-domain,dc=com:ou=customers - False>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -369,7 +369,7 @@ class TestNode(NodeTestCase):
         # tree, as the person is still changed
         customer.attrs['street'] = 'foo'
         person.attrs['description'] = 'foo'
-        self.check_output(r"""
+        self.checkOutput(r"""
         <dc=my-domain,dc=com - True>
           <ou=customers,dc=my-domain,dc=com:ou=customers - True>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -393,7 +393,7 @@ class TestNode(NodeTestCase):
         self.assertFalse(customer.__attrs__.changed)
         self.assertTrue(customer._changed)
 
-        self.check_output(r"""
+        self.checkOutput(r"""
         <dc=my-domain,dc=com - True>
           <ou=customers,dc=my-domain,dc=com:ou=customers - True>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -407,7 +407,7 @@ class TestNode(NodeTestCase):
 
         # After calling person, whole tree is unchanged again
         person()
-        self.check_output(r"""
+        self.checkOutput(r"""
         <dc=my-domain,dc=com - False>
           <ou=customers,dc=my-domain,dc=com:ou=customers - False>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -435,7 +435,7 @@ class TestNode(NodeTestCase):
 
         # Changing the rdn attribute on loaded nodes fails.
         person.attrs['cn'] = 'foo'
-        err = self.expect_error(ldap.NAMING_VIOLATION, person.__call__)
+        err = self.expectError(ldap.NAMING_VIOLATION, person.__call__)
         self.assertEqual(err.args[0], {
             'msgtype': 103,
             'msgid': 92,
@@ -649,7 +649,7 @@ class TestNode(NodeTestCase):
         customerattrempty.attrs['userPassword'] = 'fooo'
 
         # Check deleting of entries
-        self.check_output(r"""
+        self.checkOutput(r"""
         <dc=my-domain,dc=com - True>
           <ou=customers,dc=my-domain,dc=com:ou=customers - True>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -673,7 +673,7 @@ class TestNode(NodeTestCase):
         self.assertEqual(customer._deleted_children, set(['cn=max']))
         self.assertEqual(customer.keys(), [])
 
-        self.check_output(r"""
+        self.checkOutput(r"""
         <dc=my-domain,dc=com - True>
           <ou=customers,dc=my-domain,dc=com:ou=customers - True>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -690,7 +690,7 @@ class TestNode(NodeTestCase):
         self.assertEqual(customer._deleted_children, set())
         self.assertEqual(queryPersonDirectly(), [])
 
-        self.check_output(r"""
+        self.checkOutput(r"""
         <dc=my-domain,dc=com - True>
           <ou=customers,dc=my-domain,dc=com:ou=customers - True>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -716,7 +716,7 @@ class TestNode(NodeTestCase):
             (False, False, False)
         )
 
-        self.check_output(r"""
+        self.checkOutput(r"""
         <dc=my-domain,dc=com - False>
           <ou=customers,dc=my-domain,dc=com:ou=customers - False>
             <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
@@ -756,7 +756,7 @@ class TestNode(NodeTestCase):
         # It's possible to add other INode implementing objects than LDAPNode.
         # An ldap node gets created then and attrs are set from original node
         new = BaseNode()
-        err = self.expect_error(
+        err = self.expectError(
             ValueError,
             customer.__setitem__,
             'cn=from_other',
@@ -786,7 +786,7 @@ class TestNode(NodeTestCase):
 
         # Test invalidation. Initialize node
         node = LDAPNode('ou=customers,dc=my-domain,dc=com', props)
-        self.check_output(r"""
+        self.checkOutput(r"""
         <ou=customers,dc=my-domain,dc=com - False>
           <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
           <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
@@ -801,7 +801,7 @@ class TestNode(NodeTestCase):
         self.assertEqual(node.storage, odict())
 
         # Reload entries
-        self.check_output(r"""
+        self.checkOutput(r"""
         <ou=customers,dc=my-domain,dc=com - False>
           <ou=customer1,ou=customers,dc=my-domain,dc=com:ou=customer1 - False>
           <ou=customer2,ou=customers,dc=my-domain,dc=com:ou=customer2 - False>
@@ -813,7 +813,7 @@ class TestNode(NodeTestCase):
 
         # Change descripton and try to invalidate, fails
         node.attrs['description'] = 'changed description'
-        err = self.expect_error(RuntimeError, node.invalidate)
+        err = self.expectError(RuntimeError, node.invalidate)
         expected = 'Invalid tree state. Try to invalidate changed node.'
         self.assertEqual(str(err), expected)
 
@@ -823,7 +823,7 @@ class TestNode(NodeTestCase):
 
         node.invalidate()
         node['ou=customer1'].attrs['description'] = 'changed description'
-        err = self.expect_error(RuntimeError, node.invalidate)
+        err = self.expectError(RuntimeError, node.invalidate)
         expected = 'Invalid tree state. Try to invalidate changed node.'
         self.assertEqual(str(err), expected)
 
@@ -877,7 +877,7 @@ class TestNode(NodeTestCase):
 
         # Invalidate changed child fails
         node['ou=customer2'].attrs['description'] = 'changed description'
-        err = self.expect_error(
+        err = self.expectError(
             RuntimeError,
             node.invalidate,
             'ou=customer2'
@@ -892,7 +892,7 @@ class TestNode(NodeTestCase):
     def test_search(self):
         # We can fetch nodes by DNs
         node = LDAPNode('dc=my-domain,dc=com', props)
-        err = self.expect_error(
+        err = self.expectError(
             ValueError,
             node.node_by_dn,
             'ou=customers,dc=invalid_base,dc=com'
@@ -917,7 +917,7 @@ class TestNode(NodeTestCase):
             node.node_by_dn('ou=inexistent,dc=my-domain,dc=com'),
             None
         )
-        err = self.expect_error(
+        err = self.expectError(
             ValueError,
             node.node_by_dn,
             'ou=inexistent,dc=my-domain,dc=com',
@@ -1081,7 +1081,7 @@ class TestNode(NodeTestCase):
         self.assertEqual(res, [u'ou=customers,dc=my-domain,dc=com'])
 
         # Exact match fails on multi search results
-        err = self.expect_error(
+        err = self.expectError(
             ValueError,
             node.search,
             queryFilter='(objectClass=organizationalUnit)',
@@ -1091,7 +1091,7 @@ class TestNode(NodeTestCase):
         self.assertEqual(str(err), expected)
 
         # Exact match also fails on zero length result
-        err = self.expect_error(
+        err = self.expectError(
             ValueError,
             node.search,
             queryFilter='(objectClass=inexistent)',

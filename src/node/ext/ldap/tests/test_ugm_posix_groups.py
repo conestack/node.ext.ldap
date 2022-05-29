@@ -45,7 +45,7 @@ class TestUGMPosixGroups(NodeTestCase):
         self.assertTrue(ugm['groups'] is ugm.groups)
 
         # Try to delete from UGM, fails
-        err = self.expect_error(
+        err = self.expectError(
             NotImplementedError,
             ugm.__delitem__,
             'users'
@@ -53,7 +53,7 @@ class TestUGMPosixGroups(NodeTestCase):
         self.assertEqual(str(err), 'Operation forbidden on this node.')
 
         # Try to set item by invalid key, fails
-        err = self.expect_error(
+        err = self.expectError(
             KeyError,
             ugm.__setitem__,
             'inexistent',
@@ -91,20 +91,20 @@ class TestUGMPosixGroups(NodeTestCase):
         ])
 
         # User is a leaf
-        err = self.expect_error(
+        err = self.expectError(
             NotImplementedError,
             user_0.__setitem__,
             'foo',
             object()
         )
         self.assertEqual(str(err), 'User does not support ``__setitem__``')
-        err = self.expect_error(
+        err = self.expectError(
             NotImplementedError,
             user_0.__delitem__,
             'foo'
         )
         self.assertEqual(str(err), 'User does not support ``__delitem__``')
-        err = self.expect_error(
+        err = self.expectError(
             NotImplementedError,
             user_0.__getitem__,
             'foo'
@@ -178,7 +178,7 @@ class TestUGMPosixGroups(NodeTestCase):
 
     @posix_groups_ugm
     def test_change_password(self, ugm):
-        err = self.expect_error(
+        err = self.expectError(
             ldap.UNWILLING_TO_PERFORM,
             ugm.users.passwd,
             'uid0',
@@ -194,7 +194,7 @@ class TestUGMPosixGroups(NodeTestCase):
             'info': 'unwilling to verify old password'
         })
 
-        self.expect_error(
+        self.expectError(
             KeyError,
             ugm.users.passwd,
             'foo',
@@ -212,7 +212,7 @@ class TestUGMPosixGroups(NodeTestCase):
     @posix_groups_ugm
     def test_add_user(self, ugm):
         users = ugm.users
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Users'>: users
           <class 'node.ext.ldap.ugm._api.User'>: uid0
           <class 'node.ext.ldap.ugm._api.User'>: uid1
@@ -230,7 +230,7 @@ class TestUGMPosixGroups(NodeTestCase):
         self.assertTrue(isinstance(user, User))
 
         # The user is added to tree
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Users'>: users
           <class 'node.ext.ldap.ugm._api.User'>: uid0
           <class 'node.ext.ldap.ugm._api.User'>: uid1
@@ -241,7 +241,7 @@ class TestUGMPosixGroups(NodeTestCase):
         # Though, no authentication or password setting possible yet, because
         # tree is not persisted to LDAP yet
         self.assertFalse(users.authenticate('sepp', 'secret'))
-        self.expect_error(
+        self.expectError(
             KeyError,
             ugm.users.passwd,
             'sepp',
@@ -288,7 +288,7 @@ class TestUGMPosixGroups(NodeTestCase):
         self.assertTrue(isinstance(group, Group))
 
         ugm()
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Groups'>: groups
           <class 'node.ext.ldap.ugm._api.Group'>: group0
             <class 'node.ext.ldap.ugm._api.User'>: uid0
@@ -305,7 +305,7 @@ class TestUGMPosixGroups(NodeTestCase):
         # Delete already created group
         del groups['group99']
         ugm()
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Groups'>: groups
           <class 'node.ext.ldap.ugm._api.Group'>: group0
             <class 'node.ext.ldap.ugm._api.User'>: uid0
@@ -337,13 +337,13 @@ class TestUGMPosixGroups(NodeTestCase):
         self.assertTrue(user_1 is group_1['uid1'])
 
         # Querying a group for a non-member results in a KeyError
-        self.expect_error(KeyError, group_0.__getitem__, 'uid1')
+        self.expectError(KeyError, group_0.__getitem__, 'uid1')
 
         # Deleting inexistend member from group fails
-        self.expect_error(KeyError, group_0.__delitem__, 'inexistent')
+        self.expectError(KeyError, group_0.__delitem__, 'inexistent')
 
         # ``__setitem__`` is prohibited
-        err = self.expect_error(
+        err = self.expectError(
             NotImplementedError,
             group_1.__setitem__,
             'uid0',
@@ -429,7 +429,7 @@ class TestUGMPosixGroups(NodeTestCase):
 
         self.assertEqual(user.groups, [groups['group0'], groups['group1']])
         self.assertEqual(user.group_ids, [u'group0', u'group1'])
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
           <class 'node.ext.ldap.ugm._api.Users'>: users
             <class 'node.ext.ldap.ugm._api.User'>: uid0
@@ -452,7 +452,7 @@ class TestUGMPosixGroups(NodeTestCase):
 
         del users['sepp']
         ugm()
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
           <class 'node.ext.ldap.ugm._api.Users'>: users
             <class 'node.ext.ldap.ugm._api.User'>: uid0
@@ -564,7 +564,7 @@ class TestUGMPosixGroups(NodeTestCase):
         self.assertEqual(group.roles, ['viewer', 'editor'])
 
         ugm.roles_storage()
-        err = self.expect_error(
+        err = self.expectError(
             ValueError,
             group.add_role,
             'editor'
@@ -578,15 +578,15 @@ class TestUGMPosixGroups(NodeTestCase):
         self.assertEqual(ugm.roles_storage.keys(), [u'viewer'])
         self.assertEqual(ugm.roles_storage.storage.keys(), ['viewer'])
 
-        self.expect_error(KeyError, ugm.roles_storage.__getitem__, 'editor')
-        err = self.expect_error(
+        self.expectError(KeyError, ugm.roles_storage.__getitem__, 'editor')
+        err = self.expectError(
             ValueError,
             group.remove_role,
             'editor'
         )
         self.assertEqual(str(err), "Role not exists 'editor'")
 
-        err = self.expect_error(
+        err = self.expectError(
             ValueError,
             group.remove_role,
             'viewer'

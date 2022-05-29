@@ -81,7 +81,7 @@ class TestUGMPrincipals(NodeTestCase):
             'Schmidt'
         )
 
-        err = self.expect_error(
+        err = self.expectError(
             KeyError,
             users.idbydn,
             'cN=inexistent, ou=customers,dc=MY-domain,dc= com'
@@ -103,7 +103,7 @@ class TestUGMPrincipals(NodeTestCase):
         )
 
         # The '?' is just ``__repr__`` going to ascii, the id is in proper unicode
-        self.check_output("<User object 'M...ller' at ...>", repr(mueller))
+        self.checkOutput("<User object 'M...ller' at ...>", repr(mueller))
         self.assertEqual(mueller.id, u'Müller')
 
         # A user has a login
@@ -111,7 +111,7 @@ class TestUGMPrincipals(NodeTestCase):
 
         # And attributes
         self.assertTrue(isinstance(mueller.attrs, PrincipalAliasedAttributes))
-        self.check_output("""
+        self.checkOutput("""
         Aliased <LDAPNodeAttributes object 'cn=user2' at ...>
         """, repr(mueller.attrs))
         context_attrs = sorted(mueller.attrs.context.items())
@@ -129,7 +129,7 @@ class TestUGMPrincipals(NodeTestCase):
         ])
 
         # Query all user nodes
-        self.check_output("""
+        self.checkOutput("""
         [<User object 'Meier' at ...>,
         <User object 'M...ller' at ...>,
         <User object 'Schmidt' at ...>,
@@ -266,7 +266,7 @@ class TestUGMPrincipals(NodeTestCase):
             [u'Müller', u'Schmidt', u'Umhauer', u'newid', u'sn_binary']
         )
 
-        err = self.expect_error(
+        err = self.expectError(
             KeyError,
             users.create,
             'newid'
@@ -276,7 +276,7 @@ class TestUGMPrincipals(NodeTestCase):
             '"Principal with id \'newid\' already exists."'
         )
 
-        err = self.expect_error(
+        err = self.expectError(
             ValueError,
             users.__setitem__,
             'foo',
@@ -348,7 +348,7 @@ class TestUGMPrincipals(NodeTestCase):
         self.assertEqual(cookie, b'')
 
         # Only attributes defined in attrmap can be queried
-        self.expect_error(
+        self.expectError(
             KeyError,
             users.search,
             criteria=dict(sn=schmidt.attrs['sn']),
@@ -396,7 +396,7 @@ class TestUGMPrincipals(NodeTestCase):
 
         # The changed flag
         self.assertFalse(users.changed)
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Users'>: None
           <class 'node.ext.ldap.ugm._api.User'>: Meier
           <class 'node.ext.ldap.ugm._api.User'>: M...ller
@@ -409,7 +409,7 @@ class TestUGMPrincipals(NodeTestCase):
             '<cn=user2,ou=customers,dc=my-domain,dc=com:cn=user2 - False>'
         )
 
-        self.check_output("""
+        self.checkOutput("""
         <dc=my-domain,dc=com - False>
           ...
             <cn=user2,ou=customers,dc=my-domain,dc=com:cn=user2 - False>
@@ -425,7 +425,7 @@ class TestUGMPrincipals(NodeTestCase):
         self.assertTrue(users['Meier'].changed)
         self.assertTrue(users.changed)
 
-        self.check_output("""
+        self.checkOutput("""
         <dc=my-domain,dc=com - True>
           ...
             <cn=user2,ou=customers,dc=my-domain,dc=com:cn=user2 - False>
@@ -441,7 +441,7 @@ class TestUGMPrincipals(NodeTestCase):
         self.assertFalse(users['Meier'].changed)
         self.assertFalse(users.changed)
 
-        self.check_output("""
+        self.checkOutput("""
         <dc=my-domain,dc=com - False>
           ...
             <cn=user2,ou=customers,dc=my-domain,dc=com:cn=user2 - False>
@@ -495,7 +495,7 @@ class TestUGMPrincipals(NodeTestCase):
         users = Users(props, ucfg)
 
         # A user does not know about it's groups if initialized directly
-        err = self.expect_error(
+        err = self.expectError(
             AttributeError,
             lambda: users['Meier'].groups
         )
@@ -575,7 +575,7 @@ class TestUGMPrincipals(NodeTestCase):
         groups = Groups(props, gcfg)
 
         # Directly created groups object have no access to it's refering users
-        err = self.expect_error(
+        err = self.expectError(
             AttributeError,
             lambda: groups['group1'].member_ids
         )
@@ -593,10 +593,10 @@ class TestUGMPrincipals(NodeTestCase):
         self.assertEqual(member_format(['posixGroup']), 1)
         self.assertEqual(member_attribute(['posixGroup']), 'memberUid')
 
-        err = self.expect_error(Exception, member_format, 'foo')
+        err = self.expectError(Exception, member_format, 'foo')
         expected = 'Can not lookup member format for object-classes: foo'
         self.assertEqual(str(err), expected)
-        err = self.expect_error(Exception, member_attribute, 'foo')
+        err = self.expectError(Exception, member_attribute, 'foo')
         expected = 'Can not lookup member attribute for object-classes: foo'
         self.assertEqual(str(err), expected)
 
@@ -700,7 +700,7 @@ class TestUGMPrincipals(NodeTestCase):
         user = ugm.users['Meier']
         self.assertEqual(ugm.roles(user), [])
 
-        err = self.expect_error(
+        err = self.expectError(
             ValueError,
             ugm.add_role,
             'viewer',
@@ -708,7 +708,7 @@ class TestUGMPrincipals(NodeTestCase):
         )
         self.assertEqual(str(err), 'Role support not configured properly')
 
-        err = self.expect_error(
+        err = self.expectError(
             ValueError,
             ugm.remove_role,
             'viewer',
@@ -723,7 +723,7 @@ class TestUGMPrincipals(NodeTestCase):
         self.assertTrue(isinstance(roles, Roles))
 
         # No roles yet.
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Roles'>: roles
         """, roles.treerepr())
 
@@ -739,7 +739,7 @@ class TestUGMPrincipals(NodeTestCase):
         self.assertTrue(isinstance(role, Role))
         self.assertEqual(role.member_ids, [u'Meier'])
 
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Roles'>: roles
           <class 'node.ext.ldap.ugm._api.Role'>: viewer
             <class 'node.ext.ldap.ugm._api.User'>: Meier
@@ -758,7 +758,7 @@ class TestUGMPrincipals(NodeTestCase):
         user.add_role('viewer')
         user.add_role('editor')
 
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Roles'>: roles
           <class 'node.ext.ldap.ugm._api.Role'>: viewer
             <class 'node.ext.ldap.ugm._api.User'>: Meier
@@ -773,7 +773,7 @@ class TestUGMPrincipals(NodeTestCase):
 
         # Remove role 'viewer'.
         ugm.remove_role('viewer', user)
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Roles'>: roles
           <class 'node.ext.ldap.ugm._api.Role'>: viewer
             <class 'node.ext.ldap.ugm._api.User'>: Meier
@@ -786,7 +786,7 @@ class TestUGMPrincipals(NodeTestCase):
         self.assertEqual(roles.storage.keys(), ['viewer'])
         self.assertEqual(roles.context._deleted_children, set([u'cn=editor']))
         self.assertEqual(roles.keys(), [u'viewer'])
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Roles'>: roles
           <class 'node.ext.ldap.ugm._api.Role'>: viewer
             <class 'node.ext.ldap.ugm._api.User'>: Meier
@@ -799,7 +799,7 @@ class TestUGMPrincipals(NodeTestCase):
         self.assertEqual(ugm.roles(group), [])
 
         ugm.add_role('viewer', group)
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Roles'>: roles
           <class 'node.ext.ldap.ugm._api.Role'>: viewer
             <class 'node.ext.ldap.ugm._api.User'>: Meier
@@ -815,7 +815,7 @@ class TestUGMPrincipals(NodeTestCase):
         group.add_role('viewer')
         group.add_role('editor')
 
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Roles'>: roles
           <class 'node.ext.ldap.ugm._api.Role'>: viewer
             <class 'node.ext.ldap.ugm._api.User'>: Meier
@@ -832,7 +832,7 @@ class TestUGMPrincipals(NodeTestCase):
         ugm.roles_storage()
 
         # If role already granted, an error is raised.
-        err = self.expect_error(
+        err = self.expectError(
             ValueError,
             group.add_role,
             'editor'
@@ -841,7 +841,7 @@ class TestUGMPrincipals(NodeTestCase):
         self.assertEqual(group.roles, ['viewer', 'editor'])
 
         ugm.remove_role('viewer', group)
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Roles'>: roles
           <class 'node.ext.ldap.ugm._api.Role'>: viewer
             <class 'node.ext.ldap.ugm._api.User'>: Meier
@@ -854,7 +854,7 @@ class TestUGMPrincipals(NodeTestCase):
         """, roles.treerepr())
 
         group.remove_role('editor')
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Roles'>: roles
           <class 'node.ext.ldap.ugm._api.Role'>: viewer
             <class 'node.ext.ldap.ugm._api.User'>: Meier
@@ -866,7 +866,7 @@ class TestUGMPrincipals(NodeTestCase):
         ugm.roles_storage()
 
         # If role not exists, an error is raised.
-        err = self.expect_error(
+        err = self.expectError(
             ValueError,
             group.remove_role,
             'editor'
@@ -874,7 +874,7 @@ class TestUGMPrincipals(NodeTestCase):
         self.assertEqual(str(err), "Role not exists 'editor'")
 
         # If role is not granted, an error is raised.
-        err = self.expect_error(
+        err = self.expectError(
             ValueError,
             group.remove_role,
             'viewer'
@@ -894,13 +894,13 @@ class TestUGMPrincipals(NodeTestCase):
         self.assertTrue(isinstance(role['group:group1'], Group))
 
         # A KeyError is raised when trying to access an inexistent role member.
-        self.expect_error(KeyError, role.__getitem__, 'inexistent')
+        self.expectError(KeyError, role.__getitem__, 'inexistent')
 
         # A KeyError is raised when trying to delete an inexistent role member.
-        self.expect_error(KeyError, role.__delitem__, 'inexistent')
+        self.expectError(KeyError, role.__delitem__, 'inexistent')
 
         # Delete user and check if roles are removed.
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Ugm'>: None
           <class 'node.ext.ldap.ugm._api.Users'>: users
             <class 'node.ext.ldap.ugm._api.User'>: Meier
@@ -915,7 +915,7 @@ class TestUGMPrincipals(NodeTestCase):
               <class 'node.ext.ldap.ugm._api.User'>: Umhauer
         """, ugm.treerepr())
 
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Roles'>: roles
           <class 'node.ext.ldap.ugm._api.Role'>: viewer
             <class 'node.ext.ldap.ugm._api.User'>: Meier
@@ -926,7 +926,7 @@ class TestUGMPrincipals(NodeTestCase):
 
         users = ugm.users
         del users['Meier']
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Roles'>: roles
           <class 'node.ext.ldap.ugm._api.Role'>: viewer
             <class 'node.ext.ldap.ugm._api.Group'>: group1
@@ -942,7 +942,7 @@ class TestUGMPrincipals(NodeTestCase):
             users.keys(),
             [u'Müller', u'Schmidt', u'Umhauer']
         )
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Users'>: users
           <class 'node.ext.ldap.ugm._api.User'>: M...ller
           <class 'node.ext.ldap.ugm._api.User'>: Schmidt
@@ -951,11 +951,11 @@ class TestUGMPrincipals(NodeTestCase):
 
         # Delete group and check if roles are removed.
         del ugm.groups['group1']
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Roles'>: roles
         """, roles.treerepr())
 
-        self.check_output("""
+        self.checkOutput("""
         <class 'node.ext.ldap.ugm._api.Ugm'>: None
           <class 'node.ext.ldap.ugm._api.Users'>: users
             <class 'node.ext.ldap.ugm._api.User'>: M...ller

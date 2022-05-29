@@ -18,7 +18,7 @@ class TestFilter(NodeTestCase):
         self.assertEqual(str(LDAPFilter(None)), '')
         self.assertEqual(str(LDAPFilter(LDAPFilter(None))), '')
 
-        err = self.expect_error(
+        err = self.expectError(
             TypeError,
             lambda: str(LDAPFilter(object()))
         )
@@ -26,13 +26,13 @@ class TestFilter(NodeTestCase):
 
         # LDAPFilter can be combined with & and | operators. An operand must be
         # either another LDAPFilter, a string or a None type.
-        err = self.expect_error(
+        err = self.expectError(
             TypeError,
             lambda: LDAPFilter('(a=*)') & object()
         )
         self.assertEqual(str(err), 'unsupported operand type')
 
-        err = self.expect_error(
+        err = self.expectError(
             TypeError,
             lambda: LDAPFilter('(a=*)') | object()
         )

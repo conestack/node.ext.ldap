@@ -76,7 +76,7 @@ class TestBase(NodeTestCase):
         # Search fails if baseDN is not set and not given to search function
         self.assertEqual(communicator.baseDN, '')
 
-        err = self.expect_error(
+        err = self.expectError(
             ValueError,
             communicator.search,
             '(objectClass=*)',
@@ -115,7 +115,7 @@ class TestBase(NodeTestCase):
             page_size=4,
             cookie=''
         )
-        err = self.expect_error(
+        err = self.expectError(
             ValueError,
             communicator.search,
             '(objectClass=*)',
