@@ -4,7 +4,8 @@ History
 1.1 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Adopt lifecycle related changes from ``node`` 1.1.
+  [rnix]
 
 
 1.0 (2022-03-19)

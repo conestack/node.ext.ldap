@@ -13,6 +13,7 @@ from node.behaviors import MappingConstraints
 from node.behaviors import MappingNode
 from node.behaviors import NodeAttributes
 from node.behaviors import OdictStorage
+from node.behaviors import suppress_lifecycle_events
 from node.ext.ldap import BASE
 from node.ext.ldap import LDAPSession
 from node.ext.ldap import ONELEVEL
@@ -259,9 +260,8 @@ class LDAPStorage(OdictStorage):
             self._added_children.add(key)
         rdn, rdn_val = key.split('=')
         if rdn not in val.attrs:
-            val._notify_suppress = True
-            val.attrs[rdn] = rdn_val
-            val._notify_suppress = False
+            with suppress_lifecycle_events():
+                val.attrs[rdn] = rdn_val
         self.storage[key] = val
         if self.child_defaults:
             for k, v in self.child_defaults.items():
