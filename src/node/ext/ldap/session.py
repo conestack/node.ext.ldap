@@ -33,12 +33,6 @@ class LDAPSession(object):
     def baseDN(self, baseDN):
         self._communicator.baseDN = baseDN
 
-    def ensure_connection(self):
-        """If LDAP directory is down, bind again and retry given function.
-        """
-        if self._communicator._con is None:
-            self._communicator.bind()
-
     def search(self, queryFilter='(objectClass=*)', scope=BASE, baseDN=None,
                force_reload=False, attrlist=None, attrsonly=0,
                page_size=None, cookie=None):
@@ -47,7 +41,6 @@ class LDAPSession(object):
             # interpret them as "don't filter" which in LDAP terms is
             # '(objectClass=*)'
             queryFilter = '(objectClass=*)'
-        self.ensure_connection()
         res = self._communicator.search(
             queryFilter,
             scope,
@@ -67,7 +60,6 @@ class LDAPSession(object):
         return res
 
     def add(self, dn, data):
-        self.ensure_connection()
         self._communicator.add(dn, data)
 
     def authenticate(self, dn, pw):
@@ -105,16 +97,13 @@ class LDAPSession(object):
             XXX: dicts not yet
         :param replace: If set to True, replace entry at DN entirely with data.
         """
-        self.ensure_connection()
         result = self._communicator.modify(dn, data)
         return result
 
     def delete(self, dn):
-        self.ensure_connection()
         self._communicator.delete(dn)
 
     def passwd(self, userdn, oldpw, newpw):
-        self.ensure_connection()
         result = self._communicator.passwd(userdn, oldpw, newpw)
         return result
 

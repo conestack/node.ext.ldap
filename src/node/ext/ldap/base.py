@@ -196,6 +196,12 @@ class LDAPCommunicator(object):
         self._connector.unbind()
         self._con = None
 
+    def ensure_connection(self):
+        """If LDAP directory is down, bind again and retry given function.
+        """
+        if self._con is None:
+            self.bind()
+
     def search(self, queryFilter, scope, baseDN=None,
                force_reload=False, attrlist=None, attrsonly=0,
                page_size=None, cookie=None):
@@ -231,6 +237,7 @@ class LDAPCommunicator(object):
                     attrlist, attrsonly, serverctrls):
             # we have to do async search to also retrieve server controls
             # in case we do pagination of results
+            self.ensure_connection()
             if type(attrlist) in (list, tuple):
                 attrlist = [str(_) for _ in attrlist]
             try:
@@ -279,6 +286,7 @@ class LDAPCommunicator(object):
         :param data: Dict containing key/value pairs of entry attributes
         """
         attributes = [(k, v) for k, v in data.items()]
+        self.ensure_connection()
         self._con.add_s(dn, attributes)
 
     def modify(self, dn, modlist):
@@ -290,6 +298,7 @@ class LDAPCommunicator(object):
         gives the name of the field to modify, and the third gives the new
         value for the field (for MOD_ADD and MOD_REPLACE).
         """
+        self.ensure_connection()
         self._con.modify_s(dn, modlist)
 
     def delete(self, deleteDN):
@@ -297,9 +306,11 @@ class LDAPCommunicator(object):
 
         Take the DN to delete from the directory as argument.
         """
+        self.ensure_connection()
         self._con.delete_s(deleteDN)
 
     def passwd(self, userdn, oldpw, newpw):
+        self.ensure_connection()
         self._con.passwd_s(userdn, oldpw, newpw)
 
 
