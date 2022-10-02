@@ -105,6 +105,8 @@ class LDAPConnector(object):
         self._tls_cacert_file = props.tls_cacertfile
         self._retry_max = props.retry_max
         self._retry_delay = props.retry_delay
+        self._conn_timeout = props.conn_timeout
+        self._op_timeout = props.op_timeout
         self._con = None
 
     def bind(self):
@@ -125,6 +127,12 @@ class LDAPConnector(object):
         # Directory More info: https://www.python-ldap.org/faq.html#usage
         self._con.set_option(ldap.OPT_REFERRALS, 0)
         self._con.protocol_version = self.protocol
+        # Set the connection timeout
+        if self._conn_timeout > 0:
+            self._con.set_option(ldap.OPT_NETWORK_TIMEOUT, self._conn_timeout)
+        # Set the operations timeout
+        if self._op_timeout > 0:
+            self._con.timeout = self._op_timeout
         if self._start_tls:  # pragma: no cover
             # ignore in tests for now. nevertheless provide a test environment
             # for TLS and SSL later
