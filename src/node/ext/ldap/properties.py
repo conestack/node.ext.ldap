@@ -43,7 +43,7 @@ class LDAPServerProperties(object):
         user='',
         password='',
         cache=True,  # XXX: default False
-        timeout=43200,
+        timeout=43200,  # cache timeout
         uri=None,
         start_tls=0,
         ignore_cert=0,
@@ -55,7 +55,9 @@ class LDAPServerProperties(object):
         retry_delay=10.0,
         multivalued_attributes=MULTIVALUED_DEFAULTS,
         binary_attributes=BINARY_DEFAULTS,
-        page_size=1000
+        page_size=1000,
+        conn_timeout=-1,
+        op_timeout=-1,
     ):
         """Take the connection properties as arguments.
 
@@ -96,10 +98,14 @@ class LDAPServerProperties(object):
             multivalued to be returned as list.
         :param binary_attributes: Set of attributes names considered as binary.
             (no text conversion)
-        :param page_size: Oage size for LDAP search requests, defaults to 1000.
+        :param page_size: Page size for LDAP search requests, defaults to 1000.
             Number of objects requested at once.
             In iterations after this number of objects a new search query is
             sent for the next batch using returned the LDAP cookie.
+        :param conn_timeout: Connection timeout in seconds, defaults to -1 (i.e.
+            not defined).
+        :param op_timeout: Operations timeout in seconds, defaults to -1 (i.e.
+            not defined).
         """
         if uri is None:
             # old school
@@ -122,6 +128,8 @@ class LDAPServerProperties(object):
         self.multivalued_attributes = multivalued_attributes
         self.binary_attributes = binary_attributes
         self.page_size = page_size
+        self.conn_timeout = conn_timeout
+        self.op_timeout = op_timeout
 
 
 # B/C

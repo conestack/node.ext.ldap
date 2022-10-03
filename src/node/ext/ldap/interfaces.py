@@ -31,7 +31,7 @@ class ILDAPProps(Interface):
 
     cache = Attribute('Flag wether to use cache or not')
 
-    timeout = Attribute('Timeout in seconds')
+    timeout = Attribute('Cache timeout in seconds')
 
     start_tls = Attribute('TLS enabled')
 
@@ -58,6 +58,9 @@ class ILDAPProps(Interface):
 
     page_size = Attribute('Page size for LDAP queries.')
 
+    conn_timeout = Attribute('LDAP connecton timeout')
+
+    op_timemout = Attribute('LDAP operations timeout')
 
 class ILDAPPrincipalsConfig(Interface):
     """LDAP principals configuration interface.

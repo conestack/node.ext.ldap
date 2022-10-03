@@ -4,6 +4,10 @@ History
 1.1 (unreleased)
 ----------------
 
+- Add properties `conn_timeout` and `op_timeout` (both not set by default)
+  to configure ``ReconnectLDAPObject``.
+  [mamico]
+
 - Adopt lifecycle related changes from ``node`` 1.1.
   [rnix]
 
@@ -481,4 +485,3 @@ History
 
 - refactor form ``bda.ldap``.
   [rnix, chaoflow]
-

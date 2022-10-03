@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from bda.cache.nullcache import NullCacheManager
 from ldap import MOD_REPLACE
+from ldap import OPT_NETWORK_TIMEOUT
 from node.ext.ldap import LDAPCommunicator
 from node.ext.ldap import LDAPConnector
 from node.ext.ldap import LDAPProps
@@ -61,7 +62,9 @@ class TestBase(NodeTestCase):
             server=host,
             port=port,
             user=binddn,
-            password=bindpw
+            password=bindpw,
+            conn_timeout=5,
+            op_timeout=600,
         )
 
         # Create connector.
@@ -72,6 +75,10 @@ class TestBase(NodeTestCase):
 
         # Bind to directory.
         communicator.bind()
+
+        # Check whether the timeout values are correctly set
+        self.assertEqual(connector._con.get_option(OPT_NETWORK_TIMEOUT), 5)
+        self.assertEqual(connector._con.timeout, 600)
 
         # Search fails if baseDN is not set and not given to search function
         self.assertEqual(communicator.baseDN, '')
