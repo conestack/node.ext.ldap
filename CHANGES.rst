@@ -1,7 +1,7 @@
 History
 =======
 
-1.1 (unreleased)
+1.1 (2022-10-06)
 ----------------
 
 - Add properties `conn_timeout` and `op_timeout` (both not set by default)
