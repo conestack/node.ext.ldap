@@ -4,7 +4,7 @@ History
 1.2 (unreleased)
 ----------------
 
-- node >= 1.1 is required by `node.beahviors.suppress_lifecycle_events` support
+- node >= 1.1 is required by `node.behaviors.suppress_lifecycle_events` support
   [mamico]
 
 - Backward compatibility with pas.plugins.ldap <= 1.8.1 where LdapProps does not have
