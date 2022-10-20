@@ -105,8 +105,10 @@ class LDAPConnector(object):
         self._tls_cacert_file = props.tls_cacertfile
         self._retry_max = props.retry_max
         self._retry_delay = props.retry_delay
-        self._conn_timeout = props.conn_timeout
-        self._op_timeout = props.op_timeout
+        # backward compatibility:
+        # missing timeout properties in LDAPProps' pas.plugins.ldap <= 1.8.1
+        self._conn_timeout = getattr(props, "conn_timeout", -1)
+        self._op_timeout = getattr(props, "op_timeout", -1)
         self._con = None
 
     def bind(self):
