@@ -4,6 +4,19 @@ History
 1.2 (unreleased)
 ----------------
 
+- Implement ``expires`` and ``expired`` properties on
+  ``node.ext.ldap.ugm._api.LDAPUser`` as introduced on
+  ``node.ext.ugm.interfaces.IUser`` as of node.ext.ugm 1.1.
+  [rnix]
+
+- Introduce ``node.ext.ldap.ugm.expires.AccountExpiration`` and use it for
+  account expiration management.
+  [rnix]
+
+- Remove ``node.ext.ldap.ugm._api.AccountExpired`` singleton.
+  ``LDAPUsers.authenticate`` always returns ``False`` if authentication fails.
+  [rnix]
+
 - node >= 1.1 is required by `node.behaviors.suppress_lifecycle_events` support
   [mamico]
 

@@ -2,6 +2,7 @@
 from node.ext.ldap.ugm import posix
 from node.ext.ldap.ugm import samba
 
+
 # required default callbacks for several object classes.
 creation_defaults = dict()
 

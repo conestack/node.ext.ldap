@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
 from ldap.dn import explode_dn
 from node.behaviors import Alias
 from node.behaviors import Attributes
@@ -16,6 +17,10 @@ from node.ext.ldap.interfaces import ILDAPUsersConfig as IUsersConfig
 from node.ext.ldap.scope import BASE
 from node.ext.ldap.scope import ONELEVEL
 from node.ext.ldap.ugm.defaults import creation_defaults
+from node.ext.ldap.ugm.expires import AccountExpiration
+from node.ext.ldap.ugm.expires import EXPIRATION_DAYS
+from node.ext.ldap.ugm.expires import EXPIRATION_SECONDS  # noqa
+from node.ext.ldap.ugm.expires import account_expiration
 from node.ext.ldap.ugm.samba import sambaLMPassword
 from node.ext.ldap.ugm.samba import sambaNTPassword
 from node.ext.ugm import Group as UgmGroup
@@ -65,27 +70,6 @@ MEMBER_LOOKUP_BY_CLASS = {
 }
 
 
-# expiration unit
-EXPIRATION_DAYS = 0
-EXPIRATION_SECONDS = 1
-
-
-class AccountExpired(object):
-
-    def __nonzero__(self):
-        return False
-
-    __bool__ = __nonzero__
-
-    def __repr__(self):
-        return 'ACCOUNT_EXPIRED'
-
-    __str__ = __repr__
-
-
-ACCOUNT_EXPIRED = AccountExpired()
-
-
 class PrincipalsConfig(object):
 
     def __init__(
@@ -113,12 +97,13 @@ class PrincipalsConfig(object):
         self.memberOfSupport = memberOfSupport
         self.recursiveGroups = recursiveGroups
         self.memberOfExternalGroupDNs = memberOfExternalGroupDNs
-        # XXX: currently expiresAttr only gets considered for user
-        #      authentication group and role expiration is not implemented yet.
-        self.expiresAttr = expiresAttr
-        self.expiresUnit = expiresUnit
         # XXX: member_relation
         # self.member_relation = member_relation
+
+        # Expiration related settings only get considered for users
+        # XXX: move to ``ILDAPUsersConfig``
+        self.expiresAttr = expiresAttr
+        self.expiresUnit = expiresUnit
 
 
 @implementer(IUsersConfig)
@@ -305,10 +290,25 @@ class LDAPUser(LDAPPrincipal, UgmUser):
     @default
     @property
     def expired(self):
-        if not self.parent.expiresAttr:
+        account_expires = self.parent.account_expires
+        if not account_expires:
             return False
-        expires = self.context.attrs.get(self.parent.expiresAttr)
-        return calculate_expired(self.parent.expiresUnit, expires)
+        return account_expires.expired(self.context.attrs)
+
+    @property
+    def expires(self):
+        account_expires = self.parent.account_expires
+        if not account_expires:
+            return None
+        return account_expires.get(self.context.attrs)
+
+    @override
+    @expires.setter
+    def expires(self, value):
+        account_expires = self.parent.account_expires
+        if not account_expires:
+            return
+        account_expires.set(self.context.attrs, value)
 
 
 @plumbing(
@@ -488,11 +488,23 @@ class LDAPPrincipals(OdictStorage):
         self._login_attr = cfg.attrmap['id']
         if cfg.attrmap.get('login'):
             self._login_attr = cfg.attrmap['login']
-        self.expiresAttr = getattr(cfg, 'expiresAttr', None)
-        self.expiresUnit = getattr(cfg, 'expiresUnit', None)
         self.principal_attrmap = cfg.attrmap
         self.principal_attraliaser = DictAliaser(cfg.attrmap, cfg.strict)
         self.context = context
+        # Expiration related settings only get considered for users
+        # XXX: move to ``LDAPUsers``
+        expiresAttr = getattr(cfg, 'expiresAttr', None)
+        expiresUnit = getattr(cfg, 'expiresUnit', None)
+        self.account_expires = None
+        if not expiresAttr:
+            return
+        account_expires = account_expiration.get(expiresAttr)
+        if not account_expires:
+            account_expires = AccountExpiration(
+                attribute=expiresAttr,
+                unit=expiresUnit
+            )
+        self.account_expires = account_expires
 
     @default
     def idbydn(self, dn, strict=False):
@@ -731,25 +743,6 @@ class LDAPPrincipals(OdictStorage):
         return self[pid]
 
 
-def calculate_expired(expiresUnit, expires):
-    """Return bool whether expired.
-    """
-    if expires and expires not in ['99999', '-1']:
-        # check expiration timestamp
-        expires = int(expires)
-        # XXX: maybe configurable?
-        # shadow account specific
-        # if self.expiresAttr == 'shadowExpire':
-        #     expires += int(user.attrs.get('shadowInactive', '0'))
-        days = time.time()
-        if expiresUnit == EXPIRATION_DAYS:
-            # numer of days since epoch
-            days /= 86400
-        if days >= expires:
-            return True
-    return False
-
-
 class LDAPUsers(LDAPPrincipals, UgmUsers):
     principal_factory = default(User)
 
@@ -792,8 +785,9 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
         user_id = self.id_for_login(login)
         criteria = {self._key_attr: user_id}
         attrlist = ['dn']
-        if self.expiresAttr:
-            attrlist.append(self.expiresAttr)
+        account_expires = self.account_expires
+        if account_expires:
+            attrlist.append(account_expires.attribute)
         try:
             res = self.context.search(criteria=criteria, attrlist=attrlist)
         except ldap.NO_SUCH_OBJECT:  # pragma: no cover
@@ -803,11 +797,9 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
         if len(res) > 1:  # pragma: no cover
             msg = u'More than one principal with login "{0}" found.'
             logger.warning(msg.format(user_id))
-        if self.expiresAttr:
-            expires = res[0][1].get(self.expiresAttr)
-            expires = expires and expires[0] or None
+        if account_expires:
             try:
-                expired = calculate_expired(self.expiresUnit, expires)
+                expired = account_expires.expired(res[0][1])
             except ValueError:
                 # unknown expires field data
                 msg = (
@@ -817,7 +809,7 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
                 logger.error(msg.format(id))
                 return False
             if expired:
-                return ACCOUNT_EXPIRED
+                return False
         user_dn = res[0][1]['dn']
         session = self.context.ldap_session
         authenticated = session.authenticate(user_dn, pw)
@@ -829,8 +821,8 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
         user_id = self.id_for_login(id)
         criteria = {self._key_attr: user_id}
         attrlist = ['dn']
-        if self.expiresAttr:
-            attrlist.append(self.expiresAttr)
+        if self.account_expires:
+            attrlist.append(self.account_expires.attribute)
         res = self.context.search(criteria=criteria, attrlist=attrlist)
         if not res:
             raise KeyError(id)

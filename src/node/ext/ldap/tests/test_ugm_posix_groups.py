@@ -1,3 +1,4 @@
+from datetime import datetime
 from node.ext.ldap import LDAPNode
 from node.ext.ldap import SUBTREE
 from node.ext.ldap import testing
@@ -7,8 +8,9 @@ from node.ext.ldap.ugm import RolesConfig
 from node.ext.ldap.ugm import Ugm
 from node.ext.ldap.ugm import User
 from node.ext.ldap.ugm import Users
-from node.ext.ldap.ugm._api import ACCOUNT_EXPIRED
 from node.ext.ldap.ugm._api import PrincipalAliasedAttributes
+from node.ext.ldap.ugm.expires import AccountExpiration
+from node.ext.ldap.ugm.expires import EXPIRATION_DAYS
 from node.tests import NodeTestCase
 from odict import odict
 import ldap
@@ -130,41 +132,50 @@ class TestUGMPosixGroups(NodeTestCase):
         # lookup is done against LDAP directly in ``users.authenticate``
 
         # Expires attribute not set yet
-        self.assertEqual(users.expiresAttr, None)
+        self.assertEqual(users.account_expires, None)
         self.assertFalse(users['uid0'].expired)
 
         # Set expires attribute for ongoing tests
-        users.expiresAttr = 'shadowExpire'
+        users.account_expires = AccountExpiration(
+            'shadowExpire',
+            unit=EXPIRATION_DAYS
+        )
 
-        # Value 99999 and -1 means no expiration
         self.assertEqual(users['uid0'].context.attrs['shadowExpire'], u'99999')
         self.assertEqual(users['uid0'].context.attrs['shadowInactive'], u'0')
         self.assertEqual(users.authenticate('uid0', 'secret0'), u'uid0')
         self.assertFalse(users['uid0'].expired)
 
-        # Expire a while ago
-        users['uid0'].context.attrs['shadowExpire'] = '1'
+        # Expiration date gets set via ``expires`` attribute
+        # Set expiration date a while ago
+        users['uid0'].expires = datetime(2020, 1, 1)
         users['uid0']()
 
+        self.assertEqual(
+            users['uid0'].context.attrs['shadowExpire'],
+            u'18262'
+        )
+        self.assertEqual(users['uid0'].expires, datetime(2020, 1, 1))
+
         res = users.authenticate('uid0', 'secret0')
-        self.assertEqual(res, ACCOUNT_EXPIRED)
-        self.assertFalse(bool(res))
+        self.assertFalse(res)
         self.assertTrue(users['uid0'].expired)
 
         # No expiration far future
-        users['uid0'].context.attrs['shadowExpire'] = '99999'
-        users['uid0']()
-        self.assertEqual(users.authenticate('uid0', 'secret0'), u'uid0')
-        self.assertFalse(users['uid0'].expired)
-
-        # No expiration by '-1'
         users['uid0'].context.attrs['shadowExpire'] = '-1'
         users['uid0']()
         self.assertEqual(users.authenticate('uid0', 'secret0'), u'uid0')
         self.assertFalse(users['uid0'].expired)
 
+        # Set expires to None, no expiration
+        users['uid0'].expires = None
+        users['uid0']()
+        self.assertEqual(users['uid0'].context.attrs['shadowExpire'], u'-1')
+        self.assertEqual(users.authenticate('uid0', 'secret0'), u'uid0')
+        self.assertFalse(users['uid0'].expired)
+
         # Invalid expiration field data
-        users.expiresAttr = 'uid'
+        users.account_expires.attribute = 'uid'
         self.assertFalse(users.authenticate('uid0', 'secret0'))
 
         # XXX: figure out shadowInactive -> PAM and samba seem to ignore -> configuration?
@@ -206,6 +217,7 @@ class TestUGMPosixGroups(NodeTestCase):
         self.assertEqual(ugm.users.authenticate('uid0', 'bar'), 'uid0')
 
         ugm.users.expiresAttr = 'shadowExpire'
+        ugm.users.expiresNotExpiresValue = ['-1', '99999']
         ugm.users.passwd('uid0', 'bar', 'secret0')
         self.assertEqual(ugm.users.authenticate('uid0', 'secret0'), 'uid0')
 

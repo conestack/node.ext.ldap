@@ -62,6 +62,7 @@ class ILDAPProps(Interface):
 
     op_timemout = Attribute('LDAP operations timeout')
 
+
 class ILDAPPrincipalsConfig(Interface):
     """LDAP principals configuration interface.
     """
@@ -108,11 +109,11 @@ class ILDAPPrincipalsConfig(Interface):
         'List of DNs. Defaults to empty list.'
     )
 
-    # XXX: currently expiresAttr only gets considered for user authentication
-    #      group and role expiration is not implemented yet.
+    # Expiration related settings only get considered for users
+    # XXX: move to ``ILDAPUsersConfig``
     expiresAttr = Attribute(
-        'Attribute containing an expiration timestamp from epoch in UTC. '
-        'If None, entry never expires.'
+        'Attribute containing account expiration information. '
+        'If not set, account never expires.'
     )
 
     expiresUnit = Attribute(
