@@ -1,9 +1,10 @@
+*.egg-info
 *.pyc
 /.coverage
-/.installed.txt
-/.sentinels/
+/.mxmake
+/.ruff_cache
 /dist/
 /htmlcov/
-/openldap/
-/src/node.ext.ldap.egg-info
-/venv/
+/openldap
+/requirements-mxdev.txt
+/venv
