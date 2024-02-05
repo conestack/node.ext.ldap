@@ -278,7 +278,7 @@ CLEAN_TARGETS+=mxenv-clean
 ##############################################################################
 
 # case `system.dependencies` domain is included
-SYSTEM_DEPENDENCIES+=python3-dev libldap2-dev libssl-dev
+SYSTEM_DEPENDENCIES+=python3-dev libldap2-dev libssl-dev libsasl2-dev
 
 PYTHON_LDAP_TARGET:=$(SENTINEL_FOLDER)/python-ldap.sentinel
 $(PYTHON_LDAP_TARGET): $(MXENV_TARGET) $(OPENLDAP_TARGET)
