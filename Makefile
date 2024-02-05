@@ -277,14 +277,13 @@ CLEAN_TARGETS+=mxenv-clean
 # python-ldap
 ##############################################################################
 
+# case `system.dependencies` domain is included
+SYSTEM_DEPENDENCIES+=python3-dev libldap2-dev libssl-dev
+
 PYTHON_LDAP_TARGET:=$(SENTINEL_FOLDER)/python-ldap.sentinel
 $(PYTHON_LDAP_TARGET): $(MXENV_TARGET) $(OPENLDAP_TARGET)
 	@$(MXENV_PATH)pip install \
 		--force-reinstall \
-		--global-option=build_ext \
-		--global-option="-I$(OPENLDAP_DIR)/include" \
-		--global-option="-L$(OPENLDAP_DIR)/lib" \
-		--global-option="-R$(OPENLDAP_DIR)/lib" \
 		python-ldap
 	@touch $(PYTHON_LDAP_TARGET)
 
