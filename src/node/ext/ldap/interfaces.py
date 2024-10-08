@@ -39,14 +39,11 @@ class ILDAPProps(Interface):
 
     tls_cacertfile = Attribute('Name of CA Cert file')
 
-    # XXX
-    # tls_cacertdir = Attribute('Path to CA Cert directory')
+    tls_cacertdir = Attribute('Path to CA Cert directory')
 
-    # XXX
-    # tls_clcertfile = Attribute('Name of CL Cert file')
+    tls_clcertfile = Attribute('Name of client Cert file')
 
-    # XXX
-    # tls_clkeyfile = Attribute('Path to CL key file')
+    tls_clkeyfile = Attribute('Path to client key file')
 
     retry_max = Attribute('Retry count')
 
