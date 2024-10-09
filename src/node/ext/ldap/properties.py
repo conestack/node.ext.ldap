@@ -48,9 +48,9 @@ class LDAPServerProperties(object):
         start_tls=0,
         ignore_cert=0,
         tls_cacertfile=None,
-        # tls_cacertdir=None,
-        # tls_clcertfile=None,
-        # tls_clkeyfile=None,
+        tls_cacertdir=None,
+        tls_clcertfile=None,
+        tls_clkeyfile=None,
         retry_max=1,
         retry_delay=10.0,
         multivalued_attributes=MULTIVALUED_DEFAULTS,
@@ -89,9 +89,11 @@ class LDAPServerProperties(object):
             needed if the CA is not in the default CA keyring (i.e. with
             self-signed certificates). Under Windows its possible that
             python-ldap lib does recognize the system keyring.
-        :param tls_cacertdir: Not yet
-        :param tls_clcertfile: Not yet
-        :param tls_clkeyfile: Not yet
+        :param tls_cacertdir: Provide a directory with CA Certificates.
+        :param tls_clcertfile: Provide a specific client certificate file to be
+            used for client authentication. Requires tls_clkeyfile to be set.
+        :param tls_clkeyfile: Provide a specific client key file to be used for
+            client authentication. Requires tls_clcertfile to be set.
         :param retry_max: Maximum count of reconnect trials. Value has to be >= 1
         :param retry_delay: Time span to wait between two reconnect trials.
         :param multivalued_attributes: Set of attributes names considered as
@@ -120,9 +122,9 @@ class LDAPServerProperties(object):
         self.start_tls = start_tls
         self.ignore_cert = ignore_cert
         self.tls_cacertfile = tls_cacertfile
-        # self.tls_cacertdir = tls_cacertdir
-        # self.tls_clcertfile = tls_clcertfile
-        # self.tls_clkeyfile = tls_clkeyfile
+        self.tls_cacertdir = tls_cacertdir
+        self.tls_clcertfile = tls_clcertfile
+        self.tls_clkeyfile = tls_clkeyfile
         self.retry_max = retry_max
         self.retry_delay = retry_delay
         self.multivalued_attributes = multivalued_attributes

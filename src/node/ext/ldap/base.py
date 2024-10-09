@@ -103,6 +103,9 @@ class LDAPConnector(object):
         self._start_tls = props.start_tls
         self._ignore_cert = props.ignore_cert
         self._tls_cacert_file = props.tls_cacertfile
+        self._tls_cacert_dir = props.tls_cacertdir
+        self._tls_clcert_file = props.tls_clcertfile
+        self._tls_clkey_file = props.tls_clkeyfile
         self._retry_max = props.retry_max
         self._retry_delay = props.retry_delay
         # backward compatibility:
@@ -118,6 +121,13 @@ class LDAPConnector(object):
             ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
         elif self._tls_cacert_file:  # pragma: no cover
             ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, self._tls_cacert_file)
+        elif self._tls_cacert_dir:  # pragma: no cover
+            ldap.set_option(ldap.OPT_X_TLS_CACERTDIR, self._tls_cacert_dir)
+        if self._tls_clcert_file and self._tls_clkey_file:  # pragma: no cover
+            ldap.set_option(ldap.OPT_X_TLS_CERTFILE, self._tls_clcert_file)
+            ldap.set_option(ldap.OPT_X_TLS_KEYFILE, self._tls_clkey_file)
+        elif self._tls_clcert_file or self._tls_clkey_file:  # pragma: no cover
+            logger.exception("Only client certificate or key have been provided.")
         self._con = ldap.ldapobject.ReconnectLDAPObject(
             self._uri,
             bytes_mode=False,

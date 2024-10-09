@@ -68,6 +68,15 @@ class LDAPSession(object):
         # Let's bypass connector/communicator until they are sorted out
         if self._props.ignore_cert:  # pragma: no cover
             ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
+        elif self._props.tls_cacertfile:  # pragma: no cover
+            ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, self._props.tls_cacertfile)
+        elif self._props.tls_cacertdir:  # pragma: no cover
+            ldap.set_option(ldap.OPT_X_TLS_CACERTDIR, self._props.tls_cacertdir)
+        if self._props.tls_clcertfile and self._props.tls_clkeyfile:  # pragma: no cover
+            ldap.set_option(ldap.OPT_X_TLS_CERTFILE, self._props.tls_clcertfile)
+            ldap.set_option(ldap.OPT_X_TLS_KEYFILE, self._props.tls_clkeyfile)
+        elif self._props.tls_clcertfile or self._props.tls_clkeyfile:  # pragma: no cover
+            logger.exception("Only client certificate or key have been provided.")
         con = ldap.initialize(
             self._props.uri,
             bytes_mode=False,
@@ -77,6 +86,8 @@ class LDAPSession(object):
         # Directory More info: https://www.python-ldap.org/faq.html#usage
         con.set_option(ldap.OPT_REFERRALS, 0)
         try:
+            if self._props.start_tls:
+                con.start_tls_s()
             con.simple_bind_s(dn, pw)
         except (ldap.INVALID_CREDENTIALS, ldap.UNWILLING_TO_PERFORM):
             # The UNWILLING_TO_PERFORM event might be thrown, if you query a
