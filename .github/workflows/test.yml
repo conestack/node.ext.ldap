@@ -11,29 +11,28 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-latest
+        - ubuntu-latest
 
         python:
-          - "3.7"
-          - "3.8"
-          - "3.9"
-          - "3.10"
-          - "3.11"
-          - "3.12"
+        - "3.9"
+        - "3.10"
+        - "3.11"
+        - "3.12"
+        - "3.13"
 
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python }}
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python }}
 
-      - name: Install system dependencies
-        run: make system-dependencies
+    - name: Install system dependencies
+      run: make system-dependencies
 
-      - name: Install project
-        run: make install
+    - name: Install project
+      run: make install
 
-      - name: Run tests an collect code coverage
-        run: make coverage
+    - name: Run tests an collect code coverage
+      run: make coverage
