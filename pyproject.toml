@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "node.ext.ldap"
+version = "1.3.dev0"
+description = "LDAP/AD convenience with Node-trees based on python-ldap"
+readme = "README.rst"
+license = {text = "Simplified BSD"}
+authors = [{name = "Node Contributors", email = "dev@conestack.org"}]
+keywords = ["ldap", "authentication", "node", "tree", "access", "users", "groups"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: BSD License",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development",
+    "Topic :: System :: Systems Administration :: Authentication/Directory :: LDAP",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+dependencies = [
+    'argparse;python_version<"3.2"',
+    "bda.cache",
+    "node>=1.1",
+    "node.ext.ugm>=1.0",
+    "passlib",
+    "python-ldap>=2.4.14",
+]
+
+[project.optional-dependencies]
+test = [
+    "coverage",
+    "plone.testing",
+    "zope.configuration",
+    "zope.testing",
+    "zope.testrunner",
+]
+
+[project.urls]
+Homepage = "https://github.com/conestack/node.ext.ldap"
+
+[project.scripts]
+testldap = "node.ext.ldap.main:slapd"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools]
+zip-safe = false
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.zest-releaser]
+create-wheel = true
