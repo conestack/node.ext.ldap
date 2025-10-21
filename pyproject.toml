@@ -48,5 +48,8 @@ Homepage = "https://github.com/conestack/node.ext.ldap"
 [project.scripts]
 testldap = "node.ext.ldap.main:slapd"
 
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/node"]
 [tool.zest-releaser]
 create-wheel = true
