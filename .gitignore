@@ -3,9 +3,10 @@
 /.coverage
 /.mxmake
 /.ruff_cache
+/build/
 /dist/
 /htmlcov/
-/openldap
+/openldap/
 /requirements-mxdev.txt
-/venv
-/build
+/sources/
+/venv/
