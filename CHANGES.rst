@@ -1,7 +1,7 @@
 History
 =======
 
-1.3 (unreleased)
+1.3 (2025-10-25)
 ----------------
 
 - Pin upper versions of dependencies.
