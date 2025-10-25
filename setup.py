@@ -55,8 +55,8 @@ setup(
     install_requires=[
         'argparse;python_version<"3.2"',
         'bda.cache',
-        'node>=1.1',
-        'node.ext.ugm>=1.0',
+        'node>=1.1,<2.0.0',
+        'node.ext.ugm>=1.0,<2.0.0',
         'passlib',
         'python-ldap>=2.4.14',
         'setuptools'

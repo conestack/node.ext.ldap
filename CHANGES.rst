@@ -4,7 +4,8 @@ History
 1.3 (unreleased)
 ----------------
 
-- Nothing changed yet.
+- Pin upper versions of dependencies.
+  [rnix]
 
 
 1.2 (2022-12-05)
