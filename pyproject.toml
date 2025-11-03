@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "node.ext.ldap"
-version = "1.3.dev0"
+version = "2.0.0.dev0"
 description = "LDAP/AD convenience with Node-trees based on python-ldap"
 readme = "README.rst"
 license = {text = "Simplified BSD"}
