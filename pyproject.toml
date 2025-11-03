@@ -57,5 +57,10 @@ exclude = [
 [tool.hatch.build.targets.wheel]
 packages = ["src/node"]
 
+[tool.pytest.ini_options]
+consider_namespace_packages = true
+addopts = ["--import-mode=importlib"]
+pythonpath = "src"
+
 [tool.zest-releaser]
 create-wheel = true
