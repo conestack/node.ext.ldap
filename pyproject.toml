@@ -27,8 +27,8 @@ classifiers = [
 dependencies = [
     'argparse;python_version<"3.2"',
     "bda.cache",
-    "node.ext.ugm>=1.0",
-    "node>=1.1",
+    "node.ext.ugm>1.99",
+    "node>1.99",
     "passlib",
     "python-ldap>=2.4.14",
     "six",
