@@ -5,11 +5,11 @@ from node.ext.ldap import SUBTREE
 from node.ext.ldap.ugm import GroupsConfig
 from node.ext.ldap.ugm import UsersConfig
 from odict import odict
-from pkg_resources import resource_filename
 from plone.testing import Layer
 from plone.testing import zca
 
 import os
+import pathlib
 import shutil
 import subprocess
 import tempfile
@@ -26,7 +26,7 @@ LDAPSUFFIX = os.environ.get('LDAP_SUFFIX', None) or "dc=my-domain,dc=com"
 
 
 def resource(string):
-    return resource_filename(__name__, string)
+    return str(pathlib.Path(__file__).parent / string)
 
 
 def read_env(layer):
