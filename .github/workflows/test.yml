@@ -26,5 +26,11 @@ jobs:
       - name: Show Python version
         run: python -c "import sys; print(sys.version)"
 
+      - name: Install system dependencies
+        run: make system-dependencies
+
+      - name: Install project
+        run: make install
+
       - name: Run tests an collect code coverage
         run: make coverage
