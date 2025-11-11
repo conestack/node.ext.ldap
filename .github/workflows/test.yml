@@ -1,4 +1,5 @@
 name: Test node.ext.ldap
+
 on: [push]
 
 jobs:
