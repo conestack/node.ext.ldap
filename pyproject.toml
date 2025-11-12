@@ -38,7 +38,9 @@ dependencies = [
 [project.optional-dependencies]
 test = [
     "coverage",
+    "plone.testing",
     "pytest",
+    "zope.configuration",
     "zope.pytestlayer"
 ]
 

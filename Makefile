@@ -85,7 +85,7 @@ PRIMARY_PYTHON?=python3
 
 # Minimum required Python version.
 # Default: 3.10
-PYTHON_MIN_VERSION?=3.9
+PYTHON_MIN_VERSION?=3.10
 
 # Install packages using the given package installer method.
 # Supported are `pip` and `uv`. When `uv` is selected, a global installation
@@ -152,7 +152,7 @@ TEST_COMMAND?=.mxmake/files/run-tests.sh
 # Additional Python requirements for running tests to be
 # installed (via pip).
 # Default: pytest
-TEST_REQUIREMENTS?=zope.testrunner
+TEST_REQUIREMENTS?=pytest zope.pytestlayer plone.testing
 
 # Additional make targets the test target depends on.
 # No default value.
