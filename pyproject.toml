@@ -50,11 +50,6 @@ Homepage = "https://github.com/conestack/node.ext.ldap"
 [project.scripts]
 testldap = "node.ext.ldap.main:slapd"
 
-[tool.hatch.build.targets.sdist]
-exclude = [
-    "/Makefile",
-]
-
 [tool.hatch.metadata.hooks.fancy-pypi-readme]
 content-type = "text/x-rst"
 
@@ -66,6 +61,14 @@ path = "CHANGES.rst"
 
 [[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
 path = "LICENSE.rst"
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "/.github/",
+    "/docs",
+    "/Makefile",
+    "/mx.ini",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/node"]
