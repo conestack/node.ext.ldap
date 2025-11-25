@@ -65,7 +65,6 @@ path = "LICENSE.rst"
 [tool.hatch.build.targets.sdist]
 exclude = [
     "/.github/",
-    "/docs",
     "/Makefile",
     "/mx.ini",
 ]
