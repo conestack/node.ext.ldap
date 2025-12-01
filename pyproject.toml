@@ -1,0 +1,79 @@
+[build-system]
+requires = ["hatchling", "hatch-fancy-pypi-readme"]
+build-backend = "hatchling.build"
+
+[project]
+name = "node.ext.ldap"
+version = "2.0.0.dev0"
+description = "LDAP/AD convenience with Node-trees based on python-ldap"
+dynamic = ["readme"]
+requires-python = ">=3.10"
+license = {text = "Simplified BSD"}
+authors = [{name = "Node Contributors", email = "dev@conestack.org"}]
+keywords = ["ldap", "authentication", "node", "tree", "access", "users", "groups"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: BSD License",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development",
+    "Topic :: System :: Systems Administration :: Authentication/Directory :: LDAP",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    'argparse;python_version<"3.2"',
+    "bda.cache",
+    "node.ext.ugm>1.99",
+    "node>1.99",
+    "passlib",
+    "python-ldap>=2.4.14",
+    "six",
+]
+
+[project.optional-dependencies]
+test = [
+    "coverage",
+    "plone.testing",
+    "pytest",
+    "zope.configuration",
+    "zope.pytestlayer"
+]
+
+[project.urls]
+Homepage = "https://github.com/conestack/node.ext.ldap"
+
+[project.scripts]
+testldap = "node.ext.ldap.main:slapd"
+
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = "text/x-rst"
+fragments = [
+    {path = "README.rst"},
+    {text = "\n\n"},
+    {path = "CHANGES.rst"},
+    {text = "\n\n"},
+    {path = "LICENSE.rst"},
+]
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "/.github/",
+    "/Makefile",
+    "/mx.ini",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/node"]
+
+[tool.pytest.ini_options]
+consider_namespace_packages = true
+addopts = ["--import-mode=importlib"]
+pythonpath = "src"
+
+[tool.zest-releaser]
+create-wheel = true

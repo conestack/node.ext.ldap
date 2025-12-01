@@ -3,8 +3,12 @@
 /.coverage
 /.mxmake
 /.ruff_cache
+/build/
 /dist/
 /htmlcov/
-/openldap
+/openldap/
 /requirements-mxdev.txt
-/venv
+/sources/
+/venv/
+/constraints-mxdev.txt
+/openldap-2.4.59.tgz
