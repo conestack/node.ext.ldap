@@ -1,4 +1,4 @@
-name: Test node.ext.ldap
+name: Python Tests
 
 on: [push]
 
