@@ -8,9 +8,12 @@ from node.ext.ldap import SUBTREE
 from node.ext.ldap import testing
 from node.ext.ldap.base import cache_key
 from node.ext.ldap.base import main
+from node.ext.ldap.base import md5digest
 from node.ext.ldap.base import testLDAPConnectivity
 from node.tests import NodeTestCase
+from unittest import mock
 from zope.component import provideAdapter
+import hashlib
 import sys
 import warnings
 
@@ -196,6 +199,28 @@ class TestBase(NodeTestCase):
         self.assertEqual(res, [])
 
         communicator.unbind()
+
+    def test_search_returns_empty_result_on_ldap_error(self):
+        communicator = LDAPCommunicator(LDAPConnector(props=testing.props))
+        communicator.baseDN = 'dc=my-domain,dc=com'
+        with self.assertLogs('node.ext.ldap', level='WARNING') as log:
+            res = communicator.search('(objectClass=*', SUBTREE)
+        self.assertEqual(res, [])
+        self.assertIn('Bad search filter', log.output[0])
+        communicator.unbind()
+
+    def test_md5digest_on_fips_system(self):
+        # On FIPS enabled systems md5 is only available if explicitly not
+        # used for security purposes.
+        def fips_md5(usedforsecurity=True):
+            if usedforsecurity:
+                raise ValueError('unsupported hash type md5')
+            return hashlib.md5(usedforsecurity=False)
+
+        with mock.patch('node.ext.ldap.base.hashlib') as fips_hashlib:
+            fips_hashlib.md5.side_effect = fips_md5
+            digest = md5digest('key')
+        self.assertEqual(digest, hashlib.md5(b'key').hexdigest())
 
     def test_cache_key(self):
         key = cache_key([

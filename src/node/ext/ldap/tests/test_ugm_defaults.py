@@ -11,6 +11,7 @@ from node.ext.ldap.ugm import Users
 from node.ext.ldap.ugm import UsersConfig
 from node.tests import NodeTestCase
 from odict import odict
+from unittest import mock
 
 
 layer = testing.LDIF_data
@@ -134,6 +135,9 @@ class TestUGMDefaults(NodeTestCase):
             (u'memberUid', ['nobody']),
             (u'objectClass', [u'posixGroup'])
         ])
+
+    def test_posix_member_uid(self):
+        self.assertEqual(posix.memberUid(None, 'cn=posixgroup'), ['nobody'])
 
     @defaults_container
     def test_shadow_account(self, props):
@@ -280,6 +284,14 @@ class TestUGMDefaults(NodeTestCase):
         del samba_d['sambaDomainName']
         del samba_d['sambaPrimaryGroupSID']
         del samba_d['sambaAcctFlags']
+
+    def test_samba_pwd_last_set(self):
+        with mock.patch('node.ext.ldap.ugm.samba.time') as time:
+            time.time.return_value = 1234567890.5
+            self.assertEqual(
+                samba.sambaPwdLastSet(None, 'uid=sambauser'),
+                '1234567890'
+            )
 
     @defaults_container
     def test_samba_group(self, props):

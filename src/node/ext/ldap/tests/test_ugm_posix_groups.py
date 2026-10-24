@@ -11,8 +11,11 @@ from node.ext.ldap.ugm import Users
 from node.ext.ldap.ugm._api import PrincipalAliasedAttributes
 from node.ext.ldap.ugm.expires import AccountExpiration
 from node.ext.ldap.ugm.expires import EXPIRATION_DAYS
+from node.ext.ldap.ugm.expires import EXPIRATION_SECONDS
+from node.ext.ldap.ugm.expires import account_expiration
 from node.tests import NodeTestCase
 from odict import odict
+import copy
 import ldap
 
 
@@ -188,6 +191,62 @@ class TestUGMPosixGroups(NodeTestCase):
         # users['uid0'].context.attrs['shadowInactive'] = '0'
 
     @posix_groups_ugm
+    def test_expires_without_account_expiration(self, ugm):
+        self.assertIsNone(ugm.users['uid0'].expires)
+
+    @posix_groups_ugm
+    def test_set_expires_without_account_expiration_is_ignored(self, ugm):
+        user = ugm.users['uid0']
+        user.expires = datetime(2020, 1, 1)
+        self.assertFalse(user.changed)
+        self.assertIsNone(user.expires)
+
+    @posix_groups_ugm
+    def test_expires_of_account_which_never_expires(self, ugm):
+        ugm.users.account_expires = AccountExpiration(
+            'shadowExpire',
+            unit=EXPIRATION_DAYS
+        )
+        user = ugm.users['uid0']
+        user.context.attrs['shadowExpire'] = '-1'
+        self.assertIsNone(user.expires)
+
+    @posix_groups_ugm
+    def test_set_expires_requires_datetime(self, ugm):
+        ugm.users.account_expires = AccountExpiration(
+            'shadowExpire',
+            unit=EXPIRATION_DAYS
+        )
+        user = ugm.users['uid0']
+        err = self.expectError(
+            ValueError,
+            setattr,
+            user,
+            'expires',
+            '2020-01-01'
+        )
+        self.assertEqual(str(err), 'Expires value must be a datetime instance')
+
+    def test_account_expiration_from_config(self):
+        ucfg = copy.copy(layer['ucfg'])
+        ucfg.expiresAttr = 'shadowExpire'
+        users = Users(layer['props'], ucfg)
+        self.assertIs(
+            users.account_expires,
+            account_expiration['shadowExpire']
+        )
+
+    def test_account_expiration_from_config_with_custom_attribute(self):
+        ucfg = copy.copy(layer['ucfg'])
+        ucfg.expiresAttr = 'customExpires'
+        ucfg.expiresUnit = EXPIRATION_SECONDS
+        users = Users(layer['props'], ucfg)
+        account_expires = users.account_expires
+        self.assertIsInstance(account_expires, AccountExpiration)
+        self.assertEqual(account_expires.attribute, 'customExpires')
+        self.assertEqual(account_expires.unit, EXPIRATION_SECONDS)
+
+    @posix_groups_ugm
     def test_change_password(self, ugm):
         err = self.expectError(
             ldap.UNWILLING_TO_PERFORM,
@@ -216,8 +275,10 @@ class TestUGMPosixGroups(NodeTestCase):
         ugm.users.passwd('uid0', 'secret0', 'bar')
         self.assertEqual(ugm.users.authenticate('uid0', 'bar'), 'uid0')
 
-        ugm.users.expiresAttr = 'shadowExpire'
-        ugm.users.expiresNotExpiresValue = ['-1', '99999']
+        ugm.users.account_expires = AccountExpiration(
+            'shadowExpire',
+            unit=EXPIRATION_DAYS
+        )
         ugm.users.passwd('uid0', 'bar', 'secret0')
         self.assertEqual(ugm.users.authenticate('uid0', 'secret0'), 'uid0')
 

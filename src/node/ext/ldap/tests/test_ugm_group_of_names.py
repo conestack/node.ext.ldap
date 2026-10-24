@@ -6,6 +6,8 @@ from node.ext.ldap.ugm import User
 from node.ext.ldap.ugm import Users
 from node.ext.ldap.ugm._api import PrincipalAliasedAttributes
 from node.tests import NodeTestCase
+from unittest import mock
+import copy
 import ldap
 
 
@@ -315,6 +317,36 @@ class TestUGMGroupOfNames(NodeTestCase):
         self.assertEqual(user_1.group_ids, [u'group1', u'group2'])
         self.assertEqual(user_2.group_ids, [u'group2'])
 
+    def test_recursive_groups_query_member_in_chain(self):
+        # LDAP_MATCHING_RULE_IN_CHAIN is supported by Active Directory only,
+        # thus the directory response is mocked.
+        ucfg = copy.copy(layer['ucfg'])
+        ucfg.recursiveGroups = True
+        ugm = Ugm(props=layer['props'], ucfg=ucfg, gcfg=layer['gcfg'])
+        user = ugm.users['uid1']
+        nested_groups = [
+            ('cn=group1,ou=groups,ou=groupOfNames,dc=my-domain,dc=com', {
+                'cn': ['group1']
+            }),
+            ('cn=group0,ou=groups,ou=groupOfNames,dc=my-domain,dc=com', {
+                'cn': ['group0']
+            })
+        ]
+        groups_context = ugm.groups.context
+        with mock.patch.object(
+            groups_context,
+            'batched_search',
+            return_value=iter(nested_groups)
+        ) as batched_search:
+            self.assertEqual(user.group_ids, [u'group1', u'group0'])
+        batched_search.assert_called_once_with(
+            criteria={
+                'member:1.2.840.113556.1.4.1941:':
+                    'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com'
+            },
+            attrlist=['cn']
+        )
+
     @group_of_names_ugm
     def test_search(self, ugm):
         users = ugm.users
@@ -323,6 +355,24 @@ class TestUGMGroupOfNames(NodeTestCase):
         # Test search function
         self.assertEqual(users.search(criteria={'login': 'cn0'}), [u'uid0'])
         self.assertEqual(groups.search(criteria={'id': 'group2'}), [u'group2'])
+
+    @group_of_names_ugm
+    def test_search_skips_principals_without_id_attribute(self, ugm):
+        session = ugm.users.context.ldap_session
+        dn = 'cn=nouid,ou=users,ou=groupOfNames,dc=my-domain,dc=com'
+        session.add(dn, {
+            'objectClass': [b'inetOrgPerson'],
+            'cn': [b'nouid'],
+            'sn': [b'nouid']
+        })
+        try:
+            self.assertEqual(ugm.users.search(attrlist=['login']), [
+                (u'uid0', {'login': [u'cn0']}),
+                (u'uid1', {'login': [u'cn1']}),
+                (u'uid2', {'login': [u'cn2']})
+            ])
+        finally:
+            session.delete(dn)
 
     @group_of_names_ugm
     def test_ids(self, ugm):
@@ -443,3 +493,21 @@ class TestUGMGroupOfNames(NodeTestCase):
 
         ugm.ucfg.memberOfSupport = False
         ugm.gcfg.memberOfSupport = False
+
+    def test_member_of_support_skips_inexistent_group_dn(self):
+        ucfg = copy.copy(layer['ucfg'])
+        ucfg.memberOfSupport = True
+        ugm = Ugm(props=layer['props'], ucfg=ucfg, gcfg=layer['gcfg'])
+        # memberOf is maintained by the server and cannot be written, thus a
+        # stale group DN, e.g. of a deleted group, is mocked.
+        member_of = [
+            'cn=group1,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
+            'cn=inexistent,ou=groups,ou=groupOfNames,dc=my-domain,dc=com'
+        ]
+        with mock.patch.object(
+            User,
+            'member_of_attr',
+            new_callable=mock.PropertyMock,
+            return_value=member_of
+        ):
+            self.assertEqual(ugm.users['uid1'].group_ids, [u'group1'])

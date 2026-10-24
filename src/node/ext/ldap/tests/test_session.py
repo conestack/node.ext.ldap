@@ -5,6 +5,8 @@ from node.ext.ldap import SUBTREE
 from node.ext.ldap import testing
 from node.ext.ldap.testing import props
 from node.tests import NodeTestCase
+from unittest import mock
+import ldap
 
 
 class TestSession(NodeTestCase):
@@ -100,3 +102,18 @@ class TestSession(NodeTestCase):
             'ctrls': [],
             'info': 'Transport endpoint is not connected'
         })
+
+    def test_authenticate_with_start_tls(self):
+        session = LDAPSession(LDAPProps(uri=props.uri, start_tls=True))
+        connection = mock.Mock()
+        with mock.patch('ldap.initialize', return_value=connection):
+            authenticated = session.authenticate(
+                'cn=user,dc=my-domain,dc=com',
+                'secret'
+            )
+        self.assertTrue(authenticated)
+        self.assertEqual(connection.method_calls, [
+            mock.call.set_option(ldap.OPT_REFERRALS, 0),
+            mock.call.start_tls_s(),
+            mock.call.simple_bind_s('cn=user,dc=my-domain,dc=com', 'secret')
+        ])

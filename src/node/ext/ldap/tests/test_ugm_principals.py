@@ -682,6 +682,24 @@ class TestUGMPrincipals(NodeTestCase):
         self.assertEqual(groups.keys(), [u'group1', u'group2'])
         self.assertEqual(ugm.users['Schmidt'].group_ids, ['group1'])
 
+    def test_role_member_ids_skip_inexistent_member_dn(self):
+        props = testing.props
+        root = LDAPNode('dc=my-domain,dc=com', props)
+        root['ou=roles'] = LDAPNode()
+        root['ou=roles'].attrs['objectClass'] = ['organizationalUnit']
+        root()
+        try:
+            ugm = Ugm(props=props, ucfg=layer['ucfg'], gcfg=gcfg, rcfg=rcfg)
+            ugm.add_role('viewer', ugm.users['Meier'])
+            role = ugm._roles['viewer']
+            role.context.attrs['member'] = role.context.attrs['member'] + [
+                'cn=inexistent,dc=my-domain,dc=com'
+            ]
+            self.assertEqual(role.member_ids, [u'Meier'])
+        finally:
+            del root['ou=roles']
+            root()
+
     def test_zzz_principal_roles(self):
         # XXX: add users and groups before deleting them.
         #      then we can remove ``zzz`` test ordering hack from function name
