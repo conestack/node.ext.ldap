@@ -4,6 +4,13 @@ History
 2.0.1 (unreleased)
 ------------------
 
+- Fix ``node.ext.ldap.main.flatlayers`` collecting layers in a shared default
+  list across calls. Add tests for the ``testldap`` script.
+  [rnix]
+
+- Replace the deprecated ``datetime.utcfromtimestamp`` and ``logger.warn``.
+  [rnix]
+
 - Fix ``NameError`` in ``LDAPSession.authenticate`` if only a client
   certificate or only a client key is configured: ``logger`` was not defined
   in ``node.ext.ldap.session``.

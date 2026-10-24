@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import timezone
 import time
 
 
@@ -65,7 +66,7 @@ class AccountExpiration:
         value = float(value)
         if self.unit == EXPIRATION_DAYS:
             value *= 86400
-        return datetime.utcfromtimestamp(value)
+        return datetime.fromtimestamp(value, timezone.utc).replace(tzinfo=None)
 
     def expired(self, attrs):
         """Return flag whether account is expired.

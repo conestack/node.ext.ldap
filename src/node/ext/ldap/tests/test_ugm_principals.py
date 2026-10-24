@@ -136,7 +136,7 @@ class TestUGMPrincipals(NodeTestCase):
                 '<cn=user1,dc=my-domain,dc=com:cn=user1 - False>',
                 '<cn=user2,ou=customers,dc=my-domain,dc=com:cn=user2 - False>',
                 '<cn=user3,ou=customers,dc=my-domain,dc=com:cn=user3 - False>',
-                '<cn=n?sty\, User,ou=customers,dc=my-domain,dc=com:cn=n?sty\, User - False>',
+                '<cn=n?sty\\, User,ou=customers,dc=my-domain,dc=com:cn=n?sty\\, User - False>',
             ],
         )
 
@@ -394,7 +394,7 @@ class TestUGMPrincipals(NodeTestCase):
           ...
             <cn=user2,ou=customers,dc=my-domain,dc=com:cn=user2 - False>
             <cn=user3,ou=customers,dc=my-domain,dc=com:cn=user3 - False>
-            <cn=n?sty\, User,ou=customers,dc=my-domain,dc=com:cn=n?sty\, User - False>
+            <cn=n?sty\\, User,ou=customers,dc=my-domain,dc=com:cn=n?sty\\, User - False>
           ...
           <cn=user1,dc=my-domain,dc=com:cn=user1 - False>
           ...
@@ -413,7 +413,7 @@ class TestUGMPrincipals(NodeTestCase):
           ...
             <cn=user2,ou=customers,dc=my-domain,dc=com:cn=user2 - False>
             <cn=user3,ou=customers,dc=my-domain,dc=com:cn=user3 - False>
-            <cn=n?sty\, User,ou=customers,dc=my-domain,dc=com:cn=n?sty\, User - False>
+            <cn=n?sty\\, User,ou=customers,dc=my-domain,dc=com:cn=n?sty\\, User - False>
           ...
           <cn=user1,dc=my-domain,dc=com:cn=user1 - True>
           ...
@@ -432,7 +432,7 @@ class TestUGMPrincipals(NodeTestCase):
           ...
             <cn=user2,ou=customers,dc=my-domain,dc=com:cn=user2 - False>
             <cn=user3,ou=customers,dc=my-domain,dc=com:cn=user3 - False>
-            <cn=n?sty\, User,ou=customers,dc=my-domain,dc=com:cn=n?sty\, User - False>
+            <cn=n?sty\\, User,ou=customers,dc=my-domain,dc=com:cn=n?sty\\, User - False>
           ...
           <cn=user1,dc=my-domain,dc=com:cn=user1 - False>
           ...

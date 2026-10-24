@@ -9,7 +9,7 @@ from node.ext.ldap import testing
 from node.ext.ldap.base import cache_key
 from node.ext.ldap.base import main
 from node.ext.ldap.base import md5digest
-from node.ext.ldap.base import testLDAPConnectivity
+from node.ext.ldap.base import testLDAPConnectivity as ldap_connectivity
 from node.tests import NodeTestCase
 from unittest import mock
 from zope.component import provideAdapter
@@ -49,9 +49,9 @@ class TestBase(NodeTestCase):
         sys.argv = old_argv
 
         # Test node.ext.ldap base objects. Test LDAP connectivity
-        self.assertEqual(testLDAPConnectivity('127.0.0.1', 12345), 'success')
+        self.assertEqual(ldap_connectivity('127.0.0.1', 12345), 'success')
         self.assertEqual(
-            testLDAPConnectivity('127.0.0.1', 12346).args[0],
+            ldap_connectivity('127.0.0.1', 12346).args[0],
             {
                 'result': -1,
                 'desc': "Can't contact LDAP server",

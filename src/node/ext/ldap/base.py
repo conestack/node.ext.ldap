@@ -277,7 +277,7 @@ class LDAPCommunicator:
                     serverctrls=serverctrls,
                 )
             except ldap.LDAPError as e:
-                logger.warn(str(e))
+                logger.warning(str(e))
                 return []
             rtype, results, rmsgid, rctrls = self._con.result3(msgid)
             ctype = ldap.controls.libldap.SimplePagedResultsControl.controlType

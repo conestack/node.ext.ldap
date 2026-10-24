@@ -82,7 +82,9 @@ def cleanup_env():
     os.remove(ldif_path())
 
 
-def flatlayers(layer, layers=[]):
+def flatlayers(layer, layers=None):
+    if layers is None:
+        layers = []
     layers.insert(0, layer)
     for base in layer.__bases__:
         flatlayers(base, layers)
