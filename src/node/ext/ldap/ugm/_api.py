@@ -10,6 +10,8 @@ from node.behaviors import OdictStorage
 from node.behaviors.alias import DictAliaser
 from node.ext.ldap._node import LDAPNode
 from node.ext.ldap.base import ensure_text
+from node.ext.ldap.filter import LDAPDictFilter
+from node.ext.ldap.filter import LDAPFilter
 from node.ext.ldap.interfaces import ILDAPGroupsConfig as IGroupsConfig
 from node.ext.ldap.interfaces import ILDAPUsersConfig as IUsersConfig
 from node.ext.ldap.scope import BASE
@@ -479,12 +481,20 @@ class LDAPPrincipals(OdictStorage):
         # XXX: what was strict good for? remove
         # if strict:
         #     raise KeyError(dn)
+        context = self.context
+        # only accept entries of this principal type, users and groups may
+        # share attributes like ``cn``
+        query_filter = LDAPFilter(context.search_filter)
+        query_filter &= LDAPDictFilter(
+            {'objectClass': context.child_defaults['objectClass']}
+        )
         try:
-            search = self.context.ldap_session.search
-            res = search(baseDN=dn)[0]
-            return ensure_text(res[1][self._key_attr][0])
+            res = context.ldap_session.search(queryFilter=str(query_filter), baseDN=dn)
         except ldap.NO_SUCH_OBJECT:
             raise KeyError(dn)
+        if not res:
+            raise KeyError(dn)
+        return ensure_text(res[0][1][self._key_attr][0])
 
     @override
     @property

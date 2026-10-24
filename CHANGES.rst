@@ -4,6 +4,24 @@ History
 2.0.1 (unreleased)
 ------------------
 
+- Fix a paged search failing with ``ValueError`` if the LDAP search raises an
+  ``LDAPError``. ``LDAPCommunicator.search`` returned ``[]`` instead of the
+  ``(results, cookie)`` pair callers expect with ``page_size``.
+  [rnix]
+
+- Fix ``idbydn`` of users and groups accepting entries of the other principal
+  type. A user DN was translated to a group id (the ``cn``) and could appear
+  as wrong role member. ``idbydn`` only accepts entries matching the search
+  filter and object classes of the principals now.
+  [rnix]
+
+- Fix the cache activation log message checking the cache manager instead of
+  the cache provider for ``INullCacheProvider``.
+  [rnix]
+
+- Fix ``testing.Ldif`` without ldifs, the empty default became ``((),)``.
+  [rnix]
+
 - Fix ``node.ext.ldap.main.flatlayers`` collecting layers in a shared default
   list across calls. Add tests for the ``testldap`` script.
   [rnix]

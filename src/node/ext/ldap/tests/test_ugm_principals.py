@@ -670,6 +670,17 @@ class TestUGMPrincipals(NodeTestCase):
         self.assertEqual(groups.keys(), ['group1', 'group2'])
         self.assertEqual(ugm.users['Schmidt'].group_ids, ['group1'])
 
+    def test_idbydn_rejects_principals_of_other_type(self):
+        props = testing.props
+        users = Users(props, testing.ucfg)
+        groups = Groups(props, gcfg)
+        user_dn = 'cn=user3,ou=customers,dc=my-domain,dc=com'
+        group_dn = groups['group1'].context.DN
+        self.assertEqual(users.idbydn(user_dn), 'Schmidt')
+        self.assertEqual(groups.idbydn(group_dn), 'group1')
+        self.assertRaises(KeyError, groups.idbydn, user_dn)
+        self.assertRaises(KeyError, users.idbydn, group_dn)
+
     def test_role_member_ids_skip_inexistent_member_dn(self):
         props = testing.props
         root = LDAPNode('dc=my-domain,dc=com', props)

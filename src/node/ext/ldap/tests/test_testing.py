@@ -44,3 +44,13 @@ class TestTesting(NodeTestCase):
         output = stdout.getvalue()
         self.assertIn('pop global registry failed', output)
         self.assertIn(str(error), output)
+
+    def test_ldif_without_ldifs(self):
+        self.assertEqual(testing.Ldif(bases=(), name='TestLdif').ldifs, ())
+        self.assertEqual(
+            testing.Ldif('a.ldif', bases=(), name='TestLdif').ldifs, ('a.ldif',)
+        )
+        self.assertEqual(
+            testing.Ldif(('a.ldif', 'b.ldif'), bases=(), name='TestLdif').ldifs,
+            ('a.ldif', 'b.ldif'),
+        )

@@ -1,3 +1,5 @@
+from bda.cache.fscache import FSCache
+from bda.cache.fscache import FSCacheManager
 from bda.cache.nullcache import NullCacheManager
 from ldap import MOD_REPLACE
 from ldap import OPT_NETWORK_TIMEOUT
@@ -10,11 +12,14 @@ from node.ext.ldap.base import cache_key
 from node.ext.ldap.base import main
 from node.ext.ldap.base import md5digest
 from node.ext.ldap.base import testLDAPConnectivity as ldap_connectivity
+from node.ext.ldap.interfaces import ICacheProviderFactory
 from node.tests import NodeTestCase
 from unittest import mock
+from zope.component import getGlobalSiteManager
 from zope.component import provideAdapter
 import hashlib
 import sys
+import tempfile
 import warnings
 
 
@@ -213,6 +218,41 @@ class TestBase(NodeTestCase):
         self.assertEqual(res, [])
         self.assertIn('Bad search filter', log.output[0])
         communicator.unbind()
+
+    def test_paged_search_returns_empty_page_on_ldap_error(self):
+        communicator = LDAPCommunicator(LDAPConnector(props=testing.props))
+        communicator.baseDN = 'dc=my-domain,dc=com'
+        with self.assertLogs('node.ext.ldap', level='WARNING'):
+            res = communicator.search('(objectClass=*', SUBTREE, page_size=10)
+        self.assertEqual(res, ([], ''))
+        communicator.unbind()
+
+    def cached_props(self):
+        props = testing.props
+        return LDAPProps(
+            uri=props.uri, user=props.user, password=props.password, cache=True
+        )
+
+    def test_cache_activation_log_names_cache_provider(self):
+        gsm = getGlobalSiteManager()
+        with tempfile.TemporaryDirectory() as cachedir:
+            provider = FSCache(cachedir)
+            gsm.registerAdapter(FSCacheManager)
+            gsm.registerUtility(lambda: provider, ICacheProviderFactory)
+            try:
+                with self.assertLogs('node.ext.ldap', level='DEBUG') as log:
+                    LDAPCommunicator(LDAPConnector(props=self.cached_props()))
+            finally:
+                gsm.unregisterUtility(provided=ICacheProviderFactory)
+                gsm.unregisterAdapter(FSCacheManager)
+        self.assertIn('as cache provider', log.output[-1])
+
+    def test_cache_activation_log_with_null_cache_provider(self):
+        provideAdapter(NullCacheManager)
+        with self.assertLogs('node.ext.ldap', level='DEBUG') as log:
+            LDAPCommunicator(LDAPConnector(props=self.cached_props()))
+        self.assertIn('LDAP Caching activated', log.output[-1])
+        self.assertNotIn('as cache provider', log.output[-1])
 
     def test_md5digest_on_fips_system(self):
         # On FIPS enabled systems md5 is only available if explicitly not

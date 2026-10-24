@@ -197,12 +197,12 @@ class LDAPCommunicator:
             cacheprovider = cachefactory()
             self._cache = ICacheManager(cacheprovider)
             self._cache.setTimeout(connector._cachetimeout)
-            if not INullCacheProvider.providedBy(self._cache):
+            if not INullCacheProvider.providedBy(cacheprovider):
                 logger.debug(
                     f"LDAP Caching activated for instance '{repr(self._cache):s}'. "
                     f"Use '{repr(cacheprovider):s}' as cache provider"
                 )
-            else:  # pragma: no cover
+            else:
                 logger.debug(
                     f"LDAP Caching activated for instance '{repr(self._cache):s}'."
                 )
@@ -278,7 +278,8 @@ class LDAPCommunicator:
                 )
             except ldap.LDAPError as e:
                 logger.warning(str(e))
-                return []
+                # paged searches are expected to return results and cookie
+                return ([], '') if page_size else []
             rtype, results, rmsgid, rctrls = self._con.result3(msgid)
             ctype = ldap.controls.libldap.SimplePagedResultsControl.controlType
             pctrls = [c for c in rctrls if c.controlType == ctype]

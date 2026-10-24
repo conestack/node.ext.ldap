@@ -208,7 +208,7 @@ class Ldif(LDAPLayer):
         super(Ldif, self).__init__(**kws)
         self.ldapaddbin = ldapaddbin
         self.ldapdeletebin = ldapdeletebin
-        self.ldifs = type(ldifs) is tuple and ldifs or (ldifs,)
+        self.ldifs = ldifs if isinstance(ldifs, tuple) else (ldifs,)
         self.ucfg = ucfg
         self.gcfg = gcfg
 
