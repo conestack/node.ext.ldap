@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-from node.ext.ldap.base import ensure_bytes_py2
-import six
-
-
 # all special characters except * are escaped, that means * can be
 # used to perform suffix/prefix/contains searches, monkey-patch if you
 # don't like
@@ -15,17 +10,13 @@ ESCAPE_CHARS = {
     '\x00': '\\00',
 }
 
-string_type = basestring if six.PY2 else str
-
-
 class LDAPFilter(object):
 
     def __init__(self, queryFilter=None):
         if queryFilter is not None \
-                and not isinstance(queryFilter, string_type) \
+                and not isinstance(queryFilter, str) \
                 and not isinstance(queryFilter, LDAPFilter):
             raise TypeError('Query filter must be LDAPFilter or string')
-        queryFilter = ensure_bytes_py2(queryFilter)
         self._filter = queryFilter
         if isinstance(queryFilter, LDAPFilter):
             self._filter = str(queryFilter)
@@ -36,7 +27,7 @@ class LDAPFilter(object):
         res = ''
         if isinstance(other, LDAPFilter):
             other = str(other)
-        elif not isinstance(other, string_type):
+        elif not isinstance(other, str):
             raise TypeError('unsupported operand type')
         us = str(self)
         if us and other:
@@ -53,7 +44,7 @@ class LDAPFilter(object):
         res = ''
         if isinstance(other, LDAPFilter):
             other = str(other)
-        elif not isinstance(other, string_type):
+        elif not isinstance(other, str):
             raise TypeError('unsupported operand type')
         us = str(self)
         if us and other:
@@ -91,7 +82,7 @@ class LDAPDictFilter(LDAPFilter):
 
     def __repr__(self):
         cr = [
-            "'{}': '{}'".format(ensure_bytes_py2(k), ensure_bytes_py2(v))
+            "'{}': '{}'".format(k, v)
             for k, v in sorted(self.criteria.items())
         ]
         return 'LDAPDictFilter(criteria={{{}}})'.format(', '.join(cr))
@@ -136,12 +127,10 @@ def dict_to_filter(criteria, or_search=False, or_keys=None, or_values=None):
     or_values = (or_values is None) and or_search or or_values
     _filter = None
     for attr, values in sorted(criteria.items()):
-        attr = ensure_bytes_py2(attr)
         if not isinstance(values, list):
             values = [values]
         attrfilter = None
         for value in values:
-            value = ensure_bytes_py2(value)
             attr = ''.join([ESCAPE_CHARS.get(x, x) for x in attr])
             if isinstance(value, str):
                 value = ''.join([ESCAPE_CHARS.get(x, x) for x in value])

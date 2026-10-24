@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from node.ext.ldap.ugm import posix
 from node.ext.ldap.ugm import samba
 

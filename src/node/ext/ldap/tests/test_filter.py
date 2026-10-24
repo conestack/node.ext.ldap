@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from node.base import AttributedNode
 from node.ext.ldap import testing
 from node.ext.ldap.filter import dict_to_filter

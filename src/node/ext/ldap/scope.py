@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import ldap
 
 BASE = ldap.SCOPE_BASE

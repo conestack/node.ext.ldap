@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from bda.cache import Memcached
 from bda.cache import NullCache
 from node.ext.ldap.interfaces import ICacheProviderFactory

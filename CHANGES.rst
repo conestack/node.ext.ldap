@@ -4,7 +4,19 @@ History
 2.0.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Drop the Python 2 remnants: ``six`` (also as dependency), the
+  ``argparse`` dependency for Python < 3.2, ``basestring`` and
+  ``# -*- coding: utf-8 -*-``.
+  [rnix]
+
+- Deprecate ``node.ext.ldap.base.ensure_bytes_py2``. It returns the value
+  unchanged on Python 3 and is not used internally any more. It will be
+  removed in node.ext.ldap 3.0.
+  [rnix]
+
+- Declare ``zope.deprecation`` as dependency, it was used but only came in
+  through ``node``.
+  [rnix]
 
 
 2.0.0 (2026-02-03)

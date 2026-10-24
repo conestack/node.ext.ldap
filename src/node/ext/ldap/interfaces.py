@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from node.interfaces import IMappingStorage
 from node.interfaces import INodeAddedEvent
 from node.interfaces import INodeCreatedEvent

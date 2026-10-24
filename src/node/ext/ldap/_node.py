@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ldap import INVALID_DN_SYNTAX
 from ldap import MOD_ADD
 from ldap import MOD_DELETE
@@ -41,7 +40,6 @@ from plumber import plumbing
 from zope.deprecation import deprecated
 from zope.interface import implementer
 import logging
-import six
 
 logger = logging.getLogger('node.ext.ldap')
 
@@ -179,7 +177,7 @@ class LDAPStorage(OdictStorage):
         """
         if (name and not props) or (props and not name):
             raise ValueError(u"Wrong initialization.")
-        if name and not isinstance(name, six.text_type):
+        if name and not isinstance(name, str):
             name = name.decode(CHARACTER_ENCODING)
         self.__name__ = name
         self.__parent__ = None
@@ -531,7 +529,7 @@ class LDAPStorage(OdictStorage):
             dn = decode(dn)
             if attrlist is not None:
                 resattr = dict()
-                for k, v in six.iteritems(attrs):
+                for k, v in attrs.items():
                     if k in attrlist:
                         # Check binary binary attribute directly from root
                         # data to avoid initing attrs for a simple search.
@@ -620,7 +618,7 @@ class LDAPStorage(OdictStorage):
         except AttributeError:
             raise ValueError(u"No attributes found on vessel, cannot convert")
         node = LDAPNode()
-        for key, val in six.iteritems(attrs):
+        for key, val in attrs.items():
             node.attrs[key] = val
         return node
 

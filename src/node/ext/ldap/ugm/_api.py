@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from datetime import datetime
 from ldap.dn import explode_dn
 from node.behaviors import Alias
@@ -39,7 +38,6 @@ from plumber import plumbing
 from zope.interface import implementer
 import ldap
 import logging
-import six
 import time
 
 
@@ -182,7 +180,7 @@ class AliasedPrincipal(Behavior):
         # existing principals from a database not created with this
         # API/configuration.
         ocs = self.context.attrs['objectClass']
-        ocs = [ocs] if isinstance(ocs, six.text_type) else ocs
+        ocs = [ocs] if isinstance(ocs, str) else ocs
         ocsc = len(ocs)
         for oc in self.parent.context.child_defaults['objectClass']:
             if oc not in ocs:
@@ -631,8 +629,8 @@ class LDAPPrincipals(OdictStorage):
     @default
     def _alias_dict(self, dct):
         ret = dict()
-        for key, val in six.iteritems(self.principal_attraliaser):
-            for k, v in six.iteritems(dct):
+        for key, val in self.principal_attraliaser.items():
+            for k, v in dct.items():
                 if val == k:
                     ret[key] = v
         return ret
@@ -648,7 +646,7 @@ class LDAPPrincipals(OdictStorage):
             return None
         unalias = self.principal_attraliaser.unalias
         unaliased_dct = dict(
-            [(unalias(key), val) for key, val in six.iteritems(dct)])
+            [(unalias(key), val) for key, val in dct.items()])
         return unaliased_dct
 
     @default

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from node.ext.ldap.interfaces import ILDAPProps
 from zope.interface import implementer
 

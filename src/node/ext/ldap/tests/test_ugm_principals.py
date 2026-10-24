@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from node.base import BaseNode
 from node.ext.ldap import LDAPNode
 from node.ext.ldap import ONELEVEL

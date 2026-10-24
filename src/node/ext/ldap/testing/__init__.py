@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from node.ext.ldap import LDAPProps
 from node.ext.ldap import ONELEVEL
 from node.ext.ldap import SUBTREE

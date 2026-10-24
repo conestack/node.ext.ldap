@@ -1,14 +1,13 @@
-# -*- coding: utf-8 -*-
 from bda.cache import ICacheManager
 from bda.cache.interfaces import INullCacheProvider
 from node.ext.ldap.cache import nullcacheProviderFactory
 from node.ext.ldap.interfaces import ICacheProviderFactory
 from node.ext.ldap.properties import LDAPProps
 from zope.component import queryUtility
+from zope.deprecation import deprecated
 import hashlib
 import ldap
 import logging
-import six
 
 
 logger = logging.getLogger('node.ext.ldap')
@@ -55,28 +54,33 @@ def cache_key(parts):
             p = p.decode('utf-8', 'replace')
         elif isinstance(p, (list, tuple)):
             p = u'-'.join([dec(_) for _ in p])
-        elif not isinstance(p, six.text_type):
-            p = six.text_type(p)
+        elif not isinstance(p, str):
+            p = str(p)
         return p
     return u'-'.join([dec(p) for p in parts])
 
 
 def ensure_text(value):
-    if value and not isinstance(value, six.text_type):
+    if value and not isinstance(value, str):
         value = value.decode('utf-8')
     return value
 
 
 def ensure_bytes(value):
-    if value and isinstance(value, six.text_type):
+    if value and isinstance(value, str):
         value = value.encode('utf-8')
     return value
 
 
+# B/C
 def ensure_bytes_py2(value):
-    if six.PY2 and value and isinstance(value, six.text_type):  # pragma: no cover
-        value = value.encode('utf-8')
     return value
+
+
+deprecated('ensure_bytes_py2', """
+``node.ext.ldap.base.ensure_bytes_py2`` is deprecated as of node.ext.ldap 2.0.1
+and will be removed in node.ext.ldap 3.0. It returns the value unchanged on
+Python 3, drop the call.""")
 
 
 class LDAPConnector(object):

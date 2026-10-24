@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from bda.cache.nullcache import NullCacheManager
 from ldap import MOD_REPLACE
 from ldap import OPT_NETWORK_TIMEOUT
@@ -13,6 +12,7 @@ from node.ext.ldap.base import testLDAPConnectivity
 from node.tests import NodeTestCase
 from zope.component import provideAdapter
 import sys
+import warnings
 
 
 class TestBase(NodeTestCase):
@@ -218,3 +218,12 @@ class TestBase(NodeTestCase):
             key,
             u'hällo-wörld-0-None-True-False-hällo-wörld-0-None-True-False'
         )
+
+    def test_ensure_bytes_py2(self):
+        from node.ext.ldap import base
+        with warnings.catch_warnings(record=True) as log:
+            warnings.simplefilter('always')
+            ensure_bytes_py2 = base.ensure_bytes_py2
+        self.assertEqual(len(log), 1)
+        self.assertTrue(issubclass(log[0].category, DeprecationWarning))
+        self.assertEqual(ensure_bytes_py2(u'hällo'), u'hällo')
