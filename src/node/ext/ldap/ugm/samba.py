@@ -39,6 +39,7 @@ sambaGroupMapping
 - description -------------> no default callback available
 - sambaSIDList ------------> no default callback available
 """
+
 from node.ext.ldap.ugm import posix
 from passlib.hash import lmhash
 from passlib.hash import nthash
@@ -58,8 +59,7 @@ SAMBA_LOCAL_SID = 'S-1-5-21-1234567890-1234567890-1234567890'
 
 
 def sambaUserSID(node, uid):
-    """uid * 2 + 1000 = rid for users
-    """
+    """uid * 2 + 1000 = rid for users"""
     rid = int(posix.uidNumber(None, uid)) * 2 + 1000
     return SAMBA_LOCAL_SID + '-' + str(rid)
 
@@ -90,8 +90,7 @@ def sambaAcctFlags(node, uid):
 
 
 def sambaGroupSID(node, uid):
-    """gid * 2 + 1001 = rid for groups
-    """
+    """gid * 2 + 1001 = rid for groups"""
     rid = int(posix.gidNumber(None, uid)) * 2 + 1000
     return SAMBA_LOCAL_SID + '-' + str(rid)
 

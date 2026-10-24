@@ -13,9 +13,8 @@ def nullcacheProviderFactory():
 
 
 @implementer(ICacheProviderFactory)
-class MemcachedProviderFactory(object):
-    """Memcached cache provider factory.
-    """
+class MemcachedProviderFactory:
+    """Memcached cache provider factory."""
 
     def __init__(self, servers=['127.0.0.1:11211']):
         self.servers = servers

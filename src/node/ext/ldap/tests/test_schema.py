@@ -12,10 +12,10 @@ class TestSchema(NodeTestCase):
 
     def test_schema(self):
         # LDAP credentials.
-        host = "127.0.0.1"
+        host = '127.0.0.1'
         port = 12345
-        binddn = "cn=Manager,dc=my-domain,dc=com"
-        bindpw = "secret"
+        binddn = 'cn=Manager,dc=my-domain,dc=com'
+        bindpw = 'secret'
 
         props = LDAPProps(
             server=host,
@@ -35,13 +35,12 @@ class TestSchema(NodeTestCase):
         self.assertEqual(attrcn.names, ('cn', 'commonName'))
         self.assertFalse(attrcn.collective)
         self.assertEqual(
-            attrcn.desc,
-            'RFC4519: common name(s) for which the entity is known by'
+            attrcn.desc, 'RFC4519: common name(s) for which the entity is known by'
         )
         self.assertFalse(attrcn.no_user_mod)
         self.assertFalse(attrcn.obsolete)
         self.assertEqual(attrcn.ordering, None)
-        self.assertEqual(attrcn.schema_attribute, u'attributeTypes')
+        self.assertEqual(attrcn.schema_attribute, 'attributeTypes')
         self.assertFalse(attrcn.single_value)
         self.assertEqual(attrcn.substr, None)
         self.assertEqual(attrcn.sup, ('name',))
@@ -51,8 +50,7 @@ class TestSchema(NodeTestCase):
         self.assertTrue(isinstance(gof, ObjectClass))
         self.assertEqual(gof.must, ('member', 'cn'))
         self.assertEqual(
-            gof.may,
-            ('businessCategory', 'seeAlso', 'owner', 'ou', 'o', 'description')
+            gof.may, ('businessCategory', 'seeAlso', 'owner', 'ou', 'o', 'description')
         )
 
         attrs = info.attributes_of_objectclass('groupOfNames')

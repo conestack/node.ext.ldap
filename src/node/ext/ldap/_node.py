@@ -41,6 +41,7 @@ from zope.deprecation import deprecated
 from zope.interface import implementer
 import logging
 
+
 logger = logging.getLogger('node.ext.ldap')
 
 
@@ -50,7 +51,6 @@ ACTION_DELETE = 2
 
 
 class LDAPAttributesBehavior(Behavior):
-
     @plumb
     def __init__(_next, self, name=None, parent=None):
         _next(self, name=name, parent=parent)
@@ -60,9 +60,11 @@ class LDAPAttributesBehavior(Behavior):
     def load(self):
         ldap_node = self.parent
         # nothing to load
-        if not ldap_node.name \
-                or not ldap_node.ldap_session \
-                or ldap_node._action == ACTION_ADD:
+        if (
+            not ldap_node.name
+            or not ldap_node.ldap_session
+            or ldap_node._action == ACTION_ADD
+        ):
             return
         # clear in case reload
         self.clear()
@@ -82,13 +84,12 @@ class LDAPAttributesBehavior(Behavior):
             scope=BASE,
             baseDN=ldap_node.DN,
             force_reload=ldap_node._reload,
-            attrlist=attrlist
+            attrlist=attrlist,
         )
         # result length must be 1
         if len(entry) != 1:  # pragma: no cover
             raise RuntimeError(
-                "Fatal. Expected entry does not exist "
-                "or more than one entry found"
+                'Fatal. Expected entry does not exist or more than one entry found'
             )
         # read attributes from result and set to self
         attrs = entry[0][1]
@@ -149,18 +150,18 @@ class LDAPAttributesBehavior(Behavior):
 
 # B/C
 AttributesBehavior = LDAPAttributesBehavior
-deprecated('AttributesBehavior', """
+deprecated(
+    'AttributesBehavior',
+    """
 ``node.ext.ldap._node.AttributesBehavior`` is deprecated as of node.ext.ldap
 1.0 and will be removed in node.ext.ldap 1.1. Use
-``node.ext.ldap._node.LDAPAttributesBehavior`` instead.""")
+``node.ext.ldap._node.LDAPAttributesBehavior`` instead.""",
+)
 
 
-@plumbing(
-    LDAPAttributesBehavior,
-    AttributesLifecycle)
+@plumbing(LDAPAttributesBehavior, AttributesLifecycle)
 class LDAPNodeAttributes(NodeAttributes):
-    """Attributes for LDAPNode.
-    """
+    """Attributes for LDAPNode."""
 
 
 @implementer(ILDAPStorage, IInvalidate)
@@ -176,7 +177,7 @@ class LDAPStorage(OdictStorage):
         :param props: ``node.ext.ldap.LDAPProps`` instance.
         """
         if (name and not props) or (props and not name):
-            raise ValueError(u"Wrong initialization.")
+            raise ValueError('Wrong initialization.')
         if name and not isinstance(name, str):
             name = name.decode(CHARACTER_ENCODING)
         self.__name__ = name
@@ -223,7 +224,7 @@ class LDAPStorage(OdictStorage):
                 res = self.ldap_session.search(
                     scope=BASE,
                     baseDN=val.DN,
-                    attrlist=['']  # no need for attrs
+                    attrlist=[''],  # no need for attrs
                 )
                 # remember DN
                 val._dn = res[0][0]
@@ -248,7 +249,7 @@ class LDAPStorage(OdictStorage):
             self.ldap_session.search(
                 scope=BASE,
                 baseDN=val.DN,
-                attrlist=['']  # no need for attrs
+                attrlist=[''],  # no need for attrs
             )
         except (NO_SUCH_OBJECT, INVALID_DN_SYNTAX):
             # the value is not yet in the directory
@@ -298,7 +299,7 @@ class LDAPStorage(OdictStorage):
                     baseDN=self.DN,
                     attrlist=[''],
                     page_size=self._page_size,
-                    cookie=cookie
+                    cookie=cookie,
                 )
             except NO_SUCH_OBJECT:
                 # happens if not persisted yet
@@ -342,11 +343,11 @@ class LDAPStorage(OdictStorage):
 
     @finalize
     def __repr__(self):
-        dn = self.DN or u'(dn not set)'
+        dn = self.DN or '(dn not set)'
         if self.parent is None:
-            ret = u'<{} - {}>'.format(dn, self.changed)
+            ret = f'<{dn} - {self.changed}>'
         else:
-            ret = u'<{}:{} - {}>'.format(dn, self.name, self.changed)
+            ret = f'<{dn}:{self.name} - {self.changed}>'
         return decode(ret.encode('ascii', 'replace'))
 
     __str__ = finalize(__repr__)
@@ -374,7 +375,7 @@ class LDAPStorage(OdictStorage):
         if self.name:
             # We should not have a name if we are not a root node.
             return decode(self.name)
-        return u''
+        return ''
 
     @default
     @property
@@ -410,9 +411,11 @@ class LDAPStorage(OdictStorage):
         else:
             # check whether children are added, modified or deleted, cannot
             # unset changed state if so
-            if len(self._added_children) \
-                    or len(self._modified_children) \
-                    or len(self._deleted_children):
+            if (
+                len(self._added_children)
+                or len(self._modified_children)
+                or len(self._deleted_children)
+            ):
                 return
             # check whether attributes has changed, cannot unset changed if so
             try:
@@ -432,18 +435,14 @@ class LDAPStorage(OdictStorage):
     def child_dn(self, key):
         # return child DN for key
         if self._dn:
-            return u','.join([decode(key), decode(self._dn)])
-        return u','.join([decode(key), decode(self.name)])
+            return ','.join([decode(key), decode(self._dn)])
+        return ','.join([decode(key), decode(self.name)])
 
     @default
     @property
     def exists(self):
         try:
-            res = self.ldap_session.search(
-                scope=BASE,
-                baseDN=self.DN,
-                attrlist=['']
-            )
+            res = self.ldap_session.search(scope=BASE, baseDN=self.DN, attrlist=[''])
             # this probably never happens
             if len(res) != 1:  # pragma: no cover
                 raise RuntimeError()
@@ -453,32 +452,40 @@ class LDAPStorage(OdictStorage):
 
     @default
     def node_by_dn(self, dn, strict=False):
-        """Return node from tree by DN.
-        """
+        """Return node from tree by DN."""
         root = node = self.root
         base_dn = root.name
         if not dn.lower().endswith(base_dn.lower()):
-            raise ValueError(
-                u'Invalid DN "{0}" for given base DN "{1}"'.format(dn, base_dn))
-        dn = dn[:len(dn) - len(base_dn)].strip(',')
+            raise ValueError(f'Invalid DN "{dn}" for given base DN "{base_dn}"')
+        dn = dn[: len(dn) - len(base_dn)].strip(',')
         for rdn in reversed(explode_dn(dn)):
             try:
                 node = node[rdn]
             except KeyError:
                 if strict:
                     raise ValueError(
-                        u'Tree contains no node by given DN. '
-                        u'Failed at RDN {}'.format(rdn)
+                        f'Tree contains no node by given DN. Failed at RDN {rdn}'
                     )
                 return None
         return node
 
     @default
     @debug
-    def search(self, queryFilter=None, criteria=None, attrlist=None,
-               relation=None, relation_node=None, exact_match=False,
-               or_search=False, or_keys=None, or_values=None,
-               page_size=None, cookie=None, get_nodes=False):
+    def search(
+        self,
+        queryFilter=None,
+        criteria=None,
+        attrlist=None,
+        relation=None,
+        relation_node=None,
+        exact_match=False,
+        or_search=False,
+        or_keys=None,
+        or_values=None,
+        page_size=None,
+        cookie=None,
+        get_nodes=False,
+    ):
         attrset = set(attrlist or [])
         attrset.discard('dn')
         attrset.discard('rdn')
@@ -486,10 +493,7 @@ class LDAPStorage(OdictStorage):
         # filter for this search ANDed with the default filters defined on self
         search_filter = LDAPFilter(queryFilter)
         search_filter &= LDAPDictFilter(
-            criteria,
-            or_search=or_search,
-            or_keys=or_keys,
-            or_values=or_values
+            criteria, or_search=or_search, or_keys=or_keys, or_values=or_values
         )
         _filter = LDAPFilter(self.search_filter)
         _filter &= LDAPDictFilter(self.search_criteria)
@@ -506,7 +510,7 @@ class LDAPStorage(OdictStorage):
             else:
                 _filter &= LDAPRelationFilter(relation_node, relation)
         # perform the backend search
-        logger.debug("LDAP search with filter: \n{0}".format(_filter))
+        logger.debug(f'LDAP search with filter: \n{_filter}')
         matches = self.ldap_session.search(
             str(_filter),
             self.search_scope,
@@ -514,15 +518,15 @@ class LDAPStorage(OdictStorage):
             force_reload=self._reload,
             attrlist=list(attrset),
             page_size=page_size,
-            cookie=cookie
+            cookie=cookie,
         )
         if type(matches) is tuple:
             matches, cookie = matches
         # check exact match
         if exact_match and len(matches) > 1:
-            raise ValueError(u"Exact match asked but result not unique")
+            raise ValueError('Exact match asked but result not unique')
         if exact_match and len(matches) == 0:
-            raise ValueError(u"Exact match asked but result length is zero")
+            raise ValueError('Exact match asked but result length is zero')
         # extract key and desired attributes
         res = []
         for dn, attrs in matches:
@@ -538,10 +542,10 @@ class LDAPStorage(OdictStorage):
                         else:
                             resattr[decode(k)] = decode(v)
                 if 'dn' in attrlist:
-                    resattr[u'dn'] = dn
+                    resattr['dn'] = dn
                 if 'rdn' in attrlist:
                     rdn = explode_dn(dn)[0]
-                    resattr[u'rdn'] = decode(rdn)
+                    resattr['rdn'] = decode(rdn)
                 if get_nodes:
                     res.append((self.node_by_dn(dn, strict=True), resattr))
                 else:
@@ -557,8 +561,7 @@ class LDAPStorage(OdictStorage):
 
     @default
     def batched_search(self, page_size=None, search_func=None, **kw):
-        """Search generator function which does paging for us.
-        """
+        """Search generator function which does paging for us."""
         if page_size is None:
             page_size = self.ldap_session._props.page_size
         if search_func is None:
@@ -569,8 +572,7 @@ class LDAPStorage(OdictStorage):
         while True:
             kw['cookie'] = cookie
             matches, cookie = search_func(**kw)
-            for item in matches:
-                yield item
+            yield from matches
             if not cookie:
                 break
 
@@ -591,9 +593,7 @@ class LDAPStorage(OdictStorage):
         """
         if key is None:
             if self.changed:
-                raise RuntimeError(
-                    u"Invalid tree state. Try to invalidate changed node."
-                )
+                raise RuntimeError('Invalid tree state. Try to invalidate changed node.')
             self.storage.clear()
             self.attrs.load()
             # XXX: needs to get unset again somwhere
@@ -603,8 +603,7 @@ class LDAPStorage(OdictStorage):
             child = self.storage[key]
             if child.changed:
                 raise RuntimeError(
-                    u"Invalid tree state. Try to invalidate "
-                    u"changed child node '{}'.".format(key)
+                    f"Invalid tree state. Try to invalidate changed child node '{key}'."
                 )
             del self.storage[key]
         except KeyError:
@@ -616,7 +615,7 @@ class LDAPStorage(OdictStorage):
         try:
             attrs = vessel.attrs
         except AttributeError:
-            raise ValueError(u"No attributes found on vessel, cannot convert")
+            raise ValueError('No attributes found on vessel, cannot convert')
         node = LDAPNode()
         for key, val in attrs.items():
             node.attrs[key] = val
@@ -672,13 +671,9 @@ class LDAPStorage(OdictStorage):
 
 
 @plumbing(
-    Attributes,
-    Lifecycle,
-    MappingConstraints,
-    MappingAdopt,
-    MappingNode,
-    LDAPStorage)
-class LDAPNode(object):
+    Attributes, Lifecycle, MappingConstraints, MappingAdopt, MappingNode, LDAPStorage
+)
+class LDAPNode:
     events = {
         'created': LDAPNodeCreatedEvent,
         'added': LDAPNodeAddedEvent,

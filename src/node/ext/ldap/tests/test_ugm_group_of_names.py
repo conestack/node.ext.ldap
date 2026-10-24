@@ -25,6 +25,7 @@ def create_ugm():
 def group_of_names_ugm(fn):
     def wrapper(self):
         fn(self, create_ugm())
+
     return wrapper
 
 
@@ -42,20 +43,11 @@ class TestUGMGroupOfNames(NodeTestCase):
         self.assertTrue(ugm['groups'] is ugm.groups)
 
         # Try to delete from UGM, fails
-        err = self.expectError(
-            NotImplementedError,
-            ugm.__delitem__,
-            'users'
-        )
+        err = self.expectError(NotImplementedError, ugm.__delitem__, 'users')
         self.assertEqual(str(err), 'Operation forbidden on this node.')
 
         # Try to set item by invalid key, fails
-        err = self.expectError(
-            KeyError,
-            ugm.__setitem__,
-            'inexistent',
-            ugm.users
-        )
+        err = self.expectError(KeyError, ugm.__setitem__, 'inexistent', ugm.users)
         self.assertEqual(str(err), "'inexistent'")
 
         # Invalidate
@@ -69,7 +61,7 @@ class TestUGMGroupOfNames(NodeTestCase):
     def test_fetch_users(self, ugm):
         # User keys
         users = ugm.users
-        self.assertEqual(users.keys(), [u'uid0', u'uid1', u'uid2'])
+        self.assertEqual(users.keys(), ['uid0', 'uid1', 'uid2'])
 
         # Fetch some users
         user_0 = users['uid0']
@@ -84,32 +76,22 @@ class TestUGMGroupOfNames(NodeTestCase):
 
         # XXX: LDAPNodeAttributes.items does not return consistent results if
         #      attrmap points to same attribute multiple times
-        self.assertEqual(sorted(user_0.attrs.items()), [
-            ('login', u'cn0'),
-            ('mail', u'uid0@groupOfNames.com'),
-            ('rdn', u'uid0'),
-            ('sn', u'sn0')
-        ])
+        self.assertEqual(
+            sorted(user_0.attrs.items()),
+            [
+                ('login', 'cn0'),
+                ('mail', 'uid0@groupOfNames.com'),
+                ('rdn', 'uid0'),
+                ('sn', 'sn0'),
+            ],
+        )
 
         # User is a leaf
-        err = self.expectError(
-            NotImplementedError,
-            user_0.__setitem__,
-            'foo',
-            object()
-        )
+        err = self.expectError(NotImplementedError, user_0.__setitem__, 'foo', object())
         self.assertEqual(str(err), 'User does not support ``__setitem__``')
-        err = self.expectError(
-            NotImplementedError,
-            user_0.__delitem__,
-            'foo'
-        )
+        err = self.expectError(NotImplementedError, user_0.__delitem__, 'foo')
         self.assertEqual(str(err), 'User does not support ``__delitem__``')
-        err = self.expectError(
-            NotImplementedError,
-            user_0.__getitem__,
-            'foo'
-        )
+        err = self.expectError(NotImplementedError, user_0.__getitem__, 'foo')
         self.assertEqual(str(err), 'User does not support ``__getitem__``')
         self.assertEqual(user_0.keys(), [])
 
@@ -125,28 +107,21 @@ class TestUGMGroupOfNames(NodeTestCase):
     @group_of_names_ugm
     def test_change_password(self, ugm):
         err = self.expectError(
-            ldap.UNWILLING_TO_PERFORM,
-            ugm.users.passwd,
-            'uid0',
-            'foo',
-            'bar'
+            ldap.UNWILLING_TO_PERFORM, ugm.users.passwd, 'uid0', 'foo', 'bar'
         )
-        self.assertEqual(err.args[0], {
-            'msgtype': 120,
-            'msgid': 4,
-            'result': 53,
-            'desc': 'Server is unwilling to perform',
-            'ctrls': [],
-            'info': 'unwilling to verify old password'
-        })
+        self.assertEqual(
+            err.args[0],
+            {
+                'msgtype': 120,
+                'msgid': 4,
+                'result': 53,
+                'desc': 'Server is unwilling to perform',
+                'ctrls': [],
+                'info': 'unwilling to verify old password',
+            },
+        )
 
-        self.expectError(
-            KeyError,
-            ugm.users.passwd,
-            'foo',
-            'secret0',
-            'bar'
-        )
+        self.expectError(KeyError, ugm.users.passwd, 'foo', 'secret0', 'bar')
 
         ugm.users.passwd('uid0', 'secret0', 'bar')
         self.assertEqual(ugm.users.authenticate('uid0', 'bar'), 'uid0')
@@ -154,40 +129,35 @@ class TestUGMGroupOfNames(NodeTestCase):
     @group_of_names_ugm
     def test_add_user(self, ugm):
         users = ugm.users
-        self.checkOutput("""
+        self.checkOutput(
+            """
         <class 'node.ext.ldap.ugm._api.Users'>: users
           <class 'node.ext.ldap.ugm._api.User'>: uid0
           <class 'node.ext.ldap.ugm._api.User'>: uid1
           <class 'node.ext.ldap.ugm._api.User'>: uid2
-        """, users.treerepr())
-
-        user = users.create(
-            'sepp',
-            cn='Sepp',
-            sn='Bla',
-            mail='baz@bar.com'
+        """,
+            users.treerepr(),
         )
+
+        user = users.create('sepp', cn='Sepp', sn='Bla', mail='baz@bar.com')
         self.assertTrue(isinstance(user, User))
 
         # The user is added to tree
-        self.checkOutput("""
+        self.checkOutput(
+            """
         <class 'node.ext.ldap.ugm._api.Users'>: users
           <class 'node.ext.ldap.ugm._api.User'>: uid0
           <class 'node.ext.ldap.ugm._api.User'>: uid1
           <class 'node.ext.ldap.ugm._api.User'>: uid2
           <class 'node.ext.ldap.ugm._api.User'>: sepp
-        """, users.treerepr())
+        """,
+            users.treerepr(),
+        )
 
         # Though, no authentication or password setting possible yet, because
         # tree is not persisted to LDAP yet
         self.assertFalse(users.authenticate('sepp', 'secret'))
-        self.expectError(
-            KeyError,
-            ugm.users.passwd,
-            'sepp',
-            None,
-            'secret'
-        )
+        self.expectError(KeyError, ugm.users.passwd, 'sepp', None, 'secret')
 
         # After calling, new user is available in LDAP
         ugm()
@@ -201,7 +171,7 @@ class TestUGMGroupOfNames(NodeTestCase):
     @group_of_names_ugm
     def test_fetch_groups(self, ugm):
         groups = ugm.groups
-        self.assertEqual(groups.keys(), [u'group0', u'group1', u'group2'])
+        self.assertEqual(groups.keys(), ['group0', 'group1', 'group2'])
 
         group_0 = groups['group0']
         group_1 = groups['group1']
@@ -210,14 +180,22 @@ class TestUGMGroupOfNames(NodeTestCase):
         self.assertEqual(groups.values(), [group_0, group_1, group_2])
         self.assertTrue(isinstance(group_0, Group))
         self.assertTrue(isinstance(group_0.attrs, PrincipalAliasedAttributes))
-        self.assertEqual(sorted(group_0.attrs.items()), [
-            ('member', [u'cn=nobody']),
-            ('rdn', u'group0')
-        ])
-        self.assertEqual(sorted(group_1.attrs.items()), [
-            ('member', [u'cn=nobody', u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com']),
-            ('rdn', u'group1')
-        ])
+        self.assertEqual(
+            sorted(group_0.attrs.items()), [('member', ['cn=nobody']), ('rdn', 'group0')]
+        )
+        self.assertEqual(
+            sorted(group_1.attrs.items()),
+            [
+                (
+                    'member',
+                    [
+                        'cn=nobody',
+                        'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com',
+                    ],
+                ),
+                ('rdn', 'group1'),
+            ],
+        )
 
     @group_of_names_ugm
     def test_add_group(self, ugm):
@@ -226,7 +204,8 @@ class TestUGMGroupOfNames(NodeTestCase):
         self.assertTrue(isinstance(group, Group))
 
         ugm()
-        self.checkOutput("""
+        self.checkOutput(
+            """
         <class 'node.ext.ldap.ugm._api.Groups'>: groups
           <class 'node.ext.ldap.ugm._api.Group'>: group0
           <class 'node.ext.ldap.ugm._api.Group'>: group1
@@ -235,12 +214,15 @@ class TestUGMGroupOfNames(NodeTestCase):
             <class 'node.ext.ldap.ugm._api.User'>: uid1
             <class 'node.ext.ldap.ugm._api.User'>: uid2
           <class 'node.ext.ldap.ugm._api.Group'>: group99
-        """, groups.treerepr())
+        """,
+            groups.treerepr(),
+        )
 
         # Delete already created group
         del groups['group99']
         ugm()
-        self.checkOutput("""
+        self.checkOutput(
+            """
         <class 'node.ext.ldap.ugm._api.Groups'>: groups
           <class 'node.ext.ldap.ugm._api.Group'>: group0
           <class 'node.ext.ldap.ugm._api.Group'>: group1
@@ -248,7 +230,9 @@ class TestUGMGroupOfNames(NodeTestCase):
           <class 'node.ext.ldap.ugm._api.Group'>: group2
             <class 'node.ext.ldap.ugm._api.User'>: uid1
             <class 'node.ext.ldap.ugm._api.User'>: uid2
-        """, groups.treerepr())
+        """,
+            groups.treerepr(),
+        )
 
     @group_of_names_ugm
     def test_group_memebership(self, ugm):
@@ -276,17 +260,14 @@ class TestUGMGroupOfNames(NodeTestCase):
 
         # ``__setitem__`` is prohibited
         err = self.expectError(
-            NotImplementedError,
-            group_1.__setitem__,
-            'uid0',
-            users['uid0']
+            NotImplementedError, group_1.__setitem__, 'uid0', users['uid0']
         )
         self.assertEqual(str(err), 'Group does not support ``__setitem__``')
 
         # Members are added via ``add``
         group_1.add('uid0')
-        self.assertEqual(group_1.keys(), [u'uid1', u'uid0'])
-        self.assertEqual(group_1.member_ids, [u'uid1', u'uid0'])
+        self.assertEqual(group_1.keys(), ['uid1', 'uid0'])
+        self.assertEqual(group_1.member_ids, ['uid1', 'uid0'])
         self.assertTrue(group_1['uid0'] is ugm.users['uid0'])
         self.assertEqual(group_1.users, [users['uid1'], users['uid0']])
 
@@ -294,12 +275,12 @@ class TestUGMGroupOfNames(NodeTestCase):
 
         # Let's take a fresh view on ldap whether this really happened
         ugm_fresh = create_ugm()
-        self.assertEqual(ugm_fresh.groups['group1'].keys(), [u'uid1', u'uid0'])
+        self.assertEqual(ugm_fresh.groups['group1'].keys(), ['uid1', 'uid0'])
 
         # Members are removed via ``delitem``
         del group_1['uid0']
         ugm_fresh = create_ugm()
-        self.assertEqual(ugm_fresh.groups['group1'].keys(), [u'uid1'])
+        self.assertEqual(ugm_fresh.groups['group1'].keys(), ['uid1'])
 
         user_0 = ugm_fresh.users['uid0']
         user_1 = ugm_fresh.users['uid1']
@@ -307,15 +288,12 @@ class TestUGMGroupOfNames(NodeTestCase):
 
         # A user knows its groups
         self.assertEqual(user_0.groups, [])
-        self.assertEqual(user_1.groups, [
-            ugm_fresh.groups['group1'],
-            ugm_fresh.groups['group2']
-        ])
-        self.assertEqual(user_2.groups, [
-            ugm_fresh.groups['group2']
-        ])
-        self.assertEqual(user_1.group_ids, [u'group1', u'group2'])
-        self.assertEqual(user_2.group_ids, [u'group2'])
+        self.assertEqual(
+            user_1.groups, [ugm_fresh.groups['group1'], ugm_fresh.groups['group2']]
+        )
+        self.assertEqual(user_2.groups, [ugm_fresh.groups['group2']])
+        self.assertEqual(user_1.group_ids, ['group1', 'group2'])
+        self.assertEqual(user_2.group_ids, ['group2'])
 
     def test_recursive_groups_query_member_in_chain(self):
         # LDAP_MATCHING_RULE_IN_CHAIN is supported by Active Directory only,
@@ -325,26 +303,25 @@ class TestUGMGroupOfNames(NodeTestCase):
         ugm = Ugm(props=layer['props'], ucfg=ucfg, gcfg=layer['gcfg'])
         user = ugm.users['uid1']
         nested_groups = [
-            ('cn=group1,ou=groups,ou=groupOfNames,dc=my-domain,dc=com', {
-                'cn': ['group1']
-            }),
-            ('cn=group0,ou=groups,ou=groupOfNames,dc=my-domain,dc=com', {
-                'cn': ['group0']
-            })
+            (
+                'cn=group1,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
+                {'cn': ['group1']},
+            ),
+            (
+                'cn=group0,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
+                {'cn': ['group0']},
+            ),
         ]
         groups_context = ugm.groups.context
         with mock.patch.object(
-            groups_context,
-            'batched_search',
-            return_value=iter(nested_groups)
+            groups_context, 'batched_search', return_value=iter(nested_groups)
         ) as batched_search:
-            self.assertEqual(user.group_ids, [u'group1', u'group0'])
+            self.assertEqual(user.group_ids, ['group1', 'group0'])
         batched_search.assert_called_once_with(
             criteria={
-                'member:1.2.840.113556.1.4.1941:':
-                    'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com'
+                'member:1.2.840.113556.1.4.1941:': 'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com'
             },
-            attrlist=['cn']
+            attrlist=['cn'],
         )
 
     @group_of_names_ugm
@@ -353,24 +330,25 @@ class TestUGMGroupOfNames(NodeTestCase):
         groups = ugm.groups
 
         # Test search function
-        self.assertEqual(users.search(criteria={'login': 'cn0'}), [u'uid0'])
-        self.assertEqual(groups.search(criteria={'id': 'group2'}), [u'group2'])
+        self.assertEqual(users.search(criteria={'login': 'cn0'}), ['uid0'])
+        self.assertEqual(groups.search(criteria={'id': 'group2'}), ['group2'])
 
     @group_of_names_ugm
     def test_search_skips_principals_without_id_attribute(self, ugm):
         session = ugm.users.context.ldap_session
         dn = 'cn=nouid,ou=users,ou=groupOfNames,dc=my-domain,dc=com'
-        session.add(dn, {
-            'objectClass': [b'inetOrgPerson'],
-            'cn': [b'nouid'],
-            'sn': [b'nouid']
-        })
+        session.add(
+            dn, {'objectClass': [b'inetOrgPerson'], 'cn': [b'nouid'], 'sn': [b'nouid']}
+        )
         try:
-            self.assertEqual(ugm.users.search(attrlist=['login']), [
-                (u'uid0', {'login': [u'cn0']}),
-                (u'uid1', {'login': [u'cn1']}),
-                (u'uid2', {'login': [u'cn2']})
-            ])
+            self.assertEqual(
+                ugm.users.search(attrlist=['login']),
+                [
+                    ('uid0', {'login': ['cn0']}),
+                    ('uid1', {'login': ['cn1']}),
+                    ('uid2', {'login': ['cn2']}),
+                ],
+            )
         finally:
             session.delete(dn)
 
@@ -380,8 +358,8 @@ class TestUGMGroupOfNames(NodeTestCase):
         groups = ugm.groups
 
         # There's an ids property on principals base class
-        self.assertEqual(users.ids, [u'uid0', u'uid1', u'uid2'])
-        self.assertEqual(groups.ids, [u'group0', u'group1', u'group2'])
+        self.assertEqual(users.ids, ['uid0', 'uid1', 'uid2'])
+        self.assertEqual(groups.ids, ['group0', 'group1', 'group2'])
 
     @group_of_names_ugm
     def test_membership_assignment(self, ugm):
@@ -390,19 +368,15 @@ class TestUGMGroupOfNames(NodeTestCase):
 
         # Add user to some groups and then delete user, check whether user
         # is removed from all this groups.
-        user = users.create(
-            'sepp',
-            cn='Sepp',
-            sn='Bla',
-            mail='baz@bar.com'
-        )
+        user = users.create('sepp', cn='Sepp', sn='Bla', mail='baz@bar.com')
         groups['group0'].add('sepp')
         groups['group1'].add('sepp')
         ugm()
 
         self.assertEqual(user.groups, [groups['group0'], groups['group1']])
-        self.assertEqual(user.group_ids, [u'group0', u'group1'])
-        self.checkOutput("""
+        self.assertEqual(user.group_ids, ['group0', 'group1'])
+        self.checkOutput(
+            """
         <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
           <class 'node.ext.ldap.ugm._api.Users'>: users
             <class 'node.ext.ldap.ugm._api.User'>: uid0
@@ -418,11 +392,14 @@ class TestUGMGroupOfNames(NodeTestCase):
             <class 'node.ext.ldap.ugm._api.Group'>: group2
               <class 'node.ext.ldap.ugm._api.User'>: uid1
               <class 'node.ext.ldap.ugm._api.User'>: uid2
-        """, ugm.treerepr())
+        """,
+            ugm.treerepr(),
+        )
 
         del users['sepp']
         ugm()
-        self.checkOutput("""
+        self.checkOutput(
+            """
         <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
           <class 'node.ext.ldap.ugm._api.Users'>: users
             <class 'node.ext.ldap.ugm._api.User'>: uid0
@@ -435,47 +412,65 @@ class TestUGMGroupOfNames(NodeTestCase):
             <class 'node.ext.ldap.ugm._api.Group'>: group2
               <class 'node.ext.ldap.ugm._api.User'>: uid1
               <class 'node.ext.ldap.ugm._api.User'>: uid2
-        """, ugm.treerepr())
+        """,
+            ugm.treerepr(),
+        )
 
     @group_of_names_ugm
     def test_member_of_support(self, ugm):
         users = ugm.users
         groups = ugm.groups
 
-        self.assertEqual(users.context.search(queryFilter='(memberOf=*)'), [
-            u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com',
-            u'uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com'
-        ])
+        self.assertEqual(
+            users.context.search(queryFilter='(memberOf=*)'),
+            [
+                'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com',
+                'uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com',
+            ],
+        )
 
-        self.assertEqual(users.context.search(attrlist=['memberOf']), [
-            (u'uid=uid0,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {}),
-            (u'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {
-                u'memberOf': [
-                    u'cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
-                    u'cn=group3,ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com',
-                    u'cn=group1,ou=groups,ou=groupOfNames,dc=my-domain,dc=com'
-                ]
-            }),
-            (u'uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {
-                u'memberOf': [
-                    u'cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
-                    u'cn=group3,ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com'
-                ]
-            })
-        ])
+        self.assertEqual(
+            users.context.search(attrlist=['memberOf']),
+            [
+                ('uid=uid0,ou=users,ou=groupOfNames,dc=my-domain,dc=com', {}),
+                (
+                    'uid=uid1,ou=users,ou=groupOfNames,dc=my-domain,dc=com',
+                    {
+                        'memberOf': [
+                            'cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
+                            'cn=group3,ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com',
+                            'cn=group1,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
+                        ]
+                    },
+                ),
+                (
+                    'uid=uid2,ou=users,ou=groupOfNames,dc=my-domain,dc=com',
+                    {
+                        'memberOf': [
+                            'cn=group2,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
+                            'cn=group3,ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com',
+                        ]
+                    },
+                ),
+            ],
+        )
 
         ugm.ucfg.memberOfSupport = True
         ugm.gcfg.memberOfSupport = True
 
         self.assertEqual(users['uid1'].groups, [groups['group2'], groups['group1']])
-        self.assertEqual(users['uid1'].group_ids, [u'group2', u'group1'])
-        self.assertEqual(groups['group1'].member_ids, [u'uid1'])
-        self.assertEqual(groups['group2'].member_ids, [u'uid1', u'uid2'])
+        self.assertEqual(users['uid1'].group_ids, ['group2', 'group1'])
+        self.assertEqual(groups['group1'].member_ids, ['uid1'])
+        self.assertEqual(groups['group2'].member_ids, ['uid1', 'uid2'])
 
         # test ugm tree external groups
 
-        ugm.ucfg.memberOfExternalGroupDNs = ["ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com"]
-        ugm.gcfg.memberOfExternalGroupDNs = ["ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com"]
+        ugm.ucfg.memberOfExternalGroupDNs = [
+            'ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com'
+        ]
+        ugm.gcfg.memberOfExternalGroupDNs = [
+            'ou=altGroups,ou=groupOfNames,dc=my-domain,dc=com'
+        ]
 
         # external can not be handled by this ugm tree
         self.assertNotIn('group3', groups)
@@ -485,11 +480,10 @@ class TestUGMGroupOfNames(NodeTestCase):
         # but they are listed in group_ids
         self.assertEqual(
             sorted(users['uid1'].group_ids),
-            [u"group1", u'group2', u'group3'],
+            ['group1', 'group2', 'group3'],
         )
-        self.assertEqual(groups['group1'].member_ids, [u'uid1'])
-        self.assertEqual(groups['group2'].member_ids, [u'uid1', u'uid2'])
-
+        self.assertEqual(groups['group1'].member_ids, ['uid1'])
+        self.assertEqual(groups['group2'].member_ids, ['uid1', 'uid2'])
 
         ugm.ucfg.memberOfSupport = False
         ugm.gcfg.memberOfSupport = False
@@ -502,12 +496,9 @@ class TestUGMGroupOfNames(NodeTestCase):
         # stale group DN, e.g. of a deleted group, is mocked.
         member_of = [
             'cn=group1,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
-            'cn=inexistent,ou=groups,ou=groupOfNames,dc=my-domain,dc=com'
+            'cn=inexistent,ou=groups,ou=groupOfNames,dc=my-domain,dc=com',
         ]
         with mock.patch.object(
-            User,
-            'member_of_attr',
-            new_callable=mock.PropertyMock,
-            return_value=member_of
+            User, 'member_of_attr', new_callable=mock.PropertyMock, return_value=member_of
         ):
-            self.assertEqual(ugm.users['uid1'].group_ids, [u'group1'])
+            self.assertEqual(ugm.users['uid1'].group_ids, ['group1'])

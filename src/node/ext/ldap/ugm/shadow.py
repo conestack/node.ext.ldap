@@ -31,7 +31,6 @@ shadowAccount
 - description ------> no default callback available
 """
 
-
 SHADOW_DEFAULT_FLAG = '0'
 
 

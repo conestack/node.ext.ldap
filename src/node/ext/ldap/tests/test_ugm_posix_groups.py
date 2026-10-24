@@ -9,10 +9,10 @@ from node.ext.ldap.ugm import Ugm
 from node.ext.ldap.ugm import User
 from node.ext.ldap.ugm import Users
 from node.ext.ldap.ugm._api import PrincipalAliasedAttributes
+from node.ext.ldap.ugm.expires import account_expiration
 from node.ext.ldap.ugm.expires import AccountExpiration
 from node.ext.ldap.ugm.expires import EXPIRATION_DAYS
 from node.ext.ldap.ugm.expires import EXPIRATION_SECONDS
-from node.ext.ldap.ugm.expires import account_expiration
 from node.tests import NodeTestCase
 from odict import odict
 import copy
@@ -33,6 +33,7 @@ def create_ugm():
 def posix_groups_ugm(fn):
     def wrapper(self):
         fn(self, create_ugm())
+
     return wrapper
 
 
@@ -50,27 +51,18 @@ class TestUGMPosixGroups(NodeTestCase):
         self.assertTrue(ugm['groups'] is ugm.groups)
 
         # Try to delete from UGM, fails
-        err = self.expectError(
-            NotImplementedError,
-            ugm.__delitem__,
-            'users'
-        )
+        err = self.expectError(NotImplementedError, ugm.__delitem__, 'users')
         self.assertEqual(str(err), 'Operation forbidden on this node.')
 
         # Try to set item by invalid key, fails
-        err = self.expectError(
-            KeyError,
-            ugm.__setitem__,
-            'inexistent',
-            ugm.users
-        )
+        err = self.expectError(KeyError, ugm.__setitem__, 'inexistent', ugm.users)
         self.assertEqual(str(err), "'inexistent'")
 
     @posix_groups_ugm
     def test_fetch_users(self, ugm):
         # User keys
         users = ugm.users
-        self.assertEqual(users.keys(), [u'uid0', u'uid1', u'uid2'])
+        self.assertEqual(users.keys(), ['uid0', 'uid1', 'uid2'])
 
         # Fetch some users
         user_0 = users['uid0']
@@ -86,34 +78,24 @@ class TestUGMPosixGroups(NodeTestCase):
 
         # XXX: LDAPNodeAttributes.items does not return consistent results if
         #      attrmap points to same attribute multiple times
-        self.assertEqual(sorted(user_0.attrs.items()), [
-            ('gidNumber', u'0'),
-            ('homeDirectory', u'/home/uid0'),
-            ('login', u'cn0'),
-            ('rdn', u'uid0'),
-            ('sn', u'sn0'),
-            ('uidNumber', u'0')
-        ])
+        self.assertEqual(
+            sorted(user_0.attrs.items()),
+            [
+                ('gidNumber', '0'),
+                ('homeDirectory', '/home/uid0'),
+                ('login', 'cn0'),
+                ('rdn', 'uid0'),
+                ('sn', 'sn0'),
+                ('uidNumber', '0'),
+            ],
+        )
 
         # User is a leaf
-        err = self.expectError(
-            NotImplementedError,
-            user_0.__setitem__,
-            'foo',
-            object()
-        )
+        err = self.expectError(NotImplementedError, user_0.__setitem__, 'foo', object())
         self.assertEqual(str(err), 'User does not support ``__setitem__``')
-        err = self.expectError(
-            NotImplementedError,
-            user_0.__delitem__,
-            'foo'
-        )
+        err = self.expectError(NotImplementedError, user_0.__delitem__, 'foo')
         self.assertEqual(str(err), 'User does not support ``__delitem__``')
-        err = self.expectError(
-            NotImplementedError,
-            user_0.__getitem__,
-            'foo'
-        )
+        err = self.expectError(NotImplementedError, user_0.__getitem__, 'foo')
         self.assertEqual(str(err), 'User does not support ``__getitem__``')
         self.assertEqual(user_0.keys(), [])
 
@@ -139,14 +121,11 @@ class TestUGMPosixGroups(NodeTestCase):
         self.assertFalse(users['uid0'].expired)
 
         # Set expires attribute for ongoing tests
-        users.account_expires = AccountExpiration(
-            'shadowExpire',
-            unit=EXPIRATION_DAYS
-        )
+        users.account_expires = AccountExpiration('shadowExpire', unit=EXPIRATION_DAYS)
 
-        self.assertEqual(users['uid0'].context.attrs['shadowExpire'], u'99999')
-        self.assertEqual(users['uid0'].context.attrs['shadowInactive'], u'0')
-        self.assertEqual(users.authenticate('uid0', 'secret0'), u'uid0')
+        self.assertEqual(users['uid0'].context.attrs['shadowExpire'], '99999')
+        self.assertEqual(users['uid0'].context.attrs['shadowInactive'], '0')
+        self.assertEqual(users.authenticate('uid0', 'secret0'), 'uid0')
         self.assertFalse(users['uid0'].expired)
 
         # Expiration date gets set via ``expires`` attribute
@@ -154,10 +133,7 @@ class TestUGMPosixGroups(NodeTestCase):
         users['uid0'].expires = datetime(2020, 1, 1)
         users['uid0']()
 
-        self.assertEqual(
-            users['uid0'].context.attrs['shadowExpire'],
-            u'18262'
-        )
+        self.assertEqual(users['uid0'].context.attrs['shadowExpire'], '18262')
         self.assertEqual(users['uid0'].expires, datetime(2020, 1, 1))
 
         res = users.authenticate('uid0', 'secret0')
@@ -167,14 +143,14 @@ class TestUGMPosixGroups(NodeTestCase):
         # No expiration far future
         users['uid0'].context.attrs['shadowExpire'] = '-1'
         users['uid0']()
-        self.assertEqual(users.authenticate('uid0', 'secret0'), u'uid0')
+        self.assertEqual(users.authenticate('uid0', 'secret0'), 'uid0')
         self.assertFalse(users['uid0'].expired)
 
         # Set expires to None, no expiration
         users['uid0'].expires = None
         users['uid0']()
-        self.assertEqual(users['uid0'].context.attrs['shadowExpire'], u'-1')
-        self.assertEqual(users.authenticate('uid0', 'secret0'), u'uid0')
+        self.assertEqual(users['uid0'].context.attrs['shadowExpire'], '-1')
+        self.assertEqual(users.authenticate('uid0', 'secret0'), 'uid0')
         self.assertFalse(users['uid0'].expired)
 
         # Invalid expiration field data
@@ -204,8 +180,7 @@ class TestUGMPosixGroups(NodeTestCase):
     @posix_groups_ugm
     def test_expires_of_account_which_never_expires(self, ugm):
         ugm.users.account_expires = AccountExpiration(
-            'shadowExpire',
-            unit=EXPIRATION_DAYS
+            'shadowExpire', unit=EXPIRATION_DAYS
         )
         user = ugm.users['uid0']
         user.context.attrs['shadowExpire'] = '-1'
@@ -214,27 +189,17 @@ class TestUGMPosixGroups(NodeTestCase):
     @posix_groups_ugm
     def test_set_expires_requires_datetime(self, ugm):
         ugm.users.account_expires = AccountExpiration(
-            'shadowExpire',
-            unit=EXPIRATION_DAYS
+            'shadowExpire', unit=EXPIRATION_DAYS
         )
         user = ugm.users['uid0']
-        err = self.expectError(
-            ValueError,
-            setattr,
-            user,
-            'expires',
-            '2020-01-01'
-        )
+        err = self.expectError(ValueError, setattr, user, 'expires', '2020-01-01')
         self.assertEqual(str(err), 'Expires value must be a datetime instance')
 
     def test_account_expiration_from_config(self):
         ucfg = copy.copy(layer['ucfg'])
         ucfg.expiresAttr = 'shadowExpire'
         users = Users(layer['props'], ucfg)
-        self.assertIs(
-            users.account_expires,
-            account_expiration['shadowExpire']
-        )
+        self.assertIs(users.account_expires, account_expiration['shadowExpire'])
 
     def test_account_expiration_from_config_with_custom_attribute(self):
         ucfg = copy.copy(layer['ucfg'])
@@ -249,35 +214,27 @@ class TestUGMPosixGroups(NodeTestCase):
     @posix_groups_ugm
     def test_change_password(self, ugm):
         err = self.expectError(
-            ldap.UNWILLING_TO_PERFORM,
-            ugm.users.passwd,
-            'uid0',
-            'foo',
-            'bar'
+            ldap.UNWILLING_TO_PERFORM, ugm.users.passwd, 'uid0', 'foo', 'bar'
         )
-        self.assertEqual(err.args[0], {
-            'msgtype': 120,
-            'msgid': 4,
-            'result': 53,
-            'desc': 'Server is unwilling to perform',
-            'ctrls': [],
-            'info': 'unwilling to verify old password'
-        })
+        self.assertEqual(
+            err.args[0],
+            {
+                'msgtype': 120,
+                'msgid': 4,
+                'result': 53,
+                'desc': 'Server is unwilling to perform',
+                'ctrls': [],
+                'info': 'unwilling to verify old password',
+            },
+        )
 
-        self.expectError(
-            KeyError,
-            ugm.users.passwd,
-            'foo',
-            'secret0',
-            'bar'
-        )
+        self.expectError(KeyError, ugm.users.passwd, 'foo', 'secret0', 'bar')
 
         ugm.users.passwd('uid0', 'secret0', 'bar')
         self.assertEqual(ugm.users.authenticate('uid0', 'bar'), 'uid0')
 
         ugm.users.account_expires = AccountExpiration(
-            'shadowExpire',
-            unit=EXPIRATION_DAYS
+            'shadowExpire', unit=EXPIRATION_DAYS
         )
         ugm.users.passwd('uid0', 'bar', 'secret0')
         self.assertEqual(ugm.users.authenticate('uid0', 'secret0'), 'uid0')
@@ -285,12 +242,15 @@ class TestUGMPosixGroups(NodeTestCase):
     @posix_groups_ugm
     def test_add_user(self, ugm):
         users = ugm.users
-        self.checkOutput("""
+        self.checkOutput(
+            """
         <class 'node.ext.ldap.ugm._api.Users'>: users
           <class 'node.ext.ldap.ugm._api.User'>: uid0
           <class 'node.ext.ldap.ugm._api.User'>: uid1
           <class 'node.ext.ldap.ugm._api.User'>: uid2
-        """, users.treerepr())
+        """,
+            users.treerepr(),
+        )
 
         user = users.create(
             'sepp',
@@ -298,29 +258,26 @@ class TestUGMPosixGroups(NodeTestCase):
             sn='Unterwurzacher',
             uidNumber='99',
             gidNumber='99',
-            homeDirectory='home/sepp'
+            homeDirectory='home/sepp',
         )
         self.assertTrue(isinstance(user, User))
 
         # The user is added to tree
-        self.checkOutput("""
+        self.checkOutput(
+            """
         <class 'node.ext.ldap.ugm._api.Users'>: users
           <class 'node.ext.ldap.ugm._api.User'>: uid0
           <class 'node.ext.ldap.ugm._api.User'>: uid1
           <class 'node.ext.ldap.ugm._api.User'>: uid2
           <class 'node.ext.ldap.ugm._api.User'>: sepp
-        """, users.treerepr())
+        """,
+            users.treerepr(),
+        )
 
         # Though, no authentication or password setting possible yet, because
         # tree is not persisted to LDAP yet
         self.assertFalse(users.authenticate('sepp', 'secret'))
-        self.expectError(
-            KeyError,
-            ugm.users.passwd,
-            'sepp',
-            None,
-            'secret'
-        )
+        self.expectError(KeyError, ugm.users.passwd, 'sepp', None, 'secret')
 
         # After calling, new user is available in LDAP
         ugm()
@@ -334,7 +291,7 @@ class TestUGMPosixGroups(NodeTestCase):
     @posix_groups_ugm
     def test_fetch_groups(self, ugm):
         groups = ugm.groups
-        self.assertEqual(groups.keys(), [u'group0', u'group1', u'group2'])
+        self.assertEqual(groups.keys(), ['group0', 'group1', 'group2'])
 
         group_0 = groups['group0']
         group_1 = groups['group1']
@@ -343,16 +300,18 @@ class TestUGMPosixGroups(NodeTestCase):
         self.assertEqual(groups.values(), [group_0, group_1, group_2])
         self.assertTrue(isinstance(group_0, Group))
         self.assertTrue(isinstance(group_0.attrs, PrincipalAliasedAttributes))
-        self.assertEqual(sorted(group_0.attrs.items()), [
-            ('gidNumber', '0'),
-            ('memberUid', ['nobody', 'uid0']),
-            ('rdn', 'group0')
-        ])
-        self.assertEqual(sorted(group_1.attrs.items()), [
-            ('gidNumber', u'1'),
-            ('memberUid', [u'nobody', u'uid0', u'uid1']),
-            ('rdn', u'group1')
-        ])
+        self.assertEqual(
+            sorted(group_0.attrs.items()),
+            [('gidNumber', '0'), ('memberUid', ['nobody', 'uid0']), ('rdn', 'group0')],
+        )
+        self.assertEqual(
+            sorted(group_1.attrs.items()),
+            [
+                ('gidNumber', '1'),
+                ('memberUid', ['nobody', 'uid0', 'uid1']),
+                ('rdn', 'group1'),
+            ],
+        )
 
     @posix_groups_ugm
     def test_add_group(self, ugm):
@@ -361,7 +320,8 @@ class TestUGMPosixGroups(NodeTestCase):
         self.assertTrue(isinstance(group, Group))
 
         ugm()
-        self.checkOutput("""
+        self.checkOutput(
+            """
         <class 'node.ext.ldap.ugm._api.Groups'>: groups
           <class 'node.ext.ldap.ugm._api.Group'>: group0
             <class 'node.ext.ldap.ugm._api.User'>: uid0
@@ -373,12 +333,15 @@ class TestUGMPosixGroups(NodeTestCase):
             <class 'node.ext.ldap.ugm._api.User'>: uid1
             <class 'node.ext.ldap.ugm._api.User'>: uid2
           <class 'node.ext.ldap.ugm._api.Group'>: group99
-        """, groups.treerepr())
+        """,
+            groups.treerepr(),
+        )
 
         # Delete already created group
         del groups['group99']
         ugm()
-        self.checkOutput("""
+        self.checkOutput(
+            """
         <class 'node.ext.ldap.ugm._api.Groups'>: groups
           <class 'node.ext.ldap.ugm._api.Group'>: group0
             <class 'node.ext.ldap.ugm._api.User'>: uid0
@@ -389,7 +352,9 @@ class TestUGMPosixGroups(NodeTestCase):
             <class 'node.ext.ldap.ugm._api.User'>: uid0
             <class 'node.ext.ldap.ugm._api.User'>: uid1
             <class 'node.ext.ldap.ugm._api.User'>: uid2
-        """, groups.treerepr())
+        """,
+            groups.treerepr(),
+        )
 
     @posix_groups_ugm
     def test_group_memebership(self, ugm):
@@ -417,17 +382,14 @@ class TestUGMPosixGroups(NodeTestCase):
 
         # ``__setitem__`` is prohibited
         err = self.expectError(
-            NotImplementedError,
-            group_1.__setitem__,
-            'uid0',
-            users['uid0']
+            NotImplementedError, group_1.__setitem__, 'uid0', users['uid0']
         )
         self.assertEqual(str(err), 'Group does not support ``__setitem__``')
 
         # Members are added via ``add``
         group_0.add('uid1')
-        self.assertEqual(group_0.keys(), [u'uid0', u'uid1'])
-        self.assertEqual(group_0.member_ids, [u'uid0', u'uid1'])
+        self.assertEqual(group_0.keys(), ['uid0', 'uid1'])
+        self.assertEqual(group_0.member_ids, ['uid0', 'uid1'])
         self.assertTrue(group_0['uid0'] is ugm.users['uid0'])
         self.assertEqual(group_0.users, [users['uid0'], users['uid1']])
 
@@ -435,30 +397,30 @@ class TestUGMPosixGroups(NodeTestCase):
 
         # Let's take a fresh view on ldap whether this really happened
         ugm_fresh = create_ugm()
-        self.assertEqual(ugm_fresh.groups['group0'].keys(), [u'uid0', u'uid1'])
+        self.assertEqual(ugm_fresh.groups['group0'].keys(), ['uid0', 'uid1'])
 
         # Members are removed via ``delitem``
         del group_0['uid1']
         ugm_fresh = create_ugm()
-        self.assertEqual(ugm_fresh.groups['group0'].keys(), [u'uid0'])
+        self.assertEqual(ugm_fresh.groups['group0'].keys(), ['uid0'])
 
         user_0 = ugm_fresh.users['uid0']
         user_1 = ugm_fresh.users['uid1']
         user_2 = ugm_fresh.users['uid2']
 
         # A user knows its groups
-        self.assertEqual(user_0.groups, [
-            ugm_fresh.groups['group0'],
-            ugm_fresh.groups['group1'],
-            ugm_fresh.groups['group2']
-        ])
-        self.assertEqual(user_1.groups, [
-            ugm_fresh.groups['group1'],
-            ugm_fresh.groups['group2']
-        ])
-        self.assertEqual(user_2.groups, [
-            ugm_fresh.groups['group2']
-        ])
+        self.assertEqual(
+            user_0.groups,
+            [
+                ugm_fresh.groups['group0'],
+                ugm_fresh.groups['group1'],
+                ugm_fresh.groups['group2'],
+            ],
+        )
+        self.assertEqual(
+            user_1.groups, [ugm_fresh.groups['group1'], ugm_fresh.groups['group2']]
+        )
+        self.assertEqual(user_2.groups, [ugm_fresh.groups['group2']])
         self.assertEqual(user_0.group_ids, ['group0', 'group1', 'group2'])
         self.assertEqual(user_1.group_ids, ['group1', 'group2'])
         self.assertEqual(user_2.group_ids, ['group2'])
@@ -469,8 +431,8 @@ class TestUGMPosixGroups(NodeTestCase):
         groups = ugm.groups
 
         # Test search function
-        self.assertEqual(users.search(criteria={'login': 'cn0'}), [u'uid0'])
-        self.assertEqual(groups.search(criteria={'id': 'group2'}), [u'group2'])
+        self.assertEqual(users.search(criteria={'login': 'cn0'}), ['uid0'])
+        self.assertEqual(groups.search(criteria={'id': 'group2'}), ['group2'])
 
     @posix_groups_ugm
     def test_ids(self, ugm):
@@ -478,8 +440,8 @@ class TestUGMPosixGroups(NodeTestCase):
         groups = ugm.groups
 
         # There's an ids property on principals base class
-        self.assertEqual(users.ids, [u'uid0', u'uid1', u'uid2'])
-        self.assertEqual(groups.ids, [u'group0', u'group1', u'group2'])
+        self.assertEqual(users.ids, ['uid0', 'uid1', 'uid2'])
+        self.assertEqual(groups.ids, ['group0', 'group1', 'group2'])
 
     @posix_groups_ugm
     def test_membership_assignment(self, ugm):
@@ -494,15 +456,16 @@ class TestUGMPosixGroups(NodeTestCase):
             sn='Unterwurzacher',
             uidNumber='99',
             gidNumber='99',
-            homeDirectory='home/sepp'
+            homeDirectory='home/sepp',
         )
         groups['group0'].add('sepp')
         groups['group1'].add('sepp')
         ugm()
 
         self.assertEqual(user.groups, [groups['group0'], groups['group1']])
-        self.assertEqual(user.group_ids, [u'group0', u'group1'])
-        self.checkOutput("""
+        self.assertEqual(user.group_ids, ['group0', 'group1'])
+        self.checkOutput(
+            """
         <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
           <class 'node.ext.ldap.ugm._api.Users'>: users
             <class 'node.ext.ldap.ugm._api.User'>: uid0
@@ -521,11 +484,14 @@ class TestUGMPosixGroups(NodeTestCase):
               <class 'node.ext.ldap.ugm._api.User'>: uid0
               <class 'node.ext.ldap.ugm._api.User'>: uid1
               <class 'node.ext.ldap.ugm._api.User'>: uid2
-        """, ugm.treerepr())
+        """,
+            ugm.treerepr(),
+        )
 
         del users['sepp']
         ugm()
-        self.checkOutput("""
+        self.checkOutput(
+            """
         <class 'node.ext.ldap.ugm._api.Ugm'>: ugm
           <class 'node.ext.ldap.ugm._api.Users'>: users
             <class 'node.ext.ldap.ugm._api.User'>: uid0
@@ -541,15 +507,17 @@ class TestUGMPosixGroups(NodeTestCase):
               <class 'node.ext.ldap.ugm._api.User'>: uid0
               <class 'node.ext.ldap.ugm._api.User'>: uid1
               <class 'node.ext.ldap.ugm._api.User'>: uid2
-        """, ugm.treerepr())
+        """,
+            ugm.treerepr(),
+        )
 
     @posix_groups_ugm
     def test_no_member_uid_attribute_yet(self, ugm):
         # Test case where group object does not have 'memberUid' attribute
         # set yet.
         node = LDAPNode(
-            u'cn=group0,ou=groups,ou=posixGroups,dc=my-domain,dc=com',
-            props=self.layer['props']
+            'cn=group0,ou=groups,ou=posixGroups,dc=my-domain,dc=com',
+            props=self.layer['props'],
         )
         del node.attrs['memberUid']
         node()
@@ -561,8 +529,8 @@ class TestUGMPosixGroups(NodeTestCase):
         group()
 
         node = LDAPNode(
-            u'cn=group0,ou=groups,ou=posixGroups,dc=my-domain,dc=com',
-            props=self.layer['props']
+            'cn=group0,ou=groups,ou=posixGroups,dc=my-domain,dc=com',
+            props=self.layer['props'],
         )
         self.assertEqual(node.attrs['memberUid'], ['uid0'])
 
@@ -570,8 +538,8 @@ class TestUGMPosixGroups(NodeTestCase):
     def test_inexistent_member_reference(self, ugm):
         # Test case where group contains reference to inexistent member.
         node = LDAPNode(
-            u'cn=group0,ou=groups,ou=posixGroups,dc=my-domain,dc=com',
-            props=self.layer['props']
+            'cn=group0,ou=groups,ou=posixGroups,dc=my-domain,dc=com',
+            props=self.layer['props'],
         )
         node.attrs['memberUid'] = ['uid0', 'inexistent']
         node()
@@ -594,15 +562,12 @@ class TestUGMPosixGroups(NodeTestCase):
         gcfg = layer['gcfg']
         rcfg = RolesConfig(
             baseDN='ou=roles,dc=my-domain,dc=com',
-            attrmap=odict((
-                ('rdn', 'cn'),
-                ('id', 'cn')
-            )),
+            attrmap=odict((('rdn', 'cn'), ('id', 'cn'))),
             scope=SUBTREE,
             queryFilter='(objectClass=posixGroup)',
             objectClasses=['posixGroup'],
             defaults={},
-            strict=False
+            strict=False,
         )
         ugm = Ugm(props=props, ucfg=ucfg, gcfg=gcfg, rcfg=rcfg)
 
@@ -637,33 +602,21 @@ class TestUGMPosixGroups(NodeTestCase):
         self.assertEqual(group.roles, ['viewer', 'editor'])
 
         ugm.roles_storage()
-        err = self.expectError(
-            ValueError,
-            group.add_role,
-            'editor'
-        )
+        err = self.expectError(ValueError, group.add_role, 'editor')
         self.assertEqual(str(err), "Principal already has role 'editor'")
 
         ugm.remove_role('viewer', group)
-        self.assertEqual(ugm.roles_storage.keys(), [u'viewer', u'editor'])
+        self.assertEqual(ugm.roles_storage.keys(), ['viewer', 'editor'])
 
         group.remove_role('editor')
-        self.assertEqual(ugm.roles_storage.keys(), [u'viewer'])
+        self.assertEqual(ugm.roles_storage.keys(), ['viewer'])
         self.assertEqual(ugm.roles_storage.storage.keys(), ['viewer'])
 
         self.expectError(KeyError, ugm.roles_storage.__getitem__, 'editor')
-        err = self.expectError(
-            ValueError,
-            group.remove_role,
-            'editor'
-        )
+        err = self.expectError(ValueError, group.remove_role, 'editor')
         self.assertEqual(str(err), "Role not exists 'editor'")
 
-        err = self.expectError(
-            ValueError,
-            group.remove_role,
-            'viewer'
-        )
+        err = self.expectError(ValueError, group.remove_role, 'viewer')
         self.assertEqual(str(err), "Principal does not has role 'viewer'")
 
         ugm.roles_storage()

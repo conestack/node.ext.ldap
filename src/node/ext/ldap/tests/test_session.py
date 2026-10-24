@@ -31,18 +31,26 @@ class TestSession(NodeTestCase):
         self.assertTrue(len(cookie) > 0)
         self.assertEqual(len(res), 2)
 
-        res, cookie = session.search('(objectClass=*)', SUBTREE, page_size=2, cookie=cookie)
+        res, cookie = session.search(
+            '(objectClass=*)', SUBTREE, page_size=2, cookie=cookie
+        )
         self.assertTrue(len(cookie) > 0)
         self.assertEqual(len(res), 2)
 
-        res, cookie = session.search('(objectClass=*)', SUBTREE, page_size=3, cookie=cookie)
+        res, cookie = session.search(
+            '(objectClass=*)', SUBTREE, page_size=3, cookie=cookie
+        )
         self.assertTrue(len(cookie) == 0)
         self.assertEqual(len(res), 3)
 
-        res, cookie = session.search('(objectClass=*)', SUBTREE, page_size=2, cookie=cookie)
+        res, cookie = session.search(
+            '(objectClass=*)', SUBTREE, page_size=2, cookie=cookie
+        )
         self.assertEqual(len(res), 2)
 
-        res, cookie = session.search('(objectClass=*)', SUBTREE, page_size=2, cookie=cookie)
+        res, cookie = session.search(
+            '(objectClass=*)', SUBTREE, page_size=2, cookie=cookie
+        )
         self.assertEqual(len(res), 2)
 
         # Add an entry
@@ -58,31 +66,40 @@ class TestSession(NodeTestCase):
 
         # Modify this entry and check the result
         res = session.search('(cn=foo)', SUBTREE)
-        self.assertEqual(res, [(
-            'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
-            {'objectClass': [b'person', b'top'], 'cn': [b'foo'], 'sn': [b'bar']}
-        )])
+        self.assertEqual(
+            res,
+            [
+                (
+                    'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
+                    {'objectClass': [b'person', b'top'], 'cn': [b'foo'], 'sn': [b'bar']},
+                )
+            ],
+        )
 
         session.modify(res[0][0], [(MOD_REPLACE, 'sn', b'baz')])
         res = session.search('(cn=foo)', SUBTREE)
-        self.assertEqual(res, [(
-            'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
-            {'objectClass': [b'person', b'top'], 'cn': [b'foo'], 'sn': [b'baz']}
-        )])
+        self.assertEqual(
+            res,
+            [
+                (
+                    'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
+                    {'objectClass': [b'person', b'top'], 'cn': [b'foo'], 'sn': [b'baz']},
+                )
+            ],
+        )
 
         # Query only specific attributes
         res = session.search('(cn=foo)', SUBTREE, attrlist=('sn',))
-        self.assertEqual(res, [(
-            'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
-            {'sn': [b'baz']}
-        )])
+        self.assertEqual(
+            res,
+            [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com', {'sn': [b'baz']})],
+        )
 
         # And only the attributes without the values
         res = session.search('(cn=foo)', SUBTREE, attrlist=('sn',), attrsonly=True)
-        self.assertEqual(res, [(
-            'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
-            {'sn': []}
-        )])
+        self.assertEqual(
+            res, [('cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com', {'sn': []})]
+        )
 
         # Delete this entry and check the result
         session.delete(res[0][0])
@@ -95,25 +112,42 @@ class TestSession(NodeTestCase):
         session = LDAPSession(LDAPProps())
         res = session.checkServerProperties()
         self.assertEqual(res[0], False)
-        self.assertEqual(res[1].args[0], {
-            'result': -1,
-            'desc': "Can't contact LDAP server",
-            'errno': 107,
-            'ctrls': [],
-            'info': 'Transport endpoint is not connected'
-        })
+        self.assertEqual(
+            res[1].args[0],
+            {
+                'result': -1,
+                'desc': "Can't contact LDAP server",
+                'errno': 107,
+                'ctrls': [],
+                'info': 'Transport endpoint is not connected',
+            },
+        )
+
+    def test_authenticate_logs_client_certificate_without_key(self):
+        session = LDAPSession(
+            LDAPProps(uri=props.uri, tls_clcertfile='/path/to/cert.pem')
+        )
+        with (
+            mock.patch('ldap.initialize', return_value=mock.Mock()),
+            self.assertLogs('node.ext.ldap', level='ERROR') as log,
+        ):
+            session.authenticate('cn=user,dc=my-domain,dc=com', 'secret')
+        self.assertEqual(
+            log.records[0].getMessage(),
+            'Only client certificate or key have been provided.',
+        )
 
     def test_authenticate_with_start_tls(self):
         session = LDAPSession(LDAPProps(uri=props.uri, start_tls=True))
         connection = mock.Mock()
         with mock.patch('ldap.initialize', return_value=connection):
-            authenticated = session.authenticate(
-                'cn=user,dc=my-domain,dc=com',
-                'secret'
-            )
+            authenticated = session.authenticate('cn=user,dc=my-domain,dc=com', 'secret')
         self.assertTrue(authenticated)
-        self.assertEqual(connection.method_calls, [
-            mock.call.set_option(ldap.OPT_REFERRALS, 0),
-            mock.call.start_tls_s(),
-            mock.call.simple_bind_s('cn=user,dc=my-domain,dc=com', 'secret')
-        ])
+        self.assertEqual(
+            connection.method_calls,
+            [
+                mock.call.set_option(ldap.OPT_REFERRALS, 0),
+                mock.call.start_tls_s(),
+                mock.call.simple_bind_s('cn=user,dc=my-domain,dc=com', 'secret'),
+            ],
+        )

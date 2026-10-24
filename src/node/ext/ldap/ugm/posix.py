@@ -43,6 +43,7 @@ def uidNumber(node, uid):
     XXX: gets called by samba defaults
     """
     from node.ext.ldap.ugm import posix
+
     if not node:
         return posix.UID_NUMBER
     existing = node.search(criteria={'uidNumber': '*'}, attrlist=['uidNumber'])
@@ -65,6 +66,7 @@ def gidNumber(node, uid):
     XXX: gets called by samba defaults
     """
     from node.ext.ldap.ugm import posix
+
     if not node:
         return posix.GID_NUMBER
     existing = node.search(criteria={'gidNumber': '*'}, attrlist=['gidNumber'])

@@ -13,7 +13,6 @@ TESTLDAP_ENV = 'node.ext.ldap.testldap.env'
 
 
 class TestTesting(NodeTestCase):
-
     def test_slapd_teardown_stops_server_started_by_slapd_script(self):
         slapd = testing.Slapd(bases=(), name='TestSlapd')
         with tempfile.TemporaryDirectory() as confdir:
@@ -29,9 +28,7 @@ class TestTesting(NodeTestCase):
 
     def test_ldif_teardown_reports_failing_registry_pop(self):
         ldif = testing.Ldif(
-            testing.resource('ldifs/base.ldif'),
-            bases=(),
-            name='TestLdif'
+            testing.resource('ldifs/base.ldif'), bases=(), name='TestLdif'
         )
         error = ValueError('popGlobalRegistry() called out of sync')
         # ``subprocess.call`` is mocked to keep ``ldapdelete`` away from the

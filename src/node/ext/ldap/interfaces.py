@@ -13,14 +13,13 @@ class ICacheProviderFactory(Interface):
 
     Must be registered as utility.
     """
+
     def __call__():
-        """See above.
-        """
+        """See above."""
 
 
 class ILDAPProps(Interface):
-    """LDAP properties configuration interface.
-    """
+    """LDAP properties configuration interface."""
 
     uri = Attribute('LDAP URI')
 
@@ -60,8 +59,7 @@ class ILDAPProps(Interface):
 
 
 class ILDAPPrincipalsConfig(Interface):
-    """LDAP principals configuration interface.
-    """
+    """LDAP principals configuration interface."""
 
     baseDN = Attribute('Principals base DN')
 
@@ -119,18 +117,15 @@ class ILDAPPrincipalsConfig(Interface):
 
 
 class ILDAPUsersConfig(ILDAPPrincipalsConfig):
-    """LDAP users configuration interface.
-    """
+    """LDAP users configuration interface."""
 
 
 class ILDAPGroupsConfig(ILDAPPrincipalsConfig):
-    """LDAP groups configuration interface.
-    """
+    """LDAP groups configuration interface."""
 
 
 class ILDAPStorage(IMappingStorage):
-    """A LDAP Node.
-    """
+    """A LDAP Node."""
 
     ldap_session = Attribute('``node.ext.ldap.session.LDAPSession`` instance.')
 
@@ -161,10 +156,20 @@ class ILDAPStorage(IMappingStorage):
         :param key: Child key.
         """
 
-    def search(queryFilter=None, criteria=None, attrlist=None,
-               relation=None, relation_node=None, exact_match=False,
-               or_search=False, or_keys=None, or_values=None,
-               page_size=None, cookie=None, get_nodes=False):
+    def search(
+        queryFilter=None,
+        criteria=None,
+        attrlist=None,
+        relation=None,
+        relation_node=None,
+        exact_match=False,
+        or_search=False,
+        or_keys=None,
+        or_values=None,
+        page_size=None,
+        cookie=None,
+        get_nodes=False,
+    ):
         """Search the directors.
 
         All search criteria are additive and will be ``&``ed. ``queryFilter``
@@ -217,25 +222,20 @@ class ILDAPStorage(IMappingStorage):
 
 
 class ILDAPNodeCreatedEvent(INodeCreatedEvent):
-    """new LDAP node was born.
-    """
+    """new LDAP node was born."""
 
 
 class ILDAPNodeAddedEvent(INodeAddedEvent):
-    """LDAP node has been added to its parent.
-    """
+    """LDAP node has been added to its parent."""
 
 
 class ILDAPNodeModifiedEvent(INodeModifiedEvent):
-    """LDAP node has been modified.
-    """
+    """LDAP node has been modified."""
 
 
 class ILDAPNodeRemovedEvent(INodeRemovedEvent):
-    """LDAP node has been removed from its parent.
-    """
+    """LDAP node has been removed from its parent."""
 
 
 class ILDAPNodeDetachedEvent(INodeDetachedEvent):
-    """LDAP node has been detached from its parent.
-    """
+    """LDAP node has been detached from its parent."""

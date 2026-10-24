@@ -23,14 +23,14 @@ parser.add_argument(
     nargs=1,
     action='store',
     choices=['start', 'stop'],
-    help='start or stop LDAP server'
+    help='start or stop LDAP server',
 )
 parser.add_argument(
     'ldiflayer',
     nargs='?',
     default='base',
     choices=testing.ldif_layer.keys(),
-    help='Predefined LDIF Layer to load.'
+    help='Predefined LDIF Layer to load.',
 )
 
 
@@ -62,10 +62,10 @@ def mk_ldif(ldif):
 
 def _read_file(path):
     try:
-        with open(path, 'r') as file:
+        with open(path) as file:
             ret = file.read()
         return ret
-    except IOError:
+    except OSError:
         return None
 
 
@@ -114,7 +114,7 @@ def slapd():
         # XXX should check for distinct slapd
         checkslapd = 'ps ax| grep slapd| grep -v grep -q'
         if not subprocess.call(checkslapd, shell=True) == 1:
-            print(u"LDAP already running. abort.")
+            print('LDAP already running. abort.')
             sys.exit(2)
         startslapd(layer, ns.ldiflayer)
     else:

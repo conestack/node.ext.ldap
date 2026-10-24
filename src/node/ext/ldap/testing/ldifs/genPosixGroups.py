@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import sys
 
-base = "ou=posixGroups_%(nusers)s_%(ngroups)s,dc=my-domain,dc=com"
-domain = "posixGroups_%(nusers)s_%(ngroups)s.com"
+
+base = 'ou=posixGroups_%(nusers)s_%(ngroups)s,dc=my-domain,dc=com'
+domain = 'posixGroups_%(nusers)s_%(ngroups)s.com'
 
 base_template = """\
 dn: %(base)s
@@ -65,7 +66,7 @@ objectClass: top
 memberUid: nobody
 """
 
-member_template = "memberUid: uid%(n)s"
+member_template = 'memberUid: uid%(n)s'
 
 nusers = int(sys.argv.pop(1))
 ngroups = int(sys.argv.pop(1))
@@ -73,7 +74,7 @@ ngroups = int(sys.argv.pop(1))
 base = base % dict(nusers=nusers, ngroups=ngroups)
 domain = domain % dict(nusers=nusers, ngroups=ngroups)
 
-if len(sys.argv) > 1 and sys.argv[-1] == "add":
+if len(sys.argv) > 1 and sys.argv[-1] == 'add':
     print(users_add_template % dict(base=base))
     print(groups_add_template % dict(base=base))
     exit(0)
@@ -83,21 +84,27 @@ print(users_template % dict(base=base))
 print(groups_template % dict(base=base))
 
 for nu in range(nusers):
-    print(user_template % dict(
-        base=base,
-        domain=domain,
-        n=nu,
-        uid_num=nu,
-        gid_num=nu,
-    ))
+    print(
+        user_template
+        % dict(
+            base=base,
+            domain=domain,
+            n=nu,
+            uid_num=nu,
+            gid_num=nu,
+        )
+    )
     print('')
 
 for ng in range(ngroups):
-    print(group_template % dict(
-        base=base,
-        n=ng,
-        gid_num=ng,
-    ))
+    print(
+        group_template
+        % dict(
+            base=base,
+            n=ng,
+            gid_num=ng,
+        )
+    )
     for nu in range(ng + 1):
         print(member_template % dict(n=nu))
     print('')

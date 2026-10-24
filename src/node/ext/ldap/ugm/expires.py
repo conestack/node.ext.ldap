@@ -22,12 +22,7 @@ class AccountExpiration:
     inaccurate.
     """
 
-    def __init__(
-        self,
-        attribute,
-        unit=EXPIRATION_SECONDS,
-        whitelist=['-1', '99999']
-    ):
+    def __init__(self, attribute, unit=EXPIRATION_SECONDS, whitelist=['-1', '99999']):
         """Create account expiration handler.
 
         :param attribute: The attribute name containing expiration information.
@@ -99,8 +94,7 @@ account_expiration = dict()
 
 # XXX: whitelist=['0']
 account_expiration['shadowExpire'] = AccountExpiration(
-    'shadowExpire',
-    unit=EXPIRATION_DAYS
+    'shadowExpire', unit=EXPIRATION_DAYS
 )
 # account_expiration['AccountExpires'] = AccountExpiration(
 #     'AccountExpires',

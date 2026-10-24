@@ -1,4 +1,3 @@
-from datetime import datetime
 from ldap.dn import explode_dn
 from node.behaviors import Alias
 from node.behaviors import Attributes
@@ -16,10 +15,10 @@ from node.ext.ldap.interfaces import ILDAPUsersConfig as IUsersConfig
 from node.ext.ldap.scope import BASE
 from node.ext.ldap.scope import ONELEVEL
 from node.ext.ldap.ugm.defaults import creation_defaults
+from node.ext.ldap.ugm.expires import account_expiration
 from node.ext.ldap.ugm.expires import AccountExpiration
 from node.ext.ldap.ugm.expires import EXPIRATION_DAYS
 from node.ext.ldap.ugm.expires import EXPIRATION_SECONDS  # noqa
-from node.ext.ldap.ugm.expires import account_expiration
 from node.ext.ldap.ugm.samba import sambaLMPassword
 from node.ext.ldap.ugm.samba import sambaNTPassword
 from node.ext.ugm import Group as UgmGroup
@@ -38,7 +37,6 @@ from plumber import plumbing
 from zope.interface import implementer
 import ldap
 import logging
-import time
 
 
 logger = logging.getLogger('node.ext.ldap')
@@ -68,8 +66,7 @@ MEMBER_LOOKUP_BY_CLASS = {
 }
 
 
-class PrincipalsConfig(object):
-
+class PrincipalsConfig:
     def __init__(
         self,
         baseDN='',
@@ -83,7 +80,7 @@ class PrincipalsConfig(object):
         recursiveGroups=False,
         memberOfExternalGroupDNs=[],
         expiresAttr=None,
-        expiresUnit=EXPIRATION_DAYS
+        expiresUnit=EXPIRATION_DAYS,
     ):
         self.baseDN = baseDN
         self.attrmap = attrmap
@@ -106,14 +103,12 @@ class PrincipalsConfig(object):
 
 @implementer(IUsersConfig)
 class UsersConfig(PrincipalsConfig):
-    """Define how users look and where they are.
-    """
+    """Define how users look and where they are."""
 
 
 @implementer(IGroupsConfig)
 class GroupsConfig(PrincipalsConfig):
-    """Define how groups look and where they are.
-    """
+    """Define how groups look and where they are."""
 
 
 class RolesConfig(PrincipalsConfig):
@@ -123,13 +118,8 @@ class RolesConfig(PrincipalsConfig):
     """
 
 
-@plumbing(
-    Alias,
-    MappingConstraints,
-    MappingAdopt,
-    MappingNode,
-    MappingStorage)
-class PrincipalAliasedAttributes(object):
+@plumbing(Alias, MappingConstraints, MappingAdopt, MappingNode, MappingStorage)
+class PrincipalAliasedAttributes:
     child_constraints = None
 
     def __init__(self, context, aliaser=None):
@@ -151,11 +141,10 @@ class PrincipalAliasedAttributes(object):
         return self.context.changed
 
     def __repr__(self):
-        return "Aliased " + self.context.__repr__()
+        return 'Aliased ' + self.context.__repr__()
 
 
 class AliasedPrincipal(Behavior):
-
     @override
     def __init__(self, context, attraliaser):
         self.context = context
@@ -163,10 +152,7 @@ class AliasedPrincipal(Behavior):
 
     @default
     def principal_attributes_factory(self, name=None, parent=None):
-        aliased_attrs = PrincipalAliasedAttributes(
-            self.context.attrs,
-            self.attraliaser
-        )
+        aliased_attrs = PrincipalAliasedAttributes(self.context.attrs, self.attraliaser)
         return aliased_attrs
 
     attributes_factory = finalize(principal_attributes_factory)
@@ -194,7 +180,6 @@ class AliasedPrincipal(Behavior):
 
 
 class LDAPPrincipal(AliasedPrincipal):
-
     @default
     def add_role(self, role):
         self.parent.parent.add_role(role, self)
@@ -225,13 +210,12 @@ class LDAPPrincipal(AliasedPrincipal):
             scope=BASE,
             baseDN=self.context.DN,
             force_reload=self.context._reload,
-            attrlist=['memberOf']
+            attrlist=['memberOf'],
         )
         return entry[0][1].get('memberOf', list())
 
 
 class LDAPUser(LDAPPrincipal, UgmUser):
-
     @default
     @property
     def groups(self):
@@ -248,10 +232,7 @@ class LDAPUser(LDAPPrincipal, UgmUser):
             res = list()
             for dn in self.member_of_attr:
                 dn = ensure_text(dn)
-                matching_group_dns = {
-                    gdn for gdn in group_dns
-                    if dn.endswith(gdn)
-                }
+                matching_group_dns = {gdn for gdn in group_dns if dn.endswith(gdn)}
                 if not matching_group_dns:
                     # Skip DN outside groups base DN
                     continue
@@ -279,8 +260,7 @@ class LDAPUser(LDAPPrincipal, UgmUser):
             # role id's as well.
             # XXX: such edge cases should be resolved at UGM init time
             matches_generator = groups.context.batched_search(
-                criteria=criteria,
-                attrlist=attrlist
+                criteria=criteria, attrlist=attrlist
             )
             res = [att[groups._key_attr][0] for _, att in matches_generator]
         return res
@@ -309,16 +289,12 @@ class LDAPUser(LDAPPrincipal, UgmUser):
         account_expires.set(self.context.attrs, value)
 
 
-@plumbing(
-    LDAPUser,
-    Attributes,
-    MappingNode)
-class User(object):
+@plumbing(LDAPUser, Attributes, MappingNode)
+class User:
     pass
 
 
 class LDAPGroupMapping(Behavior):
-
     @override
     def __getitem__(self, key):
         key = ensure_text(key)
@@ -381,12 +357,9 @@ class LDAPGroupMapping(Behavior):
                 criteria = {'memberOf': self.context.DN}
                 attrlist = [users._key_attr]
                 matches_generator = users.context.batched_search(
-                    criteria=criteria,
-                    attrlist=attrlist
+                    criteria=criteria, attrlist=attrlist
                 )
-                return [
-                    att[users._key_attr][0] for _, att in matches_generator
-                ]
+                return [att[users._key_attr][0] for _, att in matches_generator]
         ret = list()
         members = self.context.attrs.get(self._member_attribute, list())
         for member in members:
@@ -410,7 +383,6 @@ class LDAPGroupMapping(Behavior):
 
 
 class LDAPGroup(LDAPGroupMapping, LDAPPrincipal, UgmGroup):
-
     @default
     def related_principals(self, key=None):
         return self.parent.parent.users
@@ -452,12 +424,8 @@ class LDAPGroup(LDAPGroupMapping, LDAPPrincipal, UgmGroup):
         return ret
 
 
-@plumbing(
-    LDAPGroup,
-    MappingConstraints,
-    Attributes,
-    MappingNode)
-class Group(object):
+@plumbing(LDAPGroup, MappingConstraints, Attributes, MappingNode)
+class Group:
     pass
 
 
@@ -498,10 +466,7 @@ class LDAPPrincipals(OdictStorage):
             return
         account_expires = account_expiration.get(expiresAttr)
         if not account_expires:
-            account_expires = AccountExpiration(
-                attribute=expiresAttr,
-                unit=expiresUnit
-            )
+            account_expires = AccountExpiration(attribute=expiresAttr, unit=expiresUnit)
         self.account_expires = account_expires
 
     @default
@@ -547,19 +512,18 @@ class LDAPPrincipals(OdictStorage):
             if not res:
                 raise KeyError(key)
             if len(res) > 1:  # pragma: no cover
-                msg = u'More than one principal with id "{0}" found.'
+                msg = 'More than one principal with id "{0}" found.'
                 logger.warning(msg.format(key))
             prdn = res[0][1]['rdn']
             if prdn in self.context._deleted_children:
                 raise KeyError(key)
             dn = res[0][0]
-            path = explode_dn(dn)[:len(self.context.DN.split(',')) * -1]
+            path = explode_dn(dn)[: len(self.context.DN.split(',')) * -1]
             context = self.context
             for rdn in reversed(path):
                 context = context[rdn]
             principal = self.principal_factory(
-                context,
-                attraliaser=self.principal_attraliaser
+                context, attraliaser=self.principal_attraliaser
             )
             principal.__name__ = key
             principal.__parent__ = self
@@ -582,9 +546,9 @@ class LDAPPrincipals(OdictStorage):
     @locktree
     def __setitem__(self, name, value):
         if not isinstance(value, self.principal_factory):
-            raise ValueError(u"Given value not instance of '{0}'".format(
-                self.principal_factory.__name__
-            ))
+            raise ValueError(
+                f"Given value not instance of '{self.principal_factory.__name__}'"
+            )
         # XXX: check if there is valid user context
         exists = False
         try:
@@ -593,9 +557,7 @@ class LDAPPrincipals(OdictStorage):
         except KeyError:
             pass
         if exists:
-            raise KeyError(
-                u"Principal with id '{0}' already exists.".format(name)
-            )
+            raise KeyError(f"Principal with id '{name}' already exists.")
         value.__name__ = name
         value.__parent__ = self
         self.storage[name] = value
@@ -608,8 +570,7 @@ class LDAPPrincipals(OdictStorage):
     @default
     @locktree
     def invalidate(self, key=None):
-        """Invalidate LDAPPrincipals.
-        """
+        """Invalidate LDAPPrincipals."""
         if key is None:
             self.context.invalidate()
             self.storage.clear()
@@ -645,14 +606,21 @@ class LDAPPrincipals(OdictStorage):
         if dct is None:
             return None
         unalias = self.principal_attraliaser.unalias
-        unaliased_dct = dict(
-            [(unalias(key), val) for key, val in dct.items()])
+        unaliased_dct = dict([(unalias(key), val) for key, val in dct.items()])
         return unaliased_dct
 
     @default
-    def raw_search(self, criteria=None, attrlist=None,
-                   exact_match=False, or_search=False, or_keys=None,
-                   or_values=None, page_size=None, cookie=None):
+    def raw_search(
+        self,
+        criteria=None,
+        attrlist=None,
+        exact_match=False,
+        or_search=False,
+        or_keys=None,
+        or_values=None,
+        page_size=None,
+        cookie=None,
+    ):
         search_attrlist = [self._key_attr]
         if attrlist is not None and self._key_attr not in attrlist:
             search_attrlist += attrlist
@@ -665,10 +633,10 @@ class LDAPPrincipals(OdictStorage):
                 or_keys=or_keys,
                 or_values=or_values,
                 page_size=page_size,
-                cookie=cookie
+                cookie=cookie,
             )
         except ldap.NO_SUCH_OBJECT:  # pragma: no cover
-            logger.debug("LDAPPrincipals.raw_search: ldap.NO_SUCH_OBJECT")
+            logger.debug('LDAPPrincipals.raw_search: ldap.NO_SUCH_OBJECT')
             return []
         if isinstance(results, tuple):
             results, cookie = results
@@ -692,8 +660,7 @@ class LDAPPrincipals(OdictStorage):
         return results
 
     @default
-    def search(self, criteria=None, attrlist=None,
-               exact_match=False, or_search=False):
+    def search(self, criteria=None, attrlist=None, exact_match=False, or_search=False):
         result = []
         cookie = ''
         while True:
@@ -703,7 +670,7 @@ class LDAPPrincipals(OdictStorage):
                 exact_match=exact_match,
                 or_search=or_search,
                 page_size=self.context.ldap_session._props.page_size,
-                cookie=cookie
+                cookie=cookie,
             )
             result += chunk
             if not cookie:
@@ -717,8 +684,7 @@ class LDAPPrincipals(OdictStorage):
         # create principal with LDAPNode as context
         context = LDAPNode()
         principal = self.principal_factory(
-            context,
-            attraliaser=self.principal_attraliaser
+            context, attraliaser=self.principal_attraliaser
         )
         # ensure id on attributes
         kw['id'] = pid
@@ -732,10 +698,7 @@ class LDAPPrincipals(OdictStorage):
         self[pid] = principal
         # if setting principal has been successful, hook up principal context
         # to ldap tree
-        rdn = u'{0}={1}'.format(
-            self._rdn_attr,
-            principal.context.attrs[self._rdn_attr]
-        )
+        rdn = f'{self._rdn_attr}={principal.context.attrs[self._rdn_attr]}'
         self.context[rdn] = context
         # return newly created principal
         return self[pid]
@@ -770,7 +733,7 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
         if not res:
             return ensure_text(login)
         if len(res) > 1:  # pragma: no cover
-            msg = u'More than one principal with login "{0}" found.'
+            msg = 'More than one principal with login "{0}" found.'
             logger.warning(msg.format(login))
         return ensure_text(res[0][1][self._key_attr][0])
 
@@ -793,17 +756,14 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
         if not res:
             return False
         if len(res) > 1:  # pragma: no cover
-            msg = u'More than one principal with login "{0}" found.'
+            msg = 'More than one principal with login "{0}" found.'
             logger.warning(msg.format(user_id))
         if account_expires:
             try:
                 expired = account_expires.expired(res[0][1])
             except ValueError:
                 # unknown expires field data
-                msg = (
-                    u"Accound expiration flag for user '{0}' "
-                    u"contains unknown data"
-                )
+                msg = "Accound expiration flag for user '{0}' contains unknown data"
                 logger.error(msg.format(id))
                 return False
             if expired:
@@ -825,7 +785,7 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
         if not res:
             raise KeyError(id)
         if len(res) > 1:  # pragma: no cover
-            msg = u'More than one principal with login "{0}" found.'
+            msg = 'More than one principal with login "{0}" found.'
             logger.warning(msg.format(user_id))
         user_dn = res[0][1]['dn']
         self.context.ldap_session.passwd(user_dn, oldpw, newpw)
@@ -838,13 +798,8 @@ class LDAPUsers(LDAPPrincipals, UgmUsers):
             user_node()
 
 
-@plumbing(
-    LDAPUsers,
-    MappingConstraints,
-    MappingAdopt,
-    Attributes,
-    MappingNode)
-class Users(object):
+@plumbing(LDAPUsers, MappingConstraints, MappingAdopt, Attributes, MappingNode)
+class Users:
     pass
 
 
@@ -852,11 +807,7 @@ def member_format(object_classes):
     for object_class in MEMBER_LOOKUP_BY_CLASS:
         if object_class in object_classes:
             return MEMBER_LOOKUP_BY_CLASS[object_class]['format']
-    raise Exception(
-        u"Can not lookup member format for object-classes: {0}".format(
-            object_classes,
-        )
-    )
+    raise Exception(f'Can not lookup member format for object-classes: {object_classes}')
 
 
 def member_attribute(object_classes):
@@ -864,14 +815,11 @@ def member_attribute(object_classes):
         if object_class in object_classes:
             return MEMBER_LOOKUP_BY_CLASS[object_class]['attribute']
     raise Exception(
-        u"Can not lookup member attribute for object-classes: {0}".format(
-            object_classes,
-        )
+        f'Can not lookup member attribute for object-classes: {object_classes}'
     )
 
 
 class LDAPGroupsMapping(LDAPPrincipals, UgmGroups):
-
     @default
     @property
     def _member_format(self):
@@ -918,18 +866,12 @@ class LDAPGroups(LDAPGroupsMapping):
         del self.storage[key]
 
 
-@plumbing(
-    LDAPGroups,
-    MappingConstraints,
-    MappingAdopt,
-    Attributes,
-    MappingNode)
-class Groups(object):
+@plumbing(LDAPGroups, MappingConstraints, MappingAdopt, Attributes, MappingNode)
+class Groups:
     pass
 
 
 class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
-
     @default
     def related_principals(self, key):
         ugm = self.parent.parent
@@ -945,7 +887,7 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
         groups = ugm.groups
         ret = [key for key in users]
         for key in groups:
-            ret.append('group:{}'.format(key))
+            ret.append(f'group:{key}')
         return ret
 
     @default
@@ -963,7 +905,7 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
             group_members = list()
             for dn in members:
                 try:
-                    group_members.append('group:{}'.format(groups.idbydn(dn, True)))
+                    group_members.append(f'group:{groups.idbydn(dn, True)}')
                 except KeyError:
                     pass
             members = user_members + group_members
@@ -1019,12 +961,8 @@ class LDAPRole(LDAPGroupMapping, AliasedPrincipal):
         self.context()
 
 
-@plumbing(
-    LDAPRole,
-    MappingConstraints,
-    Attributes,
-    MappingNode)
-class Role(object):
+@plumbing(LDAPRole, MappingConstraints, Attributes, MappingNode)
+class Role:
     pass
 
 
@@ -1032,21 +970,16 @@ class LDAPRoles(LDAPGroupsMapping):
     principal_factory = default(Role)
 
 
-@plumbing(
-    LDAPRoles,
-    MappingConstraints,
-    MappingAdopt,
-    Attributes,
-    MappingNode)
-class Roles(object):
+@plumbing(LDAPRoles, MappingConstraints, MappingAdopt, Attributes, MappingNode)
+class Roles:
     pass
 
 
 class LDAPUgm(UgmBase):
-
     @override
-    def __init__(self, name=None, parent=None, props=None,
-                 ucfg=None, gcfg=None, rcfg=None):
+    def __init__(
+        self, name=None, parent=None, props=None, ucfg=None, gcfg=None, rcfg=None
+    ):
         """
         :param name: Node name.
         :param parent: Node parent.
@@ -1081,12 +1014,11 @@ class LDAPUgm(UgmBase):
 
     @override
     def __delitem__(self, key):
-        raise NotImplementedError(u"Operation forbidden on this node.")
+        raise NotImplementedError('Operation forbidden on this node.')
 
     @override
     def __iter__(self):
-        for key in ['users', 'groups']:
-            yield key
+        yield from ['users', 'groups']
 
     @override
     @locktree
@@ -1126,22 +1058,22 @@ class LDAPUgm(UgmBase):
                 ret.append(role.name)
         return ret
 
-# XXX: Below is the logic for querying roles from LDAP via query. Integrate
-#      to use this logic whenever roles are queried and the roles node is
-#      unchanged.
-#        attribute = roles._member_attribute
-#        format = roles._member_format
-#        if format == FORMAT_DN:
-#            criteria = { attribute: principal.context.DN }
-#        elif format == FORMAT_UID:
-#            # XXX: this is hacky. we really need member relations!!!
-#            if isinstance(principal, Group):
-#                attrkey = principal.parent.context._rdn_attr
-#                value = 'group:%s' % principal.context.attrs[attrkey]
-#            else:
-#                value = principal.context.attrs['uid']
-#            criteria = { attribute: value }
-#        return roles.context.search(criteria=criteria)
+    # XXX: Below is the logic for querying roles from LDAP via query. Integrate
+    #      to use this logic whenever roles are queried and the roles node is
+    #      unchanged.
+    #        attribute = roles._member_attribute
+    #        format = roles._member_format
+    #        if format == FORMAT_DN:
+    #            criteria = { attribute: principal.context.DN }
+    #        elif format == FORMAT_UID:
+    #            # XXX: this is hacky. we really need member relations!!!
+    #            if isinstance(principal, Group):
+    #                attrkey = principal.parent.context._rdn_attr
+    #                value = 'group:%s' % principal.context.attrs[attrkey]
+    #            else:
+    #                value = principal.context.attrs['uid']
+    #            criteria = { attribute: value }
+    #        return roles.context.search(criteria=criteria)
 
     @default
     @locktree
@@ -1149,12 +1081,12 @@ class LDAPUgm(UgmBase):
         uid = self._principal_id(principal)
         roles = self._roles
         if roles is None:
-            raise ValueError(u"Role support not configured properly")
+            raise ValueError('Role support not configured properly')
         role = roles.get(rolename)
         if role is None:
             role = roles.create(rolename)
         if uid in role.member_ids:
-            raise ValueError(u"Principal already has role '{}'".format(rolename))
+            raise ValueError(f"Principal already has role '{rolename}'")
         role.add(uid)
 
     @default
@@ -1163,12 +1095,12 @@ class LDAPUgm(UgmBase):
         uid = self._principal_id(principal)
         roles = self._roles
         if roles is None:
-            raise ValueError(u"Role support not configured properly")
+            raise ValueError('Role support not configured properly')
         role = roles.get(rolename)
         if role is None:
-            raise ValueError(u"Role not exists '{}'".format(rolename))
+            raise ValueError(f"Role not exists '{rolename}'")
         if uid not in role.member_ids:
-            raise ValueError(u"Principal does not has role '{}'".format(rolename))
+            raise ValueError(f"Principal does not has role '{rolename}'")
         del role[uid]
         if not role.member_ids:
             parent = role.parent
@@ -1192,7 +1124,7 @@ class LDAPUgm(UgmBase):
     def _principal_id(self, principal):
         uid = principal.name
         if isinstance(principal, Group):
-            uid = 'group:{}'.format(uid)
+            uid = f'group:{uid}'
         return uid
 
     @default
@@ -1208,9 +1140,9 @@ class LDAPUgm(UgmBase):
     Attributes,
     DefaultInit,
     MappingNode,
-    OdictStorage)
-class Ugm(object):
-
+    OdictStorage,
+)
+class Ugm:
     def invalidate(self, key=None):
         if key is None:
             self.storage.clear()

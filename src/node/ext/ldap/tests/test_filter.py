@@ -17,24 +17,15 @@ class TestFilter(NodeTestCase):
         self.assertEqual(str(LDAPFilter(None)), '')
         self.assertEqual(str(LDAPFilter(LDAPFilter(None))), '')
 
-        err = self.expectError(
-            TypeError,
-            lambda: str(LDAPFilter(object()))
-        )
+        err = self.expectError(TypeError, lambda: str(LDAPFilter(object())))
         self.assertEqual(str(err), 'Query filter must be LDAPFilter or string')
 
         # LDAPFilter can be combined with & and | operators. An operand must be
         # either another LDAPFilter, a string or a None type.
-        err = self.expectError(
-            TypeError,
-            lambda: LDAPFilter('(a=*)') & object()
-        )
+        err = self.expectError(TypeError, lambda: LDAPFilter('(a=*)') & object())
         self.assertEqual(str(err), 'unsupported operand type')
 
-        err = self.expectError(
-            TypeError,
-            lambda: LDAPFilter('(a=*)') | object()
-        )
+        err = self.expectError(TypeError, lambda: LDAPFilter('(a=*)') | object())
         self.assertEqual(str(err), 'unsupported operand type')
 
         foo = LDAPFilter('(a=*)') & None
@@ -47,35 +38,27 @@ class TestFilter(NodeTestCase):
 
         foo = LDAPFilter('(a=ä)')
         self.assertEqual(str(foo), '(a=ä)')
-        self.assertEqual(str(foo), str(LDAPFilter(u'(a=ä)')))
+        self.assertEqual(str(foo), str(LDAPFilter('(a=ä)')))
 
         self.assertTrue('a' in foo)
         self.assertFalse('objectClass' in foo)
 
         filter = LDAPFilter('(objectClass=person)')
         filter |= LDAPFilter('(objectClass=some)')
-        self.assertEqual(
-            str(filter),
-            '(|(objectClass=person)(objectClass=some))'
-        )
+        self.assertEqual(str(filter), '(|(objectClass=person)(objectClass=some))')
 
         filter &= LDAPFilter('(objectClass=other)')
         self.assertEqual(
-            str(filter),
-            '(&(|(objectClass=person)(objectClass=some))(objectClass=other))'
+            str(filter), '(&(|(objectClass=person)(objectClass=some))(objectClass=other))'
         )
 
         filter = LDAPFilter('(objectClass=personä)')
         filter |= LDAPFilter('(objectClass=someä)')
-        self.assertEqual(
-            str(filter),
-            '(|(objectClass=personä)(objectClass=someä))'
-        )
+        self.assertEqual(str(filter), '(|(objectClass=personä)(objectClass=someä))')
 
         self.assertTrue('objectClass' in filter)
         self.assertEqual(
-            repr(filter),
-            "LDAPFilter('(|(objectClass=personä)(objectClass=someä))')"
+            repr(filter), "LDAPFilter('(|(objectClass=personä)(objectClass=someä))')"
         )
 
     def test_LDAPDictFilter(self):
@@ -86,55 +69,52 @@ class TestFilter(NodeTestCase):
         criteria = dict(sn='meierä', cn='sepp')
         filter = LDAPDictFilter(criteria, or_search=True)
         self.assertEqual(
-            repr(filter),
-            "LDAPDictFilter(criteria={'cn': 'sepp', 'sn': 'meierä'})"
+            repr(filter), "LDAPDictFilter(criteria={'cn': 'sepp', 'sn': 'meierä'})"
         )
         self.assertEqual(str(filter), '(|(cn=sepp)(sn=meierä))')
 
         criteria = dict(mail='*@example.com', homeDirectory='/home/*')
         other_filter = LDAPDictFilter(criteria)
         self.assertEqual(
-            str(other_filter),
-            '(&(homeDirectory=\\2fhome\\2f*)(mail=*@example.com))'
+            str(other_filter), '(&(homeDirectory=\\2fhome\\2f*)(mail=*@example.com))'
         )
         self.assertEqual(
             str(filter & other_filter),
-            '(&(|(cn=sepp)(sn=meierä))(&(homeDirectory=\\2fhome\\2f*)(mail=*@example.com)))'
+            '(&(|(cn=sepp)(sn=meierä))(&(homeDirectory=\\2fhome\\2f*)(mail=*@example.com)))',
         )
         self.assertEqual(
             str(filter | other_filter),
-            '(|(|(cn=sepp)(sn=meierä))(&(homeDirectory=\\2fhome\\2f*)(mail=*@example.com)))'
+            '(|(|(cn=sepp)(sn=meierä))(&(homeDirectory=\\2fhome\\2f*)(mail=*@example.com)))',
         )
         self.assertEqual(
             str(filter & LDAPFilter('(objectClass=person)')),
-            '(&(|(cn=sepp)(sn=meierä))(objectClass=person))'
+            '(&(|(cn=sepp)(sn=meierä))(objectClass=person))',
         )
 
         # fine-grained control with or_keys and or_values
         criteria = odict((('a', [1, 2]), ('b', [3, 4]), ('c', 5)))
         self.assertEqual(
-            str(LDAPDictFilter(criteria)),
-            '(&(&(&(a=1)(a=2))(&(b=3)(b=4)))(c=5))'
+            str(LDAPDictFilter(criteria)), '(&(&(&(a=1)(a=2))(&(b=3)(b=4)))(c=5))'
         )
         self.assertEqual(
             str(LDAPDictFilter(criteria, or_keys=True)),
-            '(|(|(&(a=1)(a=2))(&(b=3)(b=4)))(c=5))'
+            '(|(|(&(a=1)(a=2))(&(b=3)(b=4)))(c=5))',
         )
         self.assertEqual(
             str(LDAPDictFilter(criteria, or_values=True)),
-            '(&(&(|(a=1)(a=2))(|(b=3)(b=4)))(c=5))'
+            '(&(&(|(a=1)(a=2))(|(b=3)(b=4)))(c=5))',
         )
         self.assertEqual(
             str(LDAPDictFilter(criteria, or_search=True)),
-            '(|(|(|(a=1)(a=2))(|(b=3)(b=4)))(c=5))'
+            '(|(|(|(a=1)(a=2))(|(b=3)(b=4)))(c=5))',
         )
         self.assertEqual(
             str(LDAPDictFilter(criteria, or_search=True, or_keys=False)),
-            '(&(&(|(a=1)(a=2))(|(b=3)(b=4)))(c=5))'
+            '(&(&(|(a=1)(a=2))(|(b=3)(b=4)))(c=5))',
         )
         self.assertEqual(
             str(LDAPDictFilter(criteria, or_search=True, or_values=False)),
-            '(|(|(&(a=1)(a=2))(&(b=3)(b=4)))(c=5))'
+            '(|(|(&(a=1)(a=2))(&(b=3)(b=4)))(c=5))',
         )
 
     def test_LDAPRelationFilter(self):
@@ -152,43 +132,21 @@ class TestFilter(NodeTestCase):
 
         self.assertEqual(str(rel_filter), '(otherUid=123ä)')
 
-        rel_filter = LDAPRelationFilter(
-            node,
-            'someUid:otherUid|someName:otherName'
-        )
-        self.assertEqual(
-            str(rel_filter),
-            '(|(otherName=Name)(otherUid=123ä))'
-        )
+        rel_filter = LDAPRelationFilter(node, 'someUid:otherUid|someName:otherName')
+        self.assertEqual(str(rel_filter), '(|(otherName=Name)(otherUid=123ä))')
 
         rel_filter &= LDAPFilter('(objectClass=person)')
         self.assertEqual(
-            str(rel_filter),
-            '(&(|(otherName=Name)(otherUid=123ä))(objectClass=person))'
+            str(rel_filter), '(&(|(otherName=Name)(otherUid=123ä))(objectClass=person))'
         )
 
         rel_filter = LDAPRelationFilter(
-            node,
-            'someUid:otherUid|someName:otherName',
-            False
+            node, 'someUid:otherUid|someName:otherName', False
         )
-        self.assertEqual(
-            str(rel_filter),
-            '(&(otherName=Name)(otherUid=123ä))'
-        )
+        self.assertEqual(str(rel_filter), '(&(otherName=Name)(otherUid=123ä))')
 
-        rel_filter = LDAPRelationFilter(
-            node,
-            'someUid:otherUid|someUid:otherName',
-            False
-        )
-        self.assertEqual(
-            str(rel_filter),
-            '(&(otherName=123ä)(otherUid=123ä))'
-        )
+        rel_filter = LDAPRelationFilter(node, 'someUid:otherUid|someUid:otherName', False)
+        self.assertEqual(str(rel_filter), '(&(otherName=123ä)(otherUid=123ä))')
 
-        rel_filter = LDAPRelationFilter(
-            node,
-            'someUid:otherUid|inexistent:inexistent'
-        )
+        rel_filter = LDAPRelationFilter(node, 'someUid:otherUid|inexistent:inexistent')
         self.assertEqual(str(rel_filter), '(otherUid=123ä)')

@@ -32,13 +32,16 @@ class TestBase(NodeTestCase):
         self.assertEqual(main(), 'success')
 
         sys.argv[-1] = '12346'
-        self.assertEqual(main().args[0], {
-            'result': -1,
-            'desc': "Can't contact LDAP server",
-            'errno': 107,
-            'ctrls': [],
-            'info': 'Transport endpoint is not connected'
-        })
+        self.assertEqual(
+            main().args[0],
+            {
+                'result': -1,
+                'desc': "Can't contact LDAP server",
+                'errno': 107,
+                'ctrls': [],
+                'info': 'Transport endpoint is not connected',
+            },
+        )
 
         sys.argv = []
         self.assertEqual(main(), 'usage: python base.py [server] [port]')
@@ -47,19 +50,22 @@ class TestBase(NodeTestCase):
 
         # Test node.ext.ldap base objects. Test LDAP connectivity
         self.assertEqual(testLDAPConnectivity('127.0.0.1', 12345), 'success')
-        self.assertEqual(testLDAPConnectivity('127.0.0.1', 12346).args[0], {
-            'result': -1,
-            'desc': "Can't contact LDAP server",
-            'errno': 107,
-            'ctrls': [],
-            'info': 'Transport endpoint is not connected'
-        })
+        self.assertEqual(
+            testLDAPConnectivity('127.0.0.1', 12346).args[0],
+            {
+                'result': -1,
+                'desc': "Can't contact LDAP server",
+                'errno': 107,
+                'ctrls': [],
+                'info': 'Transport endpoint is not connected',
+            },
+        )
 
         # LDAP credentials
-        host = "127.0.0.1"
+        host = '127.0.0.1'
         port = 12345
-        binddn = "cn=Manager,dc=my-domain,dc=com"
-        bindpw = "secret"
+        binddn = 'cn=Manager,dc=my-domain,dc=com'
+        bindpw = 'secret'
 
         props = LDAPProps(
             server=host,
@@ -87,10 +93,7 @@ class TestBase(NodeTestCase):
         self.assertEqual(communicator.baseDN, '')
 
         err = self.expectError(
-            ValueError,
-            communicator.search,
-            '(objectClass=*)',
-            SUBTREE
+            ValueError, communicator.search, '(objectClass=*)', SUBTREE
         )
         self.assertEqual(str(err), 'baseDN unset.')
 
@@ -101,18 +104,12 @@ class TestBase(NodeTestCase):
 
         # Test search pagination
         res, cookie = communicator.search(
-            '(objectClass=*)',
-            SUBTREE,
-            page_size=4,
-            cookie=''
+            '(objectClass=*)', SUBTREE, page_size=4, cookie=''
         )
         self.assertEqual(len(res), 4)
 
         res, cookie = communicator.search(
-            '(objectClass=*)',
-            SUBTREE,
-            page_size=4,
-            cookie=cookie
+            '(objectClass=*)', SUBTREE, page_size=4, cookie=cookie
         )
         self.assertEqual(len(res), 3)
 
@@ -120,17 +117,10 @@ class TestBase(NodeTestCase):
 
         # Pagination search fails if cookie but no page size given
         res, cookie = communicator.search(
-            '(objectClass=*)',
-            SUBTREE,
-            page_size=4,
-            cookie=''
+            '(objectClass=*)', SUBTREE, page_size=4, cookie=''
         )
         err = self.expectError(
-            ValueError,
-            communicator.search,
-            '(objectClass=*)',
-            SUBTREE,
-            cookie=cookie
+            ValueError, communicator.search, '(objectClass=*)', SUBTREE, cookie=cookie
         )
         self.assertEqual(str(err), 'cookie passed without page_size')
 
@@ -149,18 +139,28 @@ class TestBase(NodeTestCase):
 
         # Query added entry directly.
         res = communicator.search('(cn=foo)', SUBTREE)
-        self.assertEqual(res, [(
-            'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
-            {'objectClass': [b'person', b'top'], 'cn': [b'foo'], 'sn': [b'bar']}
-        )])
+        self.assertEqual(
+            res,
+            [
+                (
+                    'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
+                    {'objectClass': [b'person', b'top'], 'cn': [b'foo'], 'sn': [b'bar']},
+                )
+            ],
+        )
 
         # Modify this entry and check the result.
         communicator.modify(res[0][0], [(MOD_REPLACE, 'sn', b'baz')])
         res = communicator.search('(cn=foo)', SUBTREE)
-        self.assertEqual(res, [(
-            'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
-            {'objectClass': [b'person', b'top'], 'cn': [b'foo'], 'sn': [b'baz']}
-        )])
+        self.assertEqual(
+            res,
+            [
+                (
+                    'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
+                    {'objectClass': [b'person', b'top'], 'cn': [b'foo'], 'sn': [b'baz']},
+                )
+            ],
+        )
 
         # Finally delete this entry and check the result.
         communicator.delete(res[0][0])
@@ -188,10 +188,15 @@ class TestBase(NodeTestCase):
         # provider is registered. Thus the nullcacheProviderFactory is used.
         # But cache API is used anyways::
         res = communicator.search('(cn=foo)', SUBTREE)
-        self.assertEqual(res, [(
-            'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
-            {'objectClass': [b'person', b'top'], 'cn': [b'foo'], 'sn': [b'bar']}
-        )])
+        self.assertEqual(
+            res,
+            [
+                (
+                    'cn=foo,ou=customer1,ou=customers,dc=my-domain,dc=com',
+                    {'objectClass': [b'person', b'top'], 'cn': [b'foo'], 'sn': [b'bar']},
+                )
+            ],
+        )
 
         # Delete entry
         communicator.delete(res[0][0])
@@ -223,32 +228,27 @@ class TestBase(NodeTestCase):
         self.assertEqual(digest, hashlib.md5(b'key').hexdigest())
 
     def test_cache_key(self):
-        key = cache_key([
-            u'hällo',
-            b'w\xc3\xb6rld',
-            0,
-            None,
-            True,
-            False,
+        key = cache_key(
             [
-                u'hällo',
+                'hällo',
                 b'w\xc3\xb6rld',
                 0,
                 None,
                 True,
-                False
+                False,
+                ['hällo', b'w\xc3\xb6rld', 0, None, True, False],
             ]
-        ])
+        )
         self.assertEqual(
-            key,
-            u'hällo-wörld-0-None-True-False-hällo-wörld-0-None-True-False'
+            key, 'hällo-wörld-0-None-True-False-hällo-wörld-0-None-True-False'
         )
 
     def test_ensure_bytes_py2(self):
         from node.ext.ldap import base
+
         with warnings.catch_warnings(record=True) as log:
             warnings.simplefilter('always')
             ensure_bytes_py2 = base.ensure_bytes_py2
         self.assertEqual(len(log), 1)
         self.assertTrue(issubclass(log[0].category, DeprecationWarning))
-        self.assertEqual(ensure_bytes_py2(u'hällo'), u'hällo')
+        self.assertEqual(ensure_bytes_py2('hällo'), 'hällo')

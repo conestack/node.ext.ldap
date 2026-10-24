@@ -3,11 +3,14 @@ from node.ext.ldap import LDAPCommunicator
 from node.ext.ldap import LDAPConnector
 from node.ext.ldap import testLDAPConnectivity
 import ldap
+import logging
 
 
-class LDAPSession(object):
-    """LDAP Session binds always.
-    """
+logger = logging.getLogger('node.ext.ldap')
+
+
+class LDAPSession:
+    """LDAP Session binds always."""
 
     def __init__(self, props):
         self._props = props
@@ -15,8 +18,7 @@ class LDAPSession(object):
         self._communicator = LDAPCommunicator(connector)
 
     def checkServerProperties(self):
-        """Test if connection can be established.
-        """
+        """Test if connection can be established."""
         res = testLDAPConnectivity(props=self._props)
         if res == 'success':
             return (True, 'OK')
@@ -32,9 +34,17 @@ class LDAPSession(object):
     def baseDN(self, baseDN):
         self._communicator.baseDN = baseDN
 
-    def search(self, queryFilter='(objectClass=*)', scope=BASE, baseDN=None,
-               force_reload=False, attrlist=None, attrsonly=0,
-               page_size=None, cookie=None):
+    def search(
+        self,
+        queryFilter='(objectClass=*)',
+        scope=BASE,
+        baseDN=None,
+        force_reload=False,
+        attrlist=None,
+        attrsonly=0,
+        page_size=None,
+        cookie=None,
+    ):
         if not queryFilter:
             # It makes no sense to really pass these to LDAP, therefore, we
             # interpret them as "don't filter" which in LDAP terms is
@@ -48,7 +58,7 @@ class LDAPSession(object):
             attrlist,
             attrsonly,
             page_size,
-            cookie
+            cookie,
         )
         if page_size:
             res, cookie = res
@@ -62,8 +72,7 @@ class LDAPSession(object):
         self._communicator.add(dn, data)
 
     def authenticate(self, dn, pw):
-        """Verify credentials, but don't rebind the session to that user
-        """
+        """Verify credentials, but don't rebind the session to that user"""
         # Let's bypass connector/communicator until they are sorted out
         if self._props.ignore_cert:  # pragma: no cover
             ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
@@ -74,12 +83,10 @@ class LDAPSession(object):
         if self._props.tls_clcertfile and self._props.tls_clkeyfile:  # pragma: no cover
             ldap.set_option(ldap.OPT_X_TLS_CERTFILE, self._props.tls_clcertfile)
             ldap.set_option(ldap.OPT_X_TLS_KEYFILE, self._props.tls_clkeyfile)
-        elif self._props.tls_clcertfile or self._props.tls_clkeyfile:  # pragma: no cover
-            logger.exception("Only client certificate or key have been provided.")
+        elif self._props.tls_clcertfile or self._props.tls_clkeyfile:
+            logger.exception('Only client certificate or key have been provided.')
         con = ldap.initialize(
-            self._props.uri,
-            bytes_mode=False,
-            bytes_strictness='silent'
+            self._props.uri, bytes_mode=False, bytes_strictness='silent'
         )
         # Turning referrals off since they cause problems with MS Active
         # Directory More info: https://www.python-ldap.org/faq.html#usage

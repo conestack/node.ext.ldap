@@ -10,28 +10,30 @@ class TestProperties(NodeTestCase):
 
     def test_LDAPProps(self):
         # Defaults
-        self.assertEqual(MULTIVALUED_DEFAULTS, set([
-            'member',
-            'memberUid',
-            'uniqueMember',
-            'memberOf'
-        ]))
+        self.assertEqual(
+            MULTIVALUED_DEFAULTS, set(['member', 'memberUid', 'uniqueMember', 'memberOf'])
+        )
 
-        self.assertEqual(BINARY_DEFAULTS, set([
-            'authorityRevocationList',
-            'certificateRevocationList',
-            'supportedAlgorithms',
-            'photo',
-            'deltaRevocationList',
-            'cACertificate',
-            'userCertificate',
-            'userPKCS12',
-            'crossCertificatePair',
-            'objectSid',
-            'userSMIMECertificate',
-            'jpegPhoto',
-            'objectGUID'
-        ]))
+        self.assertEqual(
+            BINARY_DEFAULTS,
+            set(
+                [
+                    'authorityRevocationList',
+                    'certificateRevocationList',
+                    'supportedAlgorithms',
+                    'photo',
+                    'deltaRevocationList',
+                    'cACertificate',
+                    'userCertificate',
+                    'userPKCS12',
+                    'crossCertificatePair',
+                    'objectSid',
+                    'userSMIMECertificate',
+                    'jpegPhoto',
+                    'objectGUID',
+                ]
+            ),
+        )
 
         # Test LDAPProps
         props = LDAPProps(
@@ -51,7 +53,7 @@ class TestProperties(NodeTestCase):
         self.assertEqual(props.tls_clcertfile, None)
         self.assertEqual(props.tls_clkeyfile, None)
         self.assertEqual(props.retry_max, 1)
-        self.assertEqual(props.retry_delay, 10.)
+        self.assertEqual(props.retry_delay, 10.0)
         self.assertEqual(props.multivalued_attributes, MULTIVALUED_DEFAULTS)
         self.assertEqual(props.binary_attributes, BINARY_DEFAULTS)
         self.assertEqual(props.page_size, 1000)

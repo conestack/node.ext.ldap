@@ -2,38 +2,34 @@ from node.ext.ldap.interfaces import ILDAPProps
 from zope.interface import implementer
 
 
-MULTIVALUED_DEFAULTS = set([
-    'member',
-    'uniqueMember',
-    'memberUid',
-    'memberOf'
-])
+MULTIVALUED_DEFAULTS = set(['member', 'uniqueMember', 'memberUid', 'memberOf'])
 
 
-BINARY_DEFAULTS = set([
-    # core.schema
-    'userCertificate',
-    'cACertificate',
-    'authorityRevocationList',
-    'certificateRevocationList',
-    'crossCertificatePair',
-    'supportedAlgorithms',
-    'deltaRevocationList',
-    # inetOrgPerson
-    'userSMIMECertificate',
-    'userPKCS12',
-    'photo',
-    'jpegPhoto',
-    # active directory
-    'objectSid',
-    'objectGUID'
-])
+BINARY_DEFAULTS = set(
+    [
+        # core.schema
+        'userCertificate',
+        'cACertificate',
+        'authorityRevocationList',
+        'certificateRevocationList',
+        'crossCertificatePair',
+        'supportedAlgorithms',
+        'deltaRevocationList',
+        # inetOrgPerson
+        'userSMIMECertificate',
+        'userPKCS12',
+        'photo',
+        'jpegPhoto',
+        # active directory
+        'objectSid',
+        'objectGUID',
+    ]
+)
 
 
 @implementer(ILDAPProps)
-class LDAPServerProperties(object):
-    """Wrapper Class for LDAP Server connection properties.
-    """
+class LDAPServerProperties:
+    """Wrapper Class for LDAP Server connection properties."""
 
     def __init__(
         self,
@@ -112,7 +108,7 @@ class LDAPServerProperties(object):
             # old school
             self.server = server or 'localhost'
             self.port = port or 389
-            uri = 'ldap://{}:{}/'.format(self.server, self.port)
+            uri = f'ldap://{self.server}:{self.port}/'
         self.uri = uri
         self.user = user
         self.password = password

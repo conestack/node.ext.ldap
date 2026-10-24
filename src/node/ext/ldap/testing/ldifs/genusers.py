@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 
+
 container_template = """\
 dn: ou=%(ou)s,dc=my-domain,dc=com
 objectClass: top
@@ -24,11 +25,14 @@ n = int(sys.argv.pop(1))
 
 print(container_template % dict(ou=ou))
 for x in range(n):
-    print(user_template % dict(
-        uid='uid%d' % x,
-        cn='cn%d' % x,
-        mail='uid%d@%s' % (x, ou),
-        ou=ou,
-        password='secret%d' % x,
-        sn='sn%d' % x,
-    ))
+    print(
+        user_template
+        % dict(
+            uid='uid%d' % x,
+            cn='cn%d' % x,
+            mail='uid%d@%s' % (x, ou),
+            ou=ou,
+            password='secret%d' % x,
+            sn='sn%d' % x,
+        )
+    )

@@ -31,6 +31,7 @@ def defaults_container(fn):
             container()
             del root['ou=defaults']
             root()
+
     return wrapper
 
 
@@ -39,102 +40,107 @@ class TestUGMDefaults(NodeTestCase):
 
     def test_defaults(self):
         # Creation defaults
-        self.assertEqual(defaults.creation_defaults['posixAccount'], {
-            'gidNumber': posix.gidNumber,
-            'homeDirectory': posix.homeDirectory,
-            'uidNumber': posix.uidNumber,
-            'cn': posix.cn,
-            'uid': posix.uid
-        })
-        self.assertEqual(defaults.creation_defaults['posixGroup'], {
-            'gidNumber': posix.gidNumber,
-            'cn': posix.cn
-        })
-        self.assertEqual(defaults.creation_defaults['sambaGroupMapping'], {
-            'sambaGroupType': samba.sambaGroupType,
-            'gidNumber': posix.gidNumber,
-            'sambaSID': samba.sambaGroupSID
-        })
-        self.assertEqual(defaults.creation_defaults['sambaSamAccount'], {
-            'sambaSID': samba.sambaUserSID
-        })
-        self.assertEqual(defaults.creation_defaults['shadowAccount'], {
-            'uid': posix.uid
-        })
+        self.assertEqual(
+            defaults.creation_defaults['posixAccount'],
+            {
+                'gidNumber': posix.gidNumber,
+                'homeDirectory': posix.homeDirectory,
+                'uidNumber': posix.uidNumber,
+                'cn': posix.cn,
+                'uid': posix.uid,
+            },
+        )
+        self.assertEqual(
+            defaults.creation_defaults['posixGroup'],
+            {'gidNumber': posix.gidNumber, 'cn': posix.cn},
+        )
+        self.assertEqual(
+            defaults.creation_defaults['sambaGroupMapping'],
+            {
+                'sambaGroupType': samba.sambaGroupType,
+                'gidNumber': posix.gidNumber,
+                'sambaSID': samba.sambaGroupSID,
+            },
+        )
+        self.assertEqual(
+            defaults.creation_defaults['sambaSamAccount'],
+            {'sambaSID': samba.sambaUserSID},
+        )
+        self.assertEqual(defaults.creation_defaults['shadowAccount'], {'uid': posix.uid})
 
     @defaults_container
     def test_posix_account(self, props):
         ucfg = UsersConfig(
             baseDN='ou=defaults,dc=my-domain,dc=com',
-            attrmap=odict((
-                ('rdn', 'cn'),
-                ('id', 'cn')
-            )),
+            attrmap=odict((('rdn', 'cn'), ('id', 'cn'))),
             scope=SUBTREE,
             queryFilter='(objectClass=posixAccount)',
             objectClasses=['account', 'posixAccount'],
-            defaults={}
+            defaults={},
         )
         users = Users(props, ucfg)
         user = users.create('posixuser')
         user()
-        self.assertEqual(sorted(user.context.attrs.items()), [
-            (u'cn', u'posixuser'),
-            (u'gidNumber', u'100'),
-            (u'homeDirectory', u'/home/posixuser'),
-            (u'objectClass', [u'account', u'posixAccount']),
-            (u'uid', u'posixuser'),
-            (u'uidNumber', u'100')
-        ])
+        self.assertEqual(
+            sorted(user.context.attrs.items()),
+            [
+                ('cn', 'posixuser'),
+                ('gidNumber', '100'),
+                ('homeDirectory', '/home/posixuser'),
+                ('objectClass', ['account', 'posixAccount']),
+                ('uid', 'posixuser'),
+                ('uidNumber', '100'),
+            ],
+        )
 
         defaults.creation_defaults['posixAccount']['loginShell'] = posix.loginShell
         ucfg = UsersConfig(
             baseDN='ou=defaults,dc=my-domain,dc=com',
-            attrmap=odict((
-                ('rdn', 'uid'),
-                ('id', 'uid')
-            )),
+            attrmap=odict((('rdn', 'uid'), ('id', 'uid'))),
             scope=SUBTREE,
             queryFilter='(objectClass=posixAccount)',
             objectClasses=['account', 'posixAccount'],
-            defaults={}
+            defaults={},
         )
         users = Users(props, ucfg)
         user = users.create('posixuser1')
         user()
-        self.assertEqual(sorted(user.context.attrs.items()), [
-            (u'cn', u'posixuser1'),
-            (u'gidNumber', u'101'),
-            (u'homeDirectory', u'/home/posixuser1'),
-            (u'loginShell', u'/bin/false'),
-            (u'objectClass', [u'account', u'posixAccount']),
-            (u'uid', u'posixuser1'),
-            (u'uidNumber', u'101')
-        ])
+        self.assertEqual(
+            sorted(user.context.attrs.items()),
+            [
+                ('cn', 'posixuser1'),
+                ('gidNumber', '101'),
+                ('homeDirectory', '/home/posixuser1'),
+                ('loginShell', '/bin/false'),
+                ('objectClass', ['account', 'posixAccount']),
+                ('uid', 'posixuser1'),
+                ('uidNumber', '101'),
+            ],
+        )
         del defaults.creation_defaults['posixAccount']['loginShell']
 
     @defaults_container
     def test_posix_group(self, props):
         gcfg = GroupsConfig(
             baseDN='ou=defaults,dc=my-domain,dc=com',
-            attrmap=odict((
-                ('rdn', 'cn'),
-                ('id', 'cn')
-            )),
+            attrmap=odict((('rdn', 'cn'), ('id', 'cn'))),
             scope=SUBTREE,
             queryFilter='(objectClass=posixGroup)',
             objectClasses=['posixGroup'],
-            defaults={}
+            defaults={},
         )
         groups = Groups(props, gcfg)
         group = groups.create('posixgroup')
         group()
-        self.assertEqual(sorted(group.context.attrs.items()), [
-            (u'cn', u'posixgroup'),
-            (u'gidNumber', u'100'),
-            (u'memberUid', ['nobody']),
-            (u'objectClass', [u'posixGroup'])
-        ])
+        self.assertEqual(
+            sorted(group.context.attrs.items()),
+            [
+                ('cn', 'posixgroup'),
+                ('gidNumber', '100'),
+                ('memberUid', ['nobody']),
+                ('objectClass', ['posixGroup']),
+            ],
+        )
 
     def test_posix_member_uid(self):
         self.assertEqual(posix.memberUid(None, 'cn=posixgroup'), ['nobody'])
@@ -143,22 +149,19 @@ class TestUGMDefaults(NodeTestCase):
     def test_shadow_account(self, props):
         ucfg = UsersConfig(
             baseDN='ou=defaults,dc=my-domain,dc=com',
-            attrmap=odict((
-                ('rdn', 'uid'),
-                ('id', 'uid')
-            )),
+            attrmap=odict((('rdn', 'uid'), ('id', 'uid'))),
             scope=SUBTREE,
             queryFilter='(objectClass=shadowAccount)',
             objectClasses=['account', 'shadowAccount'],
-            defaults={}
+            defaults={},
         )
         users = Users(props, ucfg)
         user = users.create('shadowuser')
         user()
-        self.assertEqual(sorted(user.context.attrs.items()), [
-            (u'objectClass', [u'account', u'shadowAccount']),
-            (u'uid', u'shadowuser')
-        ])
+        self.assertEqual(
+            sorted(user.context.attrs.items()),
+            [('objectClass', ['account', 'shadowAccount']), ('uid', 'shadowuser')],
+        )
 
         shadow_d = defaults.creation_defaults['shadowAccount']
         shadow_d['shadowFlag'] = shadow.shadowFlag
@@ -171,29 +174,29 @@ class TestUGMDefaults(NodeTestCase):
 
         ucfg = UsersConfig(
             baseDN='ou=defaults,dc=my-domain,dc=com',
-            attrmap=odict((
-                ('rdn', 'uid'),
-                ('id', 'uid')
-            )),
+            attrmap=odict((('rdn', 'uid'), ('id', 'uid'))),
             scope=SUBTREE,
             queryFilter='(objectClass=shadowAccount)',
             objectClasses=['account', 'shadowAccount'],
-            defaults={}
+            defaults={},
         )
         users = Users(props, ucfg)
         user = users.create('shadowuser2')
         user()
-        self.assertEqual(sorted(user.context.attrs.items()), [
-            (u'objectClass', [u'account', u'shadowAccount']),
-            (u'shadowExpire', u'99999'),
-            (u'shadowFlag', u'0'),
-            (u'shadowInactive', u'0'),
-            (u'shadowLastChange', u'12011'),
-            (u'shadowMax', u'99999'),
-            (u'shadowMin', u'0'),
-            (u'shadowWarning', u'0'),
-            (u'uid', u'shadowuser2')
-        ])
+        self.assertEqual(
+            sorted(user.context.attrs.items()),
+            [
+                ('objectClass', ['account', 'shadowAccount']),
+                ('shadowExpire', '99999'),
+                ('shadowFlag', '0'),
+                ('shadowInactive', '0'),
+                ('shadowLastChange', '12011'),
+                ('shadowMax', '99999'),
+                ('shadowMin', '0'),
+                ('shadowWarning', '0'),
+                ('uid', 'shadowuser2'),
+            ],
+        )
 
         del shadow_d['shadowFlag']
         del shadow_d['shadowMin']
@@ -207,43 +210,46 @@ class TestUGMDefaults(NodeTestCase):
     def test_samba_account(self, props):
         ucfg = UsersConfig(
             baseDN='ou=defaults,dc=my-domain,dc=com',
-            attrmap=odict((
-                ('rdn', 'cn'),
-                ('id', 'cn')
-            )),
+            attrmap=odict((('rdn', 'cn'), ('id', 'cn'))),
             scope=SUBTREE,
             queryFilter='(objectClass=sambaSamAccount)',
             objectClasses=['account', 'posixAccount', 'sambaSamAccount'],
             defaults={
                 'uid': 'sambauser',
-            }
+            },
         )
         users = Users(props, ucfg)
         user = users.create('sambauser')
         user()
-        self.assertEqual(sorted(user.context.attrs.items()), [
-            (u'cn', u'sambauser'),
-            (u'gidNumber', u'100'),
-            (u'homeDirectory', u'/home/sambauser'),
-            (u'objectClass', [u'account', u'posixAccount', u'sambaSamAccount']),
-            (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-1202'),
-            (u'uid', u'sambauser'),
-            (u'uidNumber', u'100')
-        ])
+        self.assertEqual(
+            sorted(user.context.attrs.items()),
+            [
+                ('cn', 'sambauser'),
+                ('gidNumber', '100'),
+                ('homeDirectory', '/home/sambauser'),
+                ('objectClass', ['account', 'posixAccount', 'sambaSamAccount']),
+                ('sambaSID', 'S-1-5-21-1234567890-1234567890-1234567890-1202'),
+                ('uid', 'sambauser'),
+                ('uidNumber', '100'),
+            ],
+        )
 
         user.passwd(None, 'secret')
         res = sorted(user.context.attrs.items())
-        self.assertEqual(res[:-1], [
-            (u'cn', u'sambauser'),
-            (u'gidNumber', u'100'),
-            (u'homeDirectory', u'/home/sambauser'),
-            (u'objectClass', [u'account', u'posixAccount', u'sambaSamAccount']),
-            (u'sambaLMPassword', u'552902031bede9efaad3b435b51404ee'),
-            (u'sambaNTPassword', u'878d8014606cda29677a44efa1353fc7'),
-            (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-1202'),
-            (u'uid', u'sambauser'),
-            (u'uidNumber', u'100')
-        ])
+        self.assertEqual(
+            res[:-1],
+            [
+                ('cn', 'sambauser'),
+                ('gidNumber', '100'),
+                ('homeDirectory', '/home/sambauser'),
+                ('objectClass', ['account', 'posixAccount', 'sambaSamAccount']),
+                ('sambaLMPassword', '552902031bede9efaad3b435b51404ee'),
+                ('sambaNTPassword', '878d8014606cda29677a44efa1353fc7'),
+                ('sambaSID', 'S-1-5-21-1234567890-1234567890-1234567890-1202'),
+                ('uid', 'sambauser'),
+                ('uidNumber', '100'),
+            ],
+        )
         self.assertEqual(res[-1][0], 'userPassword')
         self.assertTrue(res[-1][1].startswith('{SSHA}'))
 
@@ -254,32 +260,32 @@ class TestUGMDefaults(NodeTestCase):
 
         ucfg = UsersConfig(
             baseDN='ou=defaults,dc=my-domain,dc=com',
-            attrmap=odict((
-                ('rdn', 'cn'),
-                ('id', 'cn')
-            )),
+            attrmap=odict((('rdn', 'cn'), ('id', 'cn'))),
             scope=SUBTREE,
             queryFilter='(objectClass=sambaSamAccount)',
             objectClasses=['account', 'posixAccount', 'sambaSamAccount'],
             defaults={
                 'uid': 'sambauser1',
-            }
+            },
         )
         users = Users(props, ucfg)
         user = users.create('sambauser1')
         user()
-        self.assertEqual(sorted(user.context.attrs.items()), [
-            (u'cn', u'sambauser1'),
-            (u'gidNumber', u'101'),
-            (u'homeDirectory', u'/home/sambauser1'),
-            (u'objectClass', [u'account', u'posixAccount', u'sambaSamAccount']),
-            (u'sambaAcctFlags', u'[U]'),
-            (u'sambaDomainName', u'CONE_UGM'),
-            (u'sambaPrimaryGroupSID', u'S-1-5-21-1234567890-1234567890-1234567890-123'),
-            (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-1202'),
-            (u'uid', u'sambauser1'),
-            (u'uidNumber', u'101')
-        ])
+        self.assertEqual(
+            sorted(user.context.attrs.items()),
+            [
+                ('cn', 'sambauser1'),
+                ('gidNumber', '101'),
+                ('homeDirectory', '/home/sambauser1'),
+                ('objectClass', ['account', 'posixAccount', 'sambaSamAccount']),
+                ('sambaAcctFlags', '[U]'),
+                ('sambaDomainName', 'CONE_UGM'),
+                ('sambaPrimaryGroupSID', 'S-1-5-21-1234567890-1234567890-1234567890-123'),
+                ('sambaSID', 'S-1-5-21-1234567890-1234567890-1234567890-1202'),
+                ('uid', 'sambauser1'),
+                ('uidNumber', '101'),
+            ],
+        )
 
         del samba_d['sambaDomainName']
         del samba_d['sambaPrimaryGroupSID']
@@ -288,32 +294,29 @@ class TestUGMDefaults(NodeTestCase):
     def test_samba_pwd_last_set(self):
         with mock.patch('node.ext.ldap.ugm.samba.time') as time:
             time.time.return_value = 1234567890.5
-            self.assertEqual(
-                samba.sambaPwdLastSet(None, 'uid=sambauser'),
-                '1234567890'
-            )
+            self.assertEqual(samba.sambaPwdLastSet(None, 'uid=sambauser'), '1234567890')
 
     @defaults_container
     def test_samba_group(self, props):
         gcfg = GroupsConfig(
             baseDN='ou=defaults,dc=my-domain,dc=com',
-            attrmap=odict((
-                ('rdn', 'cn'),
-                ('id', 'cn')
-            )),
+            attrmap=odict((('rdn', 'cn'), ('id', 'cn'))),
             scope=SUBTREE,
             queryFilter='(objectClass=sambaGroupMapping)',
             objectClasses=['posixGroup', 'sambaGroupMapping'],
-            defaults={}
+            defaults={},
         )
         groups = Groups(props, gcfg)
         group = groups.create('sambagroup')
         group()
-        self.assertEqual(sorted(group.context.attrs.items()), [
-            (u'cn', u'sambagroup'),
-            (u'gidNumber', u'100'),
-            (u'memberUid', ['nobody']),
-            (u'objectClass', [u'posixGroup', u'sambaGroupMapping']),
-            (u'sambaGroupType', u'2'),
-            (u'sambaSID', u'S-1-5-21-1234567890-1234567890-1234567890-1202')
-        ])
+        self.assertEqual(
+            sorted(group.context.attrs.items()),
+            [
+                ('cn', 'sambagroup'),
+                ('gidNumber', '100'),
+                ('memberUid', ['nobody']),
+                ('objectClass', ['posixGroup', 'sambaGroupMapping']),
+                ('sambaGroupType', '2'),
+                ('sambaSID', 'S-1-5-21-1234567890-1234567890-1234567890-1202'),
+            ],
+        )

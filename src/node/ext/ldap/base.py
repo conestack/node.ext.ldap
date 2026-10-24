@@ -53,11 +53,12 @@ def cache_key(parts):
         if isinstance(p, bytes):
             p = p.decode('utf-8', 'replace')
         elif isinstance(p, (list, tuple)):
-            p = u'-'.join([dec(_) for _ in p])
+            p = '-'.join([dec(_) for _ in p])
         elif not isinstance(p, str):
             p = str(p)
         return p
-    return u'-'.join([dec(p) for p in parts])
+
+    return '-'.join([dec(p) for p in parts])
 
 
 def ensure_text(value):
@@ -77,13 +78,16 @@ def ensure_bytes_py2(value):
     return value
 
 
-deprecated('ensure_bytes_py2', """
+deprecated(
+    'ensure_bytes_py2',
+    """
 ``node.ext.ldap.base.ensure_bytes_py2`` is deprecated as of node.ext.ldap 2.0.1
 and will be removed in node.ext.ldap 3.0. It returns the value unchanged on
-Python 3, drop the call.""")
+Python 3, drop the call.""",
+)
 
 
-class LDAPConnector(object):
+class LDAPConnector:
     """Object is responsible for the LDAP connection.
 
     This Object knows about the LDAP Server to connect to, the authentication
@@ -114,13 +118,12 @@ class LDAPConnector(object):
         self._retry_delay = props.retry_delay
         # backward compatibility:
         # missing timeout properties in LDAPProps' pas.plugins.ldap <= 1.8.1
-        self._conn_timeout = getattr(props, "conn_timeout", -1)
-        self._op_timeout = getattr(props, "op_timeout", -1)
+        self._conn_timeout = getattr(props, 'conn_timeout', -1)
+        self._op_timeout = getattr(props, 'op_timeout', -1)
         self._con = None
 
     def bind(self):
-        """Bind to Server and return the Connection Object.
-        """
+        """Bind to Server and return the Connection Object."""
         if self._ignore_cert:  # pragma: no cover
             ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
         elif self._tls_cacert_file:  # pragma: no cover
@@ -131,13 +134,13 @@ class LDAPConnector(object):
             ldap.set_option(ldap.OPT_X_TLS_CERTFILE, self._tls_clcert_file)
             ldap.set_option(ldap.OPT_X_TLS_KEYFILE, self._tls_clkey_file)
         elif self._tls_clcert_file or self._tls_clkey_file:  # pragma: no cover
-            logger.exception("Only client certificate or key have been provided.")
+            logger.exception('Only client certificate or key have been provided.')
         self._con = ldap.ldapobject.ReconnectLDAPObject(
             self._uri,
             bytes_mode=False,
             bytes_strictness='silent',
             retry_max=self._retry_max,
-            retry_delay=self._retry_delay
+            retry_delay=self._retry_delay,
         )
         # Turning referrals off since they cause problems with MS Active
         # Directory More info: https://www.python-ldap.org/faq.html#usage
@@ -157,20 +160,20 @@ class LDAPConnector(object):
         return self._con
 
     def unbind(self):
-        """Unbind from Server.
-        """
+        """Unbind from Server."""
         if self._con is None:
             return
         try:
             self._con.unbind_s()
         except AttributeError:
-            logger.exception("Unbind not successful.")
+            logger.exception('Unbind not successful.')
         self._con = None
 
     def __del__(self):
         self.unbind()
 
-class LDAPCommunicator(object):
+
+class LDAPCommunicator:
     """Class LDAPCommunicator is responsible for the communication with the
     LDAP Server.
 
@@ -196,39 +199,39 @@ class LDAPCommunicator(object):
             self._cache.setTimeout(connector._cachetimeout)
             if not INullCacheProvider.providedBy(self._cache):
                 logger.debug(
-                    u"LDAP Caching activated for instance '{0:s}'. "
-                    u"Use '{1:s}' as cache provider".format(
-                        repr(self._cache),
-                        repr(cacheprovider)
-                    )
+                    f"LDAP Caching activated for instance '{repr(self._cache):s}'. "
+                    f"Use '{repr(cacheprovider):s}' as cache provider"
                 )
             else:  # pragma: no cover
                 logger.debug(
-                    u"LDAP Caching activated for instance '{0:s}'.".format(
-                        repr(self._cache),
-                    )
+                    f"LDAP Caching activated for instance '{repr(self._cache):s}'."
                 )
 
     def bind(self):
-        """Bind to LDAP Server.
-        """
+        """Bind to LDAP Server."""
         self._con = self._connector.bind()
 
     def unbind(self):
-        """Unbind from LDAP Server.
-        """
+        """Unbind from LDAP Server."""
         self._connector.unbind()
         self._con = None
 
     def ensure_connection(self):
-        """If LDAP directory is down, bind again and retry given function.
-        """
+        """If LDAP directory is down, bind again and retry given function."""
         if self._con is None:
             self.bind()
 
-    def search(self, queryFilter, scope, baseDN=None,
-               force_reload=False, attrlist=None, attrsonly=0,
-               page_size=None, cookie=None):
+    def search(
+        self,
+        queryFilter,
+        scope,
+        baseDN=None,
+        force_reload=False,
+        attrlist=None,
+        attrsonly=0,
+        page_size=None,
+        cookie=None,
+    ):
         """Search the directory.
 
         :param queryFilter: LDAP query filter
@@ -245,20 +248,20 @@ class LDAPCommunicator(object):
         if baseDN is None:
             baseDN = self.baseDN
             if not baseDN:
-                raise ValueError(u"baseDN unset.")
+                raise ValueError('baseDN unset.')
         if page_size:
             if cookie is None:
                 cookie = ''
             pagedresults = ldap.controls.libldap.SimplePagedResultsControl(
-                criticality=True, size=page_size, cookie=cookie)
+                criticality=True, size=page_size, cookie=cookie
+            )
             serverctrls = [pagedresults]
         else:
             if cookie:
                 raise ValueError('cookie passed without page_size')
             serverctrls = []
 
-        def _search(baseDN, scope, queryFilter,
-                    attrlist, attrsonly, serverctrls):
+        def _search(baseDN, scope, queryFilter, attrlist, attrsonly, serverctrls):
             # we have to do async search to also retrieve server controls
             # in case we do pagination of results
             self.ensure_connection()
@@ -271,7 +274,7 @@ class LDAPCommunicator(object):
                     queryFilter,
                     attrlist,
                     attrsonly,
-                    serverctrls=serverctrls
+                    serverctrls=serverctrls,
                 )
             except ldap.LDAPError as e:
                 logger.warn(str(e))
@@ -283,6 +286,7 @@ class LDAPCommunicator(object):
                 return results, pctrls[0].cookie
             else:
                 return results
+
         args = [baseDN, scope, queryFilter, attrlist, attrsonly, serverctrls]
         if self._cache:
             key_items = [
@@ -293,13 +297,10 @@ class LDAPCommunicator(object):
                 queryFilter,
                 scope,
                 page_size,
-                cookie
+                cookie,
             ]
             return self._cache.getData(
-                _search,
-                md5digest(cache_key(key_items)),
-                force_reload,
-                args
+                _search, md5digest(cache_key(key_items)), force_reload, args
             )
         return _search(*args)
 
@@ -345,6 +346,7 @@ def main():
     Expects server and port as arguments.
     """
     import sys
+
     if len(sys.argv) < 3:
         res = 'usage: python base.py [server] [port]'
     else:
@@ -354,5 +356,5 @@ def main():
     return res
 
 
-if __name__ == "__main__":  # pragma: no cover
+if __name__ == '__main__':  # pragma: no cover
     main()

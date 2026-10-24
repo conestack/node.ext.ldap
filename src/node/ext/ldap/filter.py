@@ -10,12 +10,14 @@ ESCAPE_CHARS = {
     '\x00': '\\00',
 }
 
-class LDAPFilter(object):
 
+class LDAPFilter:
     def __init__(self, queryFilter=None):
-        if queryFilter is not None \
-                and not isinstance(queryFilter, str) \
-                and not isinstance(queryFilter, LDAPFilter):
+        if (
+            queryFilter is not None
+            and not isinstance(queryFilter, str)
+            and not isinstance(queryFilter, LDAPFilter)
+        ):
             raise TypeError('Query filter must be LDAPFilter or string')
         self._filter = queryFilter
         if isinstance(queryFilter, LDAPFilter):
@@ -31,7 +33,7 @@ class LDAPFilter(object):
             raise TypeError('unsupported operand type')
         us = str(self)
         if us and other:
-            res = '(&{}{})'.format(us, other)
+            res = f'(&{us}{other})'
         elif us:
             res = us
         elif other:
@@ -48,23 +50,21 @@ class LDAPFilter(object):
             raise TypeError('unsupported operand type')
         us = str(self)
         if us and other:
-            res = '(|{}{})'.format(us, other)
+            res = f'(|{us}{other})'
         return LDAPFilter(res)
 
     def __contains__(self, attr):
-        return self._filter.find('({}='.format(attr)) > -1
+        return self._filter.find(f'({attr}=') > -1
 
     def __str__(self):
         return self._filter and self._filter or ''
 
     def __repr__(self):
-        return "LDAPFilter('{}')".format(self._filter)
+        return f"LDAPFilter('{self._filter}')"
 
 
 class LDAPDictFilter(LDAPFilter):
-
-    def __init__(self, criteria, or_search=False,
-                 or_keys=None, or_values=None):
+    def __init__(self, criteria, or_search=False, or_keys=None, or_values=None):
         self.criteria = criteria
         self.or_search = or_search
         self.or_keys = or_keys
@@ -73,31 +73,28 @@ class LDAPDictFilter(LDAPFilter):
     def __str__(self):
         if not self.criteria:
             return ''
-        return str(dict_to_filter(
-            self.criteria,
-            or_search=self.or_search,
-            or_keys=self.or_keys,
-            or_values=self.or_values
-        ))
+        return str(
+            dict_to_filter(
+                self.criteria,
+                or_search=self.or_search,
+                or_keys=self.or_keys,
+                or_values=self.or_values,
+            )
+        )
 
     def __repr__(self):
-        cr = [
-            "'{}': '{}'".format(k, v)
-            for k, v in sorted(self.criteria.items())
-        ]
+        cr = [f"'{k}': '{v}'" for k, v in sorted(self.criteria.items())]
         return 'LDAPDictFilter(criteria={{{}}})'.format(', '.join(cr))
 
 
 class LDAPRelationFilter(LDAPFilter):
-
     def __init__(self, node, relation, or_search=True):
         self.relation = relation
         self.gattrs = node.attrs
         self.or_search = or_search
 
     def __str__(self):
-        """turn relation string into ldap filter string
-        """
+        """turn relation string into ldap filter string"""
         dictionary = dict()
         parsedRelation = dict()
         for pair in self.relation.split('|'):
@@ -108,7 +105,7 @@ class LDAPRelationFilter(LDAPFilter):
         existing = [x for x in self.gattrs]
         for k, vals in parsedRelation.items():
             for v in vals:
-                if (str(v) == '' or str(k) == '' or str(k) not in existing):
+                if str(v) == '' or str(k) == '' or str(k) not in existing:
                     continue
                 dictionary[str(v)] = self.gattrs[str(k)]
         self.dictionary = dictionary
@@ -117,12 +114,11 @@ class LDAPRelationFilter(LDAPFilter):
         return ''
 
     def __repr__(self):
-        return "LDAPRelationFilter('{}')".format(str(self))
+        return f"LDAPRelationFilter('{str(self)}')"
 
 
 def dict_to_filter(criteria, or_search=False, or_keys=None, or_values=None):
-    """Turn dictionary criteria into ldap queryFilter string
-    """
+    """Turn dictionary criteria into ldap queryFilter string"""
     or_keys = (or_keys is None) and or_search or or_keys
     or_values = (or_values is None) and or_search or or_values
     _filter = None
@@ -134,7 +130,7 @@ def dict_to_filter(criteria, or_search=False, or_keys=None, or_values=None):
             attr = ''.join([ESCAPE_CHARS.get(x, x) for x in attr])
             if isinstance(value, str):
                 value = ''.join([ESCAPE_CHARS.get(x, x) for x in value])
-            valuefilter = LDAPFilter('({}={})'.format(attr, value))
+            valuefilter = LDAPFilter(f'({attr}={value})')
             if attrfilter is None:
                 attrfilter = valuefilter
                 continue

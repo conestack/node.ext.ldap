@@ -3,8 +3,7 @@ from node.ext.ldap import LDAPConnector
 import ldap
 
 
-class LDAPSchemaInfo(object):
-
+class LDAPSchemaInfo:
     def __init__(self, props=None):
         self._props = props
 
@@ -16,10 +15,7 @@ class LDAPSchemaInfo(object):
         communicator = LDAPCommunicator(connector)
         communicator.bind()
         res = communicator.search(
-            '(objectclass=*)',
-            ldap.SCOPE_BASE,
-            'cn=subschema',
-            attrlist=['*', '+']
+            '(objectclass=*)', ldap.SCOPE_BASE, 'cn=subschema', attrlist=['*', '+']
         )
         if len(res) != 1:  # pragma: no cover
             raise ValueError('subschema not found')
