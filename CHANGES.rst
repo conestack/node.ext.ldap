@@ -4,6 +4,12 @@ History
 2.0.2 (unreleased)
 ------------------
 
+- Fix ``LDAPConnector`` keeping the connection object after a failed bind.
+  ``ReconnectLDAPObject`` drops its connection while retrying, a later
+  ``unbind``, e.g. on garbage collection, logged "Unbind not successful." with
+  a traceback. The connection is dropped on a failed bind now.
+  [rnix]
+
 - Build the test LDAP server with OpenLDAP 2.6.16 instead of 2.4.59. The
   ``configure`` script of OpenLDAP 2.4 fails with GCC 14 and later, its test
   programs use implicit ``int`` and implicit function declarations, which are

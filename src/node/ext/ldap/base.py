@@ -152,11 +152,17 @@ class LDAPConnector:
         # Set the operations timeout
         if self._op_timeout > 0:
             self._con.timeout = self._op_timeout
-        if self._start_tls:  # pragma: no cover
-            # ignore in tests for now. nevertheless provide a test environment
-            # for TLS and SSL later
-            self._con.start_tls_s()
-        self._con.simple_bind_s(self._bindDN, self._bindPW)
+        try:
+            if self._start_tls:  # pragma: no cover
+                # ignore in tests for now. nevertheless provide a test
+                # environment for TLS and SSL later
+                self._con.start_tls_s()
+            self._con.simple_bind_s(self._bindDN, self._bindPW)
+        except ldap.LDAPError:
+            # ``ReconnectLDAPObject`` drops its connection while retrying, the
+            # object cannot be unbound anymore
+            self._con = None
+            raise
         return self._con
 
     def unbind(self):

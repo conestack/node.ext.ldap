@@ -3,6 +3,7 @@ from bda.cache.fscache import FSCacheManager
 from bda.cache.nullcache import NullCacheManager
 from ldap import MOD_REPLACE
 from ldap import OPT_NETWORK_TIMEOUT
+from ldap import SERVER_DOWN
 from node.ext.ldap import LDAPCommunicator
 from node.ext.ldap import LDAPConnector
 from node.ext.ldap import LDAPProps
@@ -226,6 +227,23 @@ class TestBase(NodeTestCase):
             res = communicator.search('(objectClass=*', SUBTREE, page_size=10)
         self.assertEqual(res, ([], ''))
         communicator.unbind()
+
+    def test_unbind_after_failed_bind(self):
+        props = LDAPProps(uri='ldap://127.0.0.1:12346', retry_delay=0)
+        connector = LDAPConnector(props=props)
+        with self.assertRaises(SERVER_DOWN):
+            connector.bind()
+        with self.assertNoLogs('node.ext.ldap', level='ERROR'):
+            connector.unbind()
+
+    def test_unbind_after_failed_reconnect(self):
+        connector = LDAPConnector(props=testing.props)
+        con = connector.bind()
+        # ``ReconnectLDAPObject`` drops its connection if a reconnect fails
+        del con._l
+        with self.assertLogs('node.ext.ldap', level='ERROR') as log:
+            connector.unbind()
+        self.assertIn('Unbind not successful.', log.output[0])
 
     def cached_props(self):
         props = testing.props
