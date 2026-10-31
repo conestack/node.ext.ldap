@@ -17,7 +17,7 @@ import time
 SCHEMA = os.environ.get('SCHEMA')
 SLAPDBIN = os.environ.get('SLAPD_BIN', 'slapd')
 SLAPDURIS = os.environ.get('SLAPD_URIS', 'ldap://127.0.0.1:12345')
-SLAPDDB = os.environ.get('SLAPD_DB', 'mdb')  # or 'bdb', but its deprecated
+SLAPDDB = os.environ.get('SLAPD_DB', 'mdb')
 LDAPADDBIN = os.environ.get('LDAP_ADD_BIN', 'ldapadd')
 LDAPDELETEBIN = os.environ.get('LDAP_DELETE_BIN', 'ldapdelete')
 LDAPSUFFIX = os.environ.get('LDAP_SUFFIX', None) or 'dc=my-domain,dc=com'

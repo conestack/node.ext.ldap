@@ -60,7 +60,7 @@ SYSTEM_DEPENDENCIES?=
 
 # OpenLDAP version to download
 # Default: 2.4.59
-OPENLDAP_VERSION?=2.4.59
+OPENLDAP_VERSION?=2.6.16
 
 # OpenLDAP base download URL
 # Default: https://www.openldap.org/software/download/OpenLDAP/openldap-release/

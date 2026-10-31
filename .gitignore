@@ -11,4 +11,4 @@
 /sources/
 /venv/
 /constraints-mxdev.txt
-/openldap-2.4.59.tgz
+/openldap-*.tgz
